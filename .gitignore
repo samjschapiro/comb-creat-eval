@@ -1,0 +1,74 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+data/
+
+# Jupyter
+.ipynb_checkpoints
+*.ipynb_checkpoints
+
+# Data (actual data files managed by DVC, not git)
+# Ignore all files but un-ignore directories so git descends into them,
+# allowing .dvc manifest files at any depth to be tracked
+data/**
+!data/**/
+!data/**/*.dvc
+!data/.gitkeep
+
+#Resources - additional resouces downloaded and provided
+resources/*
+!resources/.gitkeep
+
+# Literature - papers and references (DVC-tracked like data/)
+literature/**
+!literature/**/
+!literature/**/*.dvc
+!literature/.gitkeep
+
+# Papers - Overleaf-synced git repos (avoid dirty submodules)
+papers/*
+!papers/.gitkeep
+
+# Scratch - temporary work directory (NOT ignored, just its contents)
+scratch/*
+!scratch/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+*.log
+
+# Model files
+*.pt
+*.pth
+*.safetensors
+*.bin
+*.ckpt
+
+# UV
+uv.lock
+
+# Experiment outputs
+outputs/
+results/
+wandb/
+runs/
+checkpoints/
+*.egg-info/
