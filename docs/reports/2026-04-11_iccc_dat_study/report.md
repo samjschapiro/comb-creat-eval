@@ -74,13 +74,32 @@ This is 19 more models than PACE evaluated (30) and with a wider score range.
 ## Experimental Setup
 
 - All models queried via OpenRouter (single API, consistent interface)
-- Temperature 0.0 for reproducibility (following PACE)
-- DAT: 120 independent trials per model (high-N for robust mean estimates)
+- **Main run (CDAT, PACE):** Temperature 0.0 (following PACE methodology — captures intrinsic associative behavior; variance comes from cue/seed diversity, not stochastic sampling)
+- **DAT run:** Temperature 1.0 with 120 trials per model — DAT lacks built-in variance (one prompt only), so we need stochastic sampling. Temp=1.0 is what Bellemare-Pepin et al. (2025) used for their GPT-4 DAT benchmark.
 - CDAT: 50 cue words spanning diverse semantic domains
 - PACE: 50 seed words, 3 chains of 20 words each per seed
-- Scoring: GloVe 840B (DAT), SBERT all-mpnet-base-v2 (CDAT), FastText crawl-300d-2M (PACE)
+- Scoring: GloVe 840B (DAT, per original Olson protocol), SBERT all-mpnet-base-v2 (CDAT, per Nakajima protocol), FastText crawl-300d-2M (PACE, per Qiu & Hu protocol)
 - Correlation: Spearman rho + 500-iteration bootstrap for CIs and significance ratios
 - Partial correlations controlling for Arena Overall
+
+### Temperature Limitations (Methodological Note)
+
+Some models do not respect temperature settings via OpenRouter and produce deterministic output regardless of the requested value. We tested every model in our set across temperatures 1.0, 1.5, and 2.0 with the full DAT prompt:
+
+**Models that produce varied output at temp=1.0** (44/49): all Claude 4.x models, GPT-5.4 family, GPT-4.x family, Gemini 2.x, DeepSeek V3/R1, most Qwen, Llama, Mistral, Cohere, Gemma, etc. These are run with 120 trials at temp=1.0 for the DAT.
+
+**Models that vary only at higher temperatures** (2/49):
+- `openai/gpt-5-mini` — varied at temp=1.5, deterministic at 1.0 and 2.0
+- `qwen/qwen3-32b` — varied at temp=1.5, deterministic at 1.0 and 2.0
+
+**Effectively fixed-temperature models** (3/49) — return identical output across all tested temperatures (0, 1, 1.5, 2):
+- `openai/gpt-5`
+- `openai/gpt-5-nano`
+- `openai/o3-mini`
+
+For the fixed-temperature models, DAT yields a single deterministic point estimate per model. This is consistent with how the PACE paper handled o3-mini (they noted its API fixes temperature at 1). These models retain a single DAT score in the analysis but cannot contribute to within-model variance estimates. We flag this as a limitation in the paper.
+
+This is also a good reminder of why DAT-as-an-LLM-eval is methodologically fragile: a metric that depends on stochastic sampling can't be applied uniformly when models have heterogeneous temperature behavior. CDAT and PACE sidestep this issue by deriving variance from input diversity (50 cues, 50 seeds) rather than stochastic sampling.
 
 ## Timeline
 
