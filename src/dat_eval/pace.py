@@ -86,25 +86,35 @@ def score_chain(
     if len(chain) < 2:
         return {"chain_score": 0.0, "per_position_scores": [], "words": chain}
 
-    vectors = [embeddings.encode(w.lower()) for w in chain]
-    n = len(chain)
+    # Encode; drop OOV words that produce zero vectors (cosine distance would be NaN)
+    valid_pairs = [(w, embeddings.encode(w.lower())) for w in chain]
+    valid_pairs = [(w, v) for w, v in valid_pairs if np.linalg.norm(v) > 0]
+
+    if len(valid_pairs) < 2:
+        return {"chain_score": 0.0, "per_position_scores": [],
+                "words": [w for w, _ in valid_pairs], "n_oov": len(chain) - len(valid_pairs)}
+
+    vectors = [v for _, v in valid_pairs]
+    kept_words = [w for w, _ in valid_pairs]
+    n = len(vectors)
 
     per_position = []
     for i in range(1, n):
-        # Average distance from position i to all preceding positions
         dists = []
         for j in range(i):
             d = cosine_distance(vectors[i], vectors[j])
-            dists.append(float(d))
-        avg_dist = float(np.mean(dists))
-        per_position.append(avg_dist)
+            if np.isfinite(d):
+                dists.append(float(d))
+        if dists:
+            per_position.append(float(np.mean(dists)))
 
     chain_score = float(np.mean(per_position)) if per_position else 0.0
 
     return {
         "chain_score": chain_score,
         "per_position_scores": per_position,
-        "words": chain,
+        "words": kept_words,
+        "n_oov": len(chain) - len(kept_words),
     }
 
 
@@ -124,7 +134,7 @@ def score_seed(
         Dict with seed_score and per-chain breakdowns.
     """
     chain_results = [score_chain(c, embeddings) for c in chains]
-    chain_scores = [r["chain_score"] for r in chain_results]
+    chain_scores = [r["chain_score"] for r in chain_results if np.isfinite(r["chain_score"]) and r["chain_score"] > 0]
     seed_score = float(np.mean(chain_scores)) if chain_scores else 0.0
 
     return {
@@ -154,7 +164,8 @@ def score_model(
     for seed_word, chains in all_chains.items():
         result = score_seed(chains, embeddings)
         seed_results[seed_word] = result
-        seed_scores.append(result["seed_score"])
+        if np.isfinite(result["seed_score"]) and result["seed_score"] > 0:
+            seed_scores.append(result["seed_score"])
 
     model_score = float(np.mean(seed_scores)) if seed_scores else 0.0
 

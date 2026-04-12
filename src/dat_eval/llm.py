@@ -9,17 +9,28 @@ import os
 import re
 
 from dotenv import load_dotenv
-from openai import OpenAI
+from openai import OpenAI, AsyncOpenAI
 
 load_dotenv()
 
 
 def get_client() -> OpenAI:
-    """Create an OpenRouter client."""
+    """Create a synchronous OpenRouter client."""
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
         raise ValueError("FATAL: OPENROUTER_API_KEY not set")
     return OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=api_key,
+    )
+
+
+def get_async_client() -> AsyncOpenAI:
+    """Create an async OpenRouter client for concurrent requests."""
+    api_key = os.environ.get("OPENROUTER_API_KEY")
+    if not api_key:
+        raise ValueError("FATAL: OPENROUTER_API_KEY not set")
+    return AsyncOpenAI(
         base_url="https://openrouter.ai/api/v1",
         api_key=api_key,
     )
@@ -69,7 +80,36 @@ def call_llm(
     return response.choices[0].message.content
 
 
-def extract_words_from_response(raw: str, expected_count: int = 10) -> list[str]:
+async def call_llm_async(
+    async_client: AsyncOpenAI,
+    messages: list[dict],
+    model: str,
+    temperature: float = 0.0,
+    max_tokens: int = 1024,
+    seed: int | None = None,
+    top_p: float | None = None,
+    top_k: int | None = None,
+) -> str:
+    """Async version of call_llm. Caller provides the AsyncOpenAI client so
+    many concurrent calls can share one connection pool.
+    """
+    kwargs = dict(
+        model=model,
+        messages=messages,
+        temperature=temperature,
+        max_tokens=max_tokens,
+    )
+    if seed is not None:
+        kwargs["seed"] = seed
+    if top_p is not None:
+        kwargs["top_p"] = top_p
+    if top_k is not None:
+        kwargs["extra_body"] = {"top_k": top_k}
+    response = await async_client.chat.completions.create(**kwargs)
+    return response.choices[0].message.content
+
+
+def extract_words_from_response(raw: str | None, expected_count: int = 10) -> list[str]:
     """Extract a list of words from an LLM response.
 
     Handles various response formats:
@@ -79,8 +119,10 @@ def extract_words_from_response(raw: str, expected_count: int = 10) -> list[str]
     - One per line: word1\nword2\n...
 
     Returns:
-        List of extracted words (lowercased, stripped).
+        List of extracted words (lowercased, stripped). Empty list if raw is None/empty.
     """
+    if raw is None:
+        return []
     raw = raw.strip()
 
     # Try JSON array first

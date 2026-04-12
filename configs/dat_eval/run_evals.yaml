@@ -1,8 +1,16 @@
-# Config for running DAT, CDAT, and PACE evaluations
-# DAT and CDAT need temperature variation (DAT for stochastic sampling, CDAT to
-# explore the novelty-appropriateness tradeoff per Nakajima et al.)
-# PACE uses temp=0 per the original paper (variance comes from 50 different seeds)
+# Config for running DAT, CDAT, and PACE evaluations.
+# Models are ordered cheap-to-expensive. The budget_usd cap will stop the run
+# before cumulative estimated spend exceeds the cap.
 output_dir: "data/dat_eval/run_v1"
+
+# Budget cap in USD. Run aborts before exceeding this.
+# Remaining OpenRouter credit is ~$34 (started at $50, spent ~$16).
+# Setting a slightly lower cap to leave some margin for estimation error.
+budget_usd: 30.0
+
+# Max concurrent in-flight API calls. OpenRouter's rate ceiling scales with
+# credit balance (~$34 ≈ 30 req/s). 20 leaves headroom for retries.
+concurrency: 20
 
 # Per-eval temperature lists
 # DAT/CDAT: temps 1.0, 1.5, 2.0 to get meaningful variance — lower temps produce
@@ -20,71 +28,82 @@ dat_top_k: 0
 cdat_top_p: 1.0
 cdat_top_k: 0
 # PACE: leave at provider defaults (paper doesn't specify; only sets temp=0)
-# pace_top_p: null
-# pace_top_k: null
 
-# Trials per temperature for DAT (DAT lacks built-in variance from inputs)
-dat_trials: 40  # 40 trials × 3 temps = 120 total per model
+# Max output tokens per call — prevents runaway generation at high temperatures
+# (weak models can hallucinate tokens indefinitely). Sized generously enough for
+# the expected JSON structure.
+dat_max_tokens: 256           # 10 words in JSON + some margin
+cdat_max_tokens: 256          # 10 words in JSON + some margin
+pace_stage1_max_tokens: 400   # 3 words with reasons
+pace_stage2_max_tokens: 1200  # 20 words with reasons (can get verbose)
+
+dat_trials: 40
 
 evals:
   - dat
   - cdat
   - pace
 
-# Open models first (cheap), then proprietary
+# Models ordered cheap-to-expensive (per estimate_model_cost).
+# Cheapest models first so if we hit the budget cap, we lose the least data.
 models:
-  # === OPEN MODELS ===
-  - meta-llama/llama-4-maverick
-  - meta-llama/llama-4-scout
-  - meta-llama/llama-3.3-70b-instruct
-  - meta-llama/llama-3.1-70b-instruct
-  - meta-llama/llama-3.1-8b-instruct
-  - google/gemma-3-27b-it
-  - google/gemma-2-27b-it
-  - google/gemma-2-9b-it
-  - qwen/qwen3-235b-a22b
-  - qwen/qwen3-32b
-  - qwen/qwq-32b
-  - qwen/qwen-2.5-72b-instruct
-  - deepseek/deepseek-r1
-  - deepseek/deepseek-chat-v3-0324
-  - deepseek/deepseek-chat
-  - mistralai/mistral-large-2407
-  - mistralai/mistral-large-2411
-  - mistralai/mistral-nemo
-  - nvidia/llama-3.1-nemotron-70b-instruct
-  - microsoft/phi-4
-  - cohere/command-a
-  - cohere/command-r-plus-08-2024
+  # Under $0.05
+  - meta-llama/llama-3.1-8b-instruct        # $0.02
+  - google/gemma-2-9b-it                     # $0.02
+  - mistralai/mistral-nemo                   # $0.02
+  - microsoft/phi-4                          # $0.04
+  - google/gemma-3-27b-it                    # $0.05
+  - google/gemma-2-27b-it                    # $0.05
+  - qwen/qwen3-32b                           # $0.05
+  - qwen/qwq-32b                             # $0.05
 
-  # === PROPRIETARY ===
-  # Anthropic
-  - anthropic/claude-opus-4.6
-  - anthropic/claude-opus-4.5
-  - anthropic/claude-sonnet-4.6
-  - anthropic/claude-sonnet-4.5
-  - anthropic/claude-sonnet-4
-  - anthropic/claude-haiku-4.5
-  - anthropic/claude-3.5-haiku
-  - anthropic/claude-3-haiku
-  # OpenAI
-  - openai/gpt-5.4
-  - openai/gpt-5.4-mini
-  - openai/gpt-5.4-nano
-  - openai/gpt-5
-  - openai/gpt-5-mini
-  - openai/gpt-5-nano
-  - openai/o3
-  - openai/o3-mini
-  - openai/o4-mini
-  - openai/gpt-4.1
-  - openai/gpt-4.1-mini
-  - openai/gpt-4.1-nano
-  - openai/gpt-4o
-  - openai/gpt-4o-mini
-  - openai/gpt-4-turbo
-  - openai/gpt-3.5-turbo
-  # Google
-  - google/gemini-2.5-pro
-  - google/gemini-2.5-flash
-  - google/gemini-2.0-flash-001
+  # $0.05 - $0.20
+  - meta-llama/llama-4-maverick              # $0.13 (partially done)
+  - meta-llama/llama-4-scout                 # $0.10
+  - meta-llama/llama-3.3-70b-instruct        # $0.10
+  - meta-llama/llama-3.1-70b-instruct        # $0.10
+  - qwen/qwen-2.5-72b-instruct               # $0.10
+  - nvidia/llama-3.1-nemotron-70b-instruct   # $0.10
+  - google/gemini-2.0-flash-001              # $0.10
+  - openai/gpt-4.1-nano                      # $0.10
+  - qwen/qwen3-235b-a22b                     # $0.15
+  - openai/gpt-4o-mini                       # $0.14
+  - google/gemini-2.5-flash                  # $0.14
+
+  # $0.20 - $0.50
+  - anthropic/claude-3-haiku                 # $0.29
+  - openai/gpt-5-nano                        # $0.29
+  - openai/gpt-5.4-nano                      # $0.29
+  - deepseek/deepseek-chat-v3-0324           # $0.26
+  - deepseek/deepseek-chat                   # $0.26
+  - openai/gpt-3.5-turbo                     # $0.37
+  - openai/gpt-4.1-mini                      # $0.38
+
+  # $0.50 - $1.50
+  - deepseek/deepseek-r1                     # $0.52
+  - openai/gpt-5.4-mini                      # $0.72  (DAT/CDAT only, PACE done)
+  - anthropic/claude-haiku-4.5               # $0.93
+  - anthropic/claude-3.5-haiku               # $0.93
+  - openai/o3-mini                           # $1.05
+  - openai/o4-mini                           # $1.05
+  - openai/gpt-5-mini                        # $1.43
+  - mistralai/mistral-large-2407             # $1.48
+  - mistralai/mistral-large-2411             # $1.48
+
+  # $1.50 - $5.00
+  - anthropic/claude-sonnet-4.6              # $1.76  (DAT/CDAT only, PACE done)
+  - anthropic/claude-sonnet-4.5              # $1.76  (DAT/CDAT only, PACE done)
+  - openai/gpt-4.1                           # $1.91
+  - google/gemini-2.5-pro                    # $2.26
+  - openai/gpt-4o                            # $2.39
+  - cohere/command-r-plus-08-2024            # $2.39
+  - cohere/command-a                         # $2.39
+  - anthropic/claude-sonnet-4                # $3.50
+  - openai/gpt-5                             # $3.71
+  - openai/gpt-5.4                           # $3.72  (DAT/CDAT only, PACE done)
+
+  # $5+
+  - openai/gpt-4-turbo                       # $7.42
+  - anthropic/claude-opus-4.5                # $8.82  (DAT/CDAT only, PACE done)
+  - anthropic/claude-opus-4.6                # $8.82  (DAT/CDAT only, PACE done)
+  - openai/o3                                # $9.55

@@ -8,6 +8,7 @@ Usage:
 """
 
 import argparse
+import asyncio
 import json
 import sys
 import time
@@ -19,7 +20,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 from tqdm import tqdm
 
 from src.utils import load_config, init_directory, save_config
-from src.dat_eval.llm import call_llm, extract_words_from_response, model_id_to_key
+from src.dat_eval.llm import (
+    call_llm_async,
+    extract_words_from_response,
+    get_async_client,
+    model_id_to_key,
+)
 from src.dat_eval.dat import DAT_PROMPT
 from src.dat_eval.cdat import cdat_prompt, DEFAULT_CUES
 from src.dat_eval.pace import (
@@ -28,168 +34,207 @@ from src.dat_eval.pace import (
     DEFAULT_SEEDS,
 )
 
+# Import pricing table for budget-cap logic
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "scripts" / "safety"))
+from cost_tracker import PRICING
 
-def run_dat(
+# Per-call token estimates (based on observed responses)
+CALL_COST = {
+    "dat":   (150, 400),
+    "cdat":  (200, 400),
+    "pace1": (200, 300),
+    "pace2": (300, 600),
+}
+
+
+def estimate_model_cost(
+    model_id: str,
+    pending_dat_temps: int,
+    pending_cdat_temps: int,
+    pending_pace_temps: int,
+    dat_trials: int,
+    n_cues: int,
+    n_seeds: int,
+) -> float:
+    """Estimate USD cost of running remaining work for a given model."""
+    pricing = PRICING.get(model_id)
+    if pricing is None:
+        return float("inf")  # can't run what we can't price
+    in_price, out_price = pricing
+
+    total_in, total_out = 0, 0
+    if pending_dat_temps > 0:
+        n_calls = pending_dat_temps * dat_trials
+        total_in += n_calls * CALL_COST["dat"][0]
+        total_out += n_calls * CALL_COST["dat"][1]
+    if pending_cdat_temps > 0:
+        n_calls = pending_cdat_temps * n_cues
+        total_in += n_calls * CALL_COST["cdat"][0]
+        total_out += n_calls * CALL_COST["cdat"][1]
+    if pending_pace_temps > 0:
+        total_in += pending_pace_temps * n_seeds * CALL_COST["pace1"][0]
+        total_out += pending_pace_temps * n_seeds * CALL_COST["pace1"][1]
+        total_in += pending_pace_temps * n_seeds * 3 * CALL_COST["pace2"][0]
+        total_out += pending_pace_temps * n_seeds * 3 * CALL_COST["pace2"][1]
+
+    return (total_in * in_price + total_out * out_price) / 1_000_000
+
+
+async def _run_one(async_client, sem, call_kwargs) -> tuple[str | None, Exception | None]:
+    """Make a single LLM call with a shared semaphore. Returns (text, error).
+
+    Treats a None response content as an error (some providers return null
+    content when they refuse / content-filter / fail silently).
+    """
+    async with sem:
+        try:
+            raw = await call_llm_async(async_client, **call_kwargs)
+            if raw is None:
+                return None, RuntimeError("provider returned null content")
+            return raw, None
+        except Exception as e:
+            return None, e
+
+
+async def run_dat(
+    async_client,
+    sem,
     model_id: str,
     n_trials: int,
     temperature: float,
     base_seed: int = 1000,
     top_p: float | None = None,
     top_k: int | None = None,
+    max_tokens: int = 256,
 ) -> list[dict]:
-    """Run DAT evaluation: generate n_trials sets of 10 divergent words.
-
-    Each trial uses a different seed (base_seed + trial) to break the model's
-    prior on "first token" behavior — temperature alone is often insufficient
-    because models have very peaked distributions for the leading token.
-    """
-    results = []
-    for trial in range(n_trials):
+    """Run DAT evaluation concurrently: generate n_trials sets of 10 divergent words."""
+    async def one_trial(trial):
         seed = base_seed + trial
-        try:
-            raw = call_llm(
-                messages=[{"role": "user", "content": DAT_PROMPT}],
-                model=model_id,
-                temperature=temperature,
-                seed=seed,
-                top_p=top_p,
-                top_k=top_k,
-            )
-            words = extract_words_from_response(raw, expected_count=10)
-            results.append({
-                "trial": trial,
-                "seed": seed,
-                "raw_response": raw,
-                "words": words,
-                "api_error": None,
-            })
-        except Exception as e:
-            results.append({
-                "trial": trial,
-                "seed": seed,
-                "raw_response": None,
-                "words": [],
-                "api_error": f"{type(e).__name__}: {e}",
-            })
-            traceback.print_exc()
-            time.sleep(1)
-    return results
+        raw, err = await _run_one(async_client, sem, dict(
+            messages=[{"role": "user", "content": DAT_PROMPT}],
+            model=model_id,
+            temperature=temperature,
+            seed=seed,
+            top_p=top_p,
+            top_k=top_k,
+            max_tokens=max_tokens,
+        ))
+        if err is not None:
+            return {"trial": trial, "seed": seed, "raw_response": None,
+                    "words": [], "api_error": f"{type(err).__name__}: {err}"}
+        words = extract_words_from_response(raw, expected_count=10)
+        return {"trial": trial, "seed": seed, "raw_response": raw,
+                "words": words, "api_error": None}
+
+    return await asyncio.gather(*[one_trial(i) for i in range(n_trials)])
 
 
-def run_cdat(
+async def run_cdat(
+    async_client,
+    sem,
     model_id: str,
     cues: list[str],
     temperature: float,
     base_seed: int = 2000,
     top_p: float | None = None,
     top_k: int | None = None,
+    max_tokens: int = 256,
 ) -> dict[str, dict]:
-    """Run CDAT evaluation: generate 10 associated-but-diverse words per cue.
-
-    Each cue uses a unique seed (base_seed + cue index) to ensure variance
-    isn't lost to deterministic sampling priors.
-    """
-    results = {}
-    for i, cue in enumerate(cues):
+    """Run CDAT concurrently: 10 associated-but-diverse words per cue."""
+    async def one_cue(i, cue):
         seed = base_seed + i
-        try:
-            raw = call_llm(
-                messages=[{"role": "user", "content": cdat_prompt(cue)}],
-                model=model_id,
-                temperature=temperature,
-                seed=seed,
-                top_p=top_p,
-                top_k=top_k,
-            )
-            words = extract_words_from_response(raw, expected_count=10)
-            results[cue] = {
-                "seed": seed,
-                "raw_response": raw,
-                "words": words,
-                "api_error": None,
-            }
-        except Exception as e:
-            results[cue] = {
-                "seed": seed,
-                "raw_response": None,
-                "words": [],
-                "api_error": f"{type(e).__name__}: {e}",
-            }
-            traceback.print_exc()
-            time.sleep(1)
-    return results
+        raw, err = await _run_one(async_client, sem, dict(
+            messages=[{"role": "user", "content": cdat_prompt(cue)}],
+            model=model_id,
+            temperature=temperature,
+            seed=seed,
+            top_p=top_p,
+            top_k=top_k,
+            max_tokens=max_tokens,
+        ))
+        if err is not None:
+            return cue, {"seed": seed, "raw_response": None,
+                         "words": [], "api_error": f"{type(err).__name__}: {err}"}
+        words = extract_words_from_response(raw, expected_count=10)
+        return cue, {"seed": seed, "raw_response": raw,
+                     "words": words, "api_error": None}
+
+    pairs = await asyncio.gather(*[one_cue(i, c) for i, c in enumerate(cues)])
+    return dict(pairs)
 
 
-def run_pace(
+async def run_pace(
+    async_client,
+    sem,
     model_id: str,
     seeds: list[str],
     temperature: float,
     top_p: float | None = None,
     top_k: int | None = None,
+    stage1_max_tokens: int = 400,
+    stage2_max_tokens: int = 1200,
 ) -> dict[str, dict]:
-    """Run PACE evaluation: 3 association chains of 20 words per seed."""
-    results = {}
+    """Run PACE concurrently: 3 association chains of 20 words per seed.
 
-    for seed in seeds:
-        # Stage 1: get 3 first-associations
-        try:
-            raw1 = call_llm(
-                messages=[{"role": "user", "content": pace_stage1_prompt(seed)}],
-                model=model_id,
-                temperature=temperature,
-                top_p=top_p,
-                top_k=top_k,
-            )
-            # Parse stage 1 response
-            stage1_data = _parse_pace_stage1(raw1)
-        except Exception as e:
-            results[seed] = {
-                "stage1_raw": None,
-                "stage1_error": f"{type(e).__name__}: {e}",
-                "chains": [],
-            }
-            traceback.print_exc()
-            time.sleep(1)
-            continue
+    Stage 1 (seed -> 3 first-associations) runs across all seeds concurrently.
+    Stage 2 (each first-association -> 20-word chain) runs concurrently across
+    all (seed, chain) pairs.
+    """
+    # Stage 1: one call per seed, all concurrent
+    async def stage1_for_seed(seed_word):
+        raw, err = await _run_one(async_client, sem, dict(
+            messages=[{"role": "user", "content": pace_stage1_prompt(seed_word)}],
+            model=model_id,
+            temperature=temperature,
+            top_p=top_p,
+            top_k=top_k,
+            max_tokens=stage1_max_tokens,
+        ))
+        if err is not None:
+            return seed_word, {"stage1_raw": None, "stage1_parsed": [],
+                               "stage1_error": f"{type(err).__name__}: {err}"}
+        parsed = _parse_pace_stage1(raw)
+        return seed_word, {"stage1_raw": raw, "stage1_parsed": parsed, "stage1_error": None}
 
-        # Stage 2: build 3 chains
-        chains = []
-        for assoc in stage1_data:
-            try:
-                raw2 = call_llm(
-                    messages=[{
-                        "role": "user",
-                        "content": pace_stage2_prompt(
-                            seed, assoc["word"], assoc.get("reason", "")
-                        ),
-                    }],
-                    model=model_id,
-                    temperature=temperature,
-                    top_p=top_p,
-                    top_k=top_k,
-                )
-                chain = _parse_pace_stage2(raw2, seed, assoc["word"])
-                chains.append({
-                    "first_association": assoc,
-                    "raw_response": raw2,
-                    "chain": chain,
-                    "api_error": None,
-                })
-            except Exception as e:
-                chains.append({
-                    "first_association": assoc,
-                    "raw_response": None,
-                    "chain": [seed, assoc["word"]],
-                    "api_error": f"{type(e).__name__}: {e}",
-                })
-                traceback.print_exc()
-                time.sleep(1)
+    stage1_pairs = await asyncio.gather(*[stage1_for_seed(s) for s in seeds])
+    stage1 = dict(stage1_pairs)
 
-        results[seed] = {
-            "stage1_raw": raw1,
-            "stage1_parsed": stage1_data,
-            "chains": chains,
-        }
+    # Stage 2: one call per (seed, first-association), all concurrent
+    async def stage2_for_assoc(seed_word, assoc):
+        raw, err = await _run_one(async_client, sem, dict(
+            messages=[{"role": "user", "content": pace_stage2_prompt(
+                seed_word, assoc["word"], assoc.get("reason", ""))}],
+            model=model_id,
+            temperature=temperature,
+            top_p=top_p,
+            top_k=top_k,
+            max_tokens=stage2_max_tokens,
+        ))
+        if err is not None:
+            return {"first_association": assoc, "raw_response": None,
+                    "chain": [seed_word, assoc["word"]],
+                    "api_error": f"{type(err).__name__}: {err}"}
+        chain = _parse_pace_stage2(raw, seed_word, assoc["word"])
+        return {"first_association": assoc, "raw_response": raw,
+                "chain": chain, "api_error": None}
+
+    # Build the list of all (seed, assoc) pairs we need to run
+    stage2_tasks = []
+    stage2_keys = []
+    for seed_word in seeds:
+        s1 = stage1[seed_word]
+        for assoc in s1["stage1_parsed"]:
+            stage2_tasks.append(stage2_for_assoc(seed_word, assoc))
+            stage2_keys.append(seed_word)
+
+    stage2_results = await asyncio.gather(*stage2_tasks)
+
+    # Bucket stage-2 results back by seed
+    results = {seed_word: {"stage1_raw": stage1[seed_word]["stage1_raw"],
+                           "stage1_parsed": stage1[seed_word]["stage1_parsed"],
+                           "chains": []} for seed_word in seeds}
+    for seed_word, chain_result in zip(stage2_keys, stage2_results):
+        results[seed_word]["chains"].append(chain_result)
 
     return results
 
@@ -247,7 +292,7 @@ def _temp_suffix(temp: float) -> str:
     return f"t{str(temp).replace('.', '-')}"
 
 
-def main(config_path: str, overwrite: bool = False, debug: bool = False):
+async def main(config_path: str, overwrite: bool = False, debug: bool = False):
     config = load_config(config_path)
     output_dir = Path(config["output_dir"])
     if overwrite and output_dir.exists():
@@ -279,25 +324,95 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
     pace_top_p = config.get("pace_top_p", None)
     pace_top_k = config.get("pace_top_k", None)
 
+    # Max tokens per call, tuned per eval to prevent runaway generation at
+    # high temperatures (weak models can hallucinate indefinitely).
+    dat_max_tokens = config.get("dat_max_tokens", 256)
+    cdat_max_tokens = config.get("cdat_max_tokens", 256)
+    pace_stage1_max_tokens = config.get("pace_stage1_max_tokens", 400)
+    pace_stage2_max_tokens = config.get("pace_stage2_max_tokens", 1200)
+
+    # Concurrency cap — semaphore limits simultaneous outbound requests.
+    # OpenRouter's rate ceiling scales with credit balance (~$34 ≈ 30 req/s).
+    # Setting to 20 leaves headroom for retries and rate-limit bursts.
+    concurrency = config.get("concurrency", 20)
+
     if debug:
         models = models[:1]
         dat_trials = 1
         cdat_cues = cdat_cues[:3]
         pace_seeds = pace_seeds[:2]
 
+    # Budget cap: abort when cumulative projected spend would exceed this.
+    # Set to 0 or negative to disable the cap.
+    budget_usd = config.get("budget_usd", 0.0)
+
     print(f"Models: {len(models)}")
     print(f"Evals: {evals_to_run}")
     print(f"DAT: {dat_trials} trials per temp at temps {dat_temps}")
     print(f"CDAT: {len(cdat_cues)} cues at temps {cdat_temps}")
     print(f"PACE: {len(pace_seeds)} seeds at temps {pace_temps}")
+    print(f"Concurrency: {concurrency}")
+    if budget_usd > 0:
+        print(f"Budget cap: ${budget_usd:.2f} (will stop before exceeding)")
+    else:
+        print(f"Budget cap: NONE (will run all models)")
+
+    cumulative_cost = 0.0
+
+    # Create the shared async client and semaphore once for the entire run.
+    async_client = get_async_client()
+    sem = asyncio.Semaphore(concurrency)
 
     for model_id in models:
         model_key = model_id_to_key(model_id)
         model_dir = output_dir / model_key
         model_dir.mkdir(parents=True, exist_ok=True)
 
+        # Count pending work for this model (how many temp files are missing)
+        if "dat" in evals_to_run:
+            pending_dat = sum(
+                1 for t in dat_temps
+                if not (model_dir / f"dat_responses_{_temp_suffix(t)}.json").exists()
+            )
+        else:
+            pending_dat = 0
+        if "cdat" in evals_to_run:
+            pending_cdat = sum(
+                1 for t in cdat_temps
+                if not (model_dir / f"cdat_responses_{_temp_suffix(t)}.json").exists()
+            )
+        else:
+            pending_cdat = 0
+        if "pace" in evals_to_run:
+            pending_pace = sum(
+                1 for t in pace_temps
+                if not (model_dir / f"pace_responses_{_temp_suffix(t)}.json").exists()
+            )
+        else:
+            pending_pace = 0
+
+        model_cost_est = estimate_model_cost(
+            model_id, pending_dat, pending_cdat, pending_pace,
+            dat_trials, len(cdat_cues), len(pace_seeds),
+        )
+
+        # Budget check
+        if budget_usd > 0 and (cumulative_cost + model_cost_est) > budget_usd:
+            remaining = budget_usd - cumulative_cost
+            print(f"\n{'='*60}")
+            print(f"BUDGET CAP REACHED")
+            print(f"  Cumulative spent (estimated): ${cumulative_cost:.2f}")
+            print(f"  Budget cap: ${budget_usd:.2f}")
+            print(f"  Next model ({model_id}) would cost: ${model_cost_est:.2f}")
+            print(f"  Remaining budget: ${remaining:.2f}")
+            print(f"  Stopping run. Resume later with a higher budget or run_dat_only.yaml.")
+            print(f"{'='*60}")
+            break
+
+        cumulative_cost += model_cost_est
+
         print(f"\n{'='*60}")
-        print(f"{model_id}")
+        print(f"{model_id}   (est cost: ${model_cost_est:.2f}, cumulative: ${cumulative_cost:.2f})")
         print(f"{'='*60}")
 
         if "dat" in evals_to_run:
@@ -307,8 +422,14 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
                 if dat_path.exists():
                     print(f"  DAT temp={temp} already done, skipping")
                     continue
-                print(f"  Running DAT temp={temp} top_p={dat_top_p} top_k={dat_top_k} ({dat_trials} trials)...")
-                dat_results = run_dat(model_id, dat_trials, temp, top_p=dat_top_p, top_k=dat_top_k)
+                print(f"  Running DAT temp={temp} top_p={dat_top_p} top_k={dat_top_k} max_tokens={dat_max_tokens} ({dat_trials} trials, concurrent)...")
+                t0 = time.time()
+                dat_results = await run_dat(
+                    async_client, sem,
+                    model_id, dat_trials, temp,
+                    top_p=dat_top_p, top_k=dat_top_k, max_tokens=dat_max_tokens,
+                )
+                print(f"    ({time.time()-t0:.1f}s elapsed)")
                 with open(dat_path, "w") as f:
                     json.dump(dat_results, f, indent=2)
                 n_words = [len(r["words"]) for r in dat_results if r["words"]]
@@ -321,8 +442,14 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
                 if cdat_path.exists():
                     print(f"  CDAT temp={temp} already done, skipping")
                     continue
-                print(f"  Running CDAT temp={temp} top_p={cdat_top_p} top_k={cdat_top_k} ({len(cdat_cues)} cues)...")
-                cdat_results = run_cdat(model_id, cdat_cues, temp, top_p=cdat_top_p, top_k=cdat_top_k)
+                print(f"  Running CDAT temp={temp} top_p={cdat_top_p} top_k={cdat_top_k} max_tokens={cdat_max_tokens} ({len(cdat_cues)} cues, concurrent)...")
+                t0 = time.time()
+                cdat_results = await run_cdat(
+                    async_client, sem,
+                    model_id, cdat_cues, temp,
+                    top_p=cdat_top_p, top_k=cdat_top_k, max_tokens=cdat_max_tokens,
+                )
+                print(f"    ({time.time()-t0:.1f}s elapsed)")
                 with open(cdat_path, "w") as f:
                     json.dump(cdat_results, f, indent=2)
                 n_ok = sum(1 for r in cdat_results.values() if r["words"])
@@ -343,8 +470,16 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
                     old_pace.rename(pace_path)
                     continue
                 n_calls = len(pace_seeds) * 4
-                print(f"  Running PACE temp={temp} ({len(pace_seeds)} seeds, ~{n_calls} API calls)...")
-                pace_results = run_pace(model_id, pace_seeds, temp, top_p=pace_top_p, top_k=pace_top_k)
+                print(f"  Running PACE temp={temp} max_tokens=s1:{pace_stage1_max_tokens}/s2:{pace_stage2_max_tokens} ({len(pace_seeds)} seeds, ~{n_calls} API calls, concurrent)...")
+                t0 = time.time()
+                pace_results = await run_pace(
+                    async_client, sem,
+                    model_id, pace_seeds, temp,
+                    top_p=pace_top_p, top_k=pace_top_k,
+                    stage1_max_tokens=pace_stage1_max_tokens,
+                    stage2_max_tokens=pace_stage2_max_tokens,
+                )
+                print(f"    ({time.time()-t0:.1f}s elapsed)")
                 with open(pace_path, "w") as f:
                     json.dump(pace_results, f, indent=2)
                 n_ok = sum(1 for r in pace_results.values() if r.get("chains"))
@@ -359,4 +494,4 @@ if __name__ == "__main__":
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
-    main(args.config_path, args.overwrite, args.debug)
+    asyncio.run(main(args.config_path, args.overwrite, args.debug))

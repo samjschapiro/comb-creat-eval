@@ -256,10 +256,14 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
             dat = score_dat_results(model_dir, glove_emb)
             if dat:
                 scores["dat"] = dat["mean_score"]
-                # Per-temp scores
+                # Per-temp scores (only record if temp had >=1 valid trial)
                 for t, td in dat["by_temperature"].items():
-                    scores[f"dat_t{t}"] = td["mean_score"]
-                temps_str = ", ".join(f"t={t}: {d['mean_score']:.2f}" for t, d in dat["by_temperature"].items())
+                    if td["n_sufficient"] > 0:
+                        scores[f"dat_t{t}"] = td["mean_score"]
+                temps_str = ", ".join(
+                    f"t={t}: {d['mean_score']:.2f}" if d["n_sufficient"] > 0 else f"t={t}: N/A(0 valid)"
+                    for t, d in dat["by_temperature"].items()
+                )
                 print(f"    DAT pooled: {dat['mean_score']:.2f}  ({temps_str})")
                 model_out = output_dir / "results" / model_key
                 model_out.mkdir(parents=True, exist_ok=True)
@@ -273,9 +277,15 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
                 scores["cdat_novelty"] = cdat["mean_novelty"]
                 scores["cdat_appropriateness"] = cdat["mean_appropriateness"]
                 for t, td in cdat["by_temperature"].items():
-                    scores[f"cdat_novelty_t{t}"] = td["mean_novelty"]
-                    scores[f"cdat_approp_t{t}"] = td["mean_appropriateness"]
-                temps_str = ", ".join(f"t={t}: nov={d['mean_novelty']:.2f}/app={d['mean_appropriateness']:.2f}" for t, d in cdat["by_temperature"].items())
+                    if td["n_sufficient"] > 0:
+                        scores[f"cdat_novelty_t{t}"] = td["mean_novelty"]
+                        scores[f"cdat_approp_t{t}"] = td["mean_appropriateness"]
+                temps_str = ", ".join(
+                    f"t={t}: nov={d['mean_novelty']:.2f}/app={d['mean_appropriateness']:.2f}"
+                    if d["n_sufficient"] > 0
+                    else f"t={t}: N/A(0 valid)"
+                    for t, d in cdat["by_temperature"].items()
+                )
                 print(f"    CDAT pooled: nov={cdat['mean_novelty']:.2f}, app={cdat['mean_appropriateness']:.2f}  ({temps_str})")
                 model_out = output_dir / "results" / model_key
                 model_out.mkdir(parents=True, exist_ok=True)
