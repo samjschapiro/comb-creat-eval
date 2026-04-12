@@ -1,0 +1,20 @@
+# Config for scoring DAT/CDAT/PACE responses and correlation analysis
+upstream_dir: "data/dat_eval/run_v1"
+output_dir: "data/dat_eval/run_v1/downstream/scores_v1"
+
+# Which evaluations to score
+evals:
+  - dat
+  - cdat
+  - pace
+
+# Embedding model paths
+glove_path: "resources/glove.840B.300d.txt"
+fasttext_path: "resources/crawl-300d-2M.vec"
+sbert_model: "all-mpnet-base-v2"
+
+# Benchmark data
+benchmark_file: "configs/comb_eval/benchmarks.json"
+
+# Bootstrap settings
+n_bootstrap: 500

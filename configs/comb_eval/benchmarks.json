@@ -1,0 +1,198 @@
+{
+  "anthropic_claude-opus-4-6": {
+    "arena_overall": 1496,
+    "arena_cw": 1467
+  },
+  "anthropic_claude-opus-4-5": {
+    "arena_overall": 1468,
+    "arena_cw": 1462
+  },
+  "openai_gpt-5-4": {
+    "arena_overall": 1466,
+    "arena_cw": 1429
+  },
+  "anthropic_claude-sonnet-4-6": {
+    "arena_overall": 1462,
+    "arena_cw": 1444
+  },
+  "openai_gpt-5-4-mini": {
+    "arena_overall": 1459,
+    "arena_cw": 1417
+  },
+  "anthropic_claude-sonnet-4-5": {
+    "arena_overall": 1451,
+    "arena_cw": 1450
+  },
+  "google_gemini-2-5-pro": {
+    "arena_overall": 1448,
+    "arena_cw": 1448
+  },
+  "openai_gpt-4o": {
+    "arena_overall": 1443,
+    "arena_cw": 1423
+  },
+  "openai_gpt-5": {
+    "arena_overall": 1433,
+    "arena_cw": 1376
+  },
+  "openai_o3": {
+    "arena_overall": 1431,
+    "arena_cw": 1384
+  },
+  "openai_gpt-4-1": {
+    "arena_overall": 1413,
+    "arena_cw": 1402
+  },
+  "google_gemini-2-5-flash": {
+    "arena_overall": 1411,
+    "arena_cw": 1399
+  },
+  "anthropic_claude-haiku-4-5": {
+    "arena_overall": 1408,
+    "arena_cw": 1384
+  },
+  "openai_gpt-5-4-nano": {
+    "arena_overall": 1402,
+    "arena_cw": 1336
+  },
+  "deepseek_deepseek-r1": {
+    "arena_overall": 1398,
+    "arena_cw": 1374
+  },
+  "deepseek_deepseek-chat-v3-0324": {
+    "arena_overall": 1395,
+    "arena_cw": 1390
+  },
+  "openai_o4-mini": {
+    "arena_overall": 1390,
+    "arena_cw": 1338
+  },
+  "anthropic_claude-sonnet-4": {
+    "arena_overall": 1389,
+    "arena_cw": 1384
+  },
+  "openai_gpt-5-mini": {
+    "arena_overall": 1389,
+    "arena_cw": 1326
+  },
+  "openai_gpt-4-1-mini": {
+    "arena_overall": 1382,
+    "arena_cw": 1349
+  },
+  "qwen_qwen3-235b-a22b": {
+    "arena_overall": 1374,
+    "arena_cw": 1324
+  },
+  "google_gemma-3-27b-it": {
+    "arena_overall": 1365,
+    "arena_cw": 1348
+  },
+  "google_gemini-2-0-flash-001": {
+    "arena_overall": 1360,
+    "arena_cw": 1346
+  },
+  "deepseek_deepseek-chat": {
+    "arena_overall": 1358,
+    "arena_cw": 1349
+  },
+  "cohere_command-a": {
+    "arena_overall": 1353,
+    "arena_cw": 1337
+  },
+  "openai_o3-mini": {
+    "arena_overall": 1347,
+    "arena_cw": 1301
+  },
+  "qwen_qwen3-32b": {
+    "arena_overall": 1347,
+    "arena_cw": 1306
+  },
+  "openai_gpt-5-nano": {
+    "arena_overall": 1337,
+    "arena_cw": 1250
+  },
+  "qwen_qwq-32b": {
+    "arena_overall": 1336,
+    "arena_cw": 1296
+  },
+  "meta-llama_llama-4-maverick": {
+    "arena_overall": 1327,
+    "arena_cw": 1307
+  },
+  "anthropic_claude-3-5-haiku": {
+    "arena_overall": 1323,
+    "arena_cw": 1303
+  },
+  "openai_gpt-4-turbo": {
+    "arena_overall": 1323,
+    "arena_cw": 1322
+  },
+  "meta-llama_llama-4-scout": {
+    "arena_overall": 1322,
+    "arena_cw": 1290
+  },
+  "openai_gpt-4-1-nano": {
+    "arena_overall": 1321,
+    "arena_cw": 1306
+  },
+  "meta-llama_llama-3-3-70b-instruct": {
+    "arena_overall": 1318,
+    "arena_cw": 1286
+  },
+  "openai_gpt-4o-mini": {
+    "arena_overall": 1317,
+    "arena_cw": 1295
+  },
+  "mistralai_mistral-large-2407": {
+    "arena_overall": 1313,
+    "arena_cw": 1287
+  },
+  "mistralai_mistral-large-2411": {
+    "arena_overall": 1305,
+    "arena_cw": 1276
+  },
+  "qwen_qwen-2-5-72b-instruct": {
+    "arena_overall": 1302,
+    "arena_cw": 1254
+  },
+  "nvidia_llama-3-1-nemotron-70b-instruct": {
+    "arena_overall": 1298,
+    "arena_cw": 1277
+  },
+  "meta-llama_llama-3-1-70b-instruct": {
+    "arena_overall": 1293,
+    "arena_cw": 1257
+  },
+  "google_gemma-2-27b-it": {
+    "arena_overall": 1288,
+    "arena_cw": 1291
+  },
+  "cohere_command-r-plus-08-2024": {
+    "arena_overall": 1276,
+    "arena_cw": 1263
+  },
+  "google_gemma-2-9b-it": {
+    "arena_overall": 1265,
+    "arena_cw": 1257
+  },
+  "anthropic_claude-3-haiku": {
+    "arena_overall": 1260,
+    "arena_cw": 1214
+  },
+  "microsoft_phi-4": {
+    "arena_overall": 1255,
+    "arena_cw": 1210
+  },
+  "openai_gpt-3-5-turbo": {
+    "arena_overall": 1223,
+    "arena_cw": 1187
+  },
+  "meta-llama_llama-3-1-8b-instruct": {
+    "arena_overall": 1211,
+    "arena_cw": 1178
+  },
+  "mistralai_mistral-nemo": {
+    "arena_overall": 1108,
+    "arena_cw": 1090
+  }
+}

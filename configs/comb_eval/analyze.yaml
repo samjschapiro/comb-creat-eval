@@ -1,0 +1,21 @@
+# Config for scoring and correlation analysis
+upstream_dir: "data/comb_eval/eval_set_v1/downstream/run_v1"
+output_dir: "data/comb_eval/eval_set_v1/downstream/run_v1/downstream/analysis_v1"
+
+scoring:
+  alpha_h: 1.0   # novelty weight for hop count
+  alpha_r: 1.0   # novelty weight for surprise
+  alpha_I: 1.0   # utility weight for inclusion constraints
+  alpha_X: 1.0   # utility weight for exclusion constraints
+
+analysis:
+  benchmark_file: "configs/comb_eval/benchmarks.json"
+  benchmark_columns:
+    - arena_cw
+    - arena_overall
+    - mmlu_pro
+  # Optional: paths to PACE and DAT scores for comparison
+  pace_scores_file: null
+  dat_scores_file: null
+  n_bootstrap: 500
+  seed: 42

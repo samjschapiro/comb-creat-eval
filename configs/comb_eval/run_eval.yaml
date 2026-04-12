@@ -1,0 +1,35 @@
+# Config for running the eval against LLMs via OpenRouter
+upstream_dir: "data/comb_eval/eval_set_v1"
+output_dir: "data/comb_eval/eval_set_v1/downstream/run_v1"
+
+# OpenRouter model IDs (format: provider/model-name)
+# Full list: https://openrouter.ai/models
+models:
+  # OpenAI
+  - openai/gpt-4o
+  - openai/gpt-4o-mini
+  - openai/gpt-4.1
+  - openai/gpt-4.1-mini
+  - openai/gpt-4.1-nano
+  - openai/o3-mini
+  # Anthropic
+  - anthropic/claude-sonnet-4
+  - anthropic/claude-haiku-4-5
+  # Google
+  - google/gemini-2.5-flash-preview
+  - google/gemini-2.5-pro-preview
+  # Meta
+  - meta-llama/llama-3.1-70b-instruct
+  - meta-llama/llama-3.3-70b-instruct
+  - meta-llama/llama-4-maverick
+  # Mistral
+  - mistralai/mistral-large-2411
+  # Qwen
+  - qwen/qwen-2.5-72b-instruct
+  # DeepSeek
+  - deepseek/deepseek-chat-v3-0324
+  - deepseek/deepseek-r1
+
+eval:
+  temperature: 0.0
+  batch_size: 1

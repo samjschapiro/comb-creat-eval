@@ -1,0 +1,15 @@
+# Config for generating the graph and evaluation prompt set
+output_dir: "data/comb_eval/eval_set_v1"
+
+graph:
+  n_nodes: 150
+  avg_degree: 6.0
+  seed: 42
+  # edge_label_weights: null  # uniform over a-z by default
+
+eval:
+  hop_counts: [1, 2, 3, 4]
+  max_level: 5           # difficulty levels 1-5
+  prompts_per_hop: 10    # base paths per hop count
+  p_include: 0.5         # probability of inclusion vs exclusion constraint
+  seed: 123
