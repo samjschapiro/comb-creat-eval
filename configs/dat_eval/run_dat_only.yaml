@@ -1,16 +1,13 @@
-# Config for running DAT, CDAT, and PACE evaluations
-output_dir: "data/dat_eval/run_v1"
+# Config for running DAT only with 120 trials per model
+output_dir: "data/dat_eval/dat_120_v1"
 
 temperature: 0.0
-dat_trials: 120  # number of independent DAT trials per model
+dat_trials: 120
 
-# Which evaluations to run
 evals:
   - dat
-  - cdat
-  - pace
 
-# 49 models spanning Arena scores 1108-1496, all available on OpenRouter
+# 49 models spanning Arena scores 1108-1496
 models:
   # --- Frontier (1430+) ---
   - anthropic/claude-opus-4.6
