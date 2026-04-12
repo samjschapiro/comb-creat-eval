@@ -30,15 +30,42 @@ def call_llm(
     model: str,
     temperature: float = 0.0,
     max_tokens: int = 1024,
+    seed: int | None = None,
+    top_p: float | None = None,
+    top_k: int | None = None,
 ) -> str:
-    """Call an LLM via OpenRouter. Returns raw response text."""
+    """Call an LLM via OpenRouter. Returns raw response text.
+
+    Args:
+        messages: Chat messages.
+        model: OpenRouter model ID.
+        temperature: Sampling temperature.
+        max_tokens: Max output tokens.
+        seed: Optional seed for reproducibility-per-seed and variance-across-seeds.
+            Passing different seeds breaks the model's prior on "first token" behavior
+            even when temperature alone produces near-deterministic output.
+        top_p: Nucleus sampling threshold. Set to 1.0 to disable (full distribution).
+            Provider defaults are often 0.9, which suppresses tail tokens and limits
+            diversity even at high temperature.
+        top_k: Top-k sampling threshold. Set to 0 to disable (where supported).
+            Not all providers/models accept this — passed via extra_body for OpenRouter.
+    """
     client = get_client()
-    response = client.chat.completions.create(
+    kwargs = dict(
         model=model,
         messages=messages,
         temperature=temperature,
         max_tokens=max_tokens,
     )
+    if seed is not None:
+        kwargs["seed"] = seed
+    if top_p is not None:
+        kwargs["top_p"] = top_p
+    if top_k is not None:
+        # top_k is non-standard in OpenAI chat completions; pass via extra_body
+        # for OpenRouter to forward to providers that support it (Anthropic, most open models)
+        kwargs["extra_body"] = {"top_k": top_k}
+    response = client.chat.completions.create(**kwargs)
     return response.choices[0].message.content
 
 

@@ -22,92 +22,128 @@ from src.utils import load_config, init_directory, save_config
 from src.dat_eval.llm import model_id_to_key
 
 
+def _find_temp_files(model_dir: Path, prefix: str) -> dict[str, Path]:
+    """Find all per-temperature response files for a given prefix.
+
+    Returns:
+        Dict mapping temperature label (e.g. "0.9") to file path.
+    """
+    files = {}
+    for f in model_dir.glob(f"{prefix}_responses_t*.json"):
+        # Extract temp from filename: <prefix>_responses_t0-9.json -> "0.9"
+        suffix = f.stem.replace(f"{prefix}_responses_t", "")
+        temp_str = suffix.replace("-", ".")
+        files[temp_str] = f
+    # Backward compat: legacy un-suffixed file
+    legacy = model_dir / f"{prefix}_responses.json"
+    if legacy.exists() and not files:
+        files["legacy"] = legacy
+    return files
+
+
 def score_dat_results(
     model_dir: Path,
-    glove_path: str,
+    embeddings,
 ) -> dict | None:
-    """Score DAT responses for one model."""
-    dat_path = model_dir / "dat_responses.json"
-    if not dat_path.exists():
+    """Score DAT responses for one model across all temperatures.
+
+    Returns:
+        Dict mapping temperature -> per-temp score dict, plus "mean_score" pooled.
+    """
+    from src.dat_eval.dat import score_dat
+
+    temp_files = _find_temp_files(model_dir, "dat")
+    if not temp_files:
         return None
 
-    from src.dat_eval.dat import GloVeEmbeddings, score_dat
+    by_temp = {}
+    all_scores = []
 
-    embeddings = GloVeEmbeddings(glove_path)
+    for temp_str, path in temp_files.items():
+        with open(path) as f:
+            responses = json.load(f)
 
-    with open(dat_path) as f:
-        responses = json.load(f)
+        trial_scores = []
+        for resp in responses:
+            if resp["words"]:
+                result = score_dat(resp["words"], embeddings)
+                trial_scores.append(result)
 
-    trial_scores = []
-    for resp in responses:
-        if resp["words"]:
-            result = score_dat(resp["words"], embeddings)
-            trial_scores.append(result)
+        valid = [t["score"] for t in trial_scores if t["sufficient"]]
+        mean = float(np.mean(valid)) if valid else 0.0
+        by_temp[temp_str] = {
+            "mean_score": mean,
+            "n_trials": len(trial_scores),
+            "n_sufficient": len(valid),
+            "scores": valid,
+        }
+        all_scores.extend(valid)
 
-    if not trial_scores:
-        return {"mean_score": 0.0, "n_trials": 0, "trials": []}
-
-    valid_scores = [t["score"] for t in trial_scores if t["sufficient"]]
-    mean_score = float(np.mean(valid_scores)) if valid_scores else 0.0
-
+    pooled = float(np.mean(all_scores)) if all_scores else 0.0
     return {
-        "mean_score": mean_score,
-        "n_trials": len(trial_scores),
-        "n_sufficient": len(valid_scores),
-        "scores": valid_scores,
-        "trials": trial_scores,
+        "mean_score": pooled,
+        "by_temperature": by_temp,
+        "n_temperatures": len(by_temp),
     }
 
 
 def score_cdat_results(
     model_dir: Path,
-    sbert_model: str = "all-mpnet-base-v2",
+    embeddings,
 ) -> dict | None:
-    """Score CDAT responses for one model."""
-    cdat_path = model_dir / "cdat_responses.json"
-    if not cdat_path.exists():
+    """Score CDAT responses for one model across all temperatures."""
+    from src.dat_eval.cdat import score_cdat
+
+    temp_files = _find_temp_files(model_dir, "cdat")
+    if not temp_files:
         return None
 
-    from src.dat_eval.cdat import SBERTEmbeddings, score_cdat
+    by_temp = {}
+    all_novelty = []
+    all_approp = []
 
-    embeddings = SBERTEmbeddings(sbert_model)
+    for temp_str, path in temp_files.items():
+        with open(path) as f:
+            responses = json.load(f)
 
-    with open(cdat_path) as f:
-        responses = json.load(f)
+        cue_scores = []
+        for cue, resp in responses.items():
+            if resp["words"]:
+                result = score_cdat(resp["words"], cue, embeddings)
+                cue_scores.append(result)
 
-    cue_scores = []
-    for cue, resp in responses.items():
-        if resp["words"]:
-            result = score_cdat(resp["words"], cue, embeddings)
-            result["cue"] = cue
-            cue_scores.append(result)
-
-    if not cue_scores:
-        return {"mean_novelty": 0.0, "mean_appropriateness": 0.0, "n_cues": 0}
-
-    valid = [c for c in cue_scores if c["sufficient"]]
-    mean_novelty = float(np.mean([c["novelty"] for c in valid])) if valid else 0.0
-    mean_approp = float(np.mean([c["appropriateness"] for c in valid])) if valid else 0.0
+        valid = [c for c in cue_scores if c["sufficient"]]
+        nov = [c["novelty"] for c in valid]
+        app = [c["appropriateness"] for c in valid]
+        by_temp[temp_str] = {
+            "mean_novelty": float(np.mean(nov)) if nov else 0.0,
+            "mean_appropriateness": float(np.mean(app)) if app else 0.0,
+            "n_cues": len(cue_scores),
+            "n_sufficient": len(valid),
+            "novelty_scores": nov,
+            "appropriateness_scores": app,
+        }
+        all_novelty.extend(nov)
+        all_approp.extend(app)
 
     return {
-        "mean_novelty": mean_novelty,
-        "mean_appropriateness": mean_approp,
-        "n_cues": len(cue_scores),
-        "n_sufficient": len(valid),
-        "novelty_scores": [c["novelty"] for c in valid],
-        "appropriateness_scores": [c["appropriateness"] for c in valid],
+        "mean_novelty": float(np.mean(all_novelty)) if all_novelty else 0.0,
+        "mean_appropriateness": float(np.mean(all_approp)) if all_approp else 0.0,
+        "by_temperature": by_temp,
+        "n_temperatures": len(by_temp),
     }
 
 
-def score_pace_results(model_dir: Path, fasttext_path: str) -> dict | None:
-    """Score PACE responses for one model using FastText."""
-    pace_path = model_dir / "pace_responses.json"
-    if not pace_path.exists():
+def score_pace_results(model_dir: Path, embeddings) -> dict | None:
+    """Score PACE responses for one model. PACE typically uses a single temp (0.0)."""
+    temp_files = _find_temp_files(model_dir, "pace")
+    if not temp_files:
         return None
 
-    from src.dat_eval.pace import FastTextEmbeddings, score_model
+    # Use the first available temp file (PACE convention is single temp)
+    pace_path = next(iter(temp_files.values()))
 
-    embeddings = FastTextEmbeddings(fasttext_path)
+    from src.dat_eval.pace import score_model
 
     with open(pace_path) as f:
         responses = json.load(f)
@@ -190,8 +226,23 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
     ]
     print(f"Found {len(model_dirs)} model directories")
 
+    # Load embedding models once (lazy, but instantiate now)
+    glove_emb = None
+    sbert_emb = None
+    fasttext_emb = None
+
+    if "dat" in evals_to_score:
+        from src.dat_eval.dat import GloVeEmbeddings
+        glove_emb = GloVeEmbeddings(glove_path)
+    if "cdat" in evals_to_score:
+        from src.dat_eval.cdat import SBERTEmbeddings
+        sbert_emb = SBERTEmbeddings(sbert_model)
+    if "pace" in evals_to_score:
+        from src.dat_eval.pace import FastTextEmbeddings
+        fasttext_emb = FastTextEmbeddings(fasttext_path)
+
     # Score each model
-    model_scores = {}  # model_key -> {dat, cdat, pace}
+    model_scores = {}  # model_key -> {dat, cdat_*, pace, *_by_temp}
 
     for model_dir in sorted(model_dirs):
         model_key = model_dir.name
@@ -202,11 +253,14 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
 
         if "dat" in evals_to_score:
             print("  Scoring DAT...")
-            dat = score_dat_results(model_dir, glove_path)
+            dat = score_dat_results(model_dir, glove_emb)
             if dat:
                 scores["dat"] = dat["mean_score"]
-                print(f"    DAT score: {dat['mean_score']:.2f} ({dat['n_sufficient']} valid trials)")
-                # Save detailed results
+                # Per-temp scores
+                for t, td in dat["by_temperature"].items():
+                    scores[f"dat_t{t}"] = td["mean_score"]
+                temps_str = ", ".join(f"t={t}: {d['mean_score']:.2f}" for t, d in dat["by_temperature"].items())
+                print(f"    DAT pooled: {dat['mean_score']:.2f}  ({temps_str})")
                 model_out = output_dir / "results" / model_key
                 model_out.mkdir(parents=True, exist_ok=True)
                 with open(model_out / "dat_scores.json", "w") as f:
@@ -214,11 +268,15 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
 
         if "cdat" in evals_to_score:
             print("  Scoring CDAT...")
-            cdat = score_cdat_results(model_dir, sbert_model)
+            cdat = score_cdat_results(model_dir, sbert_emb)
             if cdat:
                 scores["cdat_novelty"] = cdat["mean_novelty"]
                 scores["cdat_appropriateness"] = cdat["mean_appropriateness"]
-                print(f"    CDAT novelty: {cdat['mean_novelty']:.2f}, approp: {cdat['mean_appropriateness']:.2f}")
+                for t, td in cdat["by_temperature"].items():
+                    scores[f"cdat_novelty_t{t}"] = td["mean_novelty"]
+                    scores[f"cdat_approp_t{t}"] = td["mean_appropriateness"]
+                temps_str = ", ".join(f"t={t}: nov={d['mean_novelty']:.2f}/app={d['mean_appropriateness']:.2f}" for t, d in cdat["by_temperature"].items())
+                print(f"    CDAT pooled: nov={cdat['mean_novelty']:.2f}, app={cdat['mean_appropriateness']:.2f}  ({temps_str})")
                 model_out = output_dir / "results" / model_key
                 model_out.mkdir(parents=True, exist_ok=True)
                 with open(model_out / "cdat_scores.json", "w") as f:
@@ -226,7 +284,7 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
 
         if "pace" in evals_to_score:
             print("  Scoring PACE...")
-            pace = score_pace_results(model_dir, fasttext_path)
+            pace = score_pace_results(model_dir, fasttext_emb)
             if pace:
                 scores["pace"] = pace["model_score"]
                 print(f"    PACE score: {pace['model_score']:.4f} ({pace['n_seeds']} seeds)")
@@ -268,7 +326,17 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
 
     corr_results = {}
 
-    for metric in ["dat", "cdat_novelty", "pace"]:
+    # Build the list of metrics to correlate. Include pooled and per-temperature variants.
+    # Discover per-temp metrics from the actual scores.
+    base_metrics = ["dat", "cdat_novelty", "cdat_appropriateness", "pace"]
+    per_temp_metrics = set()
+    for scores in model_scores.values():
+        for k in scores:
+            if k.startswith(("dat_t", "cdat_novelty_t", "cdat_approp_t")):
+                per_temp_metrics.add(k)
+    metrics_to_correlate = base_metrics + sorted(per_temp_metrics)
+
+    for metric in metrics_to_correlate:
         # Align model scores with benchmarks
         aligned_models = []
         metric_vals = []
