@@ -447,11 +447,7 @@ def fig2_combined_grid(scores, benchmarks):
             fontsize=10.5, weight="bold", rotation=90,
         )
 
-    fig.suptitle(
-        "Creativity metrics (rows) vs external benchmarks (columns)",
-        fontsize=11, y=1.003,
-    )
-    fig.tight_layout(rect=[0.05, 0, 1, 0.99])
+    fig.tight_layout(rect=[0.05, 0, 1, 1])
 
     out = FIGS_DIR / "fig2_combined_grid.pdf"
     plt.savefig(out)

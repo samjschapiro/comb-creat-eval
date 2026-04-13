@@ -1,0 +1,16 @@
+# Score the C-PACE smoke run. Benchmark correlations will be weak (n=7) but
+# the per-model per-level numbers are the useful thing for validating the
+# pipeline produces sensible variance.
+upstream_dir: "data/comb_eval/c_pace_smoke"
+output_dir: "data/comb_eval/c_pace_smoke/downstream/scores_v1"
+
+fasttext_path: "resources/crawl-300d-2M.vec"
+
+analysis:
+  benchmark_file: "configs/comb_eval/benchmarks.json"
+  benchmark_columns:
+    - arena_cw
+    - arena_overall
+    - eq_bench_cw
+  n_bootstrap: 500
+  seed: 42

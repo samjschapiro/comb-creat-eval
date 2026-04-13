@@ -1,0 +1,16 @@
+# Score C-PACE responses and run correlation analysis.
+upstream_dir: "data/comb_eval/c_pace_v1"
+output_dir: "data/comb_eval/c_pace_v1/downstream/scores_v1"
+
+fasttext_path: "resources/crawl-300d-2M.vec"
+
+analysis:
+  benchmark_file: "configs/comb_eval/benchmarks.json"
+  benchmark_columns:
+    - arena_cw
+    - arena_overall
+    - eq_bench_cw
+    - eq_bench_cw_rubric
+    - hivemind_intra_sim
+  n_bootstrap: 500
+  seed: 42

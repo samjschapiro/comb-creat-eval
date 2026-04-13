@@ -1,0 +1,36 @@
+# C-PACE smoke config: 7 cheap models, subset of seeds, to validate the
+# pipeline and check that the diversity + constraint signals vary sensibly
+# across small/mid models before committing to the full 53-model run.
+output_dir: "data/comb_eval/c_pace_smoke"
+
+budget_usd: 3.0
+concurrency: 20
+
+reasoning:
+  effort: "low"
+  exclude: true
+reasoning_max_tokens_multiplier: 4
+
+temperature: 0.0
+
+# 10 seeds keeps the smoke run fast + cheap but gives 10 × 3 × 4 = 120 chains
+# per model — enough chains per level (30) for a stable mean.
+n_seeds: 10
+levels: [1, 2, 3, 4]
+n_first_assocs: 3
+
+stage1_max_tokens: 400
+stage2_max_tokens: 1200
+
+constraint_seed: 42
+
+# Skipping qwen3-32b (hung in the graph-eval smoke run on a slow OpenRouter
+# provider). Everyone else had clean responses previously.
+models:
+  - meta-llama/llama-3.2-1b-instruct
+  - meta-llama/llama-3.2-3b-instruct
+  - meta-llama/llama-3.1-8b-instruct
+  - google/gemma-2-9b-it
+  - mistralai/mistral-nemo
+  - qwen/qwen3-8b
+  - google/gemma-2-27b-it
