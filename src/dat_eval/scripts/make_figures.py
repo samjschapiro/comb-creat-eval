@@ -348,12 +348,13 @@ def fig2_combined_grid(scores, benchmarks):
     column_specs = [
         ("arena_cw",            "Arena CW Elo"),
         ("eq_bench_cw",         "EQ-Bench CW Elo"),
+        ("mazur_cw_v2",         "Mazur CW v2 (0-10)"),
         ("hivemind_intra_sim",  "Hivemind intra-similarity"),
     ]
     n_cols = len(column_specs)
     n_rows = len(_METRIC_PANELS)
 
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(9.5, 9.0),
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(12.0, 9.0),
                               sharex="row", sharey="col")
 
     for row_idx, (metric_key, metric_label, color) in enumerate(_METRIC_PANELS):
