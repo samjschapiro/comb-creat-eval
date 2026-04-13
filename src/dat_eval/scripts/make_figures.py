@@ -629,6 +629,91 @@ def fig4_cdat_by_temperature(corr):
     print(f"Saved {out}")
 
 
+def fig_inter_metric_triangle(corr):
+    """Triangular heatmap of inter-metric Spearman correlations.
+
+    Shows the lower triangle of the 4x4 metric-by-metric correlation matrix
+    (DAT, CDAT Novelty, CDAT Appropriateness, PACE). Upper triangle is
+    blanked out because it would be redundant. Cells annotated with the
+    Spearman rho and significance stars.
+    """
+    metrics = ["dat", "cdat_novelty", "cdat_appropriateness", "pace"]
+    labels = ["DAT", "CDAT Nov.", "CDAT App.", "PACE"]
+    n = len(metrics)
+
+    # Pull pairwise values from corr["inter_metric"]
+    inter = corr.get("inter_metric", {})
+    mat = np.full((n, n), np.nan)
+    pmat = np.full((n, n), np.nan)
+    for i, mi in enumerate(metrics):
+        for j, mj in enumerate(metrics):
+            if i == j:
+                mat[i, j] = 1.0
+                pmat[i, j] = 0.0
+                continue
+            if i < j:
+                continue  # upper triangle — blank
+            key_a = f"{mj}_vs_{mi}"
+            key_b = f"{mi}_vs_{mj}"
+            entry = inter.get(key_a) or inter.get(key_b)
+            if entry is None:
+                continue
+            mat[i, j] = entry["spearman_rho"]
+            pmat[i, j] = entry["p_value"]
+
+    # Mask upper triangle for plotting
+    display = np.where(np.isnan(mat), 0.0, mat)
+    mask = np.isnan(mat)
+
+    fig, ax = plt.subplots(figsize=(3.3, 3.2))
+    im = ax.imshow(display, vmin=-1, vmax=1, cmap=CMAP_SEQ, aspect="equal")
+
+    # White-out upper triangle (and diagonal if desired; keeping diagonal
+    # shaded to indicate self-identity)
+    for i in range(n):
+        for j in range(n):
+            if mask[i, j]:
+                ax.add_patch(plt.Rectangle((j - 0.5, i - 0.5), 1, 1,
+                                            color="white", zorder=2))
+
+    ax.set_xticks(range(n))
+    ax.set_yticks(range(n))
+    ax.set_xticklabels(labels, rotation=35, ha="right", fontsize=8)
+    ax.set_yticklabels(labels, fontsize=8)
+
+    # Annotate lower triangle with rho and stars
+    for i in range(n):
+        for j in range(n):
+            if i < j or np.isnan(mat[i, j]):
+                continue
+            if i == j:
+                txt = "—"
+                color = "black"
+            else:
+                stars = sig_stars(pmat[i, j])
+                txt = f"{mat[i, j]:+.2f}{stars}"
+                # Batlow is dark at low values (purple-blue), bright at high
+                # (yellow). Use white for dark cells (rho < ~-0.2), black
+                # otherwise.
+                color = "white" if mat[i, j] < -0.2 else "black"
+            ax.text(j, i, txt, ha="center", va="center",
+                    fontsize=7.5, color=color, zorder=3)
+
+    cbar = plt.colorbar(im, ax=ax, shrink=0.75, pad=0.04)
+    cbar.set_label("Spearman $\\rho$", fontsize=8)
+    cbar.ax.tick_params(labelsize=7)
+
+    ax.set_title("Inter-metric correlations", fontsize=9.5, pad=4)
+    ax.tick_params(axis="both", which="major", length=0)
+
+    fig.tight_layout()
+    out = FIGS_DIR / "fig_inter_metric.pdf"
+    plt.savefig(out)
+    plt.savefig(out.with_suffix(".png"))
+    plt.close()
+    print(f"Saved {out}")
+
+
 def main():
     FIGS_DIR.mkdir(parents=True, exist_ok=True)
     corr, scores, benchmarks = load_data()
@@ -636,6 +721,7 @@ def main():
     fig1_correlation_matrix(corr)
     fig2_combined_grid(scores, benchmarks)
     fig4_cdat_by_temperature(corr)
+    fig_inter_metric_triangle(corr)
 
     print(f"\nAll figures saved to {FIGS_DIR}")
 

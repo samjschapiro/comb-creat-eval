@@ -123,6 +123,8 @@ OPENROUTER_TO_ARENA = {
     "meta-llama/llama-3.3-70b-instruct": "llama-3.3-70b-instruct",
     "meta-llama/llama-3.1-70b-instruct": "llama-3.1-70b-instruct",
     "meta-llama/llama-3.1-8b-instruct": "llama-3.1-8b-instruct",
+    "meta-llama/llama-3.2-1b-instruct": "llama-3.2-1b-instruct",
+    "meta-llama/llama-3.2-3b-instruct": "llama-3.2-3b-instruct",
     # DeepSeek
     "deepseek/deepseek-r1": "deepseek-r1",
     "deepseek/deepseek-chat-v3-0324": "deepseek-v3-0324",
@@ -136,6 +138,8 @@ OPENROUTER_TO_ARENA = {
     "mistralai/mistral-large-2411": "mistral-large-2411",
     "mistralai/mistral-large-2407": "mistral-large-2407",
     "mistralai/mistral-nemo": "mistral-7b-instruct",
+    "mistralai/mistral-7b-instruct-v0.1": "mistral-7b-instruct-v0.2",
+    "mistralai/mistral-small-24b-instruct-2501": "mistral-small-24b-instruct-2501",
     # Cohere
     "cohere/command-a": "command-a-03-2025",
     "cohere/command-r-plus-08-2024": "command-r-plus-08-2024",

@@ -304,5 +304,37 @@
     "eq_bench_cw_rubric": 9.51,
     "hivemind_intra_sim": 0.796,
     "hivemind_pct_sim_above_0_8": 61.0
+  },
+  "meta-llama_llama-3-2-1b-instruct": {
+    "arena_overall": 1110,
+    "arena_cw": 1082,
+    "hivemind_intra_sim": 0.739,
+    "hivemind_pct_sim_above_0_8": 39.0
+  },
+  "meta-llama_llama-3-2-3b-instruct": {
+    "arena_overall": 1166,
+    "arena_cw": 1144,
+    "hivemind_intra_sim": 0.795,
+    "hivemind_pct_sim_above_0_8": 64.0
+  },
+  "mistralai_mistral-7b-instruct-v0-1": {
+    "arena_overall": 1148,
+    "arena_cw": 1104,
+    "hivemind_intra_sim": 0.814,
+    "hivemind_pct_sim_above_0_8": 66.0
+  },
+  "mistralai_mistral-small-24b-instruct-2501": {
+    "arena_overall": 1273,
+    "arena_cw": 1227,
+    "hivemind_intra_sim": 0.82,
+    "hivemind_pct_sim_above_0_8": 70.0
+  },
+  "qwen_qwen3-14b": {
+    "hivemind_intra_sim": 0.87,
+    "hivemind_pct_sim_above_0_8": 83.0
+  },
+  "qwen_qwen3-8b": {
+    "hivemind_intra_sim": 0.881,
+    "hivemind_pct_sim_above_0_8": 82.0
   }
 }
