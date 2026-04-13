@@ -267,6 +267,50 @@ def check_constraints(chain: list[str], constraints: Constraints) -> dict:
 # --- aggregate scoring ---
 
 
+def compute_utility_hard(
+    constraints: Constraints,
+    satisfied: bool,
+    alpha_I: float = 1.0,
+    alpha_X: float = 1.0,
+) -> float:
+    """Hard utility (Schapiro et al., arXiv:2509.21043).
+
+    U_hard(x) = [1 + alpha_I * |I|] * [1 + alpha_X * |X|] * 1[all constraints satisfied]
+
+    Zero on ANY violation (binary gate). Otherwise scales multiplicatively
+    with constraint count, rewarding harder problems. With alpha = 1:
+        L1 (0I, 0X) -> 1
+        L2 (1I or 1X) -> 2
+        L3 (1I + 1X) -> 4
+        L4 (2I + 2X) -> 9
+    """
+    if not satisfied:
+        return 0.0
+    n_I = len(constraints.include_letters)
+    n_X = len(constraints.exclude_letters)
+    return (1.0 + alpha_I * n_I) * (1.0 + alpha_X * n_X)
+
+
+def compute_utility_soft(
+    constraints: Constraints,
+    include_results: dict,
+    exclude_results: dict,
+) -> float:
+    """Soft utility — partial credit for partially-satisfied constraint sets.
+
+    U_soft(x) = n_satisfied / n_total, in [0, 1].
+
+    For L1 (no constraints) there is nothing to satisfy; by convention
+    U_soft = 1.0 so L1 composite stays comparable to novelty.
+    """
+    n_total = len(constraints.include_letters) + len(constraints.exclude_letters)
+    if n_total == 0:
+        return 1.0
+    n_sat = sum(1 for ok in include_results.values() if ok) + \
+            sum(1 for ok in exclude_results.values() if ok)
+    return n_sat / n_total
+
+
 @dataclass
 class CPaceResult:
     """Per-(seed, first_assoc, level) scoring result."""
@@ -276,11 +320,15 @@ class CPaceResult:
     level: int
     constraints: dict
     chain: list[str]
-    chain_score: float  # PACE internal-chain diversity
+    chain_score: float  # PACE internal-chain diversity (Novelty, N)
     n_oov: int
     satisfied: bool
     include_results: dict
     exclude_results: dict
+    utility_hard: float                  # Schapiro U, binary-gated
+    utility_soft: float                  # fraction satisfied, in [0, 1]
+    composite_creativity_hard: float     # U_hard * N
+    composite_creativity_soft: float     # U_soft * N
 
 
 def score_one(
@@ -289,61 +337,79 @@ def score_one(
     embeddings: FastTextEmbeddings,
     seed: str,
     second_word: str,
+    alpha_I: float = 1.0,
+    alpha_X: float = 1.0,
 ) -> CPaceResult:
     pace_out = score_chain(chain, embeddings)
     check = check_constraints(chain, constraints)
+    satisfied = bool(check["satisfied"])
+    novelty = float(pace_out["chain_score"])
+    utility_hard = compute_utility_hard(constraints, satisfied, alpha_I, alpha_X)
+    utility_soft = compute_utility_soft(
+        constraints, check["include_results"], check["exclude_results"],
+    )
     return CPaceResult(
         seed=seed,
         second_word=second_word,
         level=constraints.level,
         constraints=constraints.to_dict(),
         chain=pace_out["words"],
-        chain_score=float(pace_out["chain_score"]),
+        chain_score=novelty,
         n_oov=int(pace_out.get("n_oov", 0)),
-        satisfied=bool(check["satisfied"]),
+        satisfied=satisfied,
         include_results=check["include_results"],
         exclude_results=check["exclude_results"],
+        utility_hard=utility_hard,
+        utility_soft=utility_soft,
+        composite_creativity_hard=utility_hard * novelty,
+        composite_creativity_soft=utility_soft * novelty,
     )
 
 
 def aggregate_by_level(results: list[CPaceResult]) -> dict:
     """Aggregate C-PACE results.
 
-    Returns, per level and overall:
-        - n_chains, n_valid
-        - constraint_satisfaction_rate
-        - mean_chain_score_valid: mean PACE score across chains that satisfied
-          their constraints. NaN when n_valid == 0. This is the creativity
-          channel that should correlate with creative writing.
-        - mean_chain_score_all: mean PACE score across all chains (regardless
-          of satisfaction). Reported as a control.
+    Three scoring channels reported per level and overall:
+
+    1. `mean_composite_creativity` = mean(U * N) across **all** chains
+       (including zero-utility failures). This is the Schapiro et al. headline
+       metric. Couples capability and creativity by construction.
+
+    2. `mean_chain_score_valid` = mean(N) across chains that satisfied
+       constraints. NaN when n_valid == 0. This is the decoupled creativity
+       channel (PACE-style; capability failures drop out, not zero out).
+
+    3. `constraint_satisfaction_rate` = fraction of chains with satisfied
+       constraints. Pure capability channel.
+
+    Plus `mean_chain_score_all` as a control (mean N over all chains).
     """
     by_level: dict[int, list[CPaceResult]] = {}
     for r in results:
         by_level.setdefault(r.level, []).append(r)
 
-    out: dict = {"by_level": {}}
-    for level, rs in sorted(by_level.items()):
+    def _bucket(rs: list[CPaceResult]) -> dict:
         valid_scores = [r.chain_score for r in rs if r.satisfied and r.chain_score > 0]
         all_scores = [r.chain_score for r in rs if r.chain_score > 0]
         n_valid = sum(1 for r in rs if r.satisfied)
-        out["by_level"][level] = {
+        composites_hard = [r.composite_creativity_hard for r in rs]
+        composites_soft = [r.composite_creativity_soft for r in rs]
+        utilities_hard = [r.utility_hard for r in rs]
+        utilities_soft = [r.utility_soft for r in rs]
+        return {
             "n_chains": len(rs),
             "n_valid": n_valid,
             "constraint_satisfaction_rate": n_valid / len(rs) if rs else float("nan"),
             "mean_chain_score_valid": float(np.mean(valid_scores)) if valid_scores else float("nan"),
             "mean_chain_score_all": float(np.mean(all_scores)) if all_scores else float("nan"),
+            "mean_utility_hard": float(np.mean(utilities_hard)) if utilities_hard else float("nan"),
+            "mean_utility_soft": float(np.mean(utilities_soft)) if utilities_soft else float("nan"),
+            "mean_composite_creativity_hard": float(np.mean(composites_hard)) if composites_hard else float("nan"),
+            "mean_composite_creativity_soft": float(np.mean(composites_soft)) if composites_soft else float("nan"),
         }
 
-    # Overall (across all levels, valid chains only — the headline number).
-    overall_valid = [r.chain_score for r in results if r.satisfied and r.chain_score > 0]
-    overall_all = [r.chain_score for r in results if r.chain_score > 0]
-    overall_n_valid = sum(1 for r in results if r.satisfied)
-    out["overall"] = {
-        "n_chains": len(results),
-        "n_valid": overall_n_valid,
-        "constraint_satisfaction_rate": overall_n_valid / len(results) if results else float("nan"),
-        "mean_chain_score_valid": float(np.mean(overall_valid)) if overall_valid else float("nan"),
-        "mean_chain_score_all": float(np.mean(overall_all)) if overall_all else float("nan"),
-    }
+    out: dict = {"by_level": {}}
+    for level, rs in sorted(by_level.items()):
+        out["by_level"][level] = _bucket(rs)
+    out["overall"] = _bucket(results)
     return out

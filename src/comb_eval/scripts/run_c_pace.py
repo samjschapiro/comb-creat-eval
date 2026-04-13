@@ -260,9 +260,20 @@ async def run_model(
     return summary
 
 
-async def main(config_path: str, overwrite: bool = False, debug: bool = False):
+async def main(config_path: str, overwrite: bool = False, debug: bool = False,
+               resume: bool = False):
     config = load_config(config_path)
-    output_dir = init_directory(config["output_dir"], overwrite=overwrite)
+    if resume:
+        output_dir = Path(config["output_dir"])
+        if not output_dir.exists():
+            raise FileNotFoundError(
+                f"--resume requires an existing output_dir: {output_dir}"
+            )
+        output_dir.mkdir(parents=True, exist_ok=True)
+        print(f"RESUMING run in existing {output_dir} (models with "
+              f"c_pace_responses.json will be skipped)")
+    else:
+        output_dir = init_directory(config["output_dir"], overwrite=overwrite)
     save_config(config, output_dir)
 
     models = config["models"]
@@ -360,5 +371,8 @@ if __name__ == "__main__":
     parser.add_argument("config_path", type=str)
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--resume", action="store_true",
+                        help="Resume into an existing output_dir; models with "
+                             "c_pace_responses.json are skipped.")
     args = parser.parse_args()
-    asyncio.run(main(args.config_path, args.overwrite, args.debug))
+    asyncio.run(main(args.config_path, args.overwrite, args.debug, args.resume))

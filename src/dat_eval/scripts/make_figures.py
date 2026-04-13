@@ -663,7 +663,9 @@ def fig_inter_metric_triangle(corr):
     mask = np.isnan(mat)
 
     fig, ax = plt.subplots(figsize=(3.3, 3.2))
-    im = ax.imshow(display, vmin=-1, vmax=1, cmap=CMAP_SEQ, aspect="equal")
+    # Diverging Green-Red ("RdYlGn"): red at -1, yellow at 0, green at +1.
+    cmap_gr = plt.get_cmap("RdYlGn")
+    im = ax.imshow(display, vmin=-1, vmax=1, cmap=cmap_gr, aspect="equal")
 
     # White-out upper triangle (and diagonal if desired; keeping diagonal
     # shaded to indicate self-identity)
@@ -689,10 +691,10 @@ def fig_inter_metric_triangle(corr):
             else:
                 stars = sig_stars(pmat[i, j])
                 txt = f"{mat[i, j]:+.2f}{stars}"
-                # Batlow is dark at low values (purple-blue), bright at high
-                # (yellow). Use white for dark cells (rho < ~-0.2), black
-                # otherwise.
-                color = "white" if mat[i, j] < -0.2 else "black"
+                # RdYlGn: deep red at -1 and deep green at +1 are dark enough
+                # that white text reads better; near zero the yellow band wants
+                # black text.
+                color = "white" if abs(mat[i, j]) > 0.6 else "black"
             ax.text(j, i, txt, ha="center", va="center",
                     fontsize=7.5, color=color, zorder=3)
 

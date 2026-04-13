@@ -8,13 +8,14 @@ The eval asks each model to produce k distinct valid paths per prompt.
 Intra-response diversity over the valid subset is the creativity signal.
 """
 
+import asyncio
 import json
 import os
 import re
 from dataclasses import dataclass, field
 
 from dotenv import load_dotenv
-from openai import OpenAI, AsyncOpenAI
+from openai import OpenAI, AsyncOpenAI, RateLimitError, APIStatusError
 
 from src.comb_eval.prompts import EvalPrompt
 
@@ -69,6 +70,18 @@ def call_llm(
     return response.choices[0].message.content
 
 
+def _extract_retry_after(err: Exception) -> float | None:
+    """Parse OpenRouter's `retry_after_seconds` hint from a RateLimitError if present."""
+    msg = str(err)
+    m = re.search(r"retry_after_seconds['\"]?\s*:\s*(\d+(?:\.\d+)?)", msg)
+    if m:
+        try:
+            return float(m.group(1))
+        except ValueError:
+            return None
+    return None
+
+
 async def call_llm_async(
     async_client: AsyncOpenAI,
     messages: list[dict],
@@ -78,15 +91,19 @@ async def call_llm_async(
     top_p: float | None = None,
     top_k: int | None = None,
     reasoning: dict | None = None,
+    max_retries: int = 4,
+    base_backoff: float = 2.0,
 ) -> str:
     """Async LLM call via OpenRouter. Caller provides the AsyncOpenAI client
     so many concurrent calls share one connection pool.
 
+    Retries on transient upstream errors (RateLimitError / 429, 5xx APIStatusError)
+    with exponential backoff. Honors OpenRouter's `retry_after_seconds` hint on 429s.
+
     Args:
         reasoning: Optional dict forwarded to OpenRouter's unified reasoning API.
-            Keys: "effort" ("low"/"medium"/"high"), "max_tokens", "exclude",
-            "enabled". We want reasoning models to do minimal thinking on this
-            task — the eval is about creative variation, not multi-step deduction.
+        max_retries: Total attempts (including the first). Default 4.
+        base_backoff: Seconds for the first backoff; doubles each subsequent retry.
     """
     kwargs = dict(
         model=model,
@@ -105,24 +122,49 @@ async def call_llm_async(
     if extra_body:
         kwargs["extra_body"] = extra_body
 
-    try:
-        response = await async_client.chat.completions.create(**kwargs)
-    except Exception as e:
-        # Some providers reject the reasoning param. Retry once without it.
-        msg = str(e).lower()
-        if reasoning is not None and (
-            "reasoning" in msg or "enable_thinking" in msg or "thinking" in msg
-        ):
-            if "reasoning" in extra_body:
-                del extra_body["reasoning"]
-            if extra_body:
-                kwargs["extra_body"] = extra_body
-            else:
-                kwargs.pop("extra_body", None)
-            response = await async_client.chat.completions.create(**kwargs)
-        else:
+    async def _attempt():
+        return await async_client.chat.completions.create(**kwargs)
+
+    last_err: Exception | None = None
+    for attempt in range(max_retries):
+        try:
+            response = await _attempt()
+            return response.choices[0].message.content
+        except RateLimitError as e:
+            last_err = e
+            if attempt == max_retries - 1:
+                break
+            hint = _extract_retry_after(e)
+            wait = hint if hint is not None else base_backoff * (2 ** attempt)
+            await asyncio.sleep(wait)
+        except APIStatusError as e:
+            # Retry 5xx; non-retriable errors re-raise.
+            status = getattr(e, "status_code", None)
+            if status is None or status < 500 or status >= 600:
+                last_err = e
+                break
+            last_err = e
+            if attempt == max_retries - 1:
+                break
+            await asyncio.sleep(base_backoff * (2 ** attempt))
+        except Exception as e:
+            # Some providers reject the reasoning param. Retry once without it.
+            msg = str(e).lower()
+            if reasoning is not None and (
+                "reasoning" in msg or "enable_thinking" in msg or "thinking" in msg
+            ):
+                if "reasoning" in extra_body:
+                    del extra_body["reasoning"]
+                if extra_body:
+                    kwargs["extra_body"] = extra_body
+                else:
+                    kwargs.pop("extra_body", None)
+                response = await _attempt()
+                return response.choices[0].message.content
             raise
-    return response.choices[0].message.content
+
+    assert last_err is not None
+    raise last_err
 
 
 def model_id_to_key(model_id: str) -> str:

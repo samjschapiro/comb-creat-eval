@@ -36,9 +36,21 @@ from src.comb_eval.analysis import (
 
 # Metrics we emit per model for downstream correlation. Each gets its own
 # full_correlation_analysis pass against every benchmark column.
-PER_LEVEL_METRICS = ("mean_chain_score_valid", "constraint_satisfaction_rate")
-OVERALL_METRICS = ("mean_chain_score_valid", "mean_chain_score_all",
-                   "constraint_satisfaction_rate")
+PER_LEVEL_METRICS = (
+    "mean_composite_creativity_hard",  # Schapiro U_hard * N
+    "mean_composite_creativity_soft",  # U_soft (partial credit) * N
+    "mean_chain_score_valid",          # decoupled creativity (PACE-style)
+    "constraint_satisfaction_rate",    # capability channel
+)
+OVERALL_METRICS = (
+    "mean_composite_creativity_hard",
+    "mean_composite_creativity_soft",
+    "mean_chain_score_valid",
+    "mean_chain_score_all",
+    "constraint_satisfaction_rate",
+    "mean_utility_hard",
+    "mean_utility_soft",
+)
 
 
 def score_model_responses(data: dict, embeddings: FastTextEmbeddings) -> tuple[list[CPaceResult], dict]:
@@ -101,18 +113,20 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
 
         overall = agg["overall"]
         print(
-            f"  overall: n={overall['n_chains']} "
-            f"valid={overall['n_valid']} "
-            f"sat_rate={overall['constraint_satisfaction_rate']:.2%} "
-            f"diversity_valid={overall['mean_chain_score_valid']:.4f} "
-            f"diversity_all={overall['mean_chain_score_all']:.4f}"
+            f"  overall: n={overall['n_chains']} valid={overall['n_valid']} "
+            f"sat={overall['constraint_satisfaction_rate']:.2%} "
+            f"div_valid={overall['mean_chain_score_valid']:.4f} "
+            f"comp_hard={overall['mean_composite_creativity_hard']:.4f} "
+            f"comp_soft={overall['mean_composite_creativity_soft']:.4f}"
         )
         for lvl in sorted(agg["by_level"]):
             s = agg["by_level"][lvl]
             print(
                 f"  L{lvl}: n={s['n_chains']} valid={s['n_valid']} "
                 f"sat={s['constraint_satisfaction_rate']:.2%} "
-                f"div_valid={s['mean_chain_score_valid']:.4f}"
+                f"div_valid={s['mean_chain_score_valid']:.4f} "
+                f"comp_hard={s['mean_composite_creativity_hard']:.4f} "
+                f"comp_soft={s['mean_composite_creativity_soft']:.4f}"
             )
 
         per_model[model_key] = agg
