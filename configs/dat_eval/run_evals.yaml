@@ -4,13 +4,21 @@
 output_dir: "data/dat_eval/run_v1"
 
 # Budget cap in USD. Run aborts before exceeding this.
-# Remaining OpenRouter credit is ~$34 (started at $50, spent ~$16).
-# Setting a slightly lower cap to leave some margin for estimation error.
-budget_usd: 30.0
+# Current OpenRouter balance: $46.66. Estimated remaining work: $44.71.
+# Cap at $45 leaves ~$1.66 margin for estimation error on the expensive tier.
+budget_usd: 45.0
 
 # Max concurrent in-flight API calls. OpenRouter's rate ceiling scales with
 # credit balance (~$34 ≈ 30 req/s). 20 leaves headroom for retries.
 concurrency: 20
+
+# Reasoning control for reasoning-enabled models (QwQ, o-series, DeepSeek R1,
+# Claude extended thinking). Forwarded to OpenRouter's unified reasoning API.
+# Low effort + hard cap on thinking tokens keeps reasoning models from spending
+# minutes on each simple word-generation task.
+reasoning:
+  effort: "low"
+  exclude: true
 
 # Per-eval temperature lists
 # DAT/CDAT: temps 1.0, 1.5, 2.0 to get meaningful variance — lower temps produce
@@ -29,13 +37,16 @@ cdat_top_p: 1.0
 cdat_top_k: 0
 # PACE: leave at provider defaults (paper doesn't specify; only sets temp=0)
 
-# Max output tokens per call — prevents runaway generation at high temperatures
-# (weak models can hallucinate tokens indefinitely). Sized generously enough for
-# the expected JSON structure.
-dat_max_tokens: 256           # 10 words in JSON + some margin
-cdat_max_tokens: 256          # 10 words in JSON + some margin
+# Max output tokens per call — these are BASE values for non-reasoning models.
+# Reasoning models automatically get `base * reasoning_max_tokens_multiplier`
+# (default 4x) since reasoning tokens count toward the cap.
+# Keeping base tight prevents runaway token generation at high temperatures
+# on non-reasoning models.
+dat_max_tokens: 256           # 10 words in JSON
+cdat_max_tokens: 256          # 10 words in JSON
 pace_stage1_max_tokens: 400   # 3 words with reasons
 pace_stage2_max_tokens: 1200  # 20 words with reasons (can get verbose)
+reasoning_max_tokens_multiplier: 4  # reasoning models get 4× the base
 
 dat_trials: 40
 
@@ -44,66 +55,84 @@ evals:
   - cdat
   - pace
 
-# Models ordered cheap-to-expensive (per estimate_model_cost).
-# Cheapest models first so if we hit the budget cap, we lose the least data.
+# Models ordered: non-reasoning cheap-to-expensive first, then reasoning models last.
+# Reasoning models (qwq, o3*, o4-mini, deepseek-r1) are much slower per-call even with
+# low reasoning effort. Running them last means we still get data from everyone else
+# if we hit the budget cap or time out.
 models:
-  # Under $0.05
-  - meta-llama/llama-3.1-8b-instruct        # $0.02
-  - google/gemma-2-9b-it                     # $0.02
-  - mistralai/mistral-nemo                   # $0.02
-  - microsoft/phi-4                          # $0.04
-  - google/gemma-3-27b-it                    # $0.05
-  - google/gemma-2-27b-it                    # $0.05
-  - qwen/qwen3-32b                           # $0.05
-  - qwen/qwq-32b                             # $0.05
+  # --- NON-REASONING: Under $0.05 ---
+  - meta-llama/llama-3.1-8b-instruct
+  - google/gemma-2-9b-it
+  - mistralai/mistral-nemo
+  - microsoft/phi-4
+  - google/gemma-3-27b-it
+  - google/gemma-2-27b-it
+  - qwen/qwen3-32b
 
-  # $0.05 - $0.20
-  - meta-llama/llama-4-maverick              # $0.13 (partially done)
-  - meta-llama/llama-4-scout                 # $0.10
-  - meta-llama/llama-3.3-70b-instruct        # $0.10
-  - meta-llama/llama-3.1-70b-instruct        # $0.10
-  - qwen/qwen-2.5-72b-instruct               # $0.10
-  - nvidia/llama-3.1-nemotron-70b-instruct   # $0.10
-  - google/gemini-2.0-flash-001              # $0.10
-  - openai/gpt-4.1-nano                      # $0.10
-  - qwen/qwen3-235b-a22b                     # $0.15
-  - openai/gpt-4o-mini                       # $0.14
-  - google/gemini-2.5-flash                  # $0.14
+  # --- NON-REASONING: $0.05 - $0.20 ---
+  - meta-llama/llama-4-maverick
+  - meta-llama/llama-4-scout
+  - meta-llama/llama-3.3-70b-instruct
+  - meta-llama/llama-3.1-70b-instruct
+  - qwen/qwen-2.5-72b-instruct
+  - nvidia/llama-3.1-nemotron-70b-instruct
+  - google/gemini-2.0-flash-001
+  - openai/gpt-4.1-nano
+  - qwen/qwen3-235b-a22b
+  - openai/gpt-4o-mini
+  - google/gemini-2.5-flash
 
-  # $0.20 - $0.50
-  - anthropic/claude-3-haiku                 # $0.29
-  - openai/gpt-5-nano                        # $0.29
-  - openai/gpt-5.4-nano                      # $0.29
-  - deepseek/deepseek-chat-v3-0324           # $0.26
-  - deepseek/deepseek-chat                   # $0.26
-  - openai/gpt-3.5-turbo                     # $0.37
-  - openai/gpt-4.1-mini                      # $0.38
+  # --- NON-REASONING: $0.20 - $0.50 ---
+  - anthropic/claude-3-haiku
+  - openai/gpt-5-nano
+  - openai/gpt-5.4-nano
+  - deepseek/deepseek-chat-v3-0324
+  - deepseek/deepseek-chat
+  - openai/gpt-3.5-turbo
+  - openai/gpt-4.1-mini
 
-  # $0.50 - $1.50
-  - deepseek/deepseek-r1                     # $0.52
-  - openai/gpt-5.4-mini                      # $0.72  (DAT/CDAT only, PACE done)
-  - anthropic/claude-haiku-4.5               # $0.93
-  - anthropic/claude-3.5-haiku               # $0.93
-  - openai/o3-mini                           # $1.05
-  - openai/o4-mini                           # $1.05
-  - openai/gpt-5-mini                        # $1.43
-  - mistralai/mistral-large-2407             # $1.48
-  - mistralai/mistral-large-2411             # $1.48
+  # --- NON-REASONING: $0.50 - $1.50 ---
+  - openai/gpt-5.4-mini                      # PACE done
+  - anthropic/claude-haiku-4.5
+  - anthropic/claude-3.5-haiku
+  - openai/gpt-5-mini
+  - mistralai/mistral-large-2407
+  - mistralai/mistral-large-2411
 
-  # $1.50 - $5.00
-  - anthropic/claude-sonnet-4.6              # $1.76  (DAT/CDAT only, PACE done)
-  - anthropic/claude-sonnet-4.5              # $1.76  (DAT/CDAT only, PACE done)
-  - openai/gpt-4.1                           # $1.91
-  - google/gemini-2.5-pro                    # $2.26
-  - openai/gpt-4o                            # $2.39
-  - cohere/command-r-plus-08-2024            # $2.39
-  - cohere/command-a                         # $2.39
-  - anthropic/claude-sonnet-4                # $3.50
-  - openai/gpt-5                             # $3.71
-  - openai/gpt-5.4                           # $3.72  (DAT/CDAT only, PACE done)
+  # --- NON-REASONING: $1.50 - $5.00 ---
+  - anthropic/claude-sonnet-4.6              # PACE done
+  - anthropic/claude-sonnet-4.5              # PACE done
+  - openai/gpt-4.1
+  - google/gemini-2.5-pro
+  - openai/gpt-4o
+  - cohere/command-r-plus-08-2024
+  - cohere/command-a
+  - anthropic/claude-sonnet-4
+  - openai/gpt-5
+  - openai/gpt-5.4                           # PACE done
 
-  # $5+
-  - openai/gpt-4-turbo                       # $7.42
-  - anthropic/claude-opus-4.5                # $8.82  (DAT/CDAT only, PACE done)
-  - anthropic/claude-opus-4.6                # $8.82  (DAT/CDAT only, PACE done)
-  - openai/o3                                # $9.55
+  # --- NON-REASONING: $5+ ---
+  - openai/gpt-4-turbo
+  - anthropic/claude-opus-4.5                # PACE done
+  - anthropic/claude-opus-4.6                # PACE done
+
+  # --- REASONING MODELS (SLOW, run last) ---
+  # qwen/qwq-32b — SKIPPED: fine-tuned-to-reason model whose reasoning tokens
+  # are baked into generation and can't be disabled via OpenRouter's reasoning
+  # API. Even with `reasoning.effort=low` and `exclude=true`, calls consume
+  # thousands of hidden tokens per request. Keep the earlier DAT t=1.0 data
+  # that we already have.
+  - deepseek/deepseek-r1
+  - openai/o3-mini
+  - openai/o4-mini
+  - openai/o3
+
+  # --- SMALL OPEN MODELS TO EXTEND HIVEMIND COVERAGE ---
+  # These are in the Hivemind paper but weren't in our original eval.
+  # Adding them bumps Hivemind overlap from n=20 to n~26.
+  - meta-llama/llama-3.2-1b-instruct
+  - meta-llama/llama-3.2-3b-instruct
+  - mistralai/mistral-7b-instruct-v0.1
+  - mistralai/mistral-small-24b-instruct-2501
+  - qwen/qwen3-14b
+  - qwen/qwen3-8b

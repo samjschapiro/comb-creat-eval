@@ -1,32 +1,79 @@
-# Preliminary Results: DAT/CDAT/PACE Correlations with Arena CW
+# Results: DAT/CDAT/PACE Correlations with Arena CW
 
-**Date**: 2026-04-12
-**Status**: Preliminary — 13 of 49 target models scored. Eval run still in progress.
+**Date**: 2026-04-12 (updated)
+**Status**: Near-final — 39 of 49 target models scored; 4 partial; budget cap stopped the run. Enough n for robust correlation analysis.
 **Relates to**: [ICCC 2026 short paper](../2026-04-11_iccc_dat_study/report.md)
 
-## Headline findings (preliminary, small-n)
+## Headline findings
 
-Three creativity metrics evaluated against Chatbot Arena Creative Writing (CW) Elo rankings. All correlations are Spearman rank correlation with 500-iteration bootstrap for robustness.
+Three creativity metrics evaluated against Chatbot Arena Creative Writing (CW) Elo rankings. All correlations are Spearman rank correlation. Bootstrap with 500 iterations for robustness. **Partial correlations** control for Arena Overall Elo to isolate creativity-specific signal from general model capability.
 
-| Metric | rho vs Arena CW | p | n | Bootstrap 95% CI |
-|--------|-----------------|---|---|-------------------|
-| **PACE** | **+0.852** | **0.0002** | 13 | [0.561, 0.939] |
-| **CDAT Appropriateness @ t=1.5** | **+0.964** | **0.0005** | 7 | [0.698, 1.000] |
-| **CDAT Novelty @ t=1.5** | **−0.893** | **0.007** | 7 | [−1.000, −0.373] |
-| DAT (pooled) | +0.233 | 0.55 | 9 | [−0.614, 1.000] |
-| CDAT Novelty (pooled) | +0.071 | 0.88 | 7 | — |
-| CDAT Appropriateness (pooled) | +0.357 | 0.43 | 7 | — |
-| CDAT @ t=2.0 | near zero | NS | 6 | — |
-| DAT @ t=1.0 | +0.100 | 0.80 | 9 | — |
-| DAT @ t=1.5 | −0.571 | 0.14 | 8 | — |
+**Pooling convention**: for DAT and CDAT, the "pooled" score is the mean of every valid individual trial/cue score across all three temperatures (1.0, 1.5, 2.0), not the mean of per-temperature means. A model's pooled score therefore weights toward the temperatures at which it produced valid output. Per-temperature scores are also reported separately below.
 
-**Three punchlines:**
+### Correlation matrix: 4 creativity metrics × 4 benchmarks
 
-1. **PACE replicates.** The PACE paper (Qiu & Hu, EMNLP 2025) reported rho = 0.739 across 30 models. We get rho = 0.852 across 13 models. Even with a different seed-word list and a smaller sample, PACE cleanly predicts Arena CW.
+![Correlation matrix](figures/fig1_correlation_matrix.png)
 
-2. **CDAT at t=1.5 exhibits the Nakajima tradeoff.** Arena CW correlates very strongly with appropriateness (+0.96) and very strongly *negatively* with novelty (−0.89) at the same temperature. Better creative writers produce CDAT responses that are more appropriate to the cue but less novel in word choice. This is exactly the novelty–appropriateness Pareto tradeoff predicted by the CDAT paper.
+| Metric | Arena CW | Partial (CW\|Overall) | EQ-Bench CW | Hivemind (should be neg.) |
+|--------|----------|----------------------|-------------|---------------------------|
+| **PACE** | **+0.755\*\*\*** | **+0.329\*** | **+0.798\*\*\*** | +0.08 NS |
+| DAT | +0.107 NS | +0.019 NS | +0.328 (p=.08) | −0.348 NS |
+| CDAT Novelty | −0.277 NS | +0.217 NS | −0.144 NS | **−0.515\*** ✓ |
+| CDAT Appropriateness | +0.453\*\* | −0.226 NS | +0.288 NS | **+0.539\*** ✗ (wrong dir) |
 
-3. **DAT does not predict creative writing in LLMs.** Pooled rho = 0.23 (p = 0.55, NS). Per-temperature correlations are all non-significant and inconsistent in sign. This is the predicted null result — DAT's lack of appropriateness constraint means it rewards unrelated words, and unrelated words don't reflect creative ability.
+### Scatter: each metric vs Arena Creative Writing
+
+![Scatter vs Arena CW](figures/fig2_all_metrics_scatter.png)
+
+PACE (bottom-right) shows a clean upward relationship with Arena CW. DAT and CDAT Novelty show essentially no relationship; CDAT Appropriateness shows a weak trend driven by general capability.
+
+### Scatter: each metric vs EQ-Bench Creative Writing
+
+![Scatter vs EQ-Bench CW](figures/fig2b_all_metrics_vs_eqbench.png)
+
+PACE's signal replicates on the EQ-Bench rubric-based benchmark (rho = +0.798, p < 0.0001). No other metric shows a robust relationship with EQ-Bench.
+
+### Scatter: each metric vs Hivemind intra-model similarity
+
+![Scatter vs Hivemind](figures/fig2c_all_metrics_vs_hivemind.png)
+
+A valid creativity metric should correlate **negatively** with Hivemind homogeneity. Only CDAT Novelty cleanly does (rho = −0.515). CDAT Appropriateness correlates positively, the wrong direction. PACE is near zero.
+
+### Direction check: do creativity metrics predict output diversity?
+
+![Hivemind direction check](figures/fig3_hivemind_direction.png)
+
+Green bars = expected direction. Red bar = unexpected. DAT and CDAT Novelty trend negative (diversity-predictive); CDAT Appropriateness trends strongly positive (homogeneity-predictive); PACE is essentially uncorrelated with output diversity.
+
+### CDAT's temperature sensitivity
+
+![CDAT by temperature](figures/fig4_cdat_by_temperature.png)
+
+The novelty-appropriateness tradeoff is strongest at T=1.5. At every temperature, appropriateness and novelty have opposite signs, and the Hivemind correlation confirms that appropriateness tracks homogeneity while novelty tracks diversity.
+
+### Per-temperature CDAT vs Hivemind (n=16–18)
+
+| Metric | rho vs Hivemind | p |
+|--------|------------------|---|
+| CDAT Novelty t=1.5 | **−0.679** | **0.002** ✓ |
+| CDAT Novelty t=1.0 | −0.472 | 0.048 ✓ |
+| CDAT Approp t=1.5 | **+0.730** | **0.0006** ✗ |
+| CDAT Approp t=1.0 | +0.609 | 0.007 ✗ |
+
+### Four punchlines (four benchmarks)
+
+1. **PACE is the only metric with creativity-specific signal in Arena CW.** Partial correlation controlling for Arena Overall stays at +0.329 (p=0.033). It also correlates at +0.798 with EQ-Bench CW (n=32, p<0.0001), which is an independent human-rubric creative writing benchmark. PACE is robust across benchmarks.
+
+2. **CDAT's Arena CW correlation is an artifact of general capability.** All significant CDAT correlations with Arena CW and EQ-Bench CW collapse or reverse after partialing out Arena Overall. **CDAT measures general model quality, not creativity-specific ability.**
+
+3. **DAT fails at every level.** Zero simple correlation, zero partial correlation. The one marginal finding (DAT vs EQ-Bench CW, rho=0.33 p=0.08) is not significant. **DAT is not a valid LLM creativity metric.**
+
+4. **Hivemind homogeneity reveals that creativity has TWO dimensions.**
+   - *Output diversity* (Hivemind, CDAT Novelty): CDAT Novelty correlates strongly negatively with Hivemind homogeneity (rho=−0.68 at t=1.5, p=0.002). CDAT Novelty IS picking up output diversity.
+   - *Creative writing quality* (Arena CW, EQ-Bench, PACE): PACE correlates strongly with both creative writing benchmarks but NOT with output diversity.
+   - **These are distinct.** Models that produce diverse outputs aren't necessarily the best creative writers. CDAT Appropriateness correlates *positively* with homogeneity (rho=+0.73 at t=1.5) — more appropriate = more conservative = more repetitive.
+
+This splits the field: existing psycholinguistic metrics measure *diversity of word choices*; PACE measures *creative writing quality*. They are complementary, not redundant.
 
 ## Methodology (current run)
 
@@ -45,10 +92,10 @@ Scored models include: Claude Opus 4.5/4.6, Claude Sonnet 4.5/4.6, GPT-5.4, GPT-
 
 ## Caveats
 
-- **Small n.** Per-temperature correlations use n=6–9; the bootstrap CIs span wide ranges. The CDAT t=1.5 correlations (rho=0.96 and −0.89) are striking but could shift when more models are scored.
-- **Selection bias.** The scored set right now is small open models + Anthropic frontier models. We lack data on mid-tier OpenAI, Google, and DeepSeek models which will arrive as the run continues.
-- **Temperature-fixed models.** 3 of 49 models (gpt-5, gpt-5-nano, o3-mini) don't respond to temperature variation; for those, the DAT/CDAT @ t=1.5 specifically will mirror their t=1.0 response.
-- **Reliability thresholds.** Following Nanda's writing advice, we treat p < 0.05 as suggestive and p < 0.001 as robust. The PACE result (p=0.0002) and CDAT t=1.5 correlations (p=0.0005, p=0.007) all clear that bar — but only with the current small sample.
+- **n is now reasonable** (38–42 per correlation) but missing some frontier models (Claude Opus 4.5/4.6, GPT-5.4, GPT-5, GPT-4 Turbo, o3, DeepSeek R1, o3-mini, o4-mini) because of the $30 budget cap. We have PACE-only data for some frontier Anthropic + OpenAI models which is why n=42 for PACE vs n=38–39 for DAT/CDAT.
+- **Selection bias**: the full-metric sample over-represents open-source and mid-tier models; frontier reasoning models are under-represented.
+- **Temperature-fixed models.** A few models (QwQ, some OpenAI reasoning models) had different temperature response than we expected. We accept the variance they produce via unique-seed sampling.
+- **Reliability thresholds.** Following Nanda's writing advice, we treat p < 0.05 as suggestive, p < 0.01 as solid, and p < 0.001 as robust. PACE's simple correlation (p < 0.0001) is robust. PACE's partial correlation (p = 0.033) is suggestive — it would strengthen with more frontier models.
 
 ## Score ranges (sanity check against published work)
 
@@ -65,13 +112,15 @@ Our PACE range slightly overlaps the low end of the published range, consistent 
 
 ## What this means for the ICCC paper
 
-If these correlations hold with the full 49-model run, the paper writes itself:
+The partial-correlation analysis sharpens the narrative:
 
-1. **DAT fails to predict creative writing in LLMs.** A negative finding with concrete consequences — researchers should stop citing DAT scores as evidence of LLM creativity.
+1. **DAT fails to predict creative writing in LLMs.** Zero simple correlation (rho=0.107, NS), zero partial correlation (0.019). No signal at any temperature. Confirms the theoretical critique of Nakajima et al.: DAT rewards unrelated words, and unrelated words are not creativity.
 
-2. **CDAT's appropriateness gate matters.** The *exact* pattern predicted by Nakajima et al. (novelty-appropriateness tradeoff) appears at the temperature where sampling is creative but coherent.
+2. **CDAT's CW correlation is an artifact of general model capability.** Both the appropriateness (+0.45) and novelty (-0.28) correlations with CW collapse to non-significance once Arena Overall is partialed out. The per-temperature correlations at t=1.5 that looked striking before (Approp +0.51**, Novelty -0.37*) also collapse. **This is an important critique of CDAT that the original paper did not address.**
 
-3. **PACE is a cleanly reproducible alternative.** We replicate their rho ≈ 0.7–0.8 correlation with Arena CW using a different seed list, different embedding-loading pipeline, and different model set.
+3. **PACE is the only word-association-based metric with creativity-specific signal for LLMs.** Its correlation with Arena CW (rho=0.755) survives controlling for Arena Overall (partial rho=0.329, p=0.033). The story is: among three psycholinguistic metrics proposed for LLM creativity evaluation, only PACE's chain-based formulation captures something that creative-writing quality requires beyond general capability.
+
+This is actually a *more controversial* and *cleaner* paper than the original plan. Two of three popular creativity metrics turn out to be general-capability proxies once we control for it.
 
 ## Next steps
 

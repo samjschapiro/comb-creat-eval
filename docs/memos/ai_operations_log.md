@@ -10,6 +10,10 @@ Format: `YYYY-MM-DD HH:MM | action | reason | side effects`
 
 ## 2026-04-12
 
+### ~11:20 | Added reasoning control, reordered, relaunched
+- **Action**: Killed `bhhnrjv6w` (stuck on QwQ-32B taking 6+ min/call). Added `reasoning.effort=low, exclude=true` support via OpenRouter unified reasoning API. Added retry-without-reasoning fallback for providers that reject the param (QwQ via SiliconFlow). Bumped max_tokens to 1024/2048 to give reasoning models headroom. Reordered: non-reasoning first, reasoning (QwQ, DeepSeek R1, o3-mini, o4-mini, o3) last. Relaunched as `bb1go5ov6` (PID 18280).
+- **Result**: QwQ call time dropped from 6+ min to 25s. o3-mini 4.5s. DeepSeek R1 29s.
+
 ### ~09:57 | Added async concurrency, relaunched
 - **Action**: Killed `baeejhzew`, refactored `run_dat`/`run_cdat`/`run_pace` to async with bounded concurrency (semaphore=20). Relaunched as `bgc0b90xn` (PID 15936).
 - **Reason**: Sequential API calls were the bottleneck (~12 min/model for CDAT, ~20 min for PACE). With 20 concurrent calls, PACE for a single model drops to ~30s.

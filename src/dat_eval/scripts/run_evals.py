@@ -46,6 +46,36 @@ CALL_COST = {
     "pace2": (300, 600),
 }
 
+# Models that generate reasoning tokens internally. For these we need a larger
+# max_tokens budget because reasoning tokens count toward the cap (even when
+# `reasoning.exclude=true` is set — they are generated, just not returned).
+REASONING_MODELS = {
+    "qwen/qwq-32b",
+    "deepseek/deepseek-r1",
+    "openai/o3",
+    "openai/o3-mini",
+    "openai/o4-mini",
+    "openai/gpt-5",
+    "openai/gpt-5-mini",
+    "openai/gpt-5-nano",
+    "openai/gpt-5.4",
+    "openai/gpt-5.4-mini",
+    "openai/gpt-5.4-nano",
+}
+
+
+def max_tokens_for(model_id: str, base: int, reasoning_multiplier: int = 4) -> int:
+    """Return max_tokens for a model. Reasoning models get a larger budget.
+
+    Non-reasoning models: `base` (enough for the expected output, no more — this
+    prevents runaway token generation at high temperature).
+    Reasoning models: `base * reasoning_multiplier` to account for internal
+    reasoning tokens.
+    """
+    if model_id in REASONING_MODELS:
+        return base * reasoning_multiplier
+    return base
+
 
 def estimate_model_cost(
     model_id: str,
@@ -106,6 +136,7 @@ async def run_dat(
     top_p: float | None = None,
     top_k: int | None = None,
     max_tokens: int = 256,
+    reasoning: dict | None = None,
 ) -> list[dict]:
     """Run DAT evaluation concurrently: generate n_trials sets of 10 divergent words."""
     async def one_trial(trial):
@@ -118,6 +149,7 @@ async def run_dat(
             top_p=top_p,
             top_k=top_k,
             max_tokens=max_tokens,
+            reasoning=reasoning,
         ))
         if err is not None:
             return {"trial": trial, "seed": seed, "raw_response": None,
@@ -139,6 +171,7 @@ async def run_cdat(
     top_p: float | None = None,
     top_k: int | None = None,
     max_tokens: int = 256,
+    reasoning: dict | None = None,
 ) -> dict[str, dict]:
     """Run CDAT concurrently: 10 associated-but-diverse words per cue."""
     async def one_cue(i, cue):
@@ -151,6 +184,7 @@ async def run_cdat(
             top_p=top_p,
             top_k=top_k,
             max_tokens=max_tokens,
+            reasoning=reasoning,
         ))
         if err is not None:
             return cue, {"seed": seed, "raw_response": None,
@@ -173,6 +207,7 @@ async def run_pace(
     top_k: int | None = None,
     stage1_max_tokens: int = 400,
     stage2_max_tokens: int = 1200,
+    reasoning: dict | None = None,
 ) -> dict[str, dict]:
     """Run PACE concurrently: 3 association chains of 20 words per seed.
 
@@ -189,6 +224,7 @@ async def run_pace(
             top_p=top_p,
             top_k=top_k,
             max_tokens=stage1_max_tokens,
+            reasoning=reasoning,
         ))
         if err is not None:
             return seed_word, {"stage1_raw": None, "stage1_parsed": [],
@@ -209,6 +245,7 @@ async def run_pace(
             top_p=top_p,
             top_k=top_k,
             max_tokens=stage2_max_tokens,
+            reasoning=reasoning,
         ))
         if err is not None:
             return {"first_association": assoc, "raw_response": None,
@@ -324,17 +361,29 @@ async def main(config_path: str, overwrite: bool = False, debug: bool = False):
     pace_top_p = config.get("pace_top_p", None)
     pace_top_k = config.get("pace_top_k", None)
 
-    # Max tokens per call, tuned per eval to prevent runaway generation at
-    # high temperatures (weak models can hallucinate indefinitely).
-    dat_max_tokens = config.get("dat_max_tokens", 256)
-    cdat_max_tokens = config.get("cdat_max_tokens", 256)
-    pace_stage1_max_tokens = config.get("pace_stage1_max_tokens", 400)
-    pace_stage2_max_tokens = config.get("pace_stage2_max_tokens", 1200)
+    # Max tokens per call — base values. Reasoning models get multiplied version.
+    dat_max_tokens_base = config.get("dat_max_tokens", 256)
+    cdat_max_tokens_base = config.get("cdat_max_tokens", 256)
+    pace_stage1_max_tokens_base = config.get("pace_stage1_max_tokens", 400)
+    pace_stage2_max_tokens_base = config.get("pace_stage2_max_tokens", 1200)
+    reasoning_mult = config.get("reasoning_max_tokens_multiplier", 4)
 
     # Concurrency cap — semaphore limits simultaneous outbound requests.
     # OpenRouter's rate ceiling scales with credit balance (~$34 ≈ 30 req/s).
     # Setting to 20 leaves headroom for retries and rate-limit bursts.
     concurrency = config.get("concurrency", 20)
+
+    # Reasoning control for reasoning-enabled models (QwQ, o-series, DeepSeek R1,
+    # Claude extended thinking). Sent via OpenRouter's unified reasoning API:
+    #   effort: "low"/"medium"/"high" — depth for o-series style
+    #   max_tokens: N — hard cap for Anthropic/Grok/Gemini extended thinking
+    #   exclude: true — hide reasoning in response (we never use it anyway)
+    #   enabled: false — disable reasoning entirely (not all models respect)
+    # Default: low effort + cap thinking tokens + hide reasoning to keep outputs compact.
+    reasoning_cfg = config.get("reasoning", {
+        "effort": "low",
+        "exclude": True,
+    })
 
     if debug:
         models = models[:1]
@@ -422,12 +471,14 @@ async def main(config_path: str, overwrite: bool = False, debug: bool = False):
                 if dat_path.exists():
                     print(f"  DAT temp={temp} already done, skipping")
                     continue
+                dat_max_tokens = max_tokens_for(model_id, dat_max_tokens_base, reasoning_mult)
                 print(f"  Running DAT temp={temp} top_p={dat_top_p} top_k={dat_top_k} max_tokens={dat_max_tokens} ({dat_trials} trials, concurrent)...")
                 t0 = time.time()
                 dat_results = await run_dat(
                     async_client, sem,
                     model_id, dat_trials, temp,
                     top_p=dat_top_p, top_k=dat_top_k, max_tokens=dat_max_tokens,
+                    reasoning=reasoning_cfg,
                 )
                 print(f"    ({time.time()-t0:.1f}s elapsed)")
                 with open(dat_path, "w") as f:
@@ -442,12 +493,14 @@ async def main(config_path: str, overwrite: bool = False, debug: bool = False):
                 if cdat_path.exists():
                     print(f"  CDAT temp={temp} already done, skipping")
                     continue
+                cdat_max_tokens = max_tokens_for(model_id, cdat_max_tokens_base, reasoning_mult)
                 print(f"  Running CDAT temp={temp} top_p={cdat_top_p} top_k={cdat_top_k} max_tokens={cdat_max_tokens} ({len(cdat_cues)} cues, concurrent)...")
                 t0 = time.time()
                 cdat_results = await run_cdat(
                     async_client, sem,
                     model_id, cdat_cues, temp,
                     top_p=cdat_top_p, top_k=cdat_top_k, max_tokens=cdat_max_tokens,
+                    reasoning=reasoning_cfg,
                 )
                 print(f"    ({time.time()-t0:.1f}s elapsed)")
                 with open(cdat_path, "w") as f:
@@ -470,6 +523,8 @@ async def main(config_path: str, overwrite: bool = False, debug: bool = False):
                     old_pace.rename(pace_path)
                     continue
                 n_calls = len(pace_seeds) * 4
+                pace_stage1_max_tokens = max_tokens_for(model_id, pace_stage1_max_tokens_base, reasoning_mult)
+                pace_stage2_max_tokens = max_tokens_for(model_id, pace_stage2_max_tokens_base, reasoning_mult)
                 print(f"  Running PACE temp={temp} max_tokens=s1:{pace_stage1_max_tokens}/s2:{pace_stage2_max_tokens} ({len(pace_seeds)} seeds, ~{n_calls} API calls, concurrent)...")
                 t0 = time.time()
                 pace_results = await run_pace(
@@ -478,6 +533,7 @@ async def main(config_path: str, overwrite: bool = False, debug: bool = False):
                     top_p=pace_top_p, top_k=pace_top_k,
                     stage1_max_tokens=pace_stage1_max_tokens,
                     stage2_max_tokens=pace_stage2_max_tokens,
+                    reasoning=reasoning_cfg,
                 )
                 print(f"    ({time.time()-t0:.1f}s elapsed)")
                 with open(pace_path, "w") as f:

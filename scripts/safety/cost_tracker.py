@@ -60,6 +60,8 @@ PRICING = {
     "meta-llama/llama-3.3-70b-instruct":(0.13, 0.40),
     "meta-llama/llama-3.1-70b-instruct":(0.13, 0.40),
     "meta-llama/llama-3.1-8b-instruct": (0.06, 0.06),
+    "meta-llama/llama-3.2-1b-instruct": (0.02, 0.02),
+    "meta-llama/llama-3.2-3b-instruct": (0.03, 0.03),
     # DeepSeek
     "deepseek/deepseek-r1":             (0.55, 2.19),
     "deepseek/deepseek-chat-v3-0324":   (0.27, 1.10),
@@ -67,12 +69,16 @@ PRICING = {
     # Qwen
     "qwen/qwen3-235b-a22b":             (0.20, 0.60),
     "qwen/qwen3-32b":                   (0.10, 0.20),
+    "qwen/qwen3-14b":                   (0.06, 0.12),
+    "qwen/qwen3-8b":                    (0.04, 0.10),
     "qwen/qwq-32b":                     (0.10, 0.20),
     "qwen/qwen-2.5-72b-instruct":       (0.13, 0.40),
     # Mistral
     "mistralai/mistral-large-2407":     (2.00, 6.00),
     "mistralai/mistral-large-2411":     (2.00, 6.00),
     "mistralai/mistral-nemo":           (0.07, 0.07),
+    "mistralai/mistral-7b-instruct-v0.1": (0.03, 0.06),
+    "mistralai/mistral-small-24b-instruct-2501": (0.10, 0.30),
     # Cohere
     "cohere/command-a":                 (2.50, 10.00),
     "cohere/command-r-plus-08-2024":    (2.50, 10.00),

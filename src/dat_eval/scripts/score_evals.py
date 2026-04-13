@@ -172,6 +172,45 @@ def spearman_corr(x: list[float], y: list[float]) -> tuple[float, float]:
     return float(result.statistic), float(result.pvalue)
 
 
+def partial_spearman(
+    target: np.ndarray,
+    predictor: np.ndarray,
+    control: np.ndarray,
+) -> tuple[float, float]:
+    """Spearman partial correlation of target ~ predictor, controlling for control.
+
+    Method: rank all three variables, regress target ranks on control ranks and
+    predictor ranks on control ranks, then compute Spearman correlation of the
+    two sets of residuals. This isolates the target-predictor association that
+    is not explainable by a linear relationship with the control variable.
+
+    Equivalent to the closed-form:
+        partial_rho = (rho_tp - rho_tc * rho_pc) /
+                      sqrt((1 - rho_tc^2) * (1 - rho_pc^2))
+    but the residual-based implementation is more stable with ranked ties.
+
+    Args:
+        target:    Variable we want to predict (e.g. Arena CW Elo).
+        predictor: Variable whose predictive power we want to isolate (e.g. PACE).
+        control:   Confound we want to remove (e.g. Arena Overall Elo).
+
+    Returns:
+        (partial_rho, p_value).
+    """
+    target_ranks = stats.rankdata(target)
+    predictor_ranks = stats.rankdata(predictor)
+    control_ranks = stats.rankdata(control)
+
+    # Regress each ranked variable on the control ranks; take residuals
+    slope_t, intercept_t, _, _, _ = stats.linregress(control_ranks, target_ranks)
+    resid_target = target_ranks - (slope_t * control_ranks + intercept_t)
+
+    slope_p, intercept_p, _, _, _ = stats.linregress(control_ranks, predictor_ranks)
+    resid_predictor = predictor_ranks - (slope_p * control_ranks + intercept_p)
+
+    return spearman_corr(resid_target.tolist(), resid_predictor.tolist())
+
+
 def bootstrap_spearman(
     x: np.ndarray,
     y: np.ndarray,
@@ -352,6 +391,10 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
         metric_vals = []
         arena_cw_vals = []
         arena_overall_vals = []
+        eqbench_cw_vals = []
+        eqbench_cw_keys = []
+        hivemind_vals = []
+        hivemind_keys = []
 
         for model_key, scores in model_scores.items():
             if metric not in scores or scores[metric] == 0:
@@ -367,6 +410,12 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
             arena_cw_vals.append(bench["arena_cw"])
             if "arena_overall" in bench:
                 arena_overall_vals.append(bench["arena_overall"])
+            if "eq_bench_cw" in bench:
+                eqbench_cw_vals.append(bench["eq_bench_cw"])
+                eqbench_cw_keys.append(model_key)
+            if "hivemind_intra_sim" in bench:
+                hivemind_vals.append(bench["hivemind_intra_sim"])
+                hivemind_keys.append(model_key)
 
         if len(aligned_models) < 5:
             print(f"\n{metric}: only {len(aligned_models)} models with both scores, skipping")
@@ -402,6 +451,105 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
                 "bootstrap": boot_all,
             }
             print(f"{metric.upper()} vs Arena Overall: rho={rho_all:.3f}, p={p_all:.4f}")
+
+            # Partial correlation: metric vs Arena CW controlling for Arena Overall.
+            # This isolates any creativity-specific signal from general capability.
+            # If the partial rho collapses near zero, the metric's apparent CW
+            # correlation was entirely explained by general model quality.
+            part_rho, part_p = partial_spearman(
+                target=y_cw,
+                predictor=x,
+                control=y_all,
+            )
+            corr_results[metric]["partial_cw_control_overall"] = {
+                "spearman_rho": part_rho,
+                "p_value": part_p,
+                "n_models": len(aligned_models),
+            }
+            flag = ""
+            if abs(rho_cw) > 0.2 and abs(part_rho) < 0.1:
+                flag = "  <-- signal collapses, may be general-capability proxy"
+            elif abs(part_rho) > 0.3:
+                flag = "  <-- creativity-specific signal survives"
+            print(f"{metric.upper()} partial (CW | Overall): rho={part_rho:.3f}, p={part_p:.4f}{flag}")
+
+        # Also correlate with EQ-Bench Creative Writing (often a subset of models)
+        if len(eqbench_cw_vals) >= 5:
+            eq_aligned_x = [
+                val for mk, val in zip(aligned_models, metric_vals)
+                if mk in eqbench_cw_keys
+            ]
+            # Arena Overall values for the EQ-Bench subset (for partial correlation)
+            eq_aligned_overall = [
+                bench for mk, bench in zip(aligned_models, arena_overall_vals)
+                if mk in eqbench_cw_keys and len(arena_overall_vals) == len(aligned_models)
+            ]
+            x_eq = np.array(eq_aligned_x)
+            y_eq = np.array(eqbench_cw_vals)
+            rho_eq, p_eq = spearman_corr(x_eq.tolist(), y_eq.tolist())
+            boot_eq = bootstrap_spearman(x_eq, y_eq, n_iter=n_bootstrap)
+            corr_results[metric]["vs_eq_bench_cw"] = {
+                "spearman_rho": rho_eq,
+                "p_value": p_eq,
+                "n_models": len(eqbench_cw_vals),
+                "bootstrap": boot_eq,
+            }
+            print(f"{metric.upper()} vs EQ-Bench CW: rho={rho_eq:.3f}, p={p_eq:.4f} (n={len(eqbench_cw_vals)})")
+
+            # Partial EQ-Bench correlation controlling for Arena Overall
+            if len(eq_aligned_overall) == len(eqbench_cw_vals):
+                part_rho, part_p = partial_spearman(
+                    target=y_eq,
+                    predictor=x_eq,
+                    control=np.array(eq_aligned_overall),
+                )
+                corr_results[metric]["partial_eqbench_control_overall"] = {
+                    "spearman_rho": part_rho,
+                    "p_value": part_p,
+                    "n_models": len(eqbench_cw_vals),
+                }
+                print(f"{metric.upper()} partial EQ-Bench (| Overall): rho={part_rho:.3f}, p={part_p:.4f}")
+
+        # Also correlate with Hivemind intra-model similarity. Note: Hivemind
+        # metric is *homogeneity* — higher = less diverse output. A creativity
+        # metric should correlate NEGATIVELY with hivemind_intra_sim
+        # (creative models produce more varied output).
+        if len(hivemind_vals) >= 5:
+            hm_aligned_x = [
+                val for mk, val in zip(aligned_models, metric_vals)
+                if mk in hivemind_keys
+            ]
+            hm_aligned_overall = [
+                bench for mk, bench in zip(aligned_models, arena_overall_vals)
+                if mk in hivemind_keys and len(arena_overall_vals) == len(aligned_models)
+            ]
+            x_hm = np.array(hm_aligned_x)
+            y_hm = np.array(hivemind_vals)
+            rho_hm, p_hm = spearman_corr(x_hm.tolist(), y_hm.tolist())
+            boot_hm = bootstrap_spearman(x_hm, y_hm, n_iter=n_bootstrap)
+            corr_results[metric]["vs_hivemind_intra_sim"] = {
+                "spearman_rho": rho_hm,
+                "p_value": p_hm,
+                "n_models": len(hivemind_vals),
+                "bootstrap": boot_hm,
+                "note": "NEGATIVE correlation expected — hivemind_intra_sim measures homogeneity, inverse of creativity",
+            }
+            direction = "expected negative" if rho_hm < 0 else "WRONG DIRECTION"
+            print(f"{metric.upper()} vs Hivemind intra-sim: rho={rho_hm:.3f}, p={p_hm:.4f} (n={len(hivemind_vals)}, {direction})")
+
+            # Partial Hivemind correlation controlling for Arena Overall
+            if len(hm_aligned_overall) == len(hivemind_vals):
+                part_rho, part_p = partial_spearman(
+                    target=y_hm,
+                    predictor=x_hm,
+                    control=np.array(hm_aligned_overall),
+                )
+                corr_results[metric]["partial_hivemind_control_overall"] = {
+                    "spearman_rho": part_rho,
+                    "p_value": part_p,
+                    "n_models": len(hivemind_vals),
+                }
+                print(f"{metric.upper()} partial Hivemind (| Overall): rho={part_rho:.3f}, p={part_p:.4f}")
 
     # Inter-metric correlations
     metrics_available = [m for m in ["dat", "cdat_novelty", "pace"]

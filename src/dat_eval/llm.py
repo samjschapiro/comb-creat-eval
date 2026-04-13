@@ -89,9 +89,18 @@ async def call_llm_async(
     seed: int | None = None,
     top_p: float | None = None,
     top_k: int | None = None,
+    reasoning: dict | None = None,
 ) -> str:
     """Async version of call_llm. Caller provides the AsyncOpenAI client so
     many concurrent calls can share one connection pool.
+
+    Args:
+        reasoning: Optional dict forwarded to OpenRouter's unified reasoning API.
+            Keys: "effort" ("low"/"medium"/"high" for o-series), "max_tokens"
+            (hard cap for Anthropic extended thinking), "exclude" (hide reasoning
+            in response), "enabled" (false disables reasoning entirely where
+            supported). For models like QwQ where reasoning is baked into the
+            fine-tune, "effort: low" may still speed things up via provider-side.
     """
     kwargs = dict(
         model=model,
@@ -103,9 +112,34 @@ async def call_llm_async(
         kwargs["seed"] = seed
     if top_p is not None:
         kwargs["top_p"] = top_p
+
+    extra_body = {}
     if top_k is not None:
-        kwargs["extra_body"] = {"top_k": top_k}
-    response = await async_client.chat.completions.create(**kwargs)
+        extra_body["top_k"] = top_k
+    if reasoning is not None:
+        extra_body["reasoning"] = reasoning
+    if extra_body:
+        kwargs["extra_body"] = extra_body
+
+    try:
+        response = await async_client.chat.completions.create(**kwargs)
+    except Exception as e:
+        # Some providers reject the reasoning param (e.g., SiliconFlow for QwQ
+        # rejects `enable_thinking`). Retry once without reasoning if that's
+        # the likely cause.
+        msg = str(e).lower()
+        if reasoning is not None and (
+            "reasoning" in msg or "enable_thinking" in msg or "thinking" in msg
+        ):
+            if "reasoning" in extra_body:
+                del extra_body["reasoning"]
+            if extra_body:
+                kwargs["extra_body"] = extra_body
+            else:
+                kwargs.pop("extra_body", None)
+            response = await async_client.chat.completions.create(**kwargs)
+        else:
+            raise
     return response.choices[0].message.content
 
 
