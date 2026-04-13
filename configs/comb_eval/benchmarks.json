@@ -305,12 +305,6 @@
     "hivemind_intra_sim": 0.796,
     "hivemind_pct_sim_above_0_8": 61.0
   },
-  "meta-llama_llama-3-2-1b-instruct": {
-    "arena_overall": 1110,
-    "arena_cw": 1082,
-    "hivemind_intra_sim": 0.739,
-    "hivemind_pct_sim_above_0_8": 39.0
-  },
   "meta-llama_llama-3-2-3b-instruct": {
     "arena_overall": 1166,
     "arena_cw": 1144,
