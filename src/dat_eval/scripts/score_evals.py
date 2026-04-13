@@ -413,10 +413,13 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
         metric_vals = []
         arena_cw_vals = []
         arena_overall_vals = []
+        mmlu_pro_all_vals = []  # aligned 1:1 with aligned_models; None where missing
         eqbench_cw_vals = []
         eqbench_cw_keys = []
         hivemind_vals = []
         hivemind_keys = []
+        mazur_vals = []
+        mazur_keys = []
 
         for model_key, scores in model_scores.items():
             if metric not in scores or scores[metric] == 0:
@@ -432,12 +435,16 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
             arena_cw_vals.append(bench["arena_cw"])
             if "arena_overall" in bench:
                 arena_overall_vals.append(bench["arena_overall"])
+            mmlu_pro_all_vals.append(bench.get("mmlu_pro"))  # may be None
             if "eq_bench_cw" in bench:
                 eqbench_cw_vals.append(bench["eq_bench_cw"])
                 eqbench_cw_keys.append(model_key)
             if "hivemind_intra_sim" in bench:
                 hivemind_vals.append(bench["hivemind_intra_sim"])
                 hivemind_keys.append(model_key)
+            if "mazur_cw_v2" in bench:
+                mazur_vals.append(bench["mazur_cw_v2"])
+                mazur_keys.append(model_key)
 
         if len(aligned_models) < 5:
             print(f"\n{metric}: only {len(aligned_models)} models with both scores, skipping")
@@ -608,6 +615,127 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
                     "n_models": len(hivemind_vals),
                 }
                 print(f"{metric.upper()} partial Hivemind (| Overall): rho={part_rho:.3f} (p={part_p:.4f}), r={part_r:.3f} (p={part_r_p:.4f})")
+
+        # --------------------------------------------------------------
+        # Alternative capability control: MMLU-Pro instead of Arena Overall.
+        # Arena Overall Elo is Arena-ecosystem-internal; MMLU-Pro is a
+        # structurally independent knowledge/reasoning benchmark. If partial
+        # correlations survive under BOTH controls, the creativity-specific
+        # claim is much harder to dismiss as an Arena artifact.
+        # --------------------------------------------------------------
+        def _filter_with_mmlu(keys_with_metric, metric_values, bench_values, target_keys):
+            """Return arrays (metric, bench, mmlu_pro) subset to models that
+            have all three. target_keys is the list of model keys for which
+            bench_values is defined."""
+            out_m, out_b, out_mp = [], [], []
+            bench_by_key = dict(zip(target_keys, bench_values))
+            for mk, mv in zip(keys_with_metric, metric_values):
+                if mk not in bench_by_key:
+                    continue
+                bench_row = benchmarks.get(mk, {})
+                mp = bench_row.get("mmlu_pro")
+                if mp is None:
+                    continue
+                out_m.append(mv)
+                out_b.append(bench_by_key[mk])
+                out_mp.append(mp)
+            return out_m, out_b, out_mp
+
+        # Arena CW partialled on MMLU-Pro
+        m_vals, b_vals, mp_vals = _filter_with_mmlu(
+            aligned_models, metric_vals, arena_cw_vals, aligned_models)
+        if len(m_vals) >= 5:
+            part_rho, part_p = partial_spearman(
+                target=np.array(b_vals), predictor=np.array(m_vals), control=np.array(mp_vals))
+            part_r, part_r_p = partial_pearson(
+                target=np.array(b_vals), predictor=np.array(m_vals), control=np.array(mp_vals))
+            corr_results[metric]["partial_cw_control_mmlu_pro"] = {
+                "spearman_rho": part_rho, "spearman_p": part_p,
+                "pearson_r": part_r, "pearson_p": part_r_p,
+                "p_value": part_p, "n_models": len(m_vals),
+            }
+            print(f"{metric.upper()} partial (CW | MMLU-Pro): rho={part_rho:.3f} (p={part_p:.4f}), r={part_r:.3f} (p={part_r_p:.4f}), n={len(m_vals)}")
+
+        # EQ-Bench CW partialled on MMLU-Pro
+        m_vals, b_vals, mp_vals = _filter_with_mmlu(
+            aligned_models, metric_vals, eqbench_cw_vals, eqbench_cw_keys)
+        if len(m_vals) >= 5:
+            part_rho, part_p = partial_spearman(
+                target=np.array(b_vals), predictor=np.array(m_vals), control=np.array(mp_vals))
+            part_r, part_r_p = partial_pearson(
+                target=np.array(b_vals), predictor=np.array(m_vals), control=np.array(mp_vals))
+            corr_results[metric]["partial_eqbench_control_mmlu_pro"] = {
+                "spearman_rho": part_rho, "spearman_p": part_p,
+                "pearson_r": part_r, "pearson_p": part_r_p,
+                "p_value": part_p, "n_models": len(m_vals),
+            }
+            print(f"{metric.upper()} partial EQ-Bench (| MMLU-Pro): rho={part_rho:.3f} (p={part_p:.4f}), r={part_r:.3f} (p={part_r_p:.4f}), n={len(m_vals)}")
+
+        # Hivemind partialled on MMLU-Pro
+        m_vals, b_vals, mp_vals = _filter_with_mmlu(
+            aligned_models, metric_vals, hivemind_vals, hivemind_keys)
+        if len(m_vals) >= 5:
+            part_rho, part_p = partial_spearman(
+                target=np.array(b_vals), predictor=np.array(m_vals), control=np.array(mp_vals))
+            part_r, part_r_p = partial_pearson(
+                target=np.array(b_vals), predictor=np.array(m_vals), control=np.array(mp_vals))
+            corr_results[metric]["partial_hivemind_control_mmlu_pro"] = {
+                "spearman_rho": part_rho, "spearman_p": part_p,
+                "pearson_r": part_r, "pearson_p": part_r_p,
+                "p_value": part_p, "n_models": len(m_vals),
+            }
+            print(f"{metric.upper()} partial Hivemind (| MMLU-Pro): rho={part_rho:.3f} (p={part_p:.4f}), r={part_r:.3f} (p={part_r_p:.4f}), n={len(m_vals)}")
+
+        # --------------------------------------------------------------
+        # Mazur V2 Creative Writing (appendix-only; n ≈ 21). A third
+        # creative-writing ground truth from outside the Arena ecosystem.
+        # --------------------------------------------------------------
+        if len(mazur_vals) >= 5:
+            mz_aligned_x = [
+                val for mk, val in zip(aligned_models, metric_vals)
+                if mk in mazur_keys
+            ]
+            mz_aligned_overall = [
+                bench for mk, bench in zip(aligned_models, arena_overall_vals)
+                if mk in mazur_keys and len(arena_overall_vals) == len(aligned_models)
+            ]
+            x_mz = np.array(mz_aligned_x)
+            y_mz = np.array(mazur_vals)
+            rho_mz, p_mz = spearman_corr(x_mz.tolist(), y_mz.tolist())
+            r_mz, p_r_mz = pearson_corr(x_mz.tolist(), y_mz.tolist())
+            corr_results[metric]["vs_mazur_cw"] = {
+                "spearman_rho": rho_mz, "spearman_p": p_mz,
+                "pearson_r": r_mz, "pearson_p": p_r_mz,
+                "p_value": p_mz, "n_models": len(mazur_vals),
+            }
+            print(f"{metric.upper()} vs Mazur CW v2: rho={rho_mz:.3f} (p={p_mz:.4f}), r={r_mz:.3f} (p={p_r_mz:.4f}), n={len(mazur_vals)}")
+
+            if len(mz_aligned_overall) == len(mazur_vals):
+                part_rho, part_p = partial_spearman(
+                    target=y_mz, predictor=x_mz, control=np.array(mz_aligned_overall))
+                part_r, part_r_p = partial_pearson(
+                    target=y_mz, predictor=x_mz, control=np.array(mz_aligned_overall))
+                corr_results[metric]["partial_mazur_control_overall"] = {
+                    "spearman_rho": part_rho, "spearman_p": part_p,
+                    "pearson_r": part_r, "pearson_p": part_r_p,
+                    "p_value": part_p, "n_models": len(mazur_vals),
+                }
+                print(f"{metric.upper()} partial Mazur (| Overall): rho={part_rho:.3f} (p={part_p:.4f}), r={part_r:.3f} (p={part_r_p:.4f}), n={len(mazur_vals)}")
+
+            # Mazur partial on MMLU-Pro
+            m_vals, b_vals, mp_vals = _filter_with_mmlu(
+                aligned_models, metric_vals, mazur_vals, mazur_keys)
+            if len(m_vals) >= 5:
+                part_rho, part_p = partial_spearman(
+                    target=np.array(b_vals), predictor=np.array(m_vals), control=np.array(mp_vals))
+                part_r, part_r_p = partial_pearson(
+                    target=np.array(b_vals), predictor=np.array(m_vals), control=np.array(mp_vals))
+                corr_results[metric]["partial_mazur_control_mmlu_pro"] = {
+                    "spearman_rho": part_rho, "spearman_p": part_p,
+                    "pearson_r": part_r, "pearson_p": part_r_p,
+                    "p_value": part_p, "n_models": len(m_vals),
+                }
+                print(f"{metric.upper()} partial Mazur (| MMLU-Pro): rho={part_rho:.3f} (p={part_p:.4f}), r={part_r:.3f} (p={part_r_p:.4f}), n={len(m_vals)}")
 
     # Inter-metric correlations
     metrics_available = [m for m in ["dat", "cdat_novelty", "cdat_appropriateness", "pace"]
