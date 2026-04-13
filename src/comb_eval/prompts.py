@@ -85,19 +85,22 @@ def bfs_paths(
     return found_paths
 
 
-def constrained_bfs_exists(
+def count_valid_paths_up_to_k(
     G: nx.Graph,
     source: int,
     target: int,
     hop_count: int,
     include_labels: set[str],
     exclude_labels: set[str],
-) -> bool:
-    """Check whether a valid path exists satisfying all constraints.
+    k: int,
+) -> int:
+    """Count distinct valid paths satisfying all constraints, up to k.
 
-    Uses BFS to verify that at least one path of exactly hop_count hops
-    from source to target exists that includes all include_labels and
-    uses none of the exclude_labels.
+    Stops early once k valid paths are found (so returns min(true_count, k)).
+    Paths are node-distinct (no revisits within a single path) but the k
+    returned paths may share sub-structure — distinctness across paths is
+    guaranteed by the BFS enumeration (each enqueued path is a unique
+    node sequence).
 
     Args:
         G: The graph.
@@ -106,19 +109,20 @@ def constrained_bfs_exists(
         hop_count: Required number of hops.
         include_labels: Edge labels that must appear at least once.
         exclude_labels: Edge labels that must not appear at all.
+        k: Maximum number of paths to count.
 
     Returns:
-        True if at least one valid path exists.
+        min(true_count, k).
     """
-    # State: (current_node, path, labels_collected)
     queue = deque([(source, [source], set())])
+    found = 0
 
-    while queue:
+    while queue and found < k:
         current, path, collected = queue.popleft()
 
         if len(path) - 1 == hop_count:
             if current == target and include_labels.issubset(collected):
-                return True
+                found += 1
             continue
 
         if len(path) - 1 >= hop_count:
@@ -133,14 +137,15 @@ def constrained_bfs_exists(
             new_collected = collected | {edge_label}
             queue.append((neighbor, path + [neighbor], new_collected))
 
-    return False
+    return found
 
 
 def generate_prompts_for_path(
     G: nx.Graph,
     path: list[int],
-    max_level: int = 5,
+    max_level: int = 4,
     p_include: float = 0.5,
+    min_valid_paths: int = 5,
     rng: random.Random | None = None,
 ) -> list[EvalPrompt]:
     """Generate prompts at multiple difficulty levels for a base path.
@@ -152,13 +157,16 @@ def generate_prompts_for_path(
     Following Section 3 of arXiv:2509.21043:
     - Inclusion labels are drawn from labels present in the base path.
     - Exclusion labels are drawn from labels NOT present in the base path.
-    - Each generated prompt is verified to have at least one valid solution.
+    - Each generated prompt is verified to have at least min_valid_paths
+      distinct valid solutions (required for intra-response diversity scoring).
 
     Args:
         G: The graph.
         path: Base path as list of node IDs.
         max_level: Maximum difficulty level (1-indexed).
         p_include: Probability that each constraint is inclusion (vs exclusion).
+        min_valid_paths: Minimum number of distinct valid paths required for
+            a prompt to be kept (= k in the diversity-scoring design).
         rng: Seeded random instance.
 
     Returns:
@@ -188,7 +196,10 @@ def generate_prompts_for_path(
 
     for level in range(1, max_level + 1):
         if level == 1:
-            # No constraints
+            if count_valid_paths_up_to_k(
+                G, source, target, hop_count, set(), set(), min_valid_paths
+            ) < min_valid_paths:
+                continue
             prompt = EvalPrompt(
                 start=node_labels[0],
                 end=node_labels[-1],
@@ -227,11 +238,10 @@ def generate_prompts_for_path(
                 available_include.remove(label)
             # else: no more labels available, skip this constraint
 
-        # Verify a valid solution exists
-        if not constrained_bfs_exists(
-            G, source, target, hop_count, include_set, exclude_set
-        ):
-            continue  # Skip this difficulty level if unsolvable
+        if count_valid_paths_up_to_k(
+            G, source, target, hop_count, include_set, exclude_set, min_valid_paths
+        ) < min_valid_paths:
+            continue  # Skip this difficulty if fewer than k distinct solutions exist
 
         prompt = EvalPrompt(
             start=node_labels[0],
@@ -251,22 +261,26 @@ def generate_prompts_for_path(
 def generate_eval_set(
     G: nx.Graph,
     hop_counts: list[int],
-    max_level: int = 5,
+    max_level: int = 4,
     prompts_per_hop: int = 10,
     p_include: float = 0.5,
+    min_valid_paths: int = 5,
     seed: int = 42,
 ) -> list[EvalPrompt]:
     """Generate a full evaluation set across hop counts and difficulty levels.
 
     For each hop count, samples base paths and generates prompts at multiple
-    difficulty levels.
+    difficulty levels. Every generated prompt is guaranteed to have at least
+    `min_valid_paths` distinct valid solutions, so intra-response diversity
+    scoring (k-paths-per-prompt) has headroom to vary across models.
 
     Args:
         G: The graph.
-        hop_counts: List of target hop counts (e.g., [1, 2, 3, 4]).
+        hop_counts: List of target hop counts (e.g., [3, 4, 5]).
         max_level: Maximum difficulty level per path.
         prompts_per_hop: Number of base paths to sample per hop count.
         p_include: Probability of inclusion vs exclusion constraints.
+        min_valid_paths: Minimum distinct valid paths required per prompt (= k).
         seed: Random seed.
 
     Returns:
@@ -293,8 +307,15 @@ def generate_eval_set(
 
             path = rng.choice(paths)
             prompts = generate_prompts_for_path(
-                G, path, max_level=max_level, p_include=p_include, rng=rng
+                G, path,
+                max_level=max_level,
+                p_include=p_include,
+                min_valid_paths=min_valid_paths,
+                rng=rng,
             )
+
+            if not prompts:
+                continue  # base path yielded no prompts meeting the k threshold
 
             for p in prompts:
                 p.prompt_id = f"h{hop_count}_l{p.difficulty_level}_{prompt_counter:04d}"

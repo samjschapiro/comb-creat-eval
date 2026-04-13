@@ -1,5 +1,8 @@
-# Config for generating the graph and evaluation prompt set
-output_dir: "data/comb_eval/eval_set_v1"
+# Config for generating the graph and evaluation prompt set.
+# Prompts are designed for the intra-response diversity eval: each prompt
+# must have >= k_paths distinct valid solutions on the graph, so models have
+# headroom to produce creative variation.
+output_dir: "data/comb_eval/eval_set_v2"
 
 graph:
   n_nodes: 150
@@ -8,8 +11,12 @@ graph:
   # edge_label_weights: null  # uniform over a-z by default
 
 eval:
-  hop_counts: [1, 2, 3, 4]
-  max_level: 5           # difficulty levels 1-5
-  prompts_per_hop: 10    # base paths per hop count
+  # Hop counts start at 3: hop=1 is always 1 path (direct edge); hop=2 rarely
+  # has >=5 distinct valid paths on this graph. Higher hops give the solution
+  # space room for meaningful diversity.
+  hop_counts: [3, 4, 5]
+  max_level: 4           # difficulty levels 1-4 (level 5 over-constrains for k>=5)
+  prompts_per_hop: 15    # base paths per hop count (some will be filtered out)
   p_include: 0.5         # probability of inclusion vs exclusion constraint
+  k_paths: 5             # require >= k_paths distinct valid solutions per prompt
   seed: 123

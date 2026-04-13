@@ -61,6 +61,7 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
         max_level=eval_cfg["max_level"],
         prompts_per_hop=eval_cfg["prompts_per_hop"],
         p_include=eval_cfg["p_include"],
+        min_valid_paths=eval_cfg["k_paths"],
         seed=eval_cfg["seed"],
     )
 
@@ -88,6 +89,7 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
         "by_hop_count": dict(sorted(by_hop.items())),
         "by_difficulty_level": dict(sorted(by_level.items())),
         "graph_stats": stats,
+        "k_paths": eval_cfg["k_paths"],
     }
     with open(output_dir / "results" / "generation_summary.json", "w") as f:
         json.dump(summary, f, indent=2)

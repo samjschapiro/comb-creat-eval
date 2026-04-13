@@ -1,21 +1,17 @@
-# Config for scoring and correlation analysis
-upstream_dir: "data/comb_eval/eval_set_v1/downstream/run_v1"
-output_dir: "data/comb_eval/eval_set_v1/downstream/run_v1/downstream/analysis_v1"
-
-scoring:
-  alpha_h: 1.0   # novelty weight for hop count
-  alpha_r: 1.0   # novelty weight for surprise
-  alpha_I: 1.0   # utility weight for inclusion constraints
-  alpha_X: 1.0   # utility weight for exclusion constraints
+# Config for scoring and correlation analysis.
+# Scoring is now intra-response diversity over valid paths; there are no
+# tunable scoring weights. Both Jaccard and edit-distance metrics are
+# computed and correlated against each benchmark independently.
+upstream_dir: "data/comb_eval/eval_set_v2/downstream/run_v1"
+output_dir: "data/comb_eval/eval_set_v2/downstream/run_v1/downstream/analysis_v1"
 
 analysis:
   benchmark_file: "configs/comb_eval/benchmarks.json"
   benchmark_columns:
     - arena_cw
     - arena_overall
-    - mmlu_pro
-  # Optional: paths to PACE and DAT scores for comparison
-  pace_scores_file: null
-  dat_scores_file: null
+    - eq_bench_cw
+    - eq_bench_cw_rubric
+    - hivemind_intra_sim
   n_bootstrap: 500
   seed: 42

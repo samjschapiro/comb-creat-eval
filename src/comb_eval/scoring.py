@@ -1,13 +1,29 @@
-"""Scoring module for combinatorial creativity evaluation.
+"""Intra-response diversity scoring for combinatorial creativity evaluation.
 
-Implements the Creativity = Utility x Novelty metric from arXiv:2509.21043.
-Utility is binary-gated by constraint satisfaction; Novelty combines path
-length and edge-label surprise.
+For each prompt the model returns k candidate paths. We validate each path
+independently (structural validity + constraint satisfaction) and compute
+diversity over the *valid subset*. If fewer than 2 valid paths remain the
+prompt contributes NaN to the model's diversity aggregate — it is simply
+dropped, not penalized, so capability and creativity stay decoupled.
+
+Two diversity measures are computed in parallel:
+
+- **Edge-set Jaccard distance**: 1 - |A ∩ B| / |A ∪ B| on the set of
+  unordered node-pair edges. Captures structural overlap and ignores order.
+- **Edge-label-sequence edit distance** (normalized Levenshtein): captures
+  sequential novelty in edge-label traversal, closer in spirit to
+  Hivemind's text-level similarity.
+
+Both are averaged over all C(n, 2) pairs of valid paths.
+
+`solve_rate` (fraction of returned paths that are valid) is reported
+separately — a capability signal that must not contaminate diversity.
 """
 
+import itertools
 import math
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import networkx as nx
 import numpy as np
@@ -17,251 +33,199 @@ from src.comb_eval.llm import LLMResponse
 from src.comb_eval.prompts import EvalPrompt
 
 
+# --- per-path validation ---
+
+
 @dataclass
-class PathScore:
-    """Score breakdown for a single path response.
+class PathValidation:
+    """Validity breakdown for a single candidate path in a k-paths response."""
+
+    valid: bool
+    error_type: str  # 'none', 'empty', 'hallucinated_node', 'hallucinated_edge',
+                     #  'wrong_endpoints', 'wrong_hops', 'include_violation', 'exclude_violation'
+    node_ids: list[int] = field(default_factory=list)
+    edge_labels: list[str] = field(default_factory=list)
+
+
+def _validate_path(
+    G: nx.Graph,
+    prompt: EvalPrompt,
+    path_labels: list[str],
+    l2n: dict[str, int],
+) -> PathValidation:
+    """Validate a single candidate path against the prompt's constraints."""
+    if not path_labels:
+        return PathValidation(valid=False, error_type="empty")
+
+    # Check for hallucinated nodes
+    for nl in path_labels:
+        if nl not in l2n:
+            return PathValidation(valid=False, error_type="hallucinated_node")
+
+    node_ids = [l2n[nl] for nl in path_labels]
+
+    # Check edges exist
+    actual_edge_labels: list[str] = []
+    for i in range(len(node_ids) - 1):
+        u, v = node_ids[i], node_ids[i + 1]
+        if u == v or not G.has_edge(u, v):
+            return PathValidation(valid=False, error_type="hallucinated_edge")
+        actual_edge_labels.append(get_edge_label(G, u, v))
+
+    # Endpoint + hop checks
+    if path_labels[0] != prompt.start or path_labels[-1] != prompt.end:
+        return PathValidation(
+            valid=False, error_type="wrong_endpoints",
+            node_ids=node_ids, edge_labels=actual_edge_labels,
+        )
+    if len(node_ids) - 1 != prompt.hop_count:
+        return PathValidation(
+            valid=False, error_type="wrong_hops",
+            node_ids=node_ids, edge_labels=actual_edge_labels,
+        )
+
+    # Constraint checks
+    label_set = set(actual_edge_labels)
+    if not set(prompt.include_labels).issubset(label_set):
+        return PathValidation(
+            valid=False, error_type="include_violation",
+            node_ids=node_ids, edge_labels=actual_edge_labels,
+        )
+    if set(prompt.exclude_labels) & label_set:
+        return PathValidation(
+            valid=False, error_type="exclude_violation",
+            node_ids=node_ids, edge_labels=actual_edge_labels,
+        )
+
+    return PathValidation(
+        valid=True, error_type="none",
+        node_ids=node_ids, edge_labels=actual_edge_labels,
+    )
+
+
+# --- pairwise diversity primitives ---
+
+
+def _edge_set(node_ids: list[int]) -> set[frozenset]:
+    """Unordered edges as frozenset node-pairs — order-agnostic structural signature."""
+    return {frozenset((node_ids[i], node_ids[i + 1])) for i in range(len(node_ids) - 1)}
+
+
+def _jaccard_distance(a: set, b: set) -> float:
+    if not a and not b:
+        return 0.0
+    return 1.0 - len(a & b) / len(a | b)
+
+
+def _levenshtein(a: list[str], b: list[str]) -> int:
+    m, n = len(a), len(b)
+    if m == 0:
+        return n
+    if n == 0:
+        return m
+    dp = list(range(n + 1))
+    for i in range(1, m + 1):
+        prev = dp[0]
+        dp[0] = i
+        for j in range(1, n + 1):
+            cur = dp[j]
+            cost = 0 if a[i - 1] == b[j - 1] else 1
+            dp[j] = min(dp[j] + 1, dp[j - 1] + 1, prev + cost)
+            prev = cur
+    return dp[n]
+
+
+def _norm_edit_distance(a: list[str], b: list[str]) -> float:
+    if not a and not b:
+        return 0.0
+    return _levenshtein(a, b) / max(len(a), len(b))
+
+
+# --- per-prompt diversity scoring ---
+
+
+@dataclass
+class DiversityScore:
+    """Intra-response diversity score for one prompt.
 
     Attributes:
-        creativity: Final creativity score (utility * novelty).
-        utility: Utility score (0 or positive). Zero if any constraint violated.
-        novelty: Novelty score combining hop count and edge label surprise.
-        valid_path: Whether the path is structurally valid on the graph.
-        correct_start: Whether path starts at the required node.
-        correct_end: Whether path ends at the required node.
-        correct_hops: Whether path has the required number of hops.
-        includes_satisfied: Whether all inclusion constraints are met.
-        excludes_satisfied: Whether no exclusion constraints are violated.
-        error_type: Type of error if any ('none', 'parse_failure', 'hallucinated_node',
-                     'hallucinated_edge', 'invalid_path', 'wrong_endpoints', 'wrong_hops',
-                     'constraint_violation').
-        hop_count: Actual number of hops in the response path.
-        surprise: Average edge label surprise score.
+        n_returned: How many paths the model returned (may differ from k).
+        n_valid: How many of the returned paths are valid.
+        solve_rate: n_valid / n_returned (NaN if n_returned == 0). Capability signal.
+        mean_jaccard: Mean pairwise edge-set Jaccard distance over valid paths.
+            NaN if n_valid < 2.
+        mean_edit_distance: Mean pairwise normalized Levenshtein on edge-label
+            sequences over valid paths. NaN if n_valid < 2.
+        error_distribution: Counter of per-path error types (incl. 'none').
+        parse_success: Whether the response JSON parsed at all.
     """
 
-    creativity: float
-    utility: float
-    novelty: float
-    valid_path: bool
-    correct_start: bool
-    correct_end: bool
-    correct_hops: bool
-    includes_satisfied: bool
-    excludes_satisfied: bool
-    error_type: str
-    hop_count: int
-    surprise: float
-
-
-def compute_edge_label_distribution(G: nx.Graph) -> dict[str, float]:
-    """Compute the empirical edge label frequency distribution.
-
-    Returns:
-        Dict mapping each edge label to its frequency (sums to 1).
-    """
-    label_counts = Counter()
-    for _, _, data in G.edges(data=True):
-        label_counts[data["label"]] += 1
-    total = sum(label_counts.values())
-    return {label: count / total for label, count in label_counts.items()}
-
-
-def compute_surprise(edge_labels: list[str], label_dist: dict[str, float]) -> float:
-    """Compute average surprise of edge labels in a path.
-
-    Surprise for a label l = -log(frequency(l)).
-    Average surprise S(P) = (1/k) * sum(-log(w_l)) for k edges.
-
-    Args:
-        edge_labels: List of edge labels used in the path.
-        label_dist: Empirical label frequency distribution.
-
-    Returns:
-        Average surprise score. Higher = rarer labels used.
-    """
-    if not edge_labels:
-        return 0.0
-
-    surprises = []
-    for label in edge_labels:
-        freq = label_dist.get(label, 1e-10)  # small epsilon for unseen labels
-        surprises.append(-math.log(freq))
-
-    return sum(surprises) / len(surprises)
-
-
-def compute_novelty(
-    hop_count: int,
-    edge_labels: list[str],
-    label_dist: dict[str, float],
-    alpha_h: float = 1.0,
-    alpha_r: float = 1.0,
-) -> float:
-    """Compute the novelty score for a path.
-
-    N(P) = alpha_h * h + alpha_r * S(P)
-
-    where h = hop count (longer paths explore more distant connections)
-    and S(P) = average edge label surprise.
-
-    Args:
-        hop_count: Number of hops in the path.
-        edge_labels: Edge labels used in the path.
-        label_dist: Empirical edge label frequency distribution.
-        alpha_h: Weight for hop count component.
-        alpha_r: Weight for surprise component.
-
-    Returns:
-        Novelty score.
-    """
-    surprise = compute_surprise(edge_labels, label_dist)
-    return alpha_h * hop_count + alpha_r * surprise
-
-
-def compute_utility(
-    prompt: EvalPrompt,
-    constraints_met: bool,
-    alpha_I: float = 1.0,
-    alpha_X: float = 1.0,
-) -> float:
-    """Compute the utility score for a response.
-
-    U(P; x) = [1 + alpha_I * |I|] * [1 + alpha_X * |X|] * indicator(constraints)
-
-    Utility is zero if any constraint is violated (binary gate), but scales
-    multiplicatively with the number of constraints when all are satisfied.
-
-    Args:
-        prompt: The eval prompt with constraint specifications.
-        constraints_met: Whether all constraints (endpoints, hops, include/exclude) are met.
-        alpha_I: Weight scaling for inclusion constraints.
-        alpha_X: Weight scaling for exclusion constraints.
-
-    Returns:
-        Utility score (0 if constraints violated, positive otherwise).
-    """
-    if not constraints_met:
-        return 0.0
-
-    n_include = len(prompt.include_labels)
-    n_exclude = len(prompt.exclude_labels)
-
-    return (1 + alpha_I * n_include) * (1 + alpha_X * n_exclude)
+    n_returned: int
+    n_valid: int
+    solve_rate: float
+    mean_jaccard: float
+    mean_edit_distance: float
+    error_distribution: dict[str, int]
+    parse_success: bool
 
 
 def score_response(
     G: nx.Graph,
     prompt: EvalPrompt,
     response: LLMResponse,
-    label_dist: dict[str, float],
-    alpha_h: float = 1.0,
-    alpha_r: float = 1.0,
-    alpha_I: float = 1.0,
-    alpha_X: float = 1.0,
-) -> PathScore:
-    """Score a single LLM response against its prompt.
-
-    Validates the response path against the graph and prompt constraints,
-    then computes creativity = utility * novelty.
-
-    Args:
-        G: The graph.
-        prompt: The evaluation prompt.
-        response: The parsed LLM response.
-        label_dist: Empirical edge label frequency distribution.
-        alpha_h: Novelty weight for hop count.
-        alpha_r: Novelty weight for surprise.
-        alpha_I: Utility weight for inclusion constraints.
-        alpha_X: Utility weight for exclusion constraints.
-
-    Returns:
-        PathScore with full breakdown.
-    """
-    # Handle parse failures
-    if not response.parse_success or not response.path:
-        return PathScore(
-            creativity=0.0, utility=0.0, novelty=0.0,
-            valid_path=False, correct_start=False, correct_end=False,
-            correct_hops=False, includes_satisfied=False, excludes_satisfied=False,
-            error_type="parse_failure", hop_count=0, surprise=0.0,
+) -> DiversityScore:
+    """Score a single k-paths response for intra-response diversity."""
+    if not response.parse_success or not response.paths:
+        return DiversityScore(
+            n_returned=0, n_valid=0,
+            solve_rate=float("nan"),
+            mean_jaccard=float("nan"),
+            mean_edit_distance=float("nan"),
+            error_distribution={"parse_failure": 1},
+            parse_success=False,
         )
 
-    # Build label-to-node mapping
     l2n = label_to_node(G)
 
-    # Check for hallucinated nodes
-    for node_label in response.path:
-        if node_label not in l2n:
-            return PathScore(
-                creativity=0.0, utility=0.0, novelty=0.0,
-                valid_path=False, correct_start=False, correct_end=False,
-                correct_hops=False, includes_satisfied=False, excludes_satisfied=False,
-                error_type="hallucinated_node", hop_count=len(response.path) - 1, surprise=0.0,
-            )
+    validations = [_validate_path(G, prompt, p, l2n) for p in response.paths]
+    valid = [v for v in validations if v.valid]
+    n_returned = len(validations)
+    n_valid = len(valid)
 
-    # Convert path to node IDs and validate edges
-    node_ids = [l2n[label] for label in response.path]
-    actual_edge_labels = []
+    err_counts = Counter(v.error_type for v in validations)
 
-    for i in range(len(node_ids) - 1):
-        u, v = node_ids[i], node_ids[i + 1]
-        if not G.has_edge(u, v):
-            return PathScore(
-                creativity=0.0, utility=0.0, novelty=0.0,
-                valid_path=False, correct_start=False, correct_end=False,
-                correct_hops=False, includes_satisfied=False, excludes_satisfied=False,
-                error_type="hallucinated_edge" if (u != v) else "invalid_path",
-                hop_count=len(response.path) - 1, surprise=0.0,
-            )
-        actual_edge_labels.append(get_edge_label(G, u, v))
+    solve_rate = n_valid / n_returned if n_returned > 0 else float("nan")
 
-    # Path is structurally valid on the graph
-    valid_path = True
-    actual_hops = len(response.path) - 1
+    if n_valid < 2:
+        return DiversityScore(
+            n_returned=n_returned, n_valid=n_valid,
+            solve_rate=solve_rate,
+            mean_jaccard=float("nan"),
+            mean_edit_distance=float("nan"),
+            error_distribution=dict(err_counts),
+            parse_success=True,
+        )
 
-    # Check endpoint constraints
-    correct_start = response.path[0] == prompt.start
-    correct_end = response.path[-1] == prompt.end
-    correct_hops = actual_hops == prompt.hop_count
+    edge_sets = [_edge_set(v.node_ids) for v in valid]
+    label_seqs = [v.edge_labels for v in valid]
 
-    # Check inclusion/exclusion constraints
-    label_set = set(actual_edge_labels)
-    includes_satisfied = set(prompt.include_labels).issubset(label_set)
-    excludes_satisfied = len(set(prompt.exclude_labels) & label_set) == 0
+    jaccard_dists = [
+        _jaccard_distance(edge_sets[i], edge_sets[j])
+        for i, j in itertools.combinations(range(n_valid), 2)
+    ]
+    edit_dists = [
+        _norm_edit_distance(label_seqs[i], label_seqs[j])
+        for i, j in itertools.combinations(range(n_valid), 2)
+    ]
 
-    all_constraints_met = (
-        correct_start and correct_end and correct_hops
-        and includes_satisfied and excludes_satisfied
-    )
-
-    # Determine error type
-    if all_constraints_met:
-        error_type = "none"
-    elif not correct_start or not correct_end:
-        error_type = "wrong_endpoints"
-    elif not correct_hops:
-        error_type = "wrong_hops"
-    else:
-        error_type = "constraint_violation"
-
-    # Compute scores
-    surprise = compute_surprise(actual_edge_labels, label_dist)
-    novelty = compute_novelty(actual_hops, actual_edge_labels, label_dist, alpha_h, alpha_r)
-    utility = compute_utility(prompt, all_constraints_met, alpha_I, alpha_X)
-    creativity = utility * novelty
-
-    return PathScore(
-        creativity=creativity,
-        utility=utility,
-        novelty=novelty,
-        valid_path=valid_path,
-        correct_start=correct_start,
-        correct_end=correct_end,
-        correct_hops=correct_hops,
-        includes_satisfied=includes_satisfied,
-        excludes_satisfied=excludes_satisfied,
-        error_type=error_type,
-        hop_count=actual_hops,
-        surprise=surprise,
+    return DiversityScore(
+        n_returned=n_returned,
+        n_valid=n_valid,
+        solve_rate=solve_rate,
+        mean_jaccard=float(np.mean(jaccard_dists)),
+        mean_edit_distance=float(np.mean(edit_dists)),
+        error_distribution=dict(err_counts),
+        parse_success=True,
     )
 
 
@@ -269,24 +233,8 @@ def score_eval_set(
     G: nx.Graph,
     prompts: list[EvalPrompt],
     responses: list[LLMResponse],
-    alpha_h: float = 1.0,
-    alpha_r: float = 1.0,
-    alpha_I: float = 1.0,
-    alpha_X: float = 1.0,
-) -> list[PathScore]:
+) -> list[DiversityScore]:
     """Score a full evaluation set.
-
-    Args:
-        G: The graph.
-        prompts: List of evaluation prompts.
-        responses: List of LLM responses (same length as prompts).
-        alpha_h: Novelty weight for hop count.
-        alpha_r: Novelty weight for surprise.
-        alpha_I: Utility weight for inclusion constraints.
-        alpha_X: Utility weight for exclusion constraints.
-
-    Returns:
-        List of PathScore objects.
 
     Raises:
         ValueError: If prompts and responses have different lengths.
@@ -295,57 +243,50 @@ def score_eval_set(
         raise ValueError(
             f"Mismatch: {len(prompts)} prompts but {len(responses)} responses"
         )
-
-    label_dist = compute_edge_label_distribution(G)
-
-    return [
-        score_response(G, prompt, response, label_dist, alpha_h, alpha_r, alpha_I, alpha_X)
-        for prompt, response in zip(prompts, responses)
-    ]
+    return [score_response(G, p, r) for p, r in zip(prompts, responses)]
 
 
-def aggregate_scores(scores: list[PathScore]) -> dict:
+# --- aggregation ---
+
+
+def _nanmean(values: list[float]) -> float:
+    arr = np.array(values, dtype=float)
+    if np.all(np.isnan(arr)):
+        return float("nan")
+    return float(np.nanmean(arr))
+
+
+def aggregate_scores(scores: list[DiversityScore]) -> dict:
     """Compute aggregate statistics over a set of scores.
 
     Returns a dict with:
-        - mean_creativity: Average creativity score (the main metric).
-        - mean_utility: Average utility.
-        - mean_novelty: Average novelty (over all, including zeros).
-        - mean_novelty_valid: Average novelty over paths with utility > 0.
-        - constraint_satisfaction_rate: Fraction with utility > 0.
-        - valid_path_rate: Fraction with structurally valid paths.
-        - parse_success_rate: Fraction where response parsing succeeded.
-        - error_distribution: Counts of each error type.
-        - by_difficulty: Per-difficulty-level aggregate stats.
-        - by_hop_count: Per-hop-count aggregate stats.
+        - n_prompts: total prompts scored.
+        - n_scorable: prompts with n_valid >= 2 (contributed to diversity).
+        - mean_jaccard: mean pairwise Jaccard distance across scorable prompts.
+        - mean_edit_distance: mean pairwise normalized edit distance, scorable.
+        - mean_solve_rate: mean solve_rate across prompts where n_returned > 0.
+        - parse_success_rate: fraction of prompts where the JSON parsed.
+        - error_distribution: total per-path error counts across all prompts.
     """
     if not scores:
-        return {"mean_creativity": 0.0, "n_prompts": 0}
+        return {"n_prompts": 0}
 
-    creativities = [s.creativity for s in scores]
-    utilities = [s.utility for s in scores]
-    novelties = [s.novelty for s in scores]
-    valid_novelties = [s.novelty for s in scores if s.utility > 0]
+    jaccards = [s.mean_jaccard for s in scores]
+    edits = [s.mean_edit_distance for s in scores]
+    solves = [s.solve_rate for s in scores]
 
-    error_dist = Counter(s.error_type for s in scores)
+    n_scorable = sum(1 for s in scores if s.n_valid >= 2)
 
-    # Per-difficulty breakdown
-    by_difficulty = {}
+    error_totals: Counter = Counter()
     for s in scores:
-        # Infer difficulty from prompt_id or use a default grouping
-        # We'll key by the number of constraints (include + exclude count)
-        pass  # Filled in by the orchestration script which has prompt info
+        error_totals.update(s.error_distribution)
 
-    result = {
+    return {
         "n_prompts": len(scores),
-        "mean_creativity": float(np.mean(creativities)),
-        "mean_utility": float(np.mean(utilities)),
-        "mean_novelty": float(np.mean(novelties)),
-        "mean_novelty_valid": float(np.mean(valid_novelties)) if valid_novelties else 0.0,
-        "constraint_satisfaction_rate": sum(1 for s in scores if s.utility > 0) / len(scores),
-        "valid_path_rate": sum(1 for s in scores if s.valid_path) / len(scores),
-        "parse_success_rate": sum(1 for s in scores if s.error_type != "parse_failure") / len(scores),
-        "error_distribution": dict(error_dist),
+        "n_scorable": n_scorable,
+        "mean_jaccard": _nanmean(jaccards),
+        "mean_edit_distance": _nanmean(edits),
+        "mean_solve_rate": _nanmean(solves),
+        "parse_success_rate": sum(1 for s in scores if s.parse_success) / len(scores),
+        "error_distribution": dict(error_totals),
     }
-
-    return result

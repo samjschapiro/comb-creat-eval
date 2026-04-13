@@ -1,0 +1,36 @@
+# Smoke run: a handful of cheap open-source models spanning 1B-32B, to verify
+# the pipeline produces sane scores before committing to the full 54-model run.
+#
+# Why these models: same family (Llama, Qwen) at different sizes should give a
+# capability gradient; mixing Gemma / Mistral / Qwen exposes family quirks in
+# JSON formatting and instruction-following. Total estimated cost: ~$0.50.
+upstream_dir: "data/comb_eval/eval_set_v2"
+output_dir: "data/comb_eval/eval_set_v2/downstream/run_smoke"
+
+budget_usd: 2.0        # generous cap; actual forecast << $1
+concurrency: 20
+
+reasoning:
+  effort: "low"
+  exclude: true
+reasoning_max_tokens_multiplier: 4
+
+eval:
+  k_paths: 5
+  temperature: 1.0
+  max_tokens: 2048
+
+models:
+  # Capability gradient within the Llama family
+  - meta-llama/llama-3.2-1b-instruct
+  - meta-llama/llama-3.2-3b-instruct
+  - meta-llama/llama-3.1-8b-instruct
+
+  # Other families at similar scale
+  - google/gemma-2-9b-it
+  - mistralai/mistral-nemo
+  - qwen/qwen3-8b
+
+  # Mid-tier sanity anchor
+  - google/gemma-2-27b-it
+  - qwen/qwen3-32b
