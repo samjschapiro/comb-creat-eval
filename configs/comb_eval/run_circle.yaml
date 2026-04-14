@@ -1,0 +1,76 @@
+# Full circle construction run. 20 seeds × 3 trials × 54 models, budget-capped.
+# Cheap-to-expensive ordering so the budget cap cascades if we run out.
+output_dir: "data/comb_eval/circle_v1"
+
+budget_usd: 22.0          # ~$24 in credits, small cushion
+concurrency: 20
+
+reasoning:
+  effort: "low"
+  exclude: true
+reasoning_max_tokens_multiplier: 4
+
+# Temperature > 0 so multiple trials per seed give variance (the cross-trial
+# diversity metric depends on this).
+temperature: 0.7
+
+n_seeds: 20
+n_words: 8                # matches Nagarajan & Wu's small-N regime
+n_trials: 3
+max_tokens: 1024          # JSON with 8 entries + reasons fits comfortably
+
+models:
+  - meta-llama/llama-3.2-1b-instruct
+  - meta-llama/llama-3.2-3b-instruct
+  - mistralai/mistral-7b-instruct-v0.1
+  - meta-llama/llama-3.1-8b-instruct
+  - google/gemma-2-9b-it
+  - mistralai/mistral-nemo
+  - qwen/qwen3-8b
+  - qwen/qwen3-14b
+  - microsoft/phi-4
+  - google/gemma-3-27b-it
+  - google/gemma-2-27b-it
+  - qwen/qwen3-32b
+  - mistralai/mistral-small-24b-instruct-2501
+  - google/gemini-2.0-flash-001
+  - openai/gpt-4.1-nano
+  - meta-llama/llama-3.3-70b-instruct
+  - meta-llama/llama-3.1-70b-instruct
+  - qwen/qwen-2.5-72b-instruct
+  - nvidia/llama-3.1-nemotron-70b-instruct
+  - meta-llama/llama-4-scout
+  - openai/gpt-4o-mini
+  - google/gemini-2.5-flash
+  - meta-llama/llama-4-maverick
+  - qwen/qwen3-235b-a22b
+  - deepseek/deepseek-chat-v3-0324
+  - deepseek/deepseek-chat
+  - openai/gpt-5-nano
+  - openai/gpt-5.4-nano
+  - anthropic/claude-3-haiku
+  - openai/gpt-3.5-turbo
+  - openai/gpt-4.1-mini
+  - deepseek/deepseek-r1
+  - anthropic/claude-haiku-4.5
+  - anthropic/claude-3.5-haiku
+  - openai/o3-mini
+  - openai/o4-mini
+  - openai/gpt-5.4-mini
+  - openai/gpt-5-mini
+  - mistralai/mistral-large-2407
+  - mistralai/mistral-large-2411
+  - openai/gpt-4.1
+  - google/gemini-2.5-pro
+  - openai/gpt-4o
+  - cohere/command-r-plus-08-2024
+  - cohere/command-a
+  - anthropic/claude-sonnet-4.6
+  - anthropic/claude-sonnet-4.5
+  - anthropic/claude-sonnet-4
+  - openai/gpt-5
+  - openai/gpt-5.4
+  - openai/gpt-4-turbo
+  - openai/o3
+  - anthropic/claude-opus-4.5
+  - anthropic/claude-opus-4.6

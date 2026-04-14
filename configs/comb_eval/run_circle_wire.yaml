@@ -1,0 +1,16 @@
+# Tiny wire test for circle construction: 1 cheap model × 5 seeds × 3 trials.
+# Purpose: confirm the prompt produces well-formed circles and that the
+# closure rate isn't zero (if zero, the task is too hard even for
+# mid-capable models and we'd need to tune before full run).
+output_dir: "data/comb_eval/circle_wire"
+budget_usd: 0.5
+concurrency: 10
+reasoning: {effort: "low", exclude: true}
+reasoning_max_tokens_multiplier: 4
+temperature: 0.7
+n_seeds: 5
+n_words: 8
+n_trials: 3
+max_tokens: 1024
+models:
+  - google/gemma-2-9b-it

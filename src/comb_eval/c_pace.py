@@ -40,20 +40,55 @@ from src.dat_eval.pace import (
 )
 
 
-# Letters for constraint draws. See module docstring.
+# Letters for constraint draws — lexical mode. See module docstring.
 COMMON_INIT_LETTERS = ("a", "e", "i", "o", "s", "t", "n", "r", "l", "c")
 MIDRARE_INIT_LETTERS = ("b", "d", "f", "g", "h", "m", "p", "u", "w")
+
+# Semantic anchor pool — concepts that shape the chain's trajectory through
+# semantic space. Drawn disjoint from each other and from each seed's
+# FastText neighborhood (see build_semantic_anchor_fn) so the resulting
+# constraints are neither trivially satisfied nor impossible.
+SEMANTIC_ANCHORS = (
+    # Nature
+    "ocean", "mountain", "forest", "storm", "desert",
+    # Emotion
+    "joy", "grief", "rage", "wonder", "shame",
+    # Body
+    "heart", "muscle", "bone", "skin", "blood",
+    # Technology / industry
+    "machine", "electricity", "computer", "weapon", "engine",
+    # Mind / abstract
+    "memory", "dream", "thought", "idea", "soul",
+    # Society
+    "justice", "religion", "power", "family", "war",
+    # Art / time
+    "music", "silence", "morning", "eternity", "ritual",
+)
 
 
 @dataclass
 class Constraints:
-    """Lexical constraints on an associative chain."""
+    """Constraints on an associative chain.
 
+    Two modes:
+      - type="lexical": include_letters / exclude_letters hold first letters.
+      - type="semantic": include_anchors / exclude_anchors hold concept words;
+        a chain satisfies an anchor if some word has FastText cosine >= threshold.
+    """
+
+    level: int = 1
+    type: str = "lexical"
+    # Lexical
     include_letters: list[str] = field(default_factory=list)
     exclude_letters: list[str] = field(default_factory=list)
-    level: int = 1
+    # Semantic
+    include_anchors: list[str] = field(default_factory=list)
+    exclude_anchors: list[str] = field(default_factory=list)
+    threshold: float = 0.4
 
     def is_empty(self) -> bool:
+        if self.type == "semantic":
+            return not self.include_anchors and not self.exclude_anchors
         return not self.include_letters and not self.exclude_letters
 
     def to_dict(self) -> dict:
@@ -61,40 +96,129 @@ class Constraints:
 
     @classmethod
     def from_dict(cls, d: dict) -> "Constraints":
+        # Backward compatible with v1 data, which had only letters.
         return cls(
+            level=int(d.get("level", 1)),
+            type=str(d.get("type", "lexical")),
             include_letters=list(d.get("include_letters", [])),
             exclude_letters=list(d.get("exclude_letters", [])),
-            level=int(d.get("level", 1)),
+            include_anchors=list(d.get("include_anchors", [])),
+            exclude_anchors=list(d.get("exclude_anchors", [])),
+            threshold=float(d.get("threshold", 0.4)),
         )
 
 
+# --- lexical constraint generation ---
+
+
 def generate_constraints(level: int, rng: random.Random) -> Constraints:
-    """Draw constraints for a given difficulty level.
+    """Draw LEXICAL constraints for a given difficulty level.
 
     Inclusion and exclusion letter sets are disjoint to avoid contradictions.
     """
     if level == 1:
-        return Constraints(level=1)
+        return Constraints(level=1, type="lexical")
 
     if level == 2:
         # One constraint: include or exclude, 50/50.
         if rng.random() < 0.5:
             letter = rng.choice(COMMON_INIT_LETTERS)
-            return Constraints(include_letters=[letter], level=2)
+            return Constraints(include_letters=[letter], level=2, type="lexical")
         else:
             letter = rng.choice(MIDRARE_INIT_LETTERS)
-            return Constraints(exclude_letters=[letter], level=2)
+            return Constraints(exclude_letters=[letter], level=2, type="lexical")
 
     if level == 3:
         inc = rng.choice(COMMON_INIT_LETTERS)
-        # exclude from midrare AND not equal to inc (already disjoint by construction)
         exc = rng.choice(MIDRARE_INIT_LETTERS)
-        return Constraints(include_letters=[inc], exclude_letters=[exc], level=3)
+        return Constraints(include_letters=[inc], exclude_letters=[exc], level=3, type="lexical")
 
     if level == 4:
         inc = rng.sample(COMMON_INIT_LETTERS, 2)
         exc = rng.sample(MIDRARE_INIT_LETTERS, 2)
-        return Constraints(include_letters=sorted(inc), exclude_letters=sorted(exc), level=4)
+        return Constraints(
+            include_letters=sorted(inc), exclude_letters=sorted(exc),
+            level=4, type="lexical",
+        )
+
+    raise ValueError(f"Unsupported level: {level}")
+
+
+# --- semantic constraint generation ---
+
+
+def _cosine_sim(u: np.ndarray, v: np.ndarray) -> float:
+    nu = np.linalg.norm(u); nv = np.linalg.norm(v)
+    if nu == 0 or nv == 0:
+        return 0.0
+    return float(np.dot(u, v) / (nu * nv))
+
+
+def build_semantic_anchor_fn(
+    seed: str,
+    embeddings: "FastTextEmbeddings",
+    rng: random.Random,
+    seed_neighborhood_threshold: float = 0.4,
+    pool: tuple[str, ...] = SEMANTIC_ANCHORS,
+):
+    """Return a closure that draws semantic anchors disjoint from the seed's
+    FastText neighborhood (cosine < seed_neighborhood_threshold) and disjoint
+    across a single call's include / exclude sets.
+    """
+    seed_vec = embeddings.encode(seed.lower())
+    valid_pool: list[str] = []
+    for anchor in pool:
+        av = embeddings.encode(anchor.lower())
+        if np.linalg.norm(av) == 0:
+            continue  # anchor OOV in FastText, skip it
+        if _cosine_sim(seed_vec, av) >= seed_neighborhood_threshold:
+            continue  # too close to seed
+        valid_pool.append(anchor)
+
+    def draw(n_include: int, n_exclude: int) -> tuple[list[str], list[str]]:
+        total = n_include + n_exclude
+        if total > len(valid_pool):
+            raise ValueError(
+                f"Anchor pool ({len(valid_pool)} valid) too small for "
+                f"{n_include} include + {n_exclude} exclude on seed '{seed}'"
+            )
+        sample = rng.sample(valid_pool, total)
+        return sorted(sample[:n_include]), sorted(sample[n_include:])
+
+    return draw
+
+
+def generate_semantic_constraints(
+    level: int,
+    rng: random.Random,
+    anchor_draw,  # closure from build_semantic_anchor_fn
+    threshold: float = 0.4,
+) -> Constraints:
+    """Draw SEMANTIC constraints for a given difficulty level."""
+    if level == 1:
+        return Constraints(level=1, type="semantic", threshold=threshold)
+
+    if level == 2:
+        if rng.random() < 0.5:
+            inc, _ = anchor_draw(1, 0)
+            return Constraints(include_anchors=inc, level=2, type="semantic", threshold=threshold)
+        else:
+            _, exc = anchor_draw(0, 1)
+            return Constraints(exclude_anchors=exc, level=2, type="semantic", threshold=threshold)
+
+    if level == 3:
+        inc, exc = anchor_draw(1, 1)
+        return Constraints(
+            include_anchors=inc, exclude_anchors=exc,
+            level=3, type="semantic", threshold=threshold,
+        )
+
+    if level == 4:
+        inc, exc = anchor_draw(2, 2)
+        return Constraints(
+            include_anchors=inc, exclude_anchors=exc,
+            level=4, type="semantic", threshold=threshold,
+        )
 
     raise ValueError(f"Unsupported level: {level}")
 
@@ -125,9 +249,9 @@ def c_pace_stage2_prompt(
 ) -> str:
     """Stage 2: constrained 20-word chain.
 
-    When constraints is empty (L1) this is identical to vanilla PACE. For
-    L2-L4 we prepend explicit instruction block about lexical constraints
-    on the *first letter* of each word.
+    When constraints is empty (L1) this is identical to vanilla PACE. When
+    not empty, branches on constraints.type to produce either a first-letter
+    rule (lexical) or a semantic-neighborhood rule (semantic).
     """
     base = (
         f'Starting with the word pair "{seed}" -> "{second_word}", generate a '
@@ -140,18 +264,41 @@ def c_pace_stage2_prompt(
 
     if not constraints.is_empty():
         rules = ["\n\nADDITIONAL CONSTRAINTS on the 20-word chain:"]
-        if constraints.include_letters:
-            letters = ", ".join(f"'{l}'" for l in constraints.include_letters)
+
+        if constraints.type == "lexical":
+            if constraints.include_letters:
+                letters = ", ".join(f"'{l}'" for l in constraints.include_letters)
+                rules.append(
+                    f"- The chain MUST include at least one word starting with each "
+                    f"of these letters (case-insensitive): {letters}."
+                )
+            if constraints.exclude_letters:
+                letters = ", ".join(f"'{l}'" for l in constraints.exclude_letters)
+                rules.append(
+                    f"- The chain must NOT include any word starting with these "
+                    f"letters (case-insensitive): {letters}."
+                )
+        elif constraints.type == "semantic":
+            if constraints.include_anchors:
+                concepts = ", ".join(f"'{a}'" for a in constraints.include_anchors)
+                rules.append(
+                    f"- The chain MUST include at least one word semantically "
+                    f"related to EACH of these concepts: {concepts}."
+                )
+            if constraints.exclude_anchors:
+                concepts = ", ".join(f"'{a}'" for a in constraints.exclude_anchors)
+                rules.append(
+                    f"- The chain must NOT include any word semantically "
+                    f"related to these concepts: {concepts}."
+                )
             rules.append(
-                f"- The chain MUST include at least one word starting with each "
-                f"of these letters (case-insensitive): {letters}."
+                "Semantically related means the word sits in the same conceptual "
+                "neighborhood (e.g., for 'ocean' this would include 'wave', 'tide', "
+                "'salt', 'shore', 'deep', etc. — not just the anchor word itself)."
             )
-        if constraints.exclude_letters:
-            letters = ", ".join(f"'{l}'" for l in constraints.exclude_letters)
-            rules.append(
-                f"- The chain must NOT include any word starting with these "
-                f"letters (case-insensitive): {letters}."
-            )
+        else:
+            raise ValueError(f"Unknown constraints.type: {constraints.type}")
+
         rules.append(
             "Satisfy every constraint while still producing associative chains "
             "where each word connects to the one before it."
@@ -235,28 +382,63 @@ def parse_stage2_chain(raw: str | None, seed: str, second_word: str) -> list[str
 # --- constraint verification ---
 
 
-def check_constraints(chain: list[str], constraints: Constraints) -> dict:
+def check_constraints(
+    chain: list[str],
+    constraints: Constraints,
+    embeddings: "FastTextEmbeddings | None" = None,
+) -> dict:
     """Verify a chain against its constraints. Returns per-constraint booleans.
 
     The chain's first word is the seed (given, not the model's choice). We
     evaluate constraints over all words except the seed, which is the space
     the model actually controls.
-    """
-    # Exclude the seed from constraint checks — the model didn't choose it.
-    chain_body = chain[1:]
-    chain_initials = {w[0].lower() for w in chain_body if w}
 
-    include_results = {
-        l: (l.lower() in chain_initials)
-        for l in constraints.include_letters
-    }
-    exclude_results = {
-        l: (l.lower() not in chain_initials)
-        for l in constraints.exclude_letters
-    }
+    For semantic constraints, embeddings must be provided so we can compute
+    cosine similarities to anchor concepts.
+    """
+    chain_body = chain[1:]
+
+    if constraints.type == "lexical":
+        chain_initials = {w[0].lower() for w in chain_body if w}
+        include_results = {
+            l: (l.lower() in chain_initials)
+            for l in constraints.include_letters
+        }
+        exclude_results = {
+            l: (l.lower() not in chain_initials)
+            for l in constraints.exclude_letters
+        }
+    elif constraints.type == "semantic":
+        if embeddings is None:
+            raise ValueError("embeddings required for semantic constraint check")
+        # Pre-encode chain body words once
+        word_vecs = []
+        for w in chain_body:
+            if not w:
+                continue
+            v = embeddings.encode(w.lower())
+            if np.linalg.norm(v) > 0:
+                word_vecs.append(v)
+
+        def any_word_matches(anchor_word: str) -> bool:
+            av = embeddings.encode(anchor_word.lower())
+            if np.linalg.norm(av) == 0:
+                return False  # anchor OOV — treat inclusion as unsatisfied
+            for wv in word_vecs:
+                if _cosine_sim(av, wv) >= constraints.threshold:
+                    return True
+            return False
+
+        include_results = {
+            a: any_word_matches(a) for a in constraints.include_anchors
+        }
+        exclude_results = {
+            a: (not any_word_matches(a)) for a in constraints.exclude_anchors
+        }
+    else:
+        raise ValueError(f"Unknown constraints.type: {constraints.type}")
 
     satisfied = all(include_results.values()) and all(exclude_results.values())
-
     return {
         "satisfied": satisfied,
         "include_results": include_results,
@@ -267,6 +449,12 @@ def check_constraints(chain: list[str], constraints: Constraints) -> dict:
 # --- aggregate scoring ---
 
 
+def _n_include_exclude(constraints: Constraints) -> tuple[int, int]:
+    if constraints.type == "semantic":
+        return len(constraints.include_anchors), len(constraints.exclude_anchors)
+    return len(constraints.include_letters), len(constraints.exclude_letters)
+
+
 def compute_utility_hard(
     constraints: Constraints,
     satisfied: bool,
@@ -275,19 +463,15 @@ def compute_utility_hard(
 ) -> float:
     """Hard utility (Schapiro et al., arXiv:2509.21043).
 
-    U_hard(x) = [1 + alpha_I * |I|] * [1 + alpha_X * |X|] * 1[all constraints satisfied]
+    U_hard(x) = [1 + alpha_I * |I|] * [1 + alpha_X * |X|] * 1[all satisfied]
 
-    Zero on ANY violation (binary gate). Otherwise scales multiplicatively
-    with constraint count, rewarding harder problems. With alpha = 1:
-        L1 (0I, 0X) -> 1
-        L2 (1I or 1X) -> 2
-        L3 (1I + 1X) -> 4
-        L4 (2I + 2X) -> 9
+    Zero on ANY violation; otherwise scales with constraint count. Works for
+    both lexical and semantic constraints (constraint counts are read from
+    whichever fields the type uses).
     """
     if not satisfied:
         return 0.0
-    n_I = len(constraints.include_letters)
-    n_X = len(constraints.exclude_letters)
+    n_I, n_X = _n_include_exclude(constraints)
     return (1.0 + alpha_I * n_I) * (1.0 + alpha_X * n_X)
 
 
@@ -303,7 +487,8 @@ def compute_utility_soft(
     For L1 (no constraints) there is nothing to satisfy; by convention
     U_soft = 1.0 so L1 composite stays comparable to novelty.
     """
-    n_total = len(constraints.include_letters) + len(constraints.exclude_letters)
+    n_I, n_X = _n_include_exclude(constraints)
+    n_total = n_I + n_X
     if n_total == 0:
         return 1.0
     n_sat = sum(1 for ok in include_results.values() if ok) + \
@@ -339,20 +524,35 @@ def score_one(
     second_word: str,
     alpha_I: float = 1.0,
     alpha_X: float = 1.0,
+    threshold_override: float | None = None,
 ) -> CPaceResult:
+    """Score one chain. For semantic constraints, `threshold_override` lets the
+    caller swap τ at scoring time without re-running the LLM — useful for
+    sweeping τ post-hoc."""
     pace_out = score_chain(chain, embeddings)
-    check = check_constraints(chain, constraints)
+    # If an override is supplied, clone the constraints with the new threshold
+    # so the stored record reflects what was actually used.
+    effective_constraints = constraints
+    if threshold_override is not None and constraints.type == "semantic":
+        effective_constraints = Constraints(
+            level=constraints.level,
+            type="semantic",
+            include_anchors=list(constraints.include_anchors),
+            exclude_anchors=list(constraints.exclude_anchors),
+            threshold=threshold_override,
+        )
+    check = check_constraints(chain, effective_constraints, embeddings=embeddings)
     satisfied = bool(check["satisfied"])
     novelty = float(pace_out["chain_score"])
-    utility_hard = compute_utility_hard(constraints, satisfied, alpha_I, alpha_X)
+    utility_hard = compute_utility_hard(effective_constraints, satisfied, alpha_I, alpha_X)
     utility_soft = compute_utility_soft(
-        constraints, check["include_results"], check["exclude_results"],
+        effective_constraints, check["include_results"], check["exclude_results"],
     )
     return CPaceResult(
         seed=seed,
         second_word=second_word,
-        level=constraints.level,
-        constraints=constraints.to_dict(),
+        level=effective_constraints.level,
+        constraints=effective_constraints.to_dict(),
         chain=pace_out["words"],
         chain_score=novelty,
         n_oov=int(pace_out.get("n_oov", 0)),

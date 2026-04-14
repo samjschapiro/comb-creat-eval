@@ -35,9 +35,12 @@ from src.comb_eval.llm import call_llm_async, get_async_client, model_id_to_key
 from src.comb_eval.c_pace import (
     Constraints,
     DEFAULT_SEEDS,
+    FastTextEmbeddings,
+    build_semantic_anchor_fn,
     c_pace_stage1_prompt,
     c_pace_stage2_prompt,
     generate_constraints,
+    generate_semantic_constraints,
     parse_stage1,
     parse_stage2_chain,
 )
@@ -290,6 +293,10 @@ async def main(config_path: str, overwrite: bool = False, debug: bool = False,
     stage1_max_tokens = config.get("stage1_max_tokens", 400)
     stage2_max_tokens = config.get("stage2_max_tokens", 1200)
     constraint_seed = config.get("constraint_seed", 42)
+    constraint_type = config.get("constraint_type", "lexical")
+    semantic_threshold = config.get("semantic_threshold", 0.4)
+    semantic_seed_rejection = config.get("semantic_seed_rejection_threshold", 0.4)
+    fasttext_path = config.get("fasttext_path", "resources/crawl-300d-2M.vec")
 
     if debug:
         seeds = seeds[:3]
@@ -298,9 +305,25 @@ async def main(config_path: str, overwrite: bool = False, debug: bool = False,
     # Pre-generate constraints per (seed, level) so they're fixed across all models.
     rng = random.Random(constraint_seed)
     constraints_map: dict[tuple[str, int], Constraints] = {}
-    for seed in seeds:
-        for level in levels:
-            constraints_map[(seed, level)] = generate_constraints(level, rng)
+
+    if constraint_type == "lexical":
+        for seed in seeds:
+            for level in levels:
+                constraints_map[(seed, level)] = generate_constraints(level, rng)
+    elif constraint_type == "semantic":
+        print(f"Loading FastText for semantic constraint generation ({fasttext_path})...")
+        embeddings = FastTextEmbeddings(fasttext_path)
+        for seed in seeds:
+            anchor_draw = build_semantic_anchor_fn(
+                seed, embeddings, rng,
+                seed_neighborhood_threshold=semantic_seed_rejection,
+            )
+            for level in levels:
+                constraints_map[(seed, level)] = generate_semantic_constraints(
+                    level, rng, anchor_draw, threshold=semantic_threshold,
+                )
+    else:
+        raise ValueError(f"Unknown constraint_type: {constraint_type}")
 
     print(f"Models: {len(models)}")
     print(f"Seeds: {len(seeds)}  levels: {levels}  first-assocs: {n_first_assocs}")
@@ -311,9 +334,14 @@ async def main(config_path: str, overwrite: bool = False, debug: bool = False,
         print("Budget cap: NONE")
 
     # Print a sample of constraints so we can see what the task looks like
-    print("\nSample constraints (first 4):")
-    for k, v in list(constraints_map.items())[:4]:
-        print(f"  seed={k[0]} level={k[1]}: include={v.include_letters} exclude={v.exclude_letters}")
+    print(f"\nconstraint_type = {constraint_type}")
+    print("Sample constraints (first 6):")
+    for k, v in list(constraints_map.items())[:6]:
+        if v.type == "lexical":
+            inc, exc = v.include_letters, v.exclude_letters
+        else:
+            inc, exc = v.include_anchors, v.exclude_anchors
+        print(f"  seed={k[0]} level={k[1]}: include={inc} exclude={exc}")
 
     async_client = get_async_client()
     sem = asyncio.Semaphore(concurrency)

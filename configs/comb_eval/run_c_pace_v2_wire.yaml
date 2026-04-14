@@ -1,0 +1,21 @@
+# Tiny wire test for semantic C-PACE: 1 cheap model × 3 seeds × 4 levels.
+# Purpose: confirm the semantic prompt + verification pipeline works on real
+# responses before committing $24 to the full run.
+output_dir: "data/comb_eval/c_pace_v2_wire"
+budget_usd: 0.5
+concurrency: 10
+reasoning: {effort: "low", exclude: true}
+reasoning_max_tokens_multiplier: 4
+temperature: 0.0
+n_seeds: 3
+levels: [1, 2, 3, 4]
+n_first_assocs: 3
+stage1_max_tokens: 400
+stage2_max_tokens: 1200
+constraint_seed: 42
+constraint_type: "semantic"
+semantic_threshold: 0.4
+semantic_seed_rejection_threshold: 0.4
+fasttext_path: "resources/crawl-300d-2M.vec"
+models:
+  - google/gemma-2-9b-it
