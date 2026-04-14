@@ -1,0 +1,17 @@
+# PACE mechanistic decomposition: split PACE into interpretable sub-metrics
+# and correlate each with creative-writing benchmarks to identify which
+# structural component actually carries PACE's predictive signal.
+upstream_dir: "data/dat_eval/run_v1"
+output_dir: "data/dat_eval/run_v1/downstream/pace_mechanisms_v1"
+
+fasttext_path: "resources/crawl-300d-2M.vec"
+pace_response_filename: "pace_responses_t0-0.json"
+min_chains: 50
+
+benchmark_file: "configs/comb_eval/benchmarks.json"
+benchmark_columns:
+  - arena_cw
+  - arena_overall
+  - eq_bench_cw
+  - mazur_cw_v2
+  - hivemind_intra_sim
