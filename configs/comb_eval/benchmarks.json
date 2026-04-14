@@ -3,25 +3,29 @@
     "arena_overall": 1496,
     "arena_cw": 1467,
     "eq_bench_cw": 1911.3,
-    "eq_bench_cw_rubric": 16.53
+    "eq_bench_cw_rubric": 16.53,
+    "mmlu_pro": 0.891
   },
   "anthropic_claude-opus-4-5": {
     "arena_overall": 1468,
     "arena_cw": 1462,
     "eq_bench_cw": 1737.2,
-    "eq_bench_cw_rubric": 16.35
+    "eq_bench_cw_rubric": 16.35,
+    "mmlu_pro": 0.873
   },
   "openai_gpt-5-4": {
     "arena_overall": 1466,
     "arena_cw": 1429,
     "eq_bench_cw": 1991.7,
-    "eq_bench_cw_rubric": 16.89
+    "eq_bench_cw_rubric": 16.89,
+    "mmlu_pro": 0.875
   },
   "anthropic_claude-sonnet-4-6": {
     "arena_overall": 1462,
     "arena_cw": 1444,
     "eq_bench_cw": 1937.7,
-    "eq_bench_cw_rubric": 16.5
+    "eq_bench_cw_rubric": 16.5,
+    "mmlu_pro": 0.873
   },
   "openai_gpt-5-4-mini": {
     "arena_overall": 1459,
@@ -152,7 +156,8 @@
     "arena_cw": 1348,
     "eq_bench_cw": 1213.6,
     "eq_bench_cw_rubric": 15.33,
-    "mazur_cw_v2": 7.99
+    "mazur_cw_v2": 7.99,
+    "mmlu_pro": 0.675
   },
   "google_gemini-2-0-flash-001": {
     "arena_overall": 1360,
@@ -213,7 +218,8 @@
     "arena_cw": 1307,
     "eq_bench_cw": 898.8,
     "eq_bench_cw_rubric": 10.5,
-    "mazur_cw_v2": 6.2
+    "mazur_cw_v2": 6.2,
+    "mmlu_pro": 0.805
   },
   "anthropic_claude-3-5-haiku": {
     "arena_overall": 1323,
@@ -222,7 +228,8 @@
     "eq_bench_cw_rubric": 13.57,
     "hivemind_intra_sim": 0.89,
     "hivemind_pct_sim_above_0_8": 89.0,
-    "mazur_cw_v2": 7.35
+    "mazur_cw_v2": 7.35,
+    "mmlu_pro": 0.6212
   },
   "openai_gpt-4-turbo": {
     "arena_overall": 1323,
@@ -235,7 +242,8 @@
     "arena_overall": 1322,
     "arena_cw": 1290,
     "eq_bench_cw": 857.6,
-    "eq_bench_cw_rubric": 9.12
+    "eq_bench_cw_rubric": 9.12,
+    "mmlu_pro": 0.743
   },
   "openai_gpt-4-1-nano": {
     "arena_overall": 1321,
@@ -248,7 +256,8 @@
     "arena_overall": 1318,
     "arena_cw": 1286,
     "hivemind_intra_sim": 0.869,
-    "hivemind_pct_sim_above_0_8": 81.0
+    "hivemind_pct_sim_above_0_8": 81.0,
+    "mmlu_pro": 0.6592
   },
   "openai_gpt-4o-mini": {
     "arena_overall": 1317,
@@ -257,7 +266,8 @@
     "eq_bench_cw_rubric": 11.67,
     "hivemind_intra_sim": 0.886,
     "hivemind_pct_sim_above_0_8": 87.0,
-    "mazur_cw_v2": 6.72
+    "mazur_cw_v2": 6.72,
+    "mmlu_pro": 0.6309
   },
   "mistralai_mistral-large-2407": {
     "arena_overall": 1313,
@@ -281,7 +291,8 @@
     "arena_overall": 1302,
     "arena_cw": 1254,
     "hivemind_intra_sim": 0.859,
-    "hivemind_pct_sim_above_0_8": 74.0
+    "hivemind_pct_sim_above_0_8": 74.0,
+    "mmlu_pro": 0.7159
   },
   "nvidia_llama-3-1-nemotron-70b-instruct": {
     "arena_overall": 1298,
@@ -301,7 +312,8 @@
     "arena_overall": 1288,
     "arena_cw": 1291,
     "hivemind_intra_sim": 0.842,
-    "hivemind_pct_sim_above_0_8": 76.0
+    "hivemind_pct_sim_above_0_8": 76.0,
+    "mmlu_pro": 0.5654
   },
   "cohere_command-r-plus-08-2024": {
     "arena_overall": 1276,
@@ -316,7 +328,8 @@
     "eq_bench_cw": 878.9,
     "eq_bench_cw_rubric": 11.16,
     "hivemind_intra_sim": 0.831,
-    "hivemind_pct_sim_above_0_8": 71.0
+    "hivemind_pct_sim_above_0_8": 71.0,
+    "mmlu_pro": 0.5208
   },
   "anthropic_claude-3-haiku": {
     "arena_overall": 1260,
@@ -324,7 +337,8 @@
     "eq_bench_cw": 812.4,
     "eq_bench_cw_rubric": 9.91,
     "hivemind_intra_sim": 0.871,
-    "hivemind_pct_sim_above_0_8": 81.0
+    "hivemind_pct_sim_above_0_8": 81.0,
+    "mmlu_pro": 0.4229
   },
   "microsoft_phi-4": {
     "arena_overall": 1255,
@@ -347,7 +361,8 @@
     "eq_bench_cw": 804.1,
     "eq_bench_cw_rubric": 8.89,
     "hivemind_intra_sim": 0.807,
-    "hivemind_pct_sim_above_0_8": 71.0
+    "hivemind_pct_sim_above_0_8": 71.0,
+    "mmlu_pro": 0.4425
   },
   "mistralai_mistral-nemo": {
     "arena_overall": 1108,
@@ -355,7 +370,8 @@
     "eq_bench_cw": 922.4,
     "eq_bench_cw_rubric": 9.51,
     "hivemind_intra_sim": 0.796,
-    "hivemind_pct_sim_above_0_8": 61.0
+    "hivemind_pct_sim_above_0_8": 61.0,
+    "mmlu_pro": 0.4481
   },
   "meta-llama_llama-3-2-3b-instruct": {
     "arena_overall": 1166,
@@ -387,5 +403,8 @@
     "hivemind_intra_sim": 0.881,
     "hivemind_pct_sim_above_0_8": 82.0,
     "mmlu_pro": 0.643
+  },
+  "meta-llama_llama-3-2-1b-instruct": {
+    "mmlu_pro": 0.1195
   }
 }

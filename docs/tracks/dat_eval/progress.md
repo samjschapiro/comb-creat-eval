@@ -110,3 +110,84 @@ Paper artifacts (Overleaf-synced via `papers/iccc-2026/`)
       partial finding (they disagree; n=24 is small)
 - [ ] Optionally extend Hivemind sample by adding the Hivemind-only
       Llama-3.1-405B / o1 family / smaller Qwen variants
+
+### 2026-04-14 — Chain Drift Score (CDS): a simpler Pareto improvement over PACE
+
+Mechanistic decomposition of PACE on the same 54-model data revealed that
+PACE's signal comes entirely from non-adjacent word-pair distances in the
+20-word chain. A simpler metric — **mean cosine distance across all
+non-adjacent pairs, uniform-weighted (no positional weighting)** — Pareto-
+dominates PACE on every creative-writing benchmark in our suite. Details
+in [CDS report](../../reports/2026-04-13_chain_drift_score/report.md) and
+[mechanism report](../../reports/2026-04-13_mechanistic_pace/report.md).
+
+Per-gap correlation analysis (gap k = j-i in chain positions):
+- Adjacent pairs (k=1) correlate NEGATIVELY with Arena CW (ρ = -0.205)
+- Mid-gap pairs (k=4-8) are the peak (ρ ≈ +0.85)
+- PACE's formula 1/[(n-1)(i-1)] gives 19× more weight to k=1 than k=19 — exactly
+  inverted from the signal distribution
+
+Head-to-head results (n=49-51 for Arena, n=34 for EQ-Bench):
+
+| Benchmark | PACE ρ / r | CDS ρ / r | CDS advantage |
+|---|---|---|---|
+| Arena CW | +0.770 / +0.720 | **+0.838 / +0.733** | +0.068 ρ / +0.013 r |
+| Arena Overall | +0.724 / +0.667 | **+0.781 / +0.678** | +0.057 ρ / +0.011 r |
+| EQ-Bench CW | +0.756 / +0.710 | **+0.816 / +0.773** | +0.060 ρ / +0.063 r |
+| Mazur CW v2 | +0.701 / +0.727 | +0.684 / +0.697 | ~tie (n=20) |
+
+Triple-control partial correlations (controlling for Arena Overall AND MMLU-Pro,
+n expanded to 49 after MMLU-Pro scrape fill-in):
+
+| Benchmark | Metric | raw r | \| AO | \| MMLU | **\| BOTH** |
+|---|---|---|---|---|---|
+| Arena CW | CDS | +0.733*** | +0.446** | +0.472*** | **+0.396\*\*** |
+| Arena CW | PACE | +0.720*** | +0.427** | +0.547*** | **+0.326\*** |
+| EQ-Bench CW | CDS | +0.773*** | +0.339* | +0.480** | **+0.349\*** |
+| EQ-Bench CW | PACE | +0.710*** | +0.316. | +0.452** | +0.331. |
+
+**CDS and PACE both show significant creativity-specific partial correlations
+on Arena CW and EQ-Bench CW under the most stringent BOTH-control
+specification at n ≈ 33-49.** DAT, CDAT-Novelty, CDAT-Approp remain near zero
+or wrong-direction across every control specification.
+
+Hivemind partial correction: the previously reported +0.549* (CDS, BOTH
+controls) was inflated by small-n (n=14). With MMLU-Pro coverage expanded
+(now 53/55 models) the matched sample grows to n=23, and the Hivemind partial
+drops to +0.330 (not significant) for CDS, +0.355 (marginal) for PACE. Both
+still point in the right direction (more CDS → lower intra-model similarity
+= more diverse outputs) but the effect is modest, not dramatic. This is a
+correction to the Hivemind finding in the ICCC draft if that number is cited.
+
+### Implications for ICCC 2026 draft
+
+**Supports existing claims:**
+- "PACE is the only creativity metric that predicts Arena CW after partialling"
+  is *strengthened*, because (a) MMLU-Pro control gives larger partials than
+  Arena Overall control (due to Arena Overall being itself contaminated with
+  creative-writing variance), and (b) PACE survives the most stringent BOTH
+  control at partial r = +0.33*.
+- DAT/CDAT negative results replicate under the more stringent MMLU-Pro and
+  BOTH controls; the story in the ICCC paper holds.
+
+**Two optional updates to consider before ICCC camera-ready:**
+1. Swap PACE for CDS as the primary reported metric. Higher correlations,
+   simpler formula, mechanistic justification. Tradeoff: requires re-running
+   the existing paper's analyses (bootstrap CIs, inter-metric heatmap) with CDS
+   in place of PACE, and explaining CDS in the Method section. Upside: cleaner
+   numbers and a novel methodological contribution.
+2. Keep PACE as-is and reserve CDS for a full NeurIPS paper. Under this plan,
+   the ICCC paper stays focused on "which existing metrics predict creative
+   writing" and the CDS work stands alone as a methodological advance.
+
+Path of least resistance for ICCC: **option 2**. The CDS finding is a full
+paper's worth of work; the ICCC short paper is already complete and its PACE
+framing is correct.
+
+### 2026-04-14 — MMLU-Pro coverage expanded
+
+Scraped MMLU-Pro scores from TIGER-Lab's public leaderboard to fill coverage
+gaps. Went from 36/55 models to 53/55. Only gpt-5.4-mini and gpt-5.4-nano
+remain missing (not yet on the TIGER-Lab leaderboard). This expansion
+is what enables the n=49 Arena-CW-BOTH-control partial correlation reported
+above, where the earlier n=33 version was marginal.

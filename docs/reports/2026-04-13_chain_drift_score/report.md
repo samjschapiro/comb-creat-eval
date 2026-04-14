@@ -86,6 +86,32 @@ Pattern (3) wins. **The signal is cumulative displacement, not per-step novelty.
 
 This interpretation also explains why the two negative results in our prior work (C-PACE constraints and circle construction) didn't improve over PACE. Both added explicit structural requirements to the generation task — rules to track, closures to plan — which converted the measurement from "natural drift" (what CDS/PACE measure) to "drift under constraint" (which measures instruction-following more than creativity).
 
+## Relationship to DAT
+
+CDS and DAT (Olson et al. 2021, "Divergent Association Task") share the same mathematical skeleton: mean pairwise FastText cosine distance across a set of words a model produces. Structurally:
+
+| | DAT | CDS | PACE |
+|---|---|---|---|
+| N of words | 10 | 20 | 20 |
+| Ordered sequence? | No | Yes (chain) | Yes (chain) |
+| Adjacent pairs included? | n/a | No | Yes |
+| Positional weighting? | No | No | Yes |
+| Instruction given | "make them unrelated" | "chain each word to previous" | "chain each word to previous" |
+
+Empirically, they behave very differently. At n=51 on Arena creative writing:
+
+| Metric | Arena CW ρ | Arena CW r | Arena Overall ρ | CW specificity Δρ |
+|---|---|---|---|---|
+| DAT | +0.271 | **-0.102** | +0.259 | +0.012 |
+| PACE | +0.705 | +0.592 | +0.677 | +0.028 |
+| **CDS** | **+0.837** | **+0.733** | +0.781 | **+0.056** |
+
+DAT's Pearson correlation with Arena creative writing is slightly negative. Its Spearman is weakly positive. And adding DAT to CDS in a hierarchical regression adds ΔR² = +0.005 (not significant). Going the other direction: adding CDS to DAT adds ΔR² = **+0.531** (p < 0.0001). CDS fully subsumes DAT's creative-writing signal.
+
+Directly: **DAT and CDS have Spearman ρ = +0.414 and Pearson r = -0.006 with each other.** They agree partially on rankings, disagree almost entirely on levels.
+
+The conceptual difference explains the empirical gap: **DAT explicitly instructs divergence** ("produce 10 *unrelated* words") while **CDS measures divergence emergently** as a byproduct of a different task (associative chaining). DAT asks the model to optimize for the quantity we measure; CDS observes the quantity arising from coherent local behavior. The instructed version is capability-loaded (can the model remember to make the words unrelated?); the emergent version isn't. This supports our broader finding that adding explicit rules to creativity measurement converts it from a behaviour measurement to an instruction-following measurement.
+
 ## Practical use
 
 CDS is a drop-in replacement for PACE. The data collection procedure is identical; only the scoring formula changes. Concretely:
