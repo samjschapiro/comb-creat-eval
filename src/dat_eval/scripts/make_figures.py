@@ -96,6 +96,48 @@ def load_data():
     return corr, scores, benchmarks
 
 
+def load_composite_scores() -> dict:
+    """Build per-model composite metric scores by averaging across embeddings.
+
+    For each embedder in multi_embed_scores.json, z-score its metric values
+    across models, then for each model take the mean z-score across all three
+    embedders. Returns the same shape as all_scores.json (model -> metric ->
+    composite score) so existing plotting code can use it interchangeably.
+    """
+    me_path = RESULTS_DIR / "multi_embed_scores.json"
+    if not me_path.exists():
+        return {}
+    with open(me_path) as f:
+        me = json.load(f)
+    embs = sorted(me.keys())
+    tasks = ["dat", "cdat_novelty", "cdat_appropriateness", "pace"]
+    models = sorted({m for emb in embs for m in me[emb]})
+
+    composite: dict[str, dict[str, float]] = {}
+    for t in tasks:
+        stats = {}
+        for emb in embs:
+            vals = [me[emb].get(m, {}).get(t) for m in models]
+            vals = [v for v in vals if v is not None
+                    and not (isinstance(v, float) and (np.isnan(v) or v == 0))]
+            if not vals:
+                continue
+            stats[emb] = (float(np.mean(vals)), float(np.std(vals)) or 1.0)
+        for m in models:
+            zs = []
+            for emb in embs:
+                if emb not in stats:
+                    continue
+                v = me[emb].get(m, {}).get(t)
+                if v is None or (isinstance(v, float) and (np.isnan(v) or v == 0)):
+                    continue
+                mean, std = stats[emb]
+                zs.append((v - mean) / std)
+            if zs:
+                composite.setdefault(m, {})[t] = float(np.mean(zs))
+    return composite
+
+
 def sig_stars(p):
     if p < 0.001: return "***"
     if p < 0.01: return "**"
@@ -334,19 +376,22 @@ def fig2c_all_metrics_vs_hivemind(scores, benchmarks):
 
 # --- Figure 2 (combined): 4 metrics x 3 benchmarks grid ---
 def fig2_combined_grid(scores, benchmarks):
-    """Residualized scatter grid.
+    """Residualized scatter grid using composite (across-embedding) scores.
 
     Rows = creativity metrics (DAT / CDAT Nov / CDAT App / PACE).
-    Columns = benchmarks (Arena CW / EQ-B. / Mazur / Hivemind).
+    Columns = benchmarks (Arena CW / EQ-B. / Mazur / Hivemind diversity).
 
-    Each panel plots the residuals of (metric, benchmark) after both have
-    been regressed on the capability stack [Arena Overall, MMLU-Pro]. This
-    mirrors the joint-partial cells of the correlation-summary heatmap —
-    every point is what's left of the metric/benchmark relationship that
-    cannot be explained by either capability proxy. Panel stat is the
-    partial Pearson r on those residuals.
+    Per-model metric values are composite z-scores across GloVe, FastText,
+    and SBERT (the 'Overall' row of the main-body joint-partial table).
+    Each panel plots residuals after both metric and benchmark have been
+    regressed on [Arena Overall, MMLU-Pro]. Panel stat is partial Pearson
+    r on the residuals — matches the Overall row of Table~\\ref{tab:joint-partial}.
     """
     from scipy.stats import pearsonr
+
+    composite = load_composite_scores()
+    if composite:
+        scores = composite
     column_specs = [
         ("arena_cw",            "Arena CW (residual)"),
         ("eq_bench_cw",         "EQ-Bench CW (residual)"),
@@ -928,6 +973,121 @@ def fig_inter_metric_triangle(corr):
     print(f"Saved {out}")
 
 
+def fig_scatter_by_embedding(benchmarks):
+    """Non-residualized 4x4 scatter grid overlaying all three embeddings.
+
+    Rows = creativity metrics. Columns = benchmarks. Each panel shows up to
+    3 x ~50 points: per-embedding, per-model. Within each embedding, metric
+    scores are z-scored across models so the three embedding clouds overlay
+    on a common x-axis (raw benchmarks on y). Colors: GloVe / FastText / SBERT.
+    """
+    from scipy.stats import pearsonr
+
+    me_path = RESULTS_DIR / "multi_embed_scores.json"
+    if not me_path.exists():
+        print("Skipping fig_scatter_by_embedding: multi_embed_scores.json missing.")
+        return
+    with open(me_path) as f:
+        me = json.load(f)
+
+    emb_specs = [
+        ("glove",    "GloVe",    _BATLOW_SAMPLES[0]),
+        ("fasttext", "FastText", _BATLOW_SAMPLES[1]),
+        ("sbert",    "SBERT",    _BATLOW_SAMPLES[3]),
+    ]
+
+    column_specs = [
+        ("arena_cw",           "Arena CW"),
+        ("eq_bench_cw",        "EQ-Bench CW"),
+        ("mazur_cw_v2",        "Mazur V2"),
+        ("hivemind_diversity", "Hivemind Div."),
+    ]
+    n_rows = len(_METRIC_PANELS)
+    n_cols = len(column_specs)
+
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(12.0, 9.0),
+                              sharex="row", sharey="col")
+
+    # Pre-compute per-embedding z-score stats for each metric so clouds overlay.
+    tasks = [p[0] for p in _METRIC_PANELS]
+    models = sorted({m for emb, _, _ in emb_specs for m in me.get(emb, {})})
+    zstats = {}
+    for t in tasks:
+        for emb, _, _ in emb_specs:
+            vals = [me[emb].get(m, {}).get(t) for m in models]
+            vals = [v for v in vals if v is not None
+                    and not (isinstance(v, float) and (np.isnan(v) or v == 0))]
+            if vals:
+                zstats[(t, emb)] = (float(np.mean(vals)), float(np.std(vals)) or 1.0)
+
+    for row_idx, (metric_key, metric_label, _) in enumerate(_METRIC_PANELS):
+        for col_idx, (bench_key, _) in enumerate(column_specs):
+            ax = axes[row_idx, col_idx]
+            per_emb_stats = []
+            for emb_key, emb_label, emb_color in emb_specs:
+                mu_sigma = zstats.get((metric_key, emb_key))
+                if mu_sigma is None:
+                    continue
+                mu, sigma = mu_sigma
+                xs, ys = [], []
+                for mk, srow in me[emb_key].items():
+                    v = srow.get(metric_key)
+                    if v is None or (isinstance(v, float) and (np.isnan(v) or v == 0)):
+                        continue
+                    if mk not in benchmarks or bench_key not in benchmarks[mk]:
+                        continue
+                    xs.append((v - mu) / sigma)
+                    ys.append(benchmarks[mk][bench_key])
+                if not xs:
+                    continue
+                xs_a = np.asarray(xs)
+                ys_a = np.asarray(ys)
+                ax.scatter(xs_a, ys_a, s=14, color=emb_color, alpha=0.65,
+                           edgecolor="white", linewidth=0.3, zorder=3,
+                           label=emb_label if row_idx == 0 and col_idx == 0 else None)
+                if len(xs) >= 5:
+                    r, _ = pearsonr(xs_a, ys_a)
+                    per_emb_stats.append((emb_label, r, emb_color, len(xs)))
+
+            if per_emb_stats:
+                lines = []
+                for emb_label, r, _, n in per_emb_stats:
+                    lines.append(f"{emb_label[:1]}: {r:+.2f} ($n$={n})")
+                ax.text(0.03, 0.97, "\n".join(lines),
+                        transform=ax.transAxes, fontsize=7.0,
+                        verticalalignment="top",
+                        bbox=dict(facecolor="white", edgecolor="none",
+                                  alpha=0.78, pad=1.3))
+
+            ax.set_xlabel("")
+            ax.set_ylabel("")
+            ax.tick_params(axis="both", which="major", labelsize=8)
+
+    for col_idx, (_, bench_label) in enumerate(column_specs):
+        axes[0, col_idx].set_title(bench_label, fontsize=10.5, pad=8, weight="bold")
+    for row_idx, (_, metric_label, _) in enumerate(_METRIC_PANELS):
+        axes[row_idx, 0].annotate(
+            metric_label, xy=(-0.28, 0.5), xycoords="axes fraction",
+            ha="center", va="center", fontsize=10.5, weight="bold", rotation=90,
+        )
+
+    # One shared legend at the top
+    handles = [plt.Line2D([0], [0], marker="o", linestyle="",
+                           color=emb_color, markersize=5, markeredgecolor="white",
+                           markeredgewidth=0.3, label=emb_label)
+               for _, emb_label, emb_color in emb_specs]
+    fig.legend(handles=handles, loc="upper center",
+               bbox_to_anchor=(0.5, 1.005), ncol=3, frameon=False, fontsize=9)
+
+    fig.tight_layout(rect=[0.05, 0, 1, 0.985])
+
+    out = FIGS_DIR / "fig_scatter_by_embedding.pdf"
+    plt.savefig(out)
+    plt.savefig(out.with_suffix(".png"))
+    plt.close()
+    print(f"Saved {out}")
+
+
 def main():
     FIGS_DIR.mkdir(parents=True, exist_ok=True)
     corr, scores, benchmarks = load_data()
@@ -938,6 +1098,7 @@ def main():
     fig_correlation_summary_heatmap(corr)
     fig_inter_metric_triangle(corr)
     fig_benchmark_correlations(benchmarks)
+    fig_scatter_by_embedding(benchmarks)
 
     print(f"\nAll figures saved to {FIGS_DIR}")
 
