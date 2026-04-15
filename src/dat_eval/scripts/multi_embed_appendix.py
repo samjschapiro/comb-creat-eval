@@ -27,7 +27,7 @@ from pathlib import Path
 
 import numpy as np
 from scipy.spatial.distance import cosine as cosine_distance
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr, spearmanr, rankdata
 
 # ----- Repo paths -----
 ROOT = Path(__file__).resolve().parents[3]
@@ -274,6 +274,7 @@ def rescore_model(model_dir: Path, emb: Embedder, glove_vocab: GloVeEmbeddings) 
 # Correlation helpers
 # ---------------------------------------------------------------------------
 def joint_partial_r(target, predictor, controls):
+    """Joint partial Pearson r controlling for a stack of controls."""
     X = np.column_stack([np.ones_like(target)] + [np.asarray(c) for c in controls])
     bt, *_ = np.linalg.lstsq(X, target, rcond=None)
     bp, *_ = np.linalg.lstsq(X, predictor, rcond=None)
@@ -281,40 +282,63 @@ def joint_partial_r(target, predictor, controls):
     return pearsonr(rt, rp)
 
 
+def joint_partial_rho(target, predictor, controls):
+    """Joint partial Spearman rho: rank-transform everything, then partial Pearson."""
+    tr = rankdata(target)
+    pr = rankdata(predictor)
+    cr = [rankdata(c) for c in controls]
+    return joint_partial_r(tr, pr, cr)
+
+
 def correlate(scores_by_model: dict[str, dict[str, float]], benchmarks: dict) -> dict:
-    """Returns {task_embed_key: {simple_r, simple_p, partial_r, partial_p, n}}
-    for each task_embed_key = f"{task}__{emb}"."""
-    result = {}
-    # Discover tasks: we used dat, cdat_novelty, cdat_appropriateness, pace
+    """Returns {bench_key: {task: {simple_r, partial_r, ..., n}}}.
+
+    Computes correlations against each of the four creative-writing benchmarks
+    (arena_cw, eq_bench_cw, mazur_cw_v2, hivemind_diversity). Joint partial
+    controls for Arena Overall and MMLU-Pro simultaneously.
+    """
     tasks = ["dat", "cdat_novelty", "cdat_appropriateness", "pace"]
-    for task in tasks:
-        xs, ys, ao, mp = [], [], [], []
-        for mk, row in scores_by_model.items():
-            v = row.get(task)
-            if v is None or (isinstance(v, float) and math.isnan(v)):
+    bench_keys = ["arena_cw", "eq_bench_cw", "mazur_cw_v2", "hivemind_diversity"]
+    result: dict[str, dict] = {bk: {} for bk in bench_keys}
+
+    for bk in bench_keys:
+        for task in tasks:
+            xs, ys, ao, mp = [], [], [], []
+            for mk, row in scores_by_model.items():
+                v = row.get(task)
+                if v is None or (isinstance(v, float) and math.isnan(v)):
+                    continue
+                b = benchmarks.get(mk, {})
+                if bk not in b or "arena_overall" not in b or "mmlu_pro" not in b:
+                    continue
+                xs.append(v)
+                ys.append(b[bk])
+                ao.append(b["arena_overall"])
+                mp.append(b["mmlu_pro"])
+            if len(xs) < 5:
+                result[bk][task] = None
                 continue
-            b = benchmarks.get(mk, {})
-            if "arena_cw" not in b or "arena_overall" not in b or "mmlu_pro" not in b:
-                continue
-            xs.append(v)
-            ys.append(b["arena_cw"])
-            ao.append(b["arena_overall"])
-            mp.append(b["mmlu_pro"])
-        if len(xs) < 5:
-            result[task] = None
-            continue
-        xs_a = np.asarray(xs, float)
-        ys_a = np.asarray(ys, float)
-        simple_r, simple_p = pearsonr(xs_a, ys_a)
-        partial_r, partial_p = joint_partial_r(
-            ys_a, xs_a, [np.asarray(ao, float), np.asarray(mp, float)])
-        result[task] = {
-            "simple_r": float(simple_r),
-            "simple_p": float(simple_p),
-            "partial_r": float(partial_r),
-            "partial_p": float(partial_p),
-            "n": len(xs),
-        }
+            xs_a = np.asarray(xs, float)
+            ys_a = np.asarray(ys, float)
+            ao_a = np.asarray(ao, float)
+            mp_a = np.asarray(mp, float)
+
+            simple_r, simple_p = pearsonr(xs_a, ys_a)
+            partial_r, partial_p = joint_partial_r(ys_a, xs_a, [ao_a, mp_a])
+            simple_rho, simple_rho_p = spearmanr(xs_a, ys_a)
+            partial_rho, partial_rho_p = joint_partial_rho(ys_a, xs_a, [ao_a, mp_a])
+
+            result[bk][task] = {
+                "simple_r": float(simple_r),
+                "simple_p": float(simple_p),
+                "partial_r": float(partial_r),
+                "partial_p": float(partial_p),
+                "simple_rho": float(simple_rho),
+                "simple_rho_p": float(simple_rho_p),
+                "partial_rho": float(partial_rho),
+                "partial_rho_p": float(partial_rho_p),
+                "n": len(xs),
+            }
     return result
 
 
@@ -361,16 +385,25 @@ def main():
         corr_out[emb_name] = correlate(by_model, benchmarks)
     (OUT_DIR / "multi_embed_correlations.json").write_text(json.dumps(corr_out, indent=2))
 
-    # Pretty print
-    print("\n=== Correlations: Arena CW ===")
-    for emb_name, tasks in corr_out.items():
-        print(f"\n[{emb_name}]")
-        for task, c in tasks.items():
-            if c is None:
-                print(f"  {task:25s}: n<5")
-                continue
-            print(f"  {task:25s}: simple r={c['simple_r']:+.3f} p={c['simple_p']:.4f} | "
-                  f"partial r={c['partial_r']:+.3f} p={c['partial_p']:.4f} | n={c['n']}")
+    # Pretty print: a compact joint-partial table per benchmark.
+    bench_labels = {
+        "arena_cw": "Arena CW",
+        "eq_bench_cw": "EQ-Bench CW",
+        "mazur_cw_v2": "Mazur V2",
+        "hivemind_diversity": "Hivemind diversity",
+    }
+    for bk, bench_label in bench_labels.items():
+        print(f"\n=== Joint partial correlations vs {bench_label} (r / rho) ===")
+        for emb_name in ("glove", "fasttext", "sbert"):
+            tasks = corr_out[emb_name][bk]
+            print(f"\n[{emb_name}]")
+            for task in ("dat", "cdat_novelty", "cdat_appropriateness", "pace"):
+                c = tasks.get(task)
+                if c is None:
+                    print(f"  {task:25s}: n<5")
+                    continue
+                print(f"  {task:25s}: r={c['partial_r']:+.3f} (p={c['partial_p']:.4f}), "
+                      f"rho={c['partial_rho']:+.3f} (p={c['partial_rho_p']:.4f}), n={c['n']}")
 
 
 if __name__ == "__main__":
