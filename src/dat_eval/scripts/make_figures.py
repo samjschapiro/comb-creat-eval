@@ -334,22 +334,24 @@ def fig2c_all_metrics_vs_hivemind(scores, benchmarks):
 
 # --- Figure 2 (combined): 4 metrics x 3 benchmarks grid ---
 def fig2_combined_grid(scores, benchmarks):
-    """Single figure: rows = metrics (DAT / CDAT Nov / CDAT App / PACE),
-    columns = benchmarks (Arena CW / EQ-Bench CW / Hivemind).
+    """Residualized scatter grid.
 
-    Layout convention: x-axis = metric (the predictor), y-axis = benchmark
-    (the outcome). This means every panel in a given row shares the same
-    x-axis scale (same metric); every panel in a given column shares the
-    same y-axis scale (same benchmark). We therefore share axes within
-    rows and columns, hide redundant tick labels, and place metric/benchmark
-    labels only at grid edges.
+    Rows = creativity metrics (DAT / CDAT Nov / CDAT App / PACE).
+    Columns = benchmarks (Arena CW / EQ-B. / Mazur / Hivemind).
+
+    Each panel plots the residuals of (metric, benchmark) after both have
+    been regressed on the capability stack [Arena Overall, MMLU-Pro]. This
+    mirrors the joint-partial cells of the correlation-summary heatmap —
+    every point is what's left of the metric/benchmark relationship that
+    cannot be explained by either capability proxy. Panel stat is the
+    partial Pearson r on those residuals.
     """
-    from scipy.stats import spearmanr
+    from scipy.stats import pearsonr
     column_specs = [
-        ("arena_cw",            "Arena CW Elo"),
-        ("eq_bench_cw",         "EQ-Bench CW Elo"),
-        ("mazur_cw_v2",         "Mazur CW v2 (0-10)"),
-        ("hivemind_intra_sim",  "Hivemind intra-similarity"),
+        ("arena_cw",            "Arena CW (residual)"),
+        ("eq_bench_cw",         "EQ-Bench CW (residual)"),
+        ("mazur_cw_v2",         "Mazur CW v2 (residual)"),
+        ("hivemind_diversity",  "Hivemind diversity (residual)"),
     ]
     n_cols = len(column_specs)
     n_rows = len(_METRIC_PANELS)
@@ -357,43 +359,70 @@ def fig2_combined_grid(scores, benchmarks):
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(12.0, 9.0),
                               sharex="row", sharey="col")
 
+    # Index of the panel we want to emphasise visually: the load-bearing
+    # PACE x Arena CW cell. Find it dynamically to stay robust to reordering.
+    pace_row = next((i for i, (k, *_ ) in enumerate(_METRIC_PANELS) if k == "pace"), None)
+    arena_col = next((j for j, (k, _) in enumerate(column_specs) if k == "arena_cw"), None)
+
     for row_idx, (metric_key, metric_label, color) in enumerate(_METRIC_PANELS):
         for col_idx, (bench_key, bench_label) in enumerate(column_specs):
             ax = axes[row_idx, col_idx]
 
-            # Collect paired data for this metric / benchmark combo
-            xs, ys, labels = [], [], []
+            # Collect paired data for this metric / benchmark combo,
+            # restricted to models with BOTH capability proxies available.
+            xs, ys, ao, mp, labels = [], [], [], [], []
             for mk, sc in scores.items():
                 val = sc.get(metric_key)
                 if val is None or val == 0:
                     continue
                 if mk not in benchmarks or bench_key not in benchmarks[mk]:
                     continue
+                bench_row = benchmarks[mk]
+                ao_v = bench_row.get("arena_overall")
+                mp_v = bench_row.get("mmlu_pro")
+                if ao_v is None or mp_v is None:
+                    continue
                 xs.append(val)
-                ys.append(benchmarks[mk][bench_key])
+                ys.append(bench_row[bench_key])
+                ao.append(ao_v)
+                mp.append(mp_v)
                 labels.append(_short_label(mk))
 
-            if not xs:
-                ax.text(0.5, 0.5, "(no data)", ha="center", va="center",
+            if len(xs) < 5:
+                ax.text(0.5, 0.5, "(n < 5)", ha="center", va="center",
                         transform=ax.transAxes, color=C_GREY, fontsize=9)
                 continue
 
-            xs = np.array(xs)
-            ys = np.array(ys)
+            xs_raw = np.array(xs)
+            ys_raw = np.array(ys)
+            Z = np.column_stack([np.ones(len(xs_raw)),
+                                  np.array(ao), np.array(mp)])
+
+            # Residualise both against [1, Arena Overall, MMLU-Pro]
+            beta_x, *_ = np.linalg.lstsq(Z, xs_raw, rcond=None)
+            xs = xs_raw - Z @ beta_x
+            beta_y, *_ = np.linalg.lstsq(Z, ys_raw, rcond=None)
+            ys = ys_raw - Z @ beta_y
 
             ax.scatter(xs, ys, s=22, color=color, alpha=0.78,
                        edgecolor="white", linewidth=0.4, zorder=3)
 
-            rho, pval = spearmanr(xs, ys)
+            # Partial Pearson r is the Pearson on the residuals
+            rho, pval = pearsonr(xs, ys)
             order = np.argsort(xs)
             ax.plot(xs[order], np.poly1d(np.polyfit(xs, ys, 1))(xs[order]),
                     color=C_RED, linewidth=1.0, linestyle="--",
                     alpha=0.6, zorder=2)
 
-            # Per-panel stat readout in the corner
+            # Zero lines to remind the reader these are residuals around zero
+            ax.axhline(0, color=C_GREY, linewidth=0.5, linestyle=":", alpha=0.6, zorder=1)
+            ax.axvline(0, color=C_GREY, linewidth=0.5, linestyle=":", alpha=0.6, zorder=1)
+
+            # Per-panel stat readout in the corner. This is the partial
+            # Pearson r, i.e. Pearson correlation of the residuals.
             stars = sig_stars(pval)
             ax.text(0.03, 0.97,
-                    f"$\\rho$ = {rho:+.2f}{stars}\n$n$ = {len(xs)}",
+                    f"$r_{{\\mathrm{{partial}}}} = {rho:+.2f}{stars}$\n$n$ = {len(xs)}",
                     transform=ax.transAxes, fontsize=8.0,
                     verticalalignment="top",
                     bbox=dict(facecolor="white", edgecolor="none",
@@ -432,6 +461,14 @@ def fig2_combined_grid(scores, benchmarks):
             ax.set_xlabel("")
             ax.set_ylabel("")
             ax.tick_params(axis="both", which="major", labelsize=8)
+
+            # Emphasise the load-bearing panel (PACE x Arena CW) with a
+            # thicker dark border so the reader's eye lands there.
+            if row_idx == pace_row and col_idx == arena_col:
+                for spine in ax.spines.values():
+                    spine.set_visible(True)
+                    spine.set_linewidth(2.0)
+                    spine.set_edgecolor("#222222")
 
     # Column titles (benchmark names) on the top row.
     for col_idx, (_, bench_label) in enumerate(column_specs):
@@ -626,6 +663,186 @@ def fig4_cdat_by_temperature(corr):
     print(f"Saved {out}")
 
 
+def fig_correlation_summary_heatmap(corr):
+    """Heatmap replacement for the tabular correlation summary.
+
+    Layout: 4 metrics (rows) x 8 cells (cols), where the 8 cols alternate
+    Simple and joint-Partial for each of the four benchmarks (Arena CW,
+    EQ-B., Mazur, Hivemind diversity). Each cell is coloured by Spearman rho
+    and annotated with the rho and its significance stars. The joint partial
+    uses Arena Overall + MMLU-Pro as controls.
+    """
+    metrics = ["dat", "cdat_novelty", "cdat_appropriateness", "pace"]
+    metric_labels = ["DAT", "CDAT Nov.", "CDAT App.", "PACE"]
+
+    benchmarks = [
+        ("arena_cw",           "vs_arena_cw",           "partial_cw_control_both",       "Arena"),
+        ("eq_bench_cw",        "vs_eq_bench_cw",        "partial_eqbench_control_both",  "EQ-B."),
+        ("mazur_cw_v2",        "vs_mazur_cw",           "partial_mazur_control_both",    "Mazur"),
+        ("hivemind_diversity", "vs_hivemind_diversity", "partial_hivemind_control_both", "Hive."),
+    ]
+
+    n_metrics = len(metrics)
+    n_cols = 2 * len(benchmarks)
+    rho_mat = np.full((n_metrics, n_cols), np.nan)  # holds Pearson r
+    p_mat = np.full((n_metrics, n_cols), np.nan)
+    n_mat = np.full((n_metrics, n_cols), np.nan)
+
+    for i, m in enumerate(metrics):
+        for j, (_, simple_key, partial_key, _) in enumerate(benchmarks):
+            for col_offset, key in enumerate([simple_key, partial_key]):
+                entry = corr.get(m, {}).get(key)
+                if entry is None:
+                    continue
+                rho_mat[i, 2 * j + col_offset] = entry["pearson_r"]
+                p_mat[i, 2 * j + col_offset]   = entry["pearson_p"]
+                n_mat[i, 2 * j + col_offset]   = entry["n_models"]
+
+    fig, ax = plt.subplots(figsize=(7.2, 2.6))
+    im = ax.imshow(rho_mat, vmin=-0.8, vmax=0.8, cmap=CMAP_SEQ, aspect="auto")
+
+    # Column labels on top: alternating "Simp." / "Part."
+    col_sub_labels = ["Simp.", "Part."] * len(benchmarks)
+    ax.set_xticks(range(n_cols))
+    ax.set_xticklabels(col_sub_labels, fontsize=8)
+    ax.tick_params(axis="x", which="major", length=0, pad=2)
+
+    # Benchmark-group labels above the subcolumn labels
+    for j, (_, _, _, bench_label) in enumerate(benchmarks):
+        x_center = 2 * j + 0.5
+        ax.text(x_center, -1.2, bench_label,
+                ha="center", va="bottom", fontsize=9.5, fontweight="bold",
+                transform=ax.transData)
+
+    # Row labels
+    ax.set_yticks(range(n_metrics))
+    ax.set_yticklabels(metric_labels, fontsize=9)
+    ax.tick_params(axis="y", which="major", length=0)
+
+    # Vertical dividers between benchmark groups
+    for j in range(1, len(benchmarks)):
+        ax.axvline(2 * j - 0.5, color="white", linewidth=2.0, zorder=4)
+
+    # Annotate cells with rho + stars; white text on dark cells.
+    for i in range(n_metrics):
+        for j in range(n_cols):
+            v = rho_mat[i, j]
+            if np.isnan(v):
+                continue
+            stars = sig_stars(p_mat[i, j])
+            txt = f"{v:+.2f}{stars}"
+            # Batlow is dark at low values and bright at high values. White
+            # text reads best on the dark (low/negative) end.
+            color = "white" if v < -0.1 else "black"
+            ax.text(j, i, txt, ha="center", va="center",
+                    fontsize=7.8, color=color, zorder=3)
+
+    cbar = plt.colorbar(im, ax=ax, shrink=0.85, pad=0.02)
+    cbar.set_label("Pearson $r$", fontsize=8)
+    cbar.ax.tick_params(labelsize=7)
+
+    # Footer: n per column group (Simple / Partial)
+    ns = {j: int(np.nanmax(n_mat[:, 2 * j])) if not np.all(np.isnan(n_mat[:, 2 * j])) else "-"
+          for j in range(len(benchmarks))}
+    nps = {j: int(np.nanmax(n_mat[:, 2 * j + 1])) if not np.all(np.isnan(n_mat[:, 2 * j + 1])) else "-"
+           for j in range(len(benchmarks))}
+    footer = "   ".join(
+        f"{lbl}: n={ns[j]}/{nps[j]}"
+        for j, (_, _, _, lbl) in enumerate(benchmarks)
+    )
+    ax.text(0.0, 1.18, footer,
+            transform=ax.transAxes, fontsize=7, color=C_GREY, va="bottom")
+
+    fig.tight_layout()
+    out = FIGS_DIR / "fig_correlation_summary.pdf"
+    plt.savefig(out)
+    plt.savefig(out.with_suffix(".png"))
+    plt.close()
+    print(f"Saved {out}")
+
+
+def fig_benchmark_correlations(benchmarks):
+    """Pairwise Pearson correlations among the capability proxies and
+    outcome benchmarks. Provides a calibration view of how much capability
+    each creative-writing benchmark reflects (motivates the partialling).
+
+    Rows/cols (in order, so the capability proxies sit upper-left):
+        Arena Overall, MMLU-Pro, Arena CW, EQ-B. CW, Mazur V2, Hivemind Div.
+    """
+    from scipy.stats import pearsonr
+
+    keys = ["arena_overall", "mmlu_pro", "arena_cw", "eq_bench_cw",
+            "mazur_cw_v2", "hivemind_diversity"]
+    labels = ["Arena Ovr", "MMLU-Pro", "Arena CW", "EQ-B. CW",
+              "Mazur V2", "Hive. Div."]
+    n = len(keys)
+    mat = np.full((n, n), np.nan)
+    n_mat = np.zeros((n, n), dtype=int)
+    for i, ki in enumerate(keys):
+        for j, kj in enumerate(keys):
+            xs, ys = [], []
+            for _, v in benchmarks.items():
+                if ki in v and kj in v:
+                    xs.append(v[ki])
+                    ys.append(v[kj])
+            if len(xs) >= 3:
+                r, _ = pearsonr(xs, ys)
+                mat[i, j] = r
+                n_mat[i, j] = len(xs)
+
+    # Display only the lower triangle (matrix is symmetric); blank out upper.
+    display = np.where(np.isnan(mat), 0.0, mat)
+    mask = np.ones((n, n), dtype=bool)
+    for i in range(n):
+        for j in range(n):
+            if j <= i:
+                mask[i, j] = False
+
+    fig, ax = plt.subplots(figsize=(3.6, 3.4))
+    im = ax.imshow(display, vmin=-1, vmax=1, cmap=CMAP_SEQ, aspect="equal")
+
+    # White out the strictly upper triangle so the figure reads as a
+    # triangular calibration matrix, not a square one.
+    for i in range(n):
+        for j in range(n):
+            if mask[i, j]:
+                ax.add_patch(plt.Rectangle((j - 0.5, i - 0.5), 1, 1,
+                                            color="white", zorder=2))
+
+    ax.set_xticks(range(n))
+    ax.set_yticks(range(n))
+    ax.set_xticklabels(labels, rotation=35, ha="right", fontsize=8)
+    ax.set_yticklabels(labels, fontsize=8)
+
+    # Annotate lower triangle
+    for i in range(n):
+        for j in range(n):
+            if j > i:
+                continue
+            v = mat[i, j]
+            if np.isnan(v):
+                continue
+            if i == j:
+                txt = "—"
+            else:
+                txt = f"{v:+.2f}"
+            color = "white" if v < -0.2 else "black"
+            ax.text(j, i, txt, ha="center", va="center",
+                    fontsize=7.5, color=color, zorder=3)
+
+    cbar = plt.colorbar(im, ax=ax, shrink=0.75, pad=0.04)
+    cbar.set_label("Pearson $r$", fontsize=8)
+    cbar.ax.tick_params(labelsize=7)
+    ax.tick_params(axis="both", which="major", length=0)
+
+    fig.tight_layout()
+    out = FIGS_DIR / "fig_benchmark_correlations.pdf"
+    plt.savefig(out)
+    plt.savefig(out.with_suffix(".png"))
+    plt.close()
+    print(f"Saved {out}")
+
+
 def fig_inter_metric_triangle(corr):
     """Triangular heatmap of inter-metric Spearman correlations.
 
@@ -655,17 +872,16 @@ def fig_inter_metric_triangle(corr):
             entry = inter.get(key_a) or inter.get(key_b)
             if entry is None:
                 continue
-            mat[i, j] = entry["spearman_rho"]
-            pmat[i, j] = entry["p_value"]
+            mat[i, j] = entry.get("pearson_r", entry["spearman_rho"])
+            pmat[i, j] = entry.get("pearson_p", entry["p_value"])
 
     # Mask upper triangle for plotting
     display = np.where(np.isnan(mat), 0.0, mat)
     mask = np.isnan(mat)
 
     fig, ax = plt.subplots(figsize=(3.3, 3.2))
-    # Diverging Green-Red ("RdYlGn"): red at -1, yellow at 0, green at +1.
-    cmap_gr = plt.get_cmap("RdYlGn")
-    im = ax.imshow(display, vmin=-1, vmax=1, cmap=cmap_gr, aspect="equal")
+    # Batlow (sequential, perceptually uniform): dark at -1, bright at +1.
+    im = ax.imshow(display, vmin=-1, vmax=1, cmap=CMAP_SEQ, aspect="equal")
 
     # White-out upper triangle (and diagonal if desired; keeping diagonal
     # shaded to indicate self-identity)
@@ -691,15 +907,14 @@ def fig_inter_metric_triangle(corr):
             else:
                 stars = sig_stars(pmat[i, j])
                 txt = f"{mat[i, j]:+.2f}{stars}"
-                # RdYlGn: deep red at -1 and deep green at +1 are dark enough
-                # that white text reads better; near zero the yellow band wants
-                # black text.
-                color = "white" if abs(mat[i, j]) > 0.6 else "black"
+                # Batlow is dark at low values (purple-blue), bright at high
+                # values (yellow-orange). White text on dark (negative) cells.
+                color = "white" if mat[i, j] < -0.2 else "black"
             ax.text(j, i, txt, ha="center", va="center",
                     fontsize=7.5, color=color, zorder=3)
 
     cbar = plt.colorbar(im, ax=ax, shrink=0.75, pad=0.04)
-    cbar.set_label("Spearman $\\rho$", fontsize=8)
+    cbar.set_label("Pearson $r$", fontsize=8)
     cbar.ax.tick_params(labelsize=7)
 
     ax.set_title("Inter-metric correlations", fontsize=9.5, pad=4)
@@ -720,7 +935,9 @@ def main():
     fig1_correlation_matrix(corr)
     fig2_combined_grid(scores, benchmarks)
     fig4_cdat_by_temperature(corr)
+    fig_correlation_summary_heatmap(corr)
     fig_inter_metric_triangle(corr)
+    fig_benchmark_correlations(benchmarks)
 
     print(f"\nAll figures saved to {FIGS_DIR}")
 

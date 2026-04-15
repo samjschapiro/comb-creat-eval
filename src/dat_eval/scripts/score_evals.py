@@ -233,6 +233,40 @@ def partial_spearman(
     return spearman_corr(resid_target.tolist(), resid_predictor.tolist())
 
 
+def partial_pearson_multi(
+    target: np.ndarray,
+    predictor: np.ndarray,
+    controls: list[np.ndarray],
+) -> tuple[float, float]:
+    """Pearson partial correlation controlling for multiple variables.
+
+    Regresses target and predictor each on the stack of control variables
+    via least squares, then Pearson-correlates the residuals.
+    """
+    X = np.column_stack([np.ones(len(target))] + [np.asarray(c) for c in controls])
+    beta_t, *_ = np.linalg.lstsq(X, target, rcond=None)
+    resid_target = target - X @ beta_t
+    beta_p, *_ = np.linalg.lstsq(X, predictor, rcond=None)
+    resid_predictor = predictor - X @ beta_p
+    return pearson_corr(resid_target.tolist(), resid_predictor.tolist())
+
+
+def partial_spearman_multi(
+    target: np.ndarray,
+    predictor: np.ndarray,
+    controls: list[np.ndarray],
+) -> tuple[float, float]:
+    """Spearman partial correlation controlling for multiple variables.
+
+    Rank-transforms every variable, then applies the multi-control partial
+    Pearson construction to the ranks.
+    """
+    tr = stats.rankdata(target)
+    pr = stats.rankdata(predictor)
+    cr = [stats.rankdata(c) for c in controls]
+    return partial_pearson_multi(tr, pr, cr)
+
+
 def bootstrap_spearman(
     x: np.ndarray,
     y: np.ndarray,
@@ -439,8 +473,12 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
             if "eq_bench_cw" in bench:
                 eqbench_cw_vals.append(bench["eq_bench_cw"])
                 eqbench_cw_keys.append(model_key)
-            if "hivemind_intra_sim" in bench:
-                hivemind_vals.append(bench["hivemind_intra_sim"])
+            if "hivemind_diversity" in bench:
+                hivemind_vals.append(bench["hivemind_diversity"])
+                hivemind_keys.append(model_key)
+            elif "hivemind_intra_sim" in bench:
+                # Fallback: convert legacy intra-sim to diversity (1 - sim)
+                hivemind_vals.append(1.0 - bench["hivemind_intra_sim"])
                 hivemind_keys.append(model_key)
             if "mazur_cw_v2" in bench:
                 mazur_vals.append(bench["mazur_cw_v2"])
@@ -564,10 +602,9 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
                 }
                 print(f"{metric.upper()} partial EQ-Bench (| Overall): rho={part_rho:.3f} (p={part_p:.4f}), r={part_r:.3f} (p={part_r_p:.4f})")
 
-        # Also correlate with Hivemind intra-model similarity. Note: Hivemind
-        # metric is *homogeneity* — higher = less diverse output. A creativity
-        # metric should correlate NEGATIVELY with hivemind_intra_sim
-        # (creative models produce more varied output).
+        # Correlate with Hivemind output diversity (= 1 - intra-model similarity).
+        # Higher diversity is expected for more creative models, so a valid
+        # creativity metric should correlate POSITIVELY with hivemind_diversity.
         if len(hivemind_vals) >= 5:
             hm_aligned_x = [
                 val for mk, val in zip(aligned_models, metric_vals)
@@ -582,7 +619,7 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
             rho_hm, p_hm = spearman_corr(x_hm.tolist(), y_hm.tolist())
             r_hm, p_r_hm = pearson_corr(x_hm.tolist(), y_hm.tolist())
             boot_hm = bootstrap_spearman(x_hm, y_hm, n_iter=n_bootstrap)
-            corr_results[metric]["vs_hivemind_intra_sim"] = {
+            corr_results[metric]["vs_hivemind_diversity"] = {
                 "spearman_rho": rho_hm,
                 "spearman_p": p_hm,
                 "pearson_r": r_hm,
@@ -590,10 +627,10 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
                 "p_value": p_hm,
                 "n_models": len(hivemind_vals),
                 "bootstrap": boot_hm,
-                "note": "NEGATIVE correlation expected — hivemind_intra_sim measures homogeneity, inverse of creativity",
+                "note": "POSITIVE correlation expected — hivemind_diversity = 1 - intra_sim, higher = more diverse",
             }
-            direction = "expected negative" if rho_hm < 0 else "WRONG DIRECTION"
-            print(f"{metric.upper()} vs Hivemind intra-sim: rho={rho_hm:.3f} (p={p_hm:.4f}), r={r_hm:.3f} (p={p_r_hm:.4f}), n={len(hivemind_vals)}, {direction}")
+            direction = "expected positive" if rho_hm > 0 else "WRONG DIRECTION"
+            print(f"{metric.upper()} vs Hivemind diversity: rho={rho_hm:.3f} (p={p_hm:.4f}), r={r_hm:.3f} (p={p_r_hm:.4f}), n={len(hivemind_vals)}, {direction}")
 
             if len(hm_aligned_overall) == len(hivemind_vals):
                 part_rho, part_p = partial_spearman(
@@ -641,6 +678,46 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
                 out_mp.append(mp)
             return out_m, out_b, out_mp
 
+        def _filter_with_both(keys_with_metric, metric_values, bench_values, target_keys):
+            """Return arrays (metric, bench, arena_overall, mmlu_pro) subset to
+            models that have all four. Used for the BOTH-controls partial."""
+            out_m, out_b, out_ao, out_mp = [], [], [], []
+            bench_by_key = dict(zip(target_keys, bench_values))
+            for mk, mv in zip(keys_with_metric, metric_values):
+                if mk not in bench_by_key:
+                    continue
+                bench_row = benchmarks.get(mk, {})
+                ao = bench_row.get("arena_overall")
+                mp = bench_row.get("mmlu_pro")
+                if ao is None or mp is None:
+                    continue
+                out_m.append(mv)
+                out_b.append(bench_by_key[mk])
+                out_ao.append(ao)
+                out_mp.append(mp)
+            return out_m, out_b, out_ao, out_mp
+
+        def _add_both_partial(result_key, keys_with_metric, metric_values, bench_values, target_keys):
+            """Compute partial correlation against a benchmark controlling for
+            both Arena Overall AND MMLU-Pro simultaneously. Writes to
+            corr_results[metric][result_key] if n >= 5."""
+            m_vals, b_vals, ao_vals, mp_vals = _filter_with_both(
+                keys_with_metric, metric_values, bench_values, target_keys)
+            if len(m_vals) < 5:
+                return
+            target = np.array(b_vals)
+            predictor = np.array(m_vals)
+            controls = [np.array(ao_vals), np.array(mp_vals)]
+            part_rho, part_p = partial_spearman_multi(target, predictor, controls)
+            part_r, part_r_p = partial_pearson_multi(target, predictor, controls)
+            corr_results[metric][result_key] = {
+                "spearman_rho": part_rho, "spearman_p": part_p,
+                "pearson_r": part_r, "pearson_p": part_r_p,
+                "p_value": part_p, "n_models": len(m_vals),
+            }
+            nice = result_key.replace("partial_", "").replace("_control_both", "")
+            print(f"{metric.upper()} partial {nice} (| Overall+MMLU): rho={part_rho:.3f} (p={part_p:.4f}), r={part_r:.3f} (p={part_r_p:.4f}), n={len(m_vals)}")
+
         # Arena CW partialled on MMLU-Pro
         m_vals, b_vals, mp_vals = _filter_with_mmlu(
             aligned_models, metric_vals, arena_cw_vals, aligned_models)
@@ -655,6 +732,9 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
                 "p_value": part_p, "n_models": len(m_vals),
             }
             print(f"{metric.upper()} partial (CW | MMLU-Pro): rho={part_rho:.3f} (p={part_p:.4f}), r={part_r:.3f} (p={part_r_p:.4f}), n={len(m_vals)}")
+
+        _add_both_partial("partial_cw_control_both",
+                          aligned_models, metric_vals, arena_cw_vals, aligned_models)
 
         # EQ-Bench CW partialled on MMLU-Pro
         m_vals, b_vals, mp_vals = _filter_with_mmlu(
@@ -671,6 +751,9 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
             }
             print(f"{metric.upper()} partial EQ-Bench (| MMLU-Pro): rho={part_rho:.3f} (p={part_p:.4f}), r={part_r:.3f} (p={part_r_p:.4f}), n={len(m_vals)}")
 
+        _add_both_partial("partial_eqbench_control_both",
+                          aligned_models, metric_vals, eqbench_cw_vals, eqbench_cw_keys)
+
         # Hivemind partialled on MMLU-Pro
         m_vals, b_vals, mp_vals = _filter_with_mmlu(
             aligned_models, metric_vals, hivemind_vals, hivemind_keys)
@@ -685,6 +768,9 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
                 "p_value": part_p, "n_models": len(m_vals),
             }
             print(f"{metric.upper()} partial Hivemind (| MMLU-Pro): rho={part_rho:.3f} (p={part_p:.4f}), r={part_r:.3f} (p={part_r_p:.4f}), n={len(m_vals)}")
+
+        _add_both_partial("partial_hivemind_control_both",
+                          aligned_models, metric_vals, hivemind_vals, hivemind_keys)
 
         # --------------------------------------------------------------
         # Mazur V2 Creative Writing (appendix-only; n ≈ 21). A third
@@ -737,6 +823,9 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
                 }
                 print(f"{metric.upper()} partial Mazur (| MMLU-Pro): rho={part_rho:.3f} (p={part_p:.4f}), r={part_r:.3f} (p={part_r_p:.4f}), n={len(m_vals)}")
 
+            _add_both_partial("partial_mazur_control_both",
+                              aligned_models, metric_vals, mazur_vals, mazur_keys)
+
     # Inter-metric correlations
     metrics_available = [m for m in ["dat", "cdat_novelty", "cdat_appropriateness", "pace"]
                          if any(m in v for v in model_scores.values())]
@@ -752,13 +841,16 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
                     x = [model_scores[k][m1] for k in common]
                     y = [model_scores[k][m2] for k in common]
                     rho, p = spearman_corr(x, y)
+                    r, r_p = pearson_corr(x, y)
                     key = f"{m1}_vs_{m2}"
                     corr_results["inter_metric"][key] = {
                         "spearman_rho": rho,
+                        "pearson_r": r,
+                        "pearson_p": r_p,
                         "p_value": p,
                         "n_models": len(common),
                     }
-                    print(f"  {m1} vs {m2}: rho={rho:.3f}, p={p:.4f} (n={len(common)})")
+                    print(f"  {m1} vs {m2}: rho={rho:.3f}, r={r:.3f} (n={len(common)})")
 
     with open(output_dir / "results" / "correlation_analysis.json", "w") as f:
         json.dump(corr_results, f, indent=2)

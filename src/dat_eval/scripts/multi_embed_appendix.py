@@ -1,0 +1,377 @@
+"""Rescore DAT/CDAT/PACE under three embedding models for appendix robustness.
+
+Each model's existing raw responses (already on disk under
+`data/dat_eval/run_v1/`) are rescored under three embeddings:
+
+  - GloVe 840B 300d (DAT original)
+  - FastText crawl-300d-2M (PACE original)
+  - SBERT all-mpnet-base-v2 (CDAT original)
+
+Output:
+  data/dat_eval/run_v1/downstream/scores_v1/results/multi_embed_scores.json
+  data/dat_eval/run_v1/downstream/scores_v1/results/multi_embed_correlations.json
+
+Each (task, embedder) pair yields a per-model score. We then correlate each
+column with Arena CW and compute the joint partial controlling for both
+Arena Overall Elo and MMLU-Pro. Result is a compact 9-row table for the
+appendix: {task x embedder} x {simple r, partial r | O+M}.
+"""
+
+from __future__ import annotations
+
+import json
+import math
+import os
+import sys
+from pathlib import Path
+
+import numpy as np
+from scipy.spatial.distance import cosine as cosine_distance
+from scipy.stats import pearsonr
+
+# ----- Repo paths -----
+ROOT = Path(__file__).resolve().parents[3]
+RUN_DIR = ROOT / "data" / "dat_eval" / "run_v1"
+BENCH_PATH = ROOT / "configs" / "comb_eval" / "benchmarks.json"
+OUT_DIR = RUN_DIR / "downstream" / "scores_v1" / "results"
+GLOVE_PATH = ROOT / "resources" / "glove.840B.300d.txt"
+FASTTEXT_PATH = ROOT / "resources" / "crawl-300d-2M.vec"
+
+sys.path.insert(0, str(ROOT))
+from src.dat_eval.dat import GloVeEmbeddings, validate_words  # noqa: E402
+
+
+# ---------------------------------------------------------------------------
+# Unified embedder interface
+# ---------------------------------------------------------------------------
+class Embedder:
+    """Simple protocol: encode(word) -> np.ndarray; returns zero vector on OOV.
+    has(word) -> bool tells you whether this word is natively in-vocab.
+    """
+    name: str
+
+    def has(self, word: str) -> bool:  # pragma: no cover
+        raise NotImplementedError
+
+    def encode(self, word: str) -> np.ndarray:  # pragma: no cover
+        raise NotImplementedError
+
+
+class GloVeEmbedder(Embedder):
+    name = "glove"
+
+    def __init__(self):
+        self._g = GloVeEmbeddings(GLOVE_PATH)
+
+    def has(self, word: str) -> bool:
+        return word in self._g
+
+    def encode(self, word: str) -> np.ndarray:
+        if word in self._g:
+            return self._g[word]
+        return np.zeros(300, dtype=np.float32)
+
+
+class FastTextEmbedder(Embedder):
+    name = "fasttext"
+
+    def __init__(self):
+        self._v: dict[str, np.ndarray] = {}
+        print(f"Loading FastText from {FASTTEXT_PATH}...", flush=True)
+        with open(FASTTEXT_PATH, "r", encoding="utf-8") as f:
+            f.readline()  # header
+            for line in f:
+                parts = line.rstrip().split(" ")
+                self._v[parts[0]] = np.asarray(parts[1:], dtype=np.float32)
+        print(f"  FastText loaded: {len(self._v)} vectors", flush=True)
+
+    def has(self, word: str) -> bool:
+        return word in self._v or word.lower() in self._v
+
+    def encode(self, word: str) -> np.ndarray:
+        if word in self._v:
+            return self._v[word]
+        if word.lower() in self._v:
+            return self._v[word.lower()]
+        return np.zeros(300, dtype=np.float32)
+
+
+class SBERTEmbedder(Embedder):
+    name = "sbert"
+
+    def __init__(self, model_name: str = "all-mpnet-base-v2"):
+        from sentence_transformers import SentenceTransformer
+        print(f"Loading SBERT ({model_name})...", flush=True)
+        self._m = SentenceTransformer(model_name)
+        self._cache: dict[str, np.ndarray] = {}
+
+    def has(self, word: str) -> bool:
+        return True
+
+    def encode(self, word: str) -> np.ndarray:
+        if word not in self._cache:
+            self._cache[word] = self._m.encode(word, normalize_embeddings=True)
+        return self._cache[word]
+
+
+# ---------------------------------------------------------------------------
+# Generic scoring functions (embedder-agnostic)
+# ---------------------------------------------------------------------------
+def cosine_d(a: np.ndarray, b: np.ndarray) -> float:
+    if np.linalg.norm(a) == 0 or np.linalg.norm(b) == 0:
+        return float("nan")
+    d = cosine_distance(a, b)
+    return float(d) if np.isfinite(d) else float("nan")
+
+
+def score_dat_trial(words: list[str], emb: Embedder, glove_vocab: GloVeEmbeddings) -> float:
+    """Original DAT: first 7 valid GloVe words, mean pairwise cosine * 100.
+    We keep GloVe's vocab check so the word set is identical across embedders;
+    only the distance computation changes."""
+    valid = validate_words(words, glove_vocab)
+    if len(valid) < 7:
+        return math.nan
+    vecs = [emb.encode(w) for w in valid[:7]]
+    ds = []
+    for i in range(7):
+        for j in range(i + 1, 7):
+            d = cosine_d(vecs[i], vecs[j])
+            if not math.isnan(d):
+                ds.append(d)
+    return float(np.mean(ds)) * 100 if ds else math.nan
+
+
+def score_cdat_trial(cue: str, words: list[str], emb: Embedder) -> tuple[float, float]:
+    """CDAT under arbitrary embedder: novelty = pairwise distance among the 10
+    generated words; appropriateness = mean cos-sim to the cue. We do not
+    re-apply the appropriateness gate here; we report raw novelty."""
+    if not words:
+        return math.nan, math.nan
+    vecs = [emb.encode(w) for w in words]
+    valid = [v for v in vecs if np.linalg.norm(v) > 0]
+    if len(valid) < 2:
+        return math.nan, math.nan
+    # Novelty
+    ds = []
+    for i in range(len(valid)):
+        for j in range(i + 1, len(valid)):
+            d = cosine_d(valid[i], valid[j])
+            if not math.isnan(d):
+                ds.append(d)
+    nov = float(np.mean(ds)) * 100 if ds else math.nan
+    # Appropriateness: cos-sim to cue
+    cue_v = emb.encode(cue)
+    if np.linalg.norm(cue_v) == 0:
+        app = math.nan
+    else:
+        sims = []
+        for v in valid:
+            d = cosine_d(cue_v, v)
+            if not math.isnan(d):
+                sims.append(1.0 - d)
+        app = float(np.mean(sims)) * 100 if sims else math.nan
+    return nov, app
+
+
+def score_pace_chain(chain: list[str], emb: Embedder) -> float:
+    """PACE chain score = mean-over-positions of mean-cosine-distance to all
+    earlier positions. Matches Qiu & Hu; embedder pluggable."""
+    vecs = [emb.encode(w.lower()) for w in chain]
+    vecs = [v for v in vecs if np.linalg.norm(v) > 0]
+    if len(vecs) < 2:
+        return math.nan
+    per_pos = []
+    for i in range(1, len(vecs)):
+        ds = []
+        for j in range(i):
+            d = cosine_d(vecs[i], vecs[j])
+            if not math.isnan(d):
+                ds.append(d)
+        if ds:
+            per_pos.append(float(np.mean(ds)))
+    return float(np.mean(per_pos)) if per_pos else math.nan
+
+
+# ---------------------------------------------------------------------------
+# Per-model rescore driver
+# ---------------------------------------------------------------------------
+def rescore_model(model_dir: Path, emb: Embedder, glove_vocab: GloVeEmbeddings) -> dict:
+    out = {"dat": math.nan, "cdat_novelty": math.nan,
+           "cdat_appropriateness": math.nan, "pace": math.nan}
+
+    # --- DAT: pooled across temperatures ---
+    dat_trials = []
+    for tf in sorted(model_dir.glob("dat_responses_t*.json")):
+        try:
+            data = json.loads(tf.read_text())
+        except Exception:
+            continue
+        for tr in data:
+            words = tr.get("words") or []
+            if not words:
+                continue
+            s = score_dat_trial(words, emb, glove_vocab)
+            if not math.isnan(s):
+                dat_trials.append(s)
+    if dat_trials:
+        out["dat"] = float(np.mean(dat_trials))
+
+    # --- CDAT: pooled across temperatures and cues ---
+    cdat_nov, cdat_app = [], []
+    for tf in sorted(model_dir.glob("cdat_responses_t*.json")):
+        try:
+            data = json.loads(tf.read_text())
+        except Exception:
+            continue
+        # data is dict cue -> {words, ...}
+        for cue, entry in data.items():
+            words = entry.get("words") or []
+            if not words:
+                continue
+            nov, app = score_cdat_trial(cue, words, emb)
+            if not math.isnan(nov):
+                cdat_nov.append(nov)
+            if not math.isnan(app):
+                cdat_app.append(app)
+    if cdat_nov:
+        out["cdat_novelty"] = float(np.mean(cdat_nov))
+    if cdat_app:
+        out["cdat_appropriateness"] = float(np.mean(cdat_app))
+
+    # --- PACE: pooled across seeds and chains ---
+    pace_file = model_dir / "pace_responses_t0-0.json"
+    if pace_file.exists():
+        try:
+            data = json.loads(pace_file.read_text())
+        except Exception:
+            data = {}
+        # Match the original PACE pipeline's filtering: only chains with >=3
+        # words, then drop chain scores <= 0 and seed scores <= 0 before
+        # taking means. This keeps multi-embed numbers comparable to the
+        # main-pipeline PACE values in all_scores.json (within ~1e-4).
+        seed_scores = []
+        for seed, entry in data.items():
+            chains = entry.get("chains") or []
+            chain_scores = []
+            for chain_obj in chains:
+                words = chain_obj.get("chain") if isinstance(chain_obj, dict) else None
+                if not words or len(words) < 3:
+                    continue
+                s = score_pace_chain(list(words), emb)
+                if not math.isnan(s) and s > 0:
+                    chain_scores.append(s)
+            if chain_scores:
+                seed_score = float(np.mean(chain_scores))
+                if seed_score > 0:
+                    seed_scores.append(seed_score)
+        if seed_scores:
+            out["pace"] = float(np.mean(seed_scores))
+
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Correlation helpers
+# ---------------------------------------------------------------------------
+def joint_partial_r(target, predictor, controls):
+    X = np.column_stack([np.ones_like(target)] + [np.asarray(c) for c in controls])
+    bt, *_ = np.linalg.lstsq(X, target, rcond=None)
+    bp, *_ = np.linalg.lstsq(X, predictor, rcond=None)
+    rt, rp = target - X @ bt, predictor - X @ bp
+    return pearsonr(rt, rp)
+
+
+def correlate(scores_by_model: dict[str, dict[str, float]], benchmarks: dict) -> dict:
+    """Returns {task_embed_key: {simple_r, simple_p, partial_r, partial_p, n}}
+    for each task_embed_key = f"{task}__{emb}"."""
+    result = {}
+    # Discover tasks: we used dat, cdat_novelty, cdat_appropriateness, pace
+    tasks = ["dat", "cdat_novelty", "cdat_appropriateness", "pace"]
+    for task in tasks:
+        xs, ys, ao, mp = [], [], [], []
+        for mk, row in scores_by_model.items():
+            v = row.get(task)
+            if v is None or (isinstance(v, float) and math.isnan(v)):
+                continue
+            b = benchmarks.get(mk, {})
+            if "arena_cw" not in b or "arena_overall" not in b or "mmlu_pro" not in b:
+                continue
+            xs.append(v)
+            ys.append(b["arena_cw"])
+            ao.append(b["arena_overall"])
+            mp.append(b["mmlu_pro"])
+        if len(xs) < 5:
+            result[task] = None
+            continue
+        xs_a = np.asarray(xs, float)
+        ys_a = np.asarray(ys, float)
+        simple_r, simple_p = pearsonr(xs_a, ys_a)
+        partial_r, partial_p = joint_partial_r(
+            ys_a, xs_a, [np.asarray(ao, float), np.asarray(mp, float)])
+        result[task] = {
+            "simple_r": float(simple_r),
+            "simple_p": float(simple_p),
+            "partial_r": float(partial_r),
+            "partial_p": float(partial_p),
+            "n": len(xs),
+        }
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+def main():
+    benchmarks = json.loads(BENCH_PATH.read_text())
+    model_dirs = sorted(d for d in RUN_DIR.iterdir() if d.is_dir() and d.name != "downstream")
+    print(f"{len(model_dirs)} model directories to rescore.")
+
+    # Shared GloVe vocab used for DAT validation across all embedders.
+    glove_vocab = GloVeEmbeddings(GLOVE_PATH)
+
+    embedders = [
+        ("glove", lambda: GloVeEmbedder()),
+        ("fasttext", lambda: FastTextEmbedder()),
+        ("sbert", lambda: SBERTEmbedder("all-mpnet-base-v2")),
+    ]
+
+    all_scores: dict[str, dict[str, dict[str, float]]] = {}
+    # Structure: all_scores[emb_name][model_key][task] = score
+
+    for emb_name, factory in embedders:
+        print(f"\n=== Embedder: {emb_name} ===", flush=True)
+        emb = factory()
+        # Reuse the same GloVeEmbeddings instance for DAT validation
+        by_model = {}
+        for mdir in model_dirs:
+            scores = rescore_model(mdir, emb, glove_vocab)
+            by_model[mdir.name] = scores
+            nonan = {k: v for k, v in scores.items() if not math.isnan(v)}
+            if nonan:
+                print(f"  {mdir.name}: {nonan}", flush=True)
+        all_scores[emb_name] = by_model
+
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    (OUT_DIR / "multi_embed_scores.json").write_text(json.dumps(all_scores, indent=2))
+    print(f"\nSaved scores to {OUT_DIR / 'multi_embed_scores.json'}")
+
+    # Correlations
+    corr_out = {}
+    for emb_name, by_model in all_scores.items():
+        corr_out[emb_name] = correlate(by_model, benchmarks)
+    (OUT_DIR / "multi_embed_correlations.json").write_text(json.dumps(corr_out, indent=2))
+
+    # Pretty print
+    print("\n=== Correlations: Arena CW ===")
+    for emb_name, tasks in corr_out.items():
+        print(f"\n[{emb_name}]")
+        for task, c in tasks.items():
+            if c is None:
+                print(f"  {task:25s}: n<5")
+                continue
+            print(f"  {task:25s}: simple r={c['simple_r']:+.3f} p={c['simple_p']:.4f} | "
+                  f"partial r={c['partial_r']:+.3f} p={c['partial_p']:.4f} | n={c['n']}")
+
+
+if __name__ == "__main__":
+    main()
