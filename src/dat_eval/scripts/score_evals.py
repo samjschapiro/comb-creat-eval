@@ -401,6 +401,25 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
         if scores:
             model_scores[model_key] = scores
 
+    # Inject gated CDAT (Nakajima appropriateness gate, SBERT scoring) into
+    # each model's score dict if cdat_gated_scores.json is present. The gate
+    # is computed by src/dat_eval/scripts/cdat_gate.py and saved under
+    # results/cdat_gated_scores.json. We use the SBERT (original CDAT
+    # embedding) variant here.
+    # Source-of-truth lives one level above the (--overwrite-able) output_dir
+    # so it survives `--overwrite` runs of this script.
+    gated_path = Path(config["upstream_dir"]) / "cdat_gated_scores.json"
+    if not gated_path.exists():
+        # Fallback for older layouts
+        gated_path = output_dir / "results" / "cdat_gated_scores.json"
+    if gated_path.exists():
+        with open(gated_path) as f:
+            gated = json.load(f)
+        sbert = gated.get("sbert", {})
+        for model_key, scores in model_scores.items():
+            entry = sbert.get(model_key, {})
+            scores["cdat"] = entry.get("cdat") if entry.get("cdat") is not None else 0
+
     # Save all scores
     with open(output_dir / "results" / "all_scores.json", "w") as f:
         json.dump(model_scores, f, indent=2)
@@ -433,7 +452,7 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
 
     # Build the list of metrics to correlate. Include pooled and per-temperature variants.
     # Discover per-temp metrics from the actual scores.
-    base_metrics = ["dat", "cdat_novelty", "cdat_appropriateness", "pace"]
+    base_metrics = ["dat", "cdat_novelty", "cdat_appropriateness", "cdat", "pace"]
     per_temp_metrics = set()
     for scores in model_scores.values():
         for k in scores:
@@ -827,7 +846,7 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
                               aligned_models, metric_vals, mazur_vals, mazur_keys)
 
     # Inter-metric correlations
-    metrics_available = [m for m in ["dat", "cdat_novelty", "cdat_appropriateness", "pace"]
+    metrics_available = [m for m in ["dat", "cdat", "pace"]
                          if any(m in v for v in model_scores.values())]
     if len(metrics_available) >= 2:
         print(f"\nInter-metric correlations:")

@@ -297,7 +297,7 @@ def correlate(scores_by_model: dict[str, dict[str, float]], benchmarks: dict) ->
     (arena_cw, eq_bench_cw, mazur_cw_v2, hivemind_diversity). Joint partial
     controls for Arena Overall and MMLU-Pro simultaneously.
     """
-    tasks = ["dat", "cdat_novelty", "cdat_appropriateness", "pace"]
+    tasks = ["dat", "cdat", "pace"]
     bench_keys = ["arena_cw", "eq_bench_cw", "mazur_cw_v2", "hivemind_diversity"]
     result: dict[str, dict] = {bk: {} for bk in bench_keys}
 
@@ -397,7 +397,7 @@ def main():
         for emb_name in ("glove", "fasttext", "sbert"):
             tasks = corr_out[emb_name][bk]
             print(f"\n[{emb_name}]")
-            for task in ("dat", "cdat_novelty", "cdat_appropriateness", "pace"):
+            for task in ("dat", "cdat", "pace"):
                 c = tasks.get(task)
                 if c is None:
                     print(f"  {task:25s}: n<5")

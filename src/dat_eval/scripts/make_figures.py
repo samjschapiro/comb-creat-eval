@@ -110,7 +110,7 @@ def load_composite_scores() -> dict:
     with open(me_path) as f:
         me = json.load(f)
     embs = sorted(me.keys())
-    tasks = ["dat", "cdat_novelty", "cdat_appropriateness", "pace"]
+    tasks = ["dat", "cdat", "pace"]
     models = sorted({m for emb in embs for m in me[emb]})
 
     composite: dict[str, dict[str, float]] = {}
@@ -312,8 +312,7 @@ def _scatter_panel(
 # Panel-color mapping shared by all metric grids — Batlow-sampled
 _METRIC_PANELS = [
     ("dat",                 "DAT score",              C_DAT),
-    ("cdat_novelty",        "CDAT Novelty",           C_CNOV),
-    ("cdat_appropriateness","CDAT Appropriateness",   C_CAPP),
+    ("cdat",                "CDAT (gated novelty)",   C_CAPP),
     ("pace",                "PACE score",             C_PACE),
 ]
 
@@ -896,8 +895,8 @@ def fig_inter_metric_triangle(corr):
     blanked out because it would be redundant. Cells annotated with the
     Spearman rho and significance stars.
     """
-    metrics = ["dat", "cdat_novelty", "cdat_appropriateness", "pace"]
-    labels = ["DAT", "CDAT Nov.", "CDAT App.", "PACE"]
+    metrics = ["dat", "cdat", "pace"]
+    labels = ["DAT", "CDAT", "PACE"]
     n = len(metrics)
 
     # Pull pairwise values from corr["inter_metric"]
