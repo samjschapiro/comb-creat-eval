@@ -790,24 +790,24 @@ def fig_correlation_summary_heatmap(corr):
 
 
 def fig_benchmark_correlations(benchmarks):
-    """Pairwise Pearson correlations among the capability proxies and
-    outcome benchmarks. Provides a calibration view of how much capability
-    each creative-writing benchmark reflects (motivates the partialling).
+    """Two vertically stacked Pearson correlation triangles:
 
-    Rows/cols (in order, so the capability proxies sit upper-left):
-        Arena Overall, MMLU-Pro, Arena CW, EQ-B. CW, Mazur V2, Hivemind Div.
+      (a) capability proxies + outcome benchmarks (6x6)
+      (b) inter-test correlations among DAT, CDAT, PACE using composite
+          z-scores across all 3 embeddings (3x3, scaled down)
     """
     from scipy.stats import pearsonr
+    from matplotlib.gridspec import GridSpec
 
-    keys = ["arena_overall", "mmlu_pro", "arena_cw", "eq_bench_cw",
-            "mazur_cw_v2", "hivemind_diversity"]
-    labels = ["Arena Ovr", "MMLU-Pro", "Arena CW", "EQ-B. CW",
-              "Mazur V2", "Hive. Div."]
-    n = len(keys)
-    mat = np.full((n, n), np.nan)
-    n_mat = np.zeros((n, n), dtype=int)
-    for i, ki in enumerate(keys):
-        for j, kj in enumerate(keys):
+    # Panel (a): capability proxies + outcome benchmarks (unchanged logic)
+    keys_a = ["arena_overall", "mmlu_pro", "arena_cw", "eq_bench_cw",
+              "mazur_cw_v2", "hivemind_diversity"]
+    labels_a = ["Arena Ovr", "MMLU-Pro", "Arena CW", "EQ-B. CW",
+                "Mazur V2", "Hive. Div."]
+    na = len(keys_a)
+    mat_a = np.full((na, na), np.nan)
+    for i, ki in enumerate(keys_a):
+        for j, kj in enumerate(keys_a):
             xs, ys = [], []
             for _, v in benchmarks.items():
                 if ki in v and kj in v:
@@ -815,58 +815,83 @@ def fig_benchmark_correlations(benchmarks):
                     ys.append(v[kj])
             if len(xs) >= 3:
                 r, _ = pearsonr(xs, ys)
-                mat[i, j] = r
-                n_mat[i, j] = len(xs)
+                mat_a[i, j] = r
 
-    # Display only the lower triangle (matrix is symmetric); blank out upper.
-    display = np.where(np.isnan(mat), 0.0, mat)
-    mask = np.ones((n, n), dtype=bool)
-    for i in range(n):
-        for j in range(n):
-            if j <= i:
-                mask[i, j] = False
+    # Panel (b): inter-test correlations with composite (overall z-score)
+    composite = load_composite_scores()
+    tasks = ["dat", "cdat", "pace"]
+    labels_b = ["DAT", "CDAT", "PACE"]
+    nb = len(tasks)
+    mat_b = np.full((nb, nb), np.nan)
+    for i, ti in enumerate(tasks):
+        for j, tj in enumerate(tasks):
+            xs, ys = [], []
+            for _, sc in composite.items():
+                vi = sc.get(ti)
+                vj = sc.get(tj)
+                if vi is None or vj is None:
+                    continue
+                if isinstance(vi, float) and np.isnan(vi):
+                    continue
+                if isinstance(vj, float) and np.isnan(vj):
+                    continue
+                xs.append(vi); ys.append(vj)
+            if len(xs) >= 3:
+                r, _ = pearsonr(xs, ys)
+                mat_b[i, j] = r
 
-    fig, ax = plt.subplots(figsize=(3.6, 3.4))
-    im = ax.imshow(display, vmin=-1, vmax=1, cmap=CMAP_SEQ, aspect="equal")
+    def draw_triangle(ax, mat, labels):
+        n = len(labels)
+        display = np.where(np.isnan(mat), 0.0, mat)
+        im = ax.imshow(display, vmin=-1, vmax=1, cmap=CMAP_SEQ, aspect="equal")
+        for i in range(n):
+            for j in range(n):
+                if j > i:
+                    ax.add_patch(plt.Rectangle((j - 0.5, i - 0.5), 1, 1,
+                                                color="white", zorder=2))
+        ax.set_xticks(range(n))
+        ax.set_yticks(range(n))
+        ax.set_xticklabels(labels, rotation=35, ha="right", fontsize=8)
+        ax.set_yticklabels(labels, fontsize=8)
+        for i in range(n):
+            for j in range(n):
+                if j > i:
+                    continue
+                v = mat[i, j]
+                if np.isnan(v):
+                    continue
+                txt = "—" if i == j else f"{v:+.2f}"
+                color = "white" if v < -0.2 else "black"
+                ax.text(j, i, txt, ha="center", va="center",
+                        fontsize=7.5, color=color, zorder=3)
+        ax.tick_params(axis="both", which="major", length=0)
+        return im
 
-    # White out the strictly upper triangle so the figure reads as a
-    # triangular calibration matrix, not a square one.
-    for i in range(n):
-        for j in range(n):
-            if mask[i, j]:
-                ax.add_patch(plt.Rectangle((j - 0.5, i - 0.5), 1, 1,
-                                            color="white", zorder=2))
+    # Two stacked panels. Panel (a) spans the full width; panel (b) is
+    # half-width so its cells stay the same visual size as panel (a).
+    fig = plt.figure(figsize=(3.6, 5.4))
+    gs = GridSpec(2, 2, figure=fig,
+                   height_ratios=[na, nb], width_ratios=[nb, na - nb],
+                   hspace=0.55, wspace=0.0)
+    ax1 = fig.add_subplot(gs[0, :])
+    ax2 = fig.add_subplot(gs[1, 0])
 
-    ax.set_xticks(range(n))
-    ax.set_yticks(range(n))
-    ax.set_xticklabels(labels, rotation=35, ha="right", fontsize=8)
-    ax.set_yticklabels(labels, fontsize=8)
+    im1 = draw_triangle(ax1, mat_a, labels_a)
+    draw_triangle(ax2, mat_b, labels_b)
 
-    # Annotate lower triangle
-    for i in range(n):
-        for j in range(n):
-            if j > i:
-                continue
-            v = mat[i, j]
-            if np.isnan(v):
-                continue
-            if i == j:
-                txt = "—"
-            else:
-                txt = f"{v:+.2f}"
-            color = "white" if v < -0.2 else "black"
-            ax.text(j, i, txt, ha="center", va="center",
-                    fontsize=7.5, color=color, zorder=3)
+    ax1.set_title("(a) capability proxies + outcome benchmarks",
+                   fontsize=8.5, loc="left", pad=4)
+    ax2.set_title("(b) inter-test correlations\n(composite across embeddings)",
+                   fontsize=8.5, loc="left", pad=4)
 
-    cbar = plt.colorbar(im, ax=ax, shrink=0.75, pad=0.04)
+    cbar = fig.colorbar(im1, ax=[ax1, ax2], shrink=0.55, pad=0.04,
+                         location="right")
     cbar.set_label("Pearson $r$", fontsize=8)
     cbar.ax.tick_params(labelsize=7)
-    ax.tick_params(axis="both", which="major", length=0)
 
-    fig.tight_layout()
     out = FIGS_DIR / "fig_benchmark_correlations.pdf"
-    plt.savefig(out)
-    plt.savefig(out.with_suffix(".png"))
+    plt.savefig(out, bbox_inches="tight")
+    plt.savefig(out.with_suffix(".png"), bbox_inches="tight")
     plt.close()
     print(f"Saved {out}")
 
