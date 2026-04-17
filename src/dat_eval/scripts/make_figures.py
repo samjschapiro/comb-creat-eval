@@ -375,16 +375,16 @@ def fig2c_all_metrics_vs_hivemind(scores, benchmarks):
 
 # --- Figure 2 (combined): 4 metrics x 3 benchmarks grid ---
 def fig2_combined_grid(scores, benchmarks):
-    """Residualized scatter grid using composite (across-embedding) scores.
+    """Semi-partial scatter grid using composite (across-embedding) scores.
 
-    Rows = creativity metrics (DAT / CDAT Nov / CDAT App / PACE).
+    Rows = creativity metrics (DAT / CDAT gated / PACE).
     Columns = benchmarks (Arena CW / EQ-B. / Mazur / Hivemind diversity).
 
     Per-model metric values are composite z-scores across GloVe, FastText,
-    and SBERT (the 'Overall' row of the main-body joint-partial table).
-    Each panel plots residuals after both metric and benchmark have been
-    regressed on [Arena Overall, MMLU-Pro]. Panel stat is partial Pearson
-    r on the residuals — matches the Overall row of Table~\\ref{tab:joint-partial}.
+    and SBERT (the 'Overall' block of Table~\\ref{tab:correlations}).
+    Each panel plots raw metric vs benchmark residualised against
+    [Arena Overall, MMLU-Pro]. Panel stat is the semi-partial Pearson
+    r — matches the Overall block of Table~\\ref{tab:correlations}.
     """
     from scipy.stats import pearsonr
 
@@ -392,21 +392,16 @@ def fig2_combined_grid(scores, benchmarks):
     if composite:
         scores = composite
     column_specs = [
-        ("arena_cw",            "Arena CW (residual)"),
-        ("eq_bench_cw",         "EQ-Bench CW (residual)"),
-        ("mazur_cw_v2",         "Mazur CW v2 (residual)"),
-        ("hivemind_diversity",  "Hivemind diversity (residual)"),
+        ("arena_cw",            "Arena CW (capability-adjusted)"),
+        ("eq_bench_cw",         "EQ-Bench CW (capability-adjusted)"),
+        ("mazur_cw_v2",         "Mazur CW v2 (capability-adjusted)"),
+        ("hivemind_diversity",  "Hivemind diversity (capability-adjusted)"),
     ]
     n_cols = len(column_specs)
     n_rows = len(_METRIC_PANELS)
 
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(12.0, 9.0),
                               sharex="row", sharey="col")
-
-    # Index of the panel we want to emphasise visually: the load-bearing
-    # PACE x Arena CW cell. Find it dynamically to stay robust to reordering.
-    pace_row = next((i for i, (k, *_ ) in enumerate(_METRIC_PANELS) if k == "pace"), None)
-    arena_col = next((j for j, (k, _) in enumerate(column_specs) if k == "arena_cw"), None)
 
     for row_idx, (metric_key, metric_label, color) in enumerate(_METRIC_PANELS):
         for col_idx, (bench_key, bench_label) in enumerate(column_specs):
@@ -442,31 +437,28 @@ def fig2_combined_grid(scores, benchmarks):
             Z = np.column_stack([np.ones(len(xs_raw)),
                                   np.array(ao), np.array(mp)])
 
-            # Residualise both against [1, Arena Overall, MMLU-Pro]
-            beta_x, *_ = np.linalg.lstsq(Z, xs_raw, rcond=None)
-            xs = xs_raw - Z @ beta_x
+            # Semi-partial: residualise only the benchmark (Y); keep metric raw
+            xs = xs_raw
             beta_y, *_ = np.linalg.lstsq(Z, ys_raw, rcond=None)
             ys = ys_raw - Z @ beta_y
 
             ax.scatter(xs, ys, s=22, color=color, alpha=0.78,
                        edgecolor="white", linewidth=0.4, zorder=3)
 
-            # Partial Pearson r is the Pearson on the residuals
+            # Semi-partial Pearson r: raw metric vs benchmark residual
             rho, pval = pearsonr(xs, ys)
             order = np.argsort(xs)
             ax.plot(xs[order], np.poly1d(np.polyfit(xs, ys, 1))(xs[order]),
                     color=C_RED, linewidth=1.0, linestyle="--",
                     alpha=0.6, zorder=2)
 
-            # Zero lines to remind the reader these are residuals around zero
+            # Y=0 reminds the reader the benchmark axis is a residual
             ax.axhline(0, color=C_GREY, linewidth=0.5, linestyle=":", alpha=0.6, zorder=1)
-            ax.axvline(0, color=C_GREY, linewidth=0.5, linestyle=":", alpha=0.6, zorder=1)
 
-            # Per-panel stat readout in the corner. This is the partial
-            # Pearson r, i.e. Pearson correlation of the residuals.
+            # Per-panel stat readout in the corner: semi-partial Pearson r.
             stars = sig_stars(pval)
             ax.text(0.03, 0.97,
-                    f"$r_{{\\mathrm{{partial}}}} = {rho:+.2f}{stars}$\n$n$ = {len(xs)}",
+                    f"$r_{{\\mathrm{{semi}}}} = {rho:+.2f}{stars}$\n$n$ = {len(xs)}",
                     transform=ax.transAxes, fontsize=8.0,
                     verticalalignment="top",
                     bbox=dict(facecolor="white", edgecolor="none",
@@ -505,14 +497,6 @@ def fig2_combined_grid(scores, benchmarks):
             ax.set_xlabel("")
             ax.set_ylabel("")
             ax.tick_params(axis="both", which="major", labelsize=8)
-
-            # Emphasise the load-bearing panel (PACE x Arena CW) with a
-            # thicker dark border so the reader's eye lands there.
-            if row_idx == pace_row and col_idx == arena_col:
-                for spine in ax.spines.values():
-                    spine.set_visible(True)
-                    spine.set_linewidth(2.0)
-                    spine.set_edgecolor("#222222")
 
     # Column titles (benchmark names) on the top row.
     for col_idx, (_, bench_label) in enumerate(column_specs):
