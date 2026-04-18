@@ -1052,12 +1052,14 @@ def fig_inter_metric_triangle(corr):
 
 
 def fig_scatter_by_embedding(benchmarks):
-    """Non-residualized 4x4 scatter grid overlaying all three embeddings.
+    """Non-residualised scatter grid overlaying all three embeddings.
 
-    Rows = creativity metrics. Columns = benchmarks. Each panel shows up to
-    3 x ~50 points: per-embedding, per-model. Within each embedding, metric
-    scores are z-scored across models so the three embedding clouds overlay
-    on a common x-axis (raw benchmarks on y). Colors: GloVe / FastText / SBERT.
+    Rows = creativity metrics. Columns = benchmarks. Within each embedding,
+    metric scores are z-scored across models so the three embedding clouds
+    overlay on a common x-axis (raw benchmarks on y). Each point's colour
+    identifies the model (same per-model colour map as fig2_combined_grid);
+    each point's marker shape identifies the embedding (o GloVe, ^ FastText,
+    s SBERT).
     """
     from scipy.stats import pearsonr
 
@@ -1069,9 +1071,9 @@ def fig_scatter_by_embedding(benchmarks):
         me = json.load(f)
 
     emb_specs = [
-        ("glove",    "GloVe",    _BATLOW_SAMPLES[0]),
-        ("fasttext", "FastText", _BATLOW_SAMPLES[1]),
-        ("sbert",    "SBERT",    _BATLOW_SAMPLES[3]),
+        ("glove",    "GloVe",    "o"),
+        ("fasttext", "FastText", "^"),
+        ("sbert",    "SBERT",    "s"),
     ]
 
     column_specs = [
@@ -1083,31 +1085,36 @@ def fig_scatter_by_embedding(benchmarks):
     n_rows = len(_METRIC_PANELS)
     n_cols = len(column_specs)
 
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(12.0, 9.0),
+    # Build a stable per-model colour map across every model present in any
+    # embedding's scored set.
+    all_models = {m for emb, _, _ in emb_specs for m in me.get(emb, {})}
+    model_color = _build_model_color_map(all_models)
+
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(12.0, 11.5),
                               sharex="row", sharey="col")
 
     # Pre-compute per-embedding z-score stats for each metric so clouds overlay.
     tasks = [p[0] for p in _METRIC_PANELS]
-    models = sorted({m for emb, _, _ in emb_specs for m in me.get(emb, {})})
     zstats = {}
     for t in tasks:
         for emb, _, _ in emb_specs:
-            vals = [me[emb].get(m, {}).get(t) for m in models]
+            vals = [me[emb].get(m, {}).get(t) for m in all_models]
             vals = [v for v in vals if v is not None
                     and not (isinstance(v, float) and (np.isnan(v) or v == 0))]
             if vals:
                 zstats[(t, emb)] = (float(np.mean(vals)), float(np.std(vals)) or 1.0)
 
+    models_seen = set()
     for row_idx, (metric_key, metric_label, _) in enumerate(_METRIC_PANELS):
         for col_idx, (bench_key, _) in enumerate(column_specs):
             ax = axes[row_idx, col_idx]
             per_emb_stats = []
-            for emb_key, emb_label, emb_color in emb_specs:
+            for emb_key, emb_label, emb_marker in emb_specs:
                 mu_sigma = zstats.get((metric_key, emb_key))
                 if mu_sigma is None:
                     continue
                 mu, sigma = mu_sigma
-                xs, ys = [], []
+                xs, ys, mks = [], [], []
                 for mk, srow in me[emb_key].items():
                     v = srow.get(metric_key)
                     if v is None or (isinstance(v, float) and (np.isnan(v) or v == 0)):
@@ -1116,23 +1123,25 @@ def fig_scatter_by_embedding(benchmarks):
                         continue
                     xs.append((v - mu) / sigma)
                     ys.append(benchmarks[mk][bench_key])
+                    mks.append(mk)
+                    models_seen.add(mk)
                 if not xs:
                     continue
                 xs_a = np.asarray(xs)
                 ys_a = np.asarray(ys)
-                ax.scatter(xs_a, ys_a, s=14, color=emb_color, alpha=0.65,
-                           edgecolor="white", linewidth=0.3, zorder=3,
-                           label=emb_label if row_idx == 0 and col_idx == 0 else None)
+                point_colors = [model_color[mk] for mk in mks]
+                ax.scatter(xs_a, ys_a, s=20, c=point_colors, marker=emb_marker,
+                           alpha=0.8, edgecolor="white", linewidth=0.3, zorder=3)
                 if len(xs) >= 5:
                     r, _ = pearsonr(xs_a, ys_a)
-                    per_emb_stats.append((emb_label, r, emb_color, len(xs)))
+                    per_emb_stats.append((emb_label, r, len(xs)))
 
             if per_emb_stats:
                 lines = []
-                for emb_label, r, _, n in per_emb_stats:
+                for emb_label, r, n in per_emb_stats:
                     lines.append(f"{emb_label[:1]}: {r:+.2f} ($n$={n})")
                 ax.text(0.03, 0.97, "\n".join(lines),
-                        transform=ax.transAxes, fontsize=7.0,
+                        transform=ax.transAxes, fontsize=7.5,
                         verticalalignment="top",
                         bbox=dict(facecolor="white", edgecolor="none",
                                   alpha=0.78, pad=1.3))
@@ -1149,15 +1158,38 @@ def fig_scatter_by_embedding(benchmarks):
             ha="center", va="center", fontsize=10.5, weight="bold", rotation=90,
         )
 
-    # One shared legend at the top
-    handles = [plt.Line2D([0], [0], marker="o", linestyle="",
-                           color=emb_color, markersize=5, markeredgecolor="white",
-                           markeredgewidth=0.3, label=emb_label)
-               for _, emb_label, emb_color in emb_specs]
-    fig.legend(handles=handles, loc="upper center",
-               bbox_to_anchor=(0.5, 1.005), ncol=3, frameon=False, fontsize=9)
+    # Embedding-marker legend at the top (shape conveys embedding).
+    emb_handles = [
+        plt.Line2D([0], [0], marker=m, linestyle="",
+                   color=C_GREY, markersize=7, markeredgecolor="white",
+                   markeredgewidth=0.4, label=lbl)
+        for _, lbl, m in emb_specs
+    ]
+    fig.legend(handles=emb_handles, loc="upper center",
+               bbox_to_anchor=(0.5, 1.005), ncol=3, frameon=False, fontsize=10)
 
-    fig.tight_layout(rect=[0.05, 0, 1, 0.985])
+    # Per-model colour legend at the bottom (same ordering as fig2_combined_grid).
+    models_for_legend = sorted(
+        models_seen,
+        key=lambda mk: (
+            _FAMILY_ORDER.index(_family(mk)) if _family(mk) in _FAMILY_ORDER else len(_FAMILY_ORDER),
+            mk,
+        ),
+    )
+    model_handles = [
+        plt.Line2D([0], [0], marker="o", linestyle="",
+                   color=model_color[mk], markersize=6,
+                   markeredgecolor="white", markeredgewidth=0.4,
+                   label=_short_label(mk))
+        for mk in models_for_legend
+    ]
+    fig.legend(handles=model_handles, loc="lower center",
+               bbox_to_anchor=(0.5, -0.005),
+               ncol=5, frameon=False, fontsize=10,
+               handletextpad=0.4, columnspacing=1.4,
+               labelspacing=0.35)
+
+    fig.tight_layout(rect=[0.05, 0.18, 1, 0.985])
 
     out = FIGS_DIR / "fig_scatter_by_embedding.pdf"
     plt.savefig(out)
