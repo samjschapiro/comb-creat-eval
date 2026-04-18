@@ -237,16 +237,30 @@ def _family(mk: str) -> str:
     return "Other"
 
 
-# Fixed family order. Uses matplotlib's tab10 (perceptually-distinct
-# qualitative palette designed for 10 categories). Batlow is gorgeous
-# for sequential data but its 10-sample categorical variant produces
-# several near-identical greens/blues that are hard to tell apart.
+# Family order used when sorting models into the legend so related
+# models appear together (and get visually similar hues from the
+# perceptually-smooth Batlow palette).
 _FAMILY_ORDER = [
     "OpenAI", "Anthropic", "Google", "Meta", "Mistral",
     "Qwen", "DeepSeek", "Cohere", "NVIDIA", "Microsoft",
 ]
-_TAB10 = plt.get_cmap("tab10").colors
-_FAMILY_COLORS = {f: _TAB10[i] for i, f in enumerate(_FAMILY_ORDER)}
+
+
+def _build_model_color_map(model_keys) -> dict:
+    """Assign each model a unique colour from the Batlow categorical palette.
+    Models are ordered by family (then alphabetically within family) so
+    adjacent colours land on related models.
+    """
+    ordered = sorted(
+        model_keys,
+        key=lambda mk: (
+            _FAMILY_ORDER.index(_family(mk)) if _family(mk) in _FAMILY_ORDER else len(_FAMILY_ORDER),
+            mk,
+        ),
+    )
+    n = len(ordered)
+    samples = CMAP_CAT(np.linspace(0.0, 1.0, n))
+    return {mk: samples[i] for i, mk in enumerate(ordered)}
 
 
 def _scatter_panel(
@@ -427,16 +441,19 @@ def fig2_combined_grid(scores, benchmarks):
     n_cols = len(column_specs)
     n_rows = len(_METRIC_PANELS)
 
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(12.0, 9.6),
+    model_color = _build_model_color_map(scores.keys())
+
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(12.0, 11.5),
                               sharex="row", sharey="col")
 
+    models_seen = set()
     for row_idx, (metric_key, metric_label, _color) in enumerate(_METRIC_PANELS):
         for col_idx, (bench_key, bench_label) in enumerate(column_specs):
             ax = axes[row_idx, col_idx]
 
             # Collect paired data for this metric / benchmark combo,
             # restricted to models with BOTH capability proxies available.
-            xs, ys, ao, mp, labels, families = [], [], [], [], [], []
+            xs, ys, ao, mp, labels, mks = [], [], [], [], [], []
             for mk, sc in scores.items():
                 val = sc.get(metric_key)
                 if val is None or val == 0:
@@ -453,7 +470,8 @@ def fig2_combined_grid(scores, benchmarks):
                 ao.append(ao_v)
                 mp.append(mp_v)
                 labels.append(_short_label(mk))
-                families.append(_family(mk))
+                mks.append(mk)
+                models_seen.add(mk)
 
             if len(xs) < 5:
                 ax.text(0.5, 0.5, "(n < 5)", ha="center", va="center",
@@ -470,8 +488,8 @@ def fig2_combined_grid(scores, benchmarks):
             beta_y, *_ = np.linalg.lstsq(Z, ys_raw, rcond=None)
             ys = ys_raw - Z @ beta_y
 
-            point_colors = [_FAMILY_COLORS.get(f, C_GREY) for f in families]
-            ax.scatter(xs, ys, s=26, c=point_colors, alpha=0.85,
+            point_colors = [model_color[mk] for mk in mks]
+            ax.scatter(xs, ys, s=28, c=point_colors, alpha=0.9,
                        edgecolor="white", linewidth=0.4, zorder=3)
 
             # Semi-partial Pearson r: raw metric vs benchmark residual
@@ -541,24 +559,30 @@ def fig2_combined_grid(scores, benchmarks):
             fontsize=10.5, weight="bold", rotation=90,
         )
 
-    # Shared family legend at the bottom: only include families that
-    # actually appear in the scored set, preserving _FAMILY_ORDER.
-    families_present = sorted(
-        {_family(mk) for mk in scores.keys()},
-        key=lambda f: _FAMILY_ORDER.index(f) if f in _FAMILY_ORDER else len(_FAMILY_ORDER),
+    # Shared per-model legend at the bottom: one entry per model that
+    # actually appears in at least one panel, ordered by family.
+    models_for_legend = sorted(
+        models_seen,
+        key=lambda mk: (
+            _FAMILY_ORDER.index(_family(mk)) if _family(mk) in _FAMILY_ORDER else len(_FAMILY_ORDER),
+            mk,
+        ),
     )
     handles = [
         plt.Line2D([0], [0], marker="o", linestyle="",
-                   color=_FAMILY_COLORS.get(f, C_GREY), markersize=6,
-                   markeredgecolor="white", markeredgewidth=0.5, label=f)
-        for f in families_present
+                   color=model_color[mk], markersize=6,
+                   markeredgecolor="white", markeredgewidth=0.4,
+                   label=_short_label(mk))
+        for mk in models_for_legend
     ]
+    n_cols_legend = 5
     fig.legend(handles=handles, loc="lower center",
-               bbox_to_anchor=(0.5, -0.01),
-               ncol=min(len(handles), 10), frameon=False, fontsize=9,
-               handletextpad=0.4, columnspacing=1.2)
+               bbox_to_anchor=(0.5, -0.005),
+               ncol=n_cols_legend, frameon=False, fontsize=10,
+               handletextpad=0.4, columnspacing=1.4,
+               labelspacing=0.35)
 
-    fig.tight_layout(rect=[0.05, 0.045, 1, 1])
+    fig.tight_layout(rect=[0.05, 0.18, 1, 1])
 
     out = FIGS_DIR / "fig2_combined_grid.pdf"
     plt.savefig(out)
