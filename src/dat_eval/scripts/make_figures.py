@@ -222,6 +222,33 @@ def _short_label(mk: str) -> str:
               .replace("nvidia_", "").replace("microsoft_", ""))
 
 
+def _family(mk: str) -> str:
+    """Map a model key to its provider/family label."""
+    if mk.startswith("anthropic_"):   return "Anthropic"
+    if mk.startswith("openai_"):      return "OpenAI"
+    if mk.startswith("google_"):      return "Google"
+    if mk.startswith("meta-llama_"):  return "Meta"
+    if mk.startswith("mistralai_"):   return "Mistral"
+    if mk.startswith("qwen_"):        return "Qwen"
+    if mk.startswith("deepseek_"):    return "DeepSeek"
+    if mk.startswith("cohere_"):      return "Cohere"
+    if mk.startswith("nvidia_"):      return "NVIDIA"
+    if mk.startswith("microsoft_"):   return "Microsoft"
+    return "Other"
+
+
+# Fixed family order. Uses matplotlib's tab10 (perceptually-distinct
+# qualitative palette designed for 10 categories). Batlow is gorgeous
+# for sequential data but its 10-sample categorical variant produces
+# several near-identical greens/blues that are hard to tell apart.
+_FAMILY_ORDER = [
+    "OpenAI", "Anthropic", "Google", "Meta", "Mistral",
+    "Qwen", "DeepSeek", "Cohere", "NVIDIA", "Microsoft",
+]
+_TAB10 = plt.get_cmap("tab10").colors
+_FAMILY_COLORS = {f: _TAB10[i] for i, f in enumerate(_FAMILY_ORDER)}
+
+
 def _scatter_panel(
     ax,
     scores,
@@ -400,16 +427,16 @@ def fig2_combined_grid(scores, benchmarks):
     n_cols = len(column_specs)
     n_rows = len(_METRIC_PANELS)
 
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(12.0, 9.0),
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(12.0, 9.6),
                               sharex="row", sharey="col")
 
-    for row_idx, (metric_key, metric_label, color) in enumerate(_METRIC_PANELS):
+    for row_idx, (metric_key, metric_label, _color) in enumerate(_METRIC_PANELS):
         for col_idx, (bench_key, bench_label) in enumerate(column_specs):
             ax = axes[row_idx, col_idx]
 
             # Collect paired data for this metric / benchmark combo,
             # restricted to models with BOTH capability proxies available.
-            xs, ys, ao, mp, labels = [], [], [], [], []
+            xs, ys, ao, mp, labels, families = [], [], [], [], [], []
             for mk, sc in scores.items():
                 val = sc.get(metric_key)
                 if val is None or val == 0:
@@ -426,6 +453,7 @@ def fig2_combined_grid(scores, benchmarks):
                 ao.append(ao_v)
                 mp.append(mp_v)
                 labels.append(_short_label(mk))
+                families.append(_family(mk))
 
             if len(xs) < 5:
                 ax.text(0.5, 0.5, "(n < 5)", ha="center", va="center",
@@ -442,7 +470,8 @@ def fig2_combined_grid(scores, benchmarks):
             beta_y, *_ = np.linalg.lstsq(Z, ys_raw, rcond=None)
             ys = ys_raw - Z @ beta_y
 
-            ax.scatter(xs, ys, s=22, color=color, alpha=0.78,
+            point_colors = [_FAMILY_COLORS.get(f, C_GREY) for f in families]
+            ax.scatter(xs, ys, s=26, c=point_colors, alpha=0.85,
                        edgecolor="white", linewidth=0.4, zorder=3)
 
             # Semi-partial Pearson r: raw metric vs benchmark residual
@@ -512,7 +541,24 @@ def fig2_combined_grid(scores, benchmarks):
             fontsize=10.5, weight="bold", rotation=90,
         )
 
-    fig.tight_layout(rect=[0.05, 0, 1, 1])
+    # Shared family legend at the bottom: only include families that
+    # actually appear in the scored set, preserving _FAMILY_ORDER.
+    families_present = sorted(
+        {_family(mk) for mk in scores.keys()},
+        key=lambda f: _FAMILY_ORDER.index(f) if f in _FAMILY_ORDER else len(_FAMILY_ORDER),
+    )
+    handles = [
+        plt.Line2D([0], [0], marker="o", linestyle="",
+                   color=_FAMILY_COLORS.get(f, C_GREY), markersize=6,
+                   markeredgecolor="white", markeredgewidth=0.5, label=f)
+        for f in families_present
+    ]
+    fig.legend(handles=handles, loc="lower center",
+               bbox_to_anchor=(0.5, -0.01),
+               ncol=min(len(handles), 10), frameon=False, fontsize=9,
+               handletextpad=0.4, columnspacing=1.2)
+
+    fig.tight_layout(rect=[0.05, 0.045, 1, 1])
 
     out = FIGS_DIR / "fig2_combined_grid.pdf"
     plt.savefig(out)
