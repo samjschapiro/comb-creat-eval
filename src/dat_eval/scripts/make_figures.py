@@ -1198,6 +1198,181 @@ def fig_scatter_by_embedding(benchmarks):
     print(f"Saved {out}")
 
 
+def fig_qualitative_heatmaps():
+    """3x3 grid of pairwise-cosine-distance heatmaps.
+
+    Rows = three models spanning the capability range (Mistral 7B,
+    Claude 3 Haiku, GPT-5). Columns = the three tests (DAT, CDAT, PACE).
+    Each cell's heatmap shows the cosine distance between every pair of
+    words in that test response under the test's canonical embedding
+    (GloVe for DAT, SBERT for CDAT, FastText for PACE). Axes are labelled
+    with the actual words.
+    """
+    from scipy.spatial.distance import cosine as cosine_distance
+    import json
+
+    ROOT = Path(__file__).resolve().parents[3]
+    RUN_DIR = ROOT / "data" / "dat_eval" / "run_v1"
+    sys.path.insert(0, str(ROOT))
+    from src.dat_eval.scripts.multi_embed_appendix import (
+        GloVeEmbedder, FastTextEmbedder, SBERTEmbedder,
+    )
+
+    print("Loading GloVe...", flush=True)
+    glove = GloVeEmbedder()
+    print("Loading FastText...", flush=True)
+    fasttext = FastTextEmbedder()
+    print("Loading SBERT...", flush=True)
+    sbert = SBERTEmbedder("all-mpnet-base-v2")
+    embedders = {"glove": glove, "fasttext": fasttext, "sbert": sbert}
+
+    models = [
+        ("mistralai_mistral-7b-instruct-v0-1", "Mistral 7B"),
+        ("anthropic_claude-3-haiku",            "Claude 3 Haiku"),
+        ("openai_gpt-5",                        "GPT-5"),
+    ]
+    tests = [
+        ("DAT",  "glove",    "dat_responses_t1-0.json"),
+        ("CDAT", "sbert",    "cdat_responses_t1-5.json"),
+        ("PACE", "fasttext", "pace_responses_t0-0.json"),
+    ]
+
+    def get_words(model_key: str, test: str, fname: str) -> list[str]:
+        p = RUN_DIR / model_key / fname
+        if not p.exists():
+            return []
+        d = json.load(open(p))
+        if test == "DAT":
+            for t in d:
+                if t.get("words"):
+                    return t["words"][:10]
+            return []
+        if test == "CDAT":
+            return d.get("rock", {}).get("words", [])[:10]
+        if test == "PACE":
+            chains = d.get("rock", {}).get("chains", [])
+            if not chains:
+                return []
+            # Chain positions come as a list of strings in 'chain' field.
+            return chains[0].get("chain", [])[:20]
+        return []
+
+    def pairwise_distance(words: list[str], embedder) -> tuple[np.ndarray, list[str]]:
+        vecs, valid = [], []
+        for w in words:
+            v = embedder.encode(w)
+            if np.linalg.norm(v) > 0:
+                vecs.append(v)
+                valid.append(w)
+        n = len(vecs)
+        if n < 2:
+            return np.zeros((0, 0)), valid
+        M = np.zeros((n, n))
+        for i in range(n):
+            for j in range(n):
+                if i == j:
+                    continue
+                if np.linalg.norm(vecs[i]) == 0 or np.linalg.norm(vecs[j]) == 0:
+                    M[i, j] = np.nan
+                else:
+                    M[i, j] = cosine_distance(vecs[i], vecs[j])
+        return M, valid
+
+    fig, axes = plt.subplots(3, 3, figsize=(11.5, 12.5))
+    scores_by_cell: dict[tuple[str, str], float] = {}
+    vmax = 0.0
+
+    # First pass: build all matrices, find a shared vmax for the colour scale
+    cells = {}
+    for i, (mkey, mlabel) in enumerate(models):
+        for j, (test, emb_key, fname) in enumerate(tests):
+            words = get_words(mkey, test, fname)
+            emb = embedders[emb_key]
+            M, valid = pairwise_distance(words, emb)
+            cells[(i, j)] = (M, valid)
+            if M.size:
+                # Mean off-diagonal as a uniform descriptive score (×100 to match DAT convention).
+                triu = M[np.triu_indices(M.shape[0], k=1)]
+                triu = triu[~np.isnan(triu)]
+                if triu.size:
+                    scores_by_cell[(mlabel, test)] = float(triu.mean()) * 100
+                    vmax = max(vmax, float(np.nanmax(M)))
+
+    vmax = max(vmax, 1.0)
+
+    for i, (mkey, mlabel) in enumerate(models):
+        for j, (test, emb_key, fname) in enumerate(tests):
+            ax = axes[i, j]
+            M, words = cells[(i, j)]
+            if M.size == 0:
+                ax.text(0.5, 0.5, "(no data)", ha="center", va="center",
+                         transform=ax.transAxes, color=C_GREY, fontsize=10)
+                ax.set_xticks([]); ax.set_yticks([])
+                continue
+            im = ax.imshow(M, vmin=0, vmax=vmax, cmap=CMAP_SEQ, aspect="equal")
+            n = len(words)
+            # Blank out the strictly upper triangle (matrix is symmetric) by
+            # painting white rectangles on top. Matches the lower-triangle
+            # style used in fig_benchmark_correlations.
+            for a in range(n):
+                for b in range(n):
+                    if b > a:
+                        ax.add_patch(plt.Rectangle(
+                            (b - 0.5, a - 0.5), 1, 1,
+                            facecolor="white", edgecolor="none", zorder=2))
+            # Hide the axis spines so the triangle sits flush on the page.
+            for spine in ax.spines.values():
+                spine.set_visible(False)
+            # Label every word on both axes; shrink font as words grow.
+            label_fs = 7.0 if n <= 10 else 5.5
+            ax.set_xticks(range(n))
+            ax.set_yticks(range(n))
+            ax.set_xticklabels(words, rotation=60, ha="right", fontsize=label_fs)
+            ax.set_yticklabels(words, fontsize=label_fs)
+            ax.tick_params(axis="both", which="major", length=0)
+            # Annotate each lower-triangle cell with its cosine distance.
+            # Scale the font with n so 20x20 PACE heatmaps stay legible.
+            ann_fs = 6.0 if n <= 10 else 4.2
+            for a in range(n):
+                for b in range(a + 1):
+                    if a == b:
+                        txt = "—"
+                        colour = C_GREY
+                    else:
+                        v = M[a, b]
+                        if np.isnan(v):
+                            continue
+                        txt = f"{v:.2f}".lstrip("0") if v < 1 else f"{v:.2f}"
+                        # Pick ink colour for contrast against the Batlow fill.
+                        colour = "white" if v < 0.45 else "black"
+                    ax.text(b, a, txt, ha="center", va="center",
+                            fontsize=ann_fs, color=colour, zorder=3)
+            # Title: "Model x Test  score=NN.N" (plain text — LaTeX \textit isn't
+            # supported by matplotlib outside math mode).
+            score = scores_by_cell.get((mlabel, test))
+            title = f"{mlabel} $\\times$ {test}"
+            if score is not None:
+                title += f"     score = {score:.1f}"
+            ax.set_title(title, fontsize=10, pad=6)
+
+    fig.subplots_adjust(hspace=0.6, wspace=0.35, right=0.9)
+
+    # Shared colour bar in its own axes so subplots_adjust has control.
+    cbar_ax = fig.add_axes([0.915, 0.28, 0.013, 0.44])
+    cbar = fig.colorbar(im, cax=cbar_ax)
+    cbar.set_label("cosine distance", fontsize=9)
+    cbar.ax.tick_params(labelsize=8)
+
+    out = FIGS_DIR / "fig_qualitative_heatmaps.pdf"
+    plt.savefig(out)
+    plt.savefig(out.with_suffix(".png"))
+    plt.close()
+    print(f"Saved {out}")
+    print("Per-cell mean pairwise cosine distance × 100:")
+    for (mlabel, test), s in sorted(scores_by_cell.items()):
+        print(f"  {mlabel:18s} {test:4s}: {s:5.1f}")
+
+
 def main():
     FIGS_DIR.mkdir(parents=True, exist_ok=True)
     corr, scores, benchmarks = load_data()
