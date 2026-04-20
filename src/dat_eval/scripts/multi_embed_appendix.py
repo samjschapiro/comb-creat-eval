@@ -142,34 +142,42 @@ def score_dat_trial(words: list[str], emb: Embedder, glove_vocab: GloVeEmbedding
 
 
 def score_cdat_trial(cue: str, words: list[str], emb: Embedder) -> tuple[float, float]:
-    """CDAT under arbitrary embedder: novelty = pairwise distance among the 10
-    generated words; appropriateness = mean cos-sim to the cue. We do not
-    re-apply the appropriateness gate here; we report raw novelty."""
+    """CDAT under arbitrary embedder: novelty = pairwise distance among the
+    first 7 valid words (matching the paper and cdat.py); appropriateness =
+    mean cos-sim to the cue on the shifted [0, 200] scale (matching
+    cdat.py and cdat_gate.py)."""
     if not words:
         return math.nan, math.nan
-    vecs = [emb.encode(w) for w in words]
-    valid = [v for v in vecs if np.linalg.norm(v) > 0]
+    # Keep only valid words (non-empty embedding) and truncate to first 7
+    valid = []
+    for w in words:
+        v = emb.encode(w)
+        if np.linalg.norm(v) > 0:
+            valid.append((w, v))
+        if len(valid) == 7:
+            break
     if len(valid) < 2:
         return math.nan, math.nan
-    # Novelty
+    vecs = [v for _, v in valid]
+    # Novelty: mean pairwise cosine distance of first 7 valid words × 100
     ds = []
-    for i in range(len(valid)):
-        for j in range(i + 1, len(valid)):
-            d = cosine_d(valid[i], valid[j])
+    for i in range(len(vecs)):
+        for j in range(i + 1, len(vecs)):
+            d = cosine_d(vecs[i], vecs[j])
             if not math.isnan(d):
                 ds.append(d)
     nov = float(np.mean(ds)) * 100 if ds else math.nan
-    # Appropriateness: cos-sim to cue
+    # Appropriateness: mean (1 + cos_sim) × 100, shifted to [0, 200]
     cue_v = emb.encode(cue)
     if np.linalg.norm(cue_v) == 0:
         app = math.nan
     else:
         sims = []
-        for v in valid:
+        for v in vecs:
             d = cosine_d(cue_v, v)
             if not math.isnan(d):
                 sims.append(1.0 - d)
-        app = float(np.mean(sims)) * 100 if sims else math.nan
+        app = float(np.mean([100.0 * (1.0 + s) for s in sims])) if sims else math.nan
     return nov, app
 
 
@@ -374,6 +382,17 @@ def main():
             if nonan:
                 print(f"  {mdir.name}: {nonan}", flush=True)
         all_scores[emb_name] = by_model
+
+    # Inject gated CDAT scores per embedding from cdat_gated_scores.json
+    # (computed by src/dat_eval/scripts/cdat_gate.py, lives outside the
+    # output_dir so it survives --overwrite runs of score_evals.py).
+    gated_path = RUN_DIR / "cdat_gated_scores.json"
+    if gated_path.exists():
+        gated = json.loads(gated_path.read_text())
+        for emb_name in all_scores:
+            for model_key, scores in all_scores[emb_name].items():
+                g = gated.get(emb_name, {}).get(model_key, {}).get("cdat")
+                scores["cdat"] = g if g is not None else float("nan")
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     (OUT_DIR / "multi_embed_scores.json").write_text(json.dumps(all_scores, indent=2))

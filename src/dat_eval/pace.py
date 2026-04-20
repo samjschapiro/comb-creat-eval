@@ -2,8 +2,8 @@
 
 Implements the PACE metric from Qiu & Hu (2025, EMNLP): given a seed word,
 the model produces 3 first-associations, then builds a 20-word chain from
-each. Scored by average semantic distance between consecutive words using
-FastText embeddings.
+each. Scored by average semantic distance between each word and all preceding
+words in the chain, using FastText embeddings.
 
 Higher association distance = higher creativity.
 """

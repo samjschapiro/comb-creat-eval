@@ -1198,6 +1198,132 @@ def fig_scatter_by_embedding(benchmarks):
     print(f"Saved {out}")
 
 
+def fig_qualitative_embedding():
+    """Per-test 2D t-SNE projections of response words from three
+    models across DAT, CDAT, and PACE.
+
+    One panel per test. Within each panel, each model's response words
+    are embedded under SBERT and jointly projected to 2D with t-SNE so
+    the reader can see how the three models' word clouds arrange
+    themselves on that test. Words are labelled inline. Same three
+    model colours across all panels.
+    """
+    from sklearn.manifold import TSNE
+    import json
+
+    ROOT = Path(__file__).resolve().parents[3]
+    RUN_DIR = ROOT / "data" / "dat_eval" / "run_v1"
+    sys.path.insert(0, str(ROOT))
+    from src.dat_eval.scripts.multi_embed_appendix import SBERTEmbedder
+
+    print("Loading SBERT...", flush=True)
+    sbert = SBERTEmbedder("all-mpnet-base-v2")
+
+    models = [
+        ("mistralai_mistral-7b-instruct-v0-1", "Mistral 7B",      "#D95F02"),
+        ("anthropic_claude-3-haiku",            "Claude 3 Haiku",  "#7570B3"),
+        ("openai_gpt-5",                        "GPT-5",           "#1B9E77"),
+    ]
+    tests = [
+        ("DAT",  "dat_responses_t1-0.json"),
+        ("CDAT", "cdat_responses_t1-5.json"),
+        ("PACE", "pace_responses_t0-0.json"),
+    ]
+
+    def get_words(mkey: str, test: str, fname: str) -> list[str]:
+        p = RUN_DIR / mkey / fname
+        if not p.exists():
+            return []
+        d = json.load(open(p))
+        if test == "DAT":
+            for t in d:
+                if t.get("words"):
+                    return t["words"][:10]
+            return []
+        if test == "CDAT":
+            return d.get("rock", {}).get("words", [])[:10]
+        if test == "PACE":
+            chains = d.get("rock", {}).get("chains", [])
+            if not chains:
+                return []
+            return chains[0].get("chain", [])[:20]
+        return []
+
+    fig, axes = plt.subplots(1, 3, figsize=(14.0, 5.0))
+
+    for ai, (test, fname) in enumerate(tests):
+        ax = axes[ai]
+        # Collect (word, model_idx) for this test
+        words, model_idx = [], []
+        for mi, (mkey, _, _) in enumerate(models):
+            for w in get_words(mkey, test, fname):
+                words.append(w)
+                model_idx.append(mi)
+        if not words:
+            ax.text(0.5, 0.5, "(no data)", ha="center", va="center",
+                     transform=ax.transAxes, color=C_GREY)
+            ax.set_title(test, fontsize=12, weight="bold")
+            continue
+
+        X = np.vstack([sbert.encode(w) for w in words])
+        # Per-test t-SNE with perplexity suited to the set size.
+        perplexity = max(3, min(15, (len(words) - 1) // 3))
+        tsne = TSNE(n_components=2, perplexity=perplexity, init="pca",
+                     random_state=0, learning_rate="auto")
+        Y = tsne.fit_transform(X)
+
+        # Draw points per model, coloured by model.
+        for mi, (_, mlabel, mcolor) in enumerate(models):
+            mask = [i for i, m in enumerate(model_idx) if m == mi]
+            if not mask:
+                continue
+            pts = Y[mask]
+            ax.scatter(pts[:, 0], pts[:, 1], s=80, color=mcolor,
+                       alpha=0.8, edgecolor="white", linewidth=0.7,
+                       zorder=3, label=mlabel if ai == 0 else None)
+
+        # Label every word inline so the reader can read what each
+        # cluster contains.
+        for i, w in enumerate(words):
+            mcolor = models[model_idx[i]][2]
+            ax.annotate(w, xy=(Y[i, 0], Y[i, 1]),
+                        xytext=(5, 4), textcoords="offset points",
+                        fontsize=8.0, color=mcolor,
+                        zorder=4)
+
+        ax.set_title(test, fontsize=12, weight="bold", pad=8)
+        ax.set_xlabel("t-SNE 1", fontsize=9)
+        if ai == 0:
+            ax.set_ylabel("t-SNE 2", fontsize=9)
+        ax.tick_params(axis="both", which="major", labelsize=7,
+                        labelleft=(ai == 0))
+        # Expand limits so labels fit inside the panel.
+        xlim = ax.get_xlim(); ylim = ax.get_ylim()
+        ax.set_xlim(xlim[0] - 8, xlim[1] + 30)
+        ax.set_ylim(ylim[0] - 8, ylim[1] + 8)
+
+    # Single legend across the whole figure.
+    handles = [
+        plt.Line2D([0], [0], marker="o", linestyle="",
+                   color=mcolor, markersize=9, markeredgecolor="white",
+                   markeredgewidth=0.6, label=mlabel)
+        for _, mlabel, mcolor in models
+    ]
+    fig.legend(handles=handles, loc="lower center",
+               bbox_to_anchor=(0.5, -0.02), ncol=3, frameon=False,
+               fontsize=10)
+
+    fig.suptitle("Response words projected into SBERT embedding space (per-test t-SNE)",
+                  fontsize=11, y=1.02)
+    fig.tight_layout(rect=[0, 0.05, 1, 0.98])
+
+    out = FIGS_DIR / "fig_qualitative_embedding.pdf"
+    plt.savefig(out, bbox_inches="tight")
+    plt.savefig(out.with_suffix(".png"), bbox_inches="tight")
+    plt.close()
+    print(f"Saved {out}")
+
+
 def fig_qualitative_heatmaps():
     """3x3 grid of pairwise-cosine-distance heatmaps.
 
