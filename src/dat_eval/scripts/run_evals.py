@@ -61,6 +61,9 @@ REASONING_MODELS = {
     "openai/gpt-5.4",
     "openai/gpt-5.4-mini",
     "openai/gpt-5.4-nano",
+    # Claude Sonnet 4.6 emits extended-thinking tokens by default that burn
+    # through a 256-token cap before any visible content is produced.
+    "anthropic/claude-sonnet-4.6",
 }
 
 

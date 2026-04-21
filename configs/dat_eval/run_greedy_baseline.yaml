@@ -1,0 +1,5 @@
+output_dir: "data/dat_eval/greedy_baseline_v1"
+glove_path: "resources/glove.840B.300d.txt"
+n_trials: 120
+n_words: 10
+base_seed: 0

@@ -1,0 +1,26 @@
+# DAT re-run for claude-sonnet-4.6: prior run_v1 produced null content
+# because the 256-token cap was consumed by extended-thinking tokens.
+# Outputs write directly into the existing run_v1 tree (files for the
+# other temps/evals are left alone).
+output_dir: "data/dat_eval/run_v1"
+
+dat_temperatures:
+  - 1.0
+  - 1.5
+  - 2.0
+dat_trials: 40
+dat_top_p: 1.0
+dat_top_k: 0
+dat_max_tokens: 256
+
+evals:
+  - dat
+
+models:
+  - anthropic/claude-sonnet-4.6
+
+concurrency: 20
+reasoning:
+  effort: low
+  exclude: true
+reasoning_max_tokens_multiplier: 4
