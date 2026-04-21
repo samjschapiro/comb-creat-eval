@@ -1198,6 +1198,156 @@ def fig_scatter_by_embedding(benchmarks):
     print(f"Saved {out}")
 
 
+def fig_validity_specificity(benchmarks):
+    """2x2 scatter: Validity (raw Pearson r) vs Specificity (semi-partial
+    Pearson r controlling for Arena Overall + MMLU-Pro), one panel per
+    benchmark. Colour = test (DAT / CDAT / PACE), marker = embedding
+    (GloVe / FastText / SBERT / Overall composite). Points significant
+    on BOTH axes (p < .05, expected direction) are drawn with a thick
+    black edge. Figural analogue of Table~\\ref{tab:correlations}.
+    """
+    from scipy.stats import pearsonr
+    from matplotlib.lines import Line2D
+
+    me_path = RESULTS_DIR / "multi_embed_scores.json"
+    if not me_path.exists():
+        print("Skipping fig_validity_specificity: multi_embed_scores.json missing.")
+        return
+    with open(me_path) as f:
+        me_scores = json.load(f)
+    composite = load_composite_scores()
+
+    # (key, label, marker, size)
+    embedders = [
+        ("glove",    "GloVe",    "o", 60),
+        ("fasttext", "FastText", "^", 60),
+        ("sbert",    "SBERT",    "s", 60),
+        ("overall",  "Overall",  "D", 90),   # diamond, larger: headline row
+    ]
+    tests = [
+        ("dat",  "DAT",  C_DAT),
+        ("cdat", "CDAT", C_CNOV),
+        ("pace", "PACE", C_PACE),
+    ]
+    benchs = [
+        ("arena_cw",           "Arena CW"),
+        ("eq_bench_cw",        "EQ-Bench CW"),
+        ("mazur_cw_v2",        "Mazur CW v2"),
+        ("hivemind_diversity", "Hivemind diversity"),
+    ]
+
+    # Per (test, embedding, benchmark): raw r + semi-partial r + p-values.
+    records = {}
+    for emb_key, _, _, _ in embedders:
+        score_src = composite if emb_key == "overall" else me_scores.get(emb_key, {})
+        for test_key, _, _ in tests:
+            for bench_key, _ in benchs:
+                xs, ys, ao, mp = [], [], [], []
+                for mk, sc in score_src.items():
+                    v = sc.get(test_key)
+                    if v is None or (isinstance(v, float) and (np.isnan(v) or v == 0)):
+                        continue
+                    b = benchmarks.get(mk, {})
+                    if bench_key not in b or "arena_overall" not in b or "mmlu_pro" not in b:
+                        continue
+                    xs.append(v); ys.append(b[bench_key])
+                    ao.append(b["arena_overall"]); mp.append(b["mmlu_pro"])
+                if len(xs) < 5:
+                    records[(test_key, emb_key, bench_key)] = None
+                    continue
+                xs_a = np.asarray(xs, float)
+                ys_a = np.asarray(ys, float)
+                Z = np.column_stack([np.ones(len(xs_a)),
+                                      np.asarray(ao, float),
+                                      np.asarray(mp, float)])
+                val_r, val_p = pearsonr(xs_a, ys_a)
+                beta, *_ = np.linalg.lstsq(Z, ys_a, rcond=None)
+                y_resid = ys_a - Z @ beta
+                spec_r, spec_p = pearsonr(xs_a, y_resid)
+                records[(test_key, emb_key, bench_key)] = {
+                    "val_r": float(val_r), "val_p": float(val_p),
+                    "spec_r": float(spec_r), "spec_p": float(spec_p),
+                }
+
+    fig, axes = plt.subplots(2, 2, figsize=(7.2, 6.8),
+                              sharex=True, sharey=True)
+
+    for ax, (bench_key, bench_label) in zip(axes.flat, benchs):
+        ax.axhline(0, color=C_GREY, linewidth=0.5, linestyle=":", alpha=0.7, zorder=0)
+        ax.axvline(0, color=C_GREY, linewidth=0.5, linestyle=":", alpha=0.7, zorder=0)
+
+        for test_key, _, test_color in tests:
+            for emb_key, _, marker, size in embedders:
+                rec = records.get((test_key, emb_key, bench_key))
+                if rec is None:
+                    continue
+                both_sig = (rec["val_p"] < 0.05 and rec["spec_p"] < 0.05
+                            and rec["val_r"] > 0 and rec["spec_r"] > 0)
+                ax.scatter(
+                    rec["val_r"], rec["spec_r"],
+                    marker=marker, s=size, c=[test_color],
+                    edgecolor="black" if both_sig else "white",
+                    linewidth=1.6 if both_sig else 0.5,
+                    zorder=4 if both_sig else 3,
+                    alpha=0.95,
+                )
+
+        ax.set_title(bench_label, fontsize=10.5)
+        ax.tick_params(axis="both", labelsize=8.5)
+
+    # Shared axes: pad ranges so extremes aren't clipped
+    all_val = [rec["val_r"] for rec in records.values() if rec]
+    all_spec = [rec["spec_r"] for rec in records.values() if rec]
+    xpad = 0.05 * (max(all_val) - min(all_val))
+    ypad = 0.05 * (max(all_spec) - min(all_spec))
+    for ax in axes.flat:
+        ax.set_xlim(min(all_val) - xpad, max(all_val) + xpad)
+        ax.set_ylim(min(all_spec) - ypad, max(all_spec) + ypad)
+
+    # Axis labels only on outer edge for shared layout
+    for ax in axes[-1, :]:
+        ax.set_xlabel(r"Validity  $r$", fontsize=10.5)
+    for ax in axes[:, 0]:
+        ax.set_ylabel(r"Specificity  $r \mid g$", fontsize=10.5)
+
+    # --- Legends ---
+    test_handles = [Line2D([], [], marker="o", linestyle="none",
+                           markerfacecolor=c, markeredgecolor="white",
+                           markeredgewidth=0.5, markersize=8, label=lbl)
+                    for (_, lbl, c) in tests]
+    emb_handles = [Line2D([], [], marker=m, linestyle="none",
+                          markerfacecolor=C_GREY, markeredgecolor="white",
+                          markeredgewidth=0.5,
+                          markersize=(10 if k == "overall" else 8),
+                          label=lbl)
+                   for (k, lbl, m, _) in embedders]
+    sig_handle = [Line2D([], [], marker="o", linestyle="none",
+                         markerfacecolor="white", markeredgecolor="black",
+                         markeredgewidth=1.6, markersize=8,
+                         label=r"sig. on both ($p\!<\!.05$)")]
+
+    l1 = fig.legend(handles=test_handles, title="Test",
+                    loc="lower left", bbox_to_anchor=(0.03, 0.0),
+                    ncol=3, frameon=False, fontsize=9, title_fontsize=9.5,
+                    handletextpad=0.3, columnspacing=0.9)
+    l2 = fig.legend(handles=emb_handles, title="Embedding",
+                    loc="lower center", bbox_to_anchor=(0.55, 0.0),
+                    ncol=4, frameon=False, fontsize=9, title_fontsize=9.5,
+                    handletextpad=0.3, columnspacing=0.9)
+    l3 = fig.legend(handles=sig_handle,
+                    loc="lower right", bbox_to_anchor=(0.99, 0.012),
+                    ncol=1, frameon=False, fontsize=9,
+                    handletextpad=0.3)
+    fig.add_artist(l1); fig.add_artist(l2)
+
+    fig.tight_layout(rect=[0, 0.11, 1, 1])
+    out = FIGS_DIR / "fig_validity_specificity.pdf"
+    plt.savefig(out)
+    plt.savefig(out.with_suffix(".png"))
+    plt.close()
+    print(f"Saved {out}")
+
+
 def fig_qualitative_embedding():
     """Per-test 2D t-SNE projections of response words from three
     models across DAT, CDAT, and PACE.
@@ -1510,6 +1660,7 @@ def main():
     fig_inter_metric_triangle(corr)
     fig_benchmark_correlations(benchmarks)
     fig_scatter_by_embedding(benchmarks)
+    fig_validity_specificity(benchmarks)
 
     print(f"\nAll figures saved to {FIGS_DIR}")
 
