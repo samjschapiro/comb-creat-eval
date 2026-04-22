@@ -1269,13 +1269,16 @@ def fig_validity_specificity(benchmarks):
                     "spec_r": float(spec_r), "spec_p": float(spec_p),
                 }
 
-    fig, axes = plt.subplots(2, 2, figsize=(7.2, 6.8),
+    fig, axes = plt.subplots(2, 2, figsize=(6.4, 4.7),
                               sharex=True, sharey=True)
 
     for ax, (bench_key, bench_label) in zip(axes.flat, benchs):
         ax.axhline(0, color=C_GREY, linewidth=0.5, linestyle=":", alpha=0.7, zorder=0)
         ax.axvline(0, color=C_GREY, linewidth=0.5, linestyle=":", alpha=0.7, zorder=0)
 
+        import matplotlib.transforms as mtransforms
+        star_trans = mtransforms.offset_copy(ax.transData, fig=fig,
+                                             x=7, y=6, units="points")
         for test_key, _, test_color in tests:
             for emb_key, _, marker, size in embedders:
                 rec = records.get((test_key, emb_key, bench_key))
@@ -1286,23 +1289,29 @@ def fig_validity_specificity(benchmarks):
                 ax.scatter(
                     rec["val_r"], rec["spec_r"],
                     marker=marker, s=size, c=[test_color],
-                    edgecolor="black" if both_sig else "white",
-                    linewidth=1.6 if both_sig else 0.5,
-                    zorder=4 if both_sig else 3,
-                    alpha=0.95,
+                    edgecolor="white", linewidth=0.5,
+                    zorder=3, alpha=0.95,
                 )
+                # Small gold star offset to the upper-right of both-sig cells
+                if both_sig:
+                    ax.scatter(
+                        rec["val_r"], rec["spec_r"],
+                        marker="*", s=55,
+                        facecolor="#ffcc00", edgecolor="black",
+                        linewidth=0.5, zorder=5, transform=star_trans,
+                    )
 
         ax.set_title(bench_label, fontsize=10.5)
         ax.tick_params(axis="both", labelsize=8.5)
 
-    # Shared axes: pad ranges so extremes aren't clipped
+    # Shared axes: extra pad on top/right so offset sig stars stay inside.
     all_val = [rec["val_r"] for rec in records.values() if rec]
     all_spec = [rec["spec_r"] for rec in records.values() if rec]
     xpad = 0.05 * (max(all_val) - min(all_val))
     ypad = 0.05 * (max(all_spec) - min(all_spec))
     for ax in axes.flat:
-        ax.set_xlim(min(all_val) - xpad, max(all_val) + xpad)
-        ax.set_ylim(min(all_spec) - ypad, max(all_spec) + ypad)
+        ax.set_xlim(min(all_val) - xpad, max(all_val) + 2.0 * xpad)
+        ax.set_ylim(min(all_spec) - ypad, max(all_spec) + 2.0 * ypad)
 
     # Axis labels only on outer edge for shared layout
     for ax in axes[-1, :]:
@@ -1321,26 +1330,21 @@ def fig_validity_specificity(benchmarks):
                           markersize=(10 if k == "overall" else 8),
                           label=lbl)
                    for (k, lbl, m, _) in embedders]
-    sig_handle = [Line2D([], [], marker="o", linestyle="none",
-                         markerfacecolor="white", markeredgecolor="black",
-                         markeredgewidth=1.6, markersize=8,
+    sig_handle = [Line2D([], [], marker="*", linestyle="none",
+                         markerfacecolor="#ffcc00", markeredgecolor="black",
+                         markeredgewidth=0.5, markersize=9,
                          label=r"sig. on both ($p\!<\!.05$)")]
 
-    l1 = fig.legend(handles=test_handles, title="Test",
-                    loc="lower left", bbox_to_anchor=(0.03, 0.0),
-                    ncol=3, frameon=False, fontsize=9, title_fontsize=9.5,
-                    handletextpad=0.3, columnspacing=0.9)
-    l2 = fig.legend(handles=emb_handles, title="Embedding",
-                    loc="lower center", bbox_to_anchor=(0.55, 0.0),
-                    ncol=4, frameon=False, fontsize=9, title_fontsize=9.5,
-                    handletextpad=0.3, columnspacing=0.9)
-    l3 = fig.legend(handles=sig_handle,
-                    loc="lower right", bbox_to_anchor=(0.99, 0.012),
-                    ncol=1, frameon=False, fontsize=9,
-                    handletextpad=0.3)
-    fig.add_artist(l1); fig.add_artist(l2)
+    # Single combined legend: row 1 = tests + sig indicator,
+    # row 2 = embeddings. ncol=4 fills across rows first.
+    combined = test_handles + sig_handle + emb_handles
+    fig.legend(handles=combined,
+               loc="lower center", bbox_to_anchor=(0.5, 0.0),
+               ncol=4, frameon=False, fontsize=8.5,
+               handletextpad=0.3, columnspacing=1.2,
+               labelspacing=0.3)
 
-    fig.tight_layout(rect=[0, 0.11, 1, 1])
+    fig.tight_layout(rect=[0, 0.16, 1, 1])
     out = FIGS_DIR / "fig_validity_specificity.pdf"
     plt.savefig(out)
     plt.savefig(out.with_suffix(".png"))
