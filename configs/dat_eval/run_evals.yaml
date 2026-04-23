@@ -4,9 +4,10 @@
 output_dir: "data/dat_eval/run_v1"
 
 # Budget cap in USD. Run aborts before exceeding this.
-# Current OpenRouter balance: $46.66. Estimated remaining work: $44.71.
-# Cap at $45 leaves ~$1.66 margin for estimation error on the expensive tier.
-budget_usd: 45.0
+# Bumped 55 -> 75 on 2026-04-23 after Gemini 3 DAT/CDAT truncated on first
+# pass; added gemini-3.x and gpt-5.2 to REASONING_MODELS (4x max_tokens)
+# and re-running only those, $28 fresh credits added to OpenRouter.
+budget_usd: 75.0
 
 # Max concurrent in-flight API calls. OpenRouter's rate ceiling scales with
 # credit balance (~$34 ≈ 30 req/s). 20 leaves headroom for retries.
@@ -136,3 +137,26 @@ models:
   - mistralai/mistral-small-24b-instruct-2501
   - qwen/qwen3-14b
   - qwen/qwen3-8b
+
+  # --- NEW: EXTEND NOVELTYBENCH COVERAGE (added 2026-04-22) ---
+  # Adds 8 models that appear in NoveltyBench's 20-model pool but weren't in
+  # our original eval, bumping overlap from n=11 to n=19 (Claude 3 Opus dropped
+  # for cost; Gemini 2.0 Pro experimental may 404).
+  - google/gemma-2-2b-it
+  - cohere/command-r7b-12-2024
+  - google/gemini-2.0-flash-lite-001
+  - cohere/command-r-08-2024
+  - meta-llama/llama-3.1-405b-instruct
+  - google/gemini-pro-1.5
+  - google/gemini-2.0-pro-exp-02-05
+  - anthropic/claude-3.5-sonnet
+
+  # --- NEW: EXTEND ARC-AGI COVERAGE (added 2026-04-23) ---
+  # 4 frontier models overlapping with ARC-AGI-v2 leaderboard that aren't in
+  # our pool. Lifts ARC-AGI validity coverage from n=6 to ~n=10. GPT-5.2 Pro
+  # (est $35) and Claude Opus 4 (est $16) dropped for cost; if post-run
+  # correlations look interesting, we can decide whether to add them.
+  - google/gemini-3-flash-preview
+  - openai/gpt-5.2
+  - google/gemini-3.1-pro-preview
+  - x-ai/grok-4

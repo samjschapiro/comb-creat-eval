@@ -82,10 +82,24 @@ PRICING = {
     # Cohere
     "cohere/command-a":                 (2.50, 10.00),
     "cohere/command-r-plus-08-2024":    (2.50, 10.00),
+    "cohere/command-r-08-2024":         (0.15, 0.60),
+    "cohere/command-r7b-12-2024":       (0.04, 0.15),
     # NVIDIA
     "nvidia/llama-3.1-nemotron-70b-instruct": (0.13, 0.40),
     # Microsoft
     "microsoft/phi-4":                  (0.07, 0.14),
+    # --- NoveltyBench-coverage additions (2026-04-22) ---
+    "anthropic/claude-3.5-sonnet":      (3.00, 15.00),
+    "google/gemini-pro-1.5":            (1.25, 5.00),
+    "google/gemini-2.0-flash-lite-001": (0.075, 0.30),
+    "google/gemini-2.0-pro-exp-02-05":  (0.0, 0.0),       # experimental / free
+    "google/gemma-2-2b-it":             (0.03, 0.03),
+    "meta-llama/llama-3.1-405b-instruct": (3.00, 3.00),
+    # --- ARC-AGI-coverage additions (2026-04-23) ---
+    "google/gemini-3.1-pro-preview":    (2.00, 12.00),
+    "openai/gpt-5.2":                   (1.75, 14.00),
+    "google/gemini-3-flash-preview":    (0.50, 3.00),
+    "x-ai/grok-4":                      (3.00, 15.00),
 }
 
 

@@ -871,9 +871,9 @@ def fig_benchmark_correlations(benchmarks):
 
     # Panel (a): capability proxies + outcome benchmarks (unchanged logic)
     keys_a = ["arena_overall", "mmlu_pro", "arena_cw", "eq_bench_cw",
-              "mazur_cw_v2", "hivemind_diversity"]
+              "mazur_cw_v2", "hivemind_diversity", "noveltybench_distinct"]
     labels_a = ["Arena Ovr", "MMLU-Pro", "Arena CW", "EQ-B. CW",
-                "Mazur V2", "Hive. Div."]
+                "Mazur V2", "Hive. Div.", "NovBench"]
     na = len(keys_a)
     mat_a = np.full((na, na), np.nan)
     for i, ki in enumerate(keys_a):

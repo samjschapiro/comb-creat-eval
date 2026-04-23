@@ -64,6 +64,14 @@ REASONING_MODELS = {
     # Claude Sonnet 4.6 emits extended-thinking tokens by default that burn
     # through a 256-token cap before any visible content is produced.
     "anthropic/claude-sonnet-4.6",
+    # Gemini 3.x models think-by-default and ignore reasoning.exclude; truncate
+    # JSON mid-array under the base 256-token cap. Add to the reasoning bucket
+    # so they get 4x the max_tokens.
+    "google/gemini-3.1-pro-preview",
+    "google/gemini-3-flash-preview",
+    # OpenAI GPT-5.2 family similarly emits reasoning by default.
+    "openai/gpt-5.2",
+    "openai/gpt-5.2-pro",
 }
 
 

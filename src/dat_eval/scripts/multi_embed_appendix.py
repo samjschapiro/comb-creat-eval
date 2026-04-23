@@ -306,7 +306,8 @@ def correlate(scores_by_model: dict[str, dict[str, float]], benchmarks: dict) ->
     controls for Arena Overall and MMLU-Pro simultaneously.
     """
     tasks = ["dat", "cdat", "pace"]
-    bench_keys = ["arena_cw", "eq_bench_cw", "mazur_cw_v2", "hivemind_diversity"]
+    bench_keys = ["arena_cw", "eq_bench_cw", "mazur_cw_v2",
+                  "hivemind_diversity", "noveltybench_distinct"]
     result: dict[str, dict] = {bk: {} for bk in bench_keys}
 
     for bk in bench_keys:
@@ -410,6 +411,7 @@ def main():
         "eq_bench_cw": "EQ-Bench CW",
         "mazur_cw_v2": "Mazur V2",
         "hivemind_diversity": "Hivemind diversity",
+        "noveltybench_distinct": "NoveltyBench Distinct",
     }
     for bk, bench_label in bench_labels.items():
         print(f"\n=== Joint partial correlations vs {bench_label} (r / rho) ===")
