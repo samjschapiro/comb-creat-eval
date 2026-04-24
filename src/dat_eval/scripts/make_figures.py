@@ -110,7 +110,7 @@ def load_composite_scores() -> dict:
     with open(me_path) as f:
         me = json.load(f)
     embs = sorted(me.keys())
-    tasks = ["dat", "cdat", "pace"]
+    tasks = ["dat", "cdat", "cdat_novelty", "cdat_appropriateness", "pace"]
     models = sorted({m for emb in embs for m in me[emb]})
 
     composite: dict[str, dict[str, float]] = {}
@@ -889,8 +889,8 @@ def fig_benchmark_correlations(benchmarks):
 
     # Panel (b): inter-test correlations with composite (overall z-score)
     composite = load_composite_scores()
-    tasks = ["dat", "cdat", "pace"]
-    labels_b = ["DAT", "CDAT", "PACE"]
+    tasks = ["dat", "cdat", "cdat_novelty", "cdat_appropriateness", "pace"]
+    labels_b = ["DAT", "CDAT", "CDAT-N", "CDAT-A", "PACE"]
     nb = len(tasks)
     mat_b = np.full((nb, nb), np.nan)
     for i, ti in enumerate(tasks):

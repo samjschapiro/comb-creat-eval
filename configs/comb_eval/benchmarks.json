@@ -4,28 +4,32 @@
     "arena_cw": 1467,
     "eq_bench_cw": 1911.3,
     "eq_bench_cw_rubric": 16.53,
-    "mmlu_pro": 0.891
+    "mmlu_pro": 0.891,
+    "arc_agi_v2": 0.688
   },
   "anthropic_claude-opus-4-5": {
     "arena_overall": 1468,
     "arena_cw": 1462,
     "eq_bench_cw": 1737.2,
     "eq_bench_cw_rubric": 16.35,
-    "mmlu_pro": 0.873
+    "mmlu_pro": 0.873,
+    "arc_agi_v2": 0.376
   },
   "openai_gpt-5-4": {
     "arena_overall": 1466,
     "arena_cw": 1429,
     "eq_bench_cw": 1991.7,
     "eq_bench_cw_rubric": 16.89,
-    "mmlu_pro": 0.875
+    "mmlu_pro": 0.875,
+    "arc_agi_v2": 0.733
   },
   "anthropic_claude-sonnet-4-6": {
     "arena_overall": 1462,
     "arena_cw": 1444,
     "eq_bench_cw": 1937.7,
     "eq_bench_cw_rubric": 16.5,
-    "mmlu_pro": 0.873
+    "mmlu_pro": 0.873,
+    "arc_agi_v2": 0.583
   },
   "openai_gpt-5-4-mini": {
     "arena_overall": 1459,
@@ -46,7 +50,8 @@
     "eq_bench_cw": 1377.1,
     "eq_bench_cw_rubric": 16.16,
     "mmlu_pro": 0.837,
-    "mazur_cw_v2": 8.38
+    "mazur_cw_v2": 8.38,
+    "arc_agi_v2": 0.049
   },
   "openai_gpt-4o": {
     "arena_overall": 1443,
@@ -73,7 +78,8 @@
     "arena_overall": 1431,
     "arena_cw": 1384,
     "mmlu_pro": 0.853,
-    "mazur_cw_v2": 8.39
+    "mazur_cw_v2": 8.39,
+    "arc_agi_v2": 0.065
   },
   "openai_gpt-4-1": {
     "arena_overall": 1413,
@@ -494,5 +500,17 @@
   "cohere_command-r7b-12-2024": {
     "noveltybench_distinct": 3.58,
     "noveltybench_utility": 3.35
+  },
+  "openai_gpt-5-2": {
+    "arc_agi_v2": 0.529
+  },
+  "google_gemini-3-flash-preview": {
+    "arc_agi_v2": 0.336
+  },
+  "x-ai_grok-4": {
+    "arc_agi_v2": 0.159
+  },
+  "google_gemini-3-1-pro-preview": {
+    "arc_agi_v2": 0.771
   }
 }
