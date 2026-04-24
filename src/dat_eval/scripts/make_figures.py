@@ -1368,14 +1368,14 @@ def fig_headline():
     """
     from matplotlib.lines import Line2D
 
-    figsize = (7.8, 4.8)
+    figsize = (9.2, 4.2)
     title_fs, axis_fs, tick_fs = 11.0, 10.5, 9.0
     leg_fs, leg_title_fs, annotate_fs = 9.0, 9.5, 8.5
     s_ind, s_overall, s_star = 38, 170, 40
     overall_edge_lw, ind_sig_lw, ind_nosig_lw = 1.3, 0.9, 0.4
     leg_ms_test, leg_ms_overall, leg_ms_star, leg_ms_outl = 9, 11, 10, 7
     star_off_pts = 6
-    rect = [0, 0.18, 1, 1]
+    rect = [0, 0, 0.77, 1]
     out_dirs = [FIGS_DIR, PAPER_FIGS_DIR]
 
     # Colors encode tests. 6 well-separated categorical samples from Batlow;
@@ -1563,19 +1563,20 @@ def fig_headline():
                label="outlined: sig. one axis"),
     ]
 
+    # Stacked legends on the right: Test on top, Indicators below.
     leg_tests = fig.legend(
         handles=test_handles, title="Test",
-        loc="lower center", bbox_to_anchor=(0.28, -0.01),
-        ncol=3, frameon=False, fontsize=leg_fs, title_fontsize=leg_title_fs,
-        handletextpad=0.3, columnspacing=1.2, labelspacing=0.35,
+        loc="upper left", bbox_to_anchor=(0.78, 0.95),
+        ncol=1, frameon=False, fontsize=leg_fs, title_fontsize=leg_title_fs,
+        handletextpad=0.4, labelspacing=0.4,
     )
     leg_tests._legend_box.align = "left"
     fig.add_artist(leg_tests)
     leg_ind = fig.legend(
         handles=indicator_handles, title="Indicators",
-        loc="lower center", bbox_to_anchor=(0.76, -0.01),
+        loc="upper left", bbox_to_anchor=(0.78, 0.44),
         ncol=1, frameon=False, fontsize=leg_fs, title_fontsize=leg_title_fs,
-        handletextpad=0.4, labelspacing=0.45,
+        handletextpad=0.4, labelspacing=0.5,
     )
     leg_ind._legend_box.align = "left"
 
