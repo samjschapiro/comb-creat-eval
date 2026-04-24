@@ -1375,7 +1375,7 @@ def fig_headline():
     overall_edge_lw, ind_sig_lw, ind_nosig_lw = 1.3, 0.9, 0.4
     leg_ms_test, leg_ms_overall, leg_ms_star, leg_ms_outl = 9, 11, 10, 7
     star_off_pts = 6
-    rect = [0, 0.10, 1, 1]
+    rect = [0, 0.06, 1, 1]
     out_dirs = [FIGS_DIR, PAPER_FIGS_DIR]
 
     # Colors encode tests. 6 well-separated categorical samples from Batlow;
@@ -1552,7 +1552,7 @@ def fig_headline():
     ]
     leg_tests = fig.legend(
         handles=test_handles,
-        loc="lower center", bbox_to_anchor=(0.5, -0.01),
+        loc="lower center", bbox_to_anchor=(0.5, 0.00),
         ncol=6, frameon=False, fontsize=leg_fs,
         handletextpad=0.3, columnspacing=1.6,
     )
