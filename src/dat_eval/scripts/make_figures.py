@@ -1568,6 +1568,138 @@ def fig_headline():
     plt.close()
 
 
+def fig_specificity_ceilings():
+    """Four-panel plot of the theoretical specificity ceiling per benchmark.
+
+    For a test X with validity v = r(X,Y) against benchmark Y whose
+    correlation with a scalar capability proxy Z is c = r(Y,Z), the
+    maximum attainable specificity in the expected direction is
+        max r(X, Y | Z) = v * sqrt(1 - c^2) + |c| * sqrt(1 - v^2),
+    which follows from the PSD bound
+        |r(X,Z) - r(Y,Z)| <= sqrt(2 * (1 - r(X,Y))).
+    The "feasible" specificity region (between min and max envelopes)
+    is shaded; the Overall-block cells from Table 1 are overlaid.
+    """
+    from matplotlib.lines import Line2D
+
+    test_samples = CMAP_SEQ(np.linspace(0.05, 0.82, 6))
+    test_colors = {
+        "DAT":      test_samples[0],
+        "CDAT":     test_samples[1],
+        "CDAT-N":   test_samples[2],
+        "CDAT-A":   test_samples[3],
+        "CDAT-N×A": test_samples[4],
+        "PACE":     test_samples[5],
+    }
+    test_order = ["DAT", "CDAT", "CDAT-N", "CDAT-A", "CDAT-N×A", "PACE"]
+
+    # (benchmark label, c = r(Y, Arena Overall) from Fig 3a)
+    benchmarks = [
+        ("Arena CW",       0.98),
+        ("EQ-Bench CW",    0.83),
+        ("Mazur CW v2",    0.79),
+        ("Hivemind Div.", -0.67),
+    ]
+
+    # Overall block from Table 1: {benchmark: {test: (validity, specificity)}}.
+    bench_data = {
+        "Arena CW": {
+            "DAT":      (+0.44, +0.08),
+            "CDAT":     (-0.13, +0.28),
+            "CDAT-N":   (-0.18, +0.23),
+            "CDAT-A":   (+0.54, -0.12),
+            "CDAT-N×A": (+0.40, +0.30),
+            "PACE":     (+0.72, +0.05),
+        },
+        "EQ-Bench CW": {
+            "DAT":      (+0.71, +0.50),
+            "CDAT":     (-0.06, +0.13),
+            "CDAT-N":   (-0.14, +0.15),
+            "CDAT-A":   (+0.47, -0.02),
+            "CDAT-N×A": (+0.39, +0.28),
+            "PACE":     (+0.70, +0.20),
+        },
+        "Mazur CW v2": {
+            "DAT":      (+0.59, +0.50),
+            "CDAT":     (+0.07, +0.39),
+            "CDAT-N":   (+0.09, +0.35),
+            "CDAT-A":   (+0.24, -0.21),
+            "CDAT-N×A": (+0.54, +0.43),
+            "PACE":     (+0.75, +0.18),
+        },
+        "Hivemind Div.": {
+            "DAT":      (+0.33, +0.26),
+            "CDAT":     (+0.25, +0.19),
+            "CDAT-N":   (+0.24, +0.17),
+            "CDAT-A":   (-0.39, -0.16),
+            "CDAT-N×A": (-0.07, +0.14),
+            "PACE":     (-0.05, +0.37),
+        },
+    }
+
+    v_grid = np.linspace(-1, 1, 400)
+
+    fig, axes = plt.subplots(1, 4, figsize=(12.8, 3.8),
+                              sharex=True, sharey=True)
+
+    for ax, (bench_name, c) in zip(axes, benchmarks):
+        root1mc2 = np.sqrt(1 - c**2)
+        root1mv2 = np.sqrt(1 - v_grid**2)
+        upper = v_grid * root1mc2 + abs(c) * root1mv2
+        lower = v_grid * root1mc2 - abs(c) * root1mv2
+
+        # Feasible region lens
+        ax.fill_between(v_grid, lower, upper,
+                         color="#d0d0d0", alpha=0.35, zorder=0,
+                         label="feasible region")
+        # Upper envelope (the ceiling) in solid; lower in dotted
+        ax.plot(v_grid, upper, color="black", linewidth=1.2,
+                linestyle="-", zorder=1)
+        ax.plot(v_grid, lower, color="black", linewidth=0.7,
+                linestyle=":", alpha=0.5, zorder=1)
+
+        ax.axhline(0, color=C_GREY, linewidth=0.5, linestyle=":", alpha=0.7, zorder=0)
+        ax.axvline(0, color=C_GREY, linewidth=0.5, linestyle=":", alpha=0.7, zorder=0)
+
+        for test in test_order:
+            v, spec = bench_data[bench_name][test]
+            ax.scatter(v, spec, marker="o", s=55,
+                       c=[test_colors[test]],
+                       edgecolor="black", linewidth=0.8,
+                       zorder=3, alpha=0.95)
+
+        ax.set_title(f"{bench_name}  ($c = {c:+.2f}$)", fontsize=11)
+        ax.tick_params(axis="both", labelsize=9)
+        ax.set_xlabel(r"Validity  ($r$)", fontsize=10.5)
+        ax.set_xlim(-1.02, 1.02)
+        ax.set_ylim(-1.05, 1.05)
+
+    axes[0].set_ylabel(r"Specificity  ($r \mid g$)", fontsize=10.5)
+
+    # Test legend at bottom
+    test_handles = [
+        Line2D([], [], marker="o", linestyle="none",
+               markerfacecolor=test_colors[t], markeredgecolor="black",
+               markeredgewidth=0.8, markersize=9, label=t)
+        for t in test_order
+    ]
+    envelope_handle = Line2D([], [], color="black", linewidth=1.2,
+                              linestyle="-", label="theoretical ceiling")
+    fig.legend(handles=[envelope_handle, *test_handles],
+               loc="lower center", bbox_to_anchor=(0.5, 0.00),
+               ncol=7, frameon=False, fontsize=10,
+               handletextpad=0.4, columnspacing=1.4)
+
+    fig.tight_layout(rect=[0, 0.09, 1, 1])
+    for out_dir in [FIGS_DIR, PAPER_FIGS_DIR]:
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out = out_dir / "fig_specificity_ceilings.pdf"
+        plt.savefig(out)
+        plt.savefig(out.with_suffix(".png"))
+        print(f"Saved {out}")
+    plt.close()
+
+
 def fig_qualitative_embedding():
     """Per-test 2D t-SNE projections of response words from three
     models across DAT, CDAT, and PACE.
@@ -1882,6 +2014,7 @@ def main():
     fig_scatter_by_embedding(benchmarks)
     fig_validity_specificity(benchmarks)
     fig_headline()
+    fig_specificity_ceilings()
 
     print(f"\nAll figures saved to {FIGS_DIR}")
 
