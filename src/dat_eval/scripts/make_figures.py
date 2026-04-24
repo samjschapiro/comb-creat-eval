@@ -1593,12 +1593,13 @@ def fig_specificity_ceilings():
     }
     test_order = ["DAT", "CDAT", "CDAT-N", "CDAT-A", "CDAT-N×A", "PACE"]
 
-    # (benchmark label, c = r(Y, Arena Overall) from Fig 3a)
+    # (benchmark label, c = r(Y, Arena Overall) computed from benchmarks.json)
     benchmarks = [
-        ("Arena CW",       0.98),
-        ("EQ-Bench CW",    0.83),
-        ("Mazur CW v2",    0.79),
-        ("Hivemind Div.", -0.67),
+        ("Arena CW",        +0.98),
+        ("EQ-Bench CW",     +0.83),
+        ("Mazur CW v2",     +0.79),
+        ("Hivemind Div.",   -0.67),
+        ("NovBench Util.",  -0.27),
     ]
 
     # Overall block from Table 1: {benchmark: {test: (validity, specificity)}}.
@@ -1635,11 +1636,19 @@ def fig_specificity_ceilings():
             "CDAT-N×A": (-0.07, +0.14),
             "PACE":     (-0.05, +0.37),
         },
+        "NovBench Util.": {
+            "DAT":      (+0.15, -0.26),
+            "CDAT":     (+0.60, +0.57),
+            "CDAT-N":   (+0.54, +0.46),
+            "CDAT-A":   (-0.67, -0.40),
+            "CDAT-N×A": (+0.33, +0.25),
+            "PACE":     (+0.18, -0.06),
+        },
     }
 
     v_grid = np.linspace(-1, 1, 400)
 
-    fig, axes = plt.subplots(1, 4, figsize=(12.8, 3.8),
+    fig, axes = plt.subplots(1, 5, figsize=(15.0, 3.8),
                               sharex=True, sharey=True)
 
     for ax, (bench_name, c) in zip(axes, benchmarks):
