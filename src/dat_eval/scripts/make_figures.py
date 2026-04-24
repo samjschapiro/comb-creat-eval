@@ -1458,7 +1458,18 @@ def fig_headline():
     )
     import matplotlib.transforms as mtransforms
 
+    from matplotlib.patches import Rectangle
+
     def _plot(ax, data, benchmarks, title):
+        # Soft green wash in the positive-positive quadrant: the region a
+        # useful creativity test should occupy (positive validity AND
+        # positive specificity). Rectangle extends well beyond plausible
+        # axis limits; matplotlib clips to the axes.
+        ax.add_patch(Rectangle(
+            (0, 0), 10, 10,
+            facecolor="#7ec587", alpha=0.10,
+            edgecolor="none", zorder=-1,
+        ))
         ax.axhline(0, color=C_GREY, linewidth=0.5, linestyle=":", alpha=0.7, zorder=0)
         ax.axvline(0, color=C_GREY, linewidth=0.5, linestyle=":", alpha=0.7, zorder=0)
         # Offset transform for the tiny gold "both-sig" star sitting to the
