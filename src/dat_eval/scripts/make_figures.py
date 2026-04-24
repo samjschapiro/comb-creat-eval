@@ -1368,14 +1368,14 @@ def fig_headline():
     """
     from matplotlib.lines import Line2D
 
-    figsize = (8.4, 5.0)
+    figsize = (8.4, 4.8)
     title_fs, axis_fs, tick_fs = 11.0, 10.5, 9.0
     leg_fs, leg_title_fs, annotate_fs = 9.0, 9.5, 8.5
     s_ind, s_overall, s_star = 38, 170, 40
     overall_edge_lw, ind_sig_lw, ind_nosig_lw = 1.3, 0.9, 0.4
     leg_ms_test, leg_ms_overall, leg_ms_star, leg_ms_outl = 9, 11, 10, 7
     star_off_pts = 6
-    rect = [0, 0, 1, 0.82]
+    rect = [0, 0.10, 1, 1]
     out_dirs = [FIGS_DIR, PAPER_FIGS_DIR]
 
     # Colors encode tests. 6 well-separated categorical samples from Batlow;
@@ -1541,44 +1541,22 @@ def fig_headline():
         ax.set_xlim(min(all_vals) - xpad, max(all_vals) + xpad)
         ax.set_ylim(min(all_specs) - ypad, max(all_specs) + ypad)
 
-    # --- Shared bottom legend: test colors + indicator key. ---
+    # --- Single flat Test legend at the bottom. Indicator conventions
+    # (Overall marker, both-axes star, one-axis outline) are explained
+    # in the figure caption rather than in the figure itself. ---
     test_handles = [
         Line2D([], [], marker="o", linestyle="none",
                markerfacecolor=test_colors[t], markeredgecolor="black",
                markeredgewidth=1.0, markersize=leg_ms_test, label=t)
         for t in test_order
     ]
-    indicator_handles = [
-        Line2D([], [], marker="o", linestyle="none",
-               markerfacecolor=C_GREY, markeredgecolor="black",
-               markeredgewidth=1.3, markersize=leg_ms_overall,
-               label="Overall (avg. across benchmarks)"),
-        Line2D([], [], marker="*", linestyle="none",
-               markerfacecolor="#ffcc00", markeredgecolor="black",
-               markeredgewidth=0.4, markersize=leg_ms_star,
-               label=r"sig. both axes ($p{<}.05$)"),
-        Line2D([], [], marker="o", linestyle="none",
-               markerfacecolor=C_GREY, markeredgecolor="black",
-               markeredgewidth=1.0, markersize=leg_ms_outl,
-               label="outlined: sig. one axis"),
-    ]
-
-    # Legends above the panels: Test on the left, Indicators on the right.
     leg_tests = fig.legend(
-        handles=test_handles, title="Test",
-        loc="upper center", bbox_to_anchor=(0.28, 1.00),
-        ncol=3, frameon=False, fontsize=leg_fs, title_fontsize=leg_title_fs,
-        handletextpad=0.3, columnspacing=1.2, labelspacing=0.35,
+        handles=test_handles,
+        loc="lower center", bbox_to_anchor=(0.5, -0.01),
+        ncol=6, frameon=False, fontsize=leg_fs,
+        handletextpad=0.3, columnspacing=1.6,
     )
-    leg_tests._legend_box.align = "left"
-    fig.add_artist(leg_tests)
-    leg_ind = fig.legend(
-        handles=indicator_handles, title="Indicators",
-        loc="upper center", bbox_to_anchor=(0.76, 1.00),
-        ncol=1, frameon=False, fontsize=leg_fs, title_fontsize=leg_title_fs,
-        handletextpad=0.4, labelspacing=0.45,
-    )
-    leg_ind._legend_box.align = "left"
+    leg_tests._legend_box.align = "center"
 
     fig.tight_layout(rect=rect)
     for out_dir in out_dirs:
