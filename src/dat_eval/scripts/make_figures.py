@@ -1353,7 +1353,7 @@ def fig_validity_specificity(benchmarks):
     print(f"Saved {out}")
 
 
-def fig_headline(compact=False):
+def fig_headline():
     """Two-panel headline scatter pulling the ``Overall'' (mean z-score
     across GloVe / FastText / SBERT) block from Table~1. Left panel =
     Creative Writing benchmarks (Arena CW, EQ-Bench CW, Mazur CW v2),
@@ -1362,36 +1362,21 @@ def fig_headline(compact=False):
     circles are per-benchmark cells and the large black-outlined circle
     per test is the within-panel benchmark average (``Overall'').
 
-    When ``compact=True``, a column-width-native variant is saved to
-    ``papers/iccc-2026/figures/`` for single-column placement in the
-    paper; otherwise the default wide variant is saved to the report's
-    figures directory.
+    Saved to both the report's figures directory and the ICCC paper's
+    figures directory so the paper can reference the same file via a
+    ``figure*`` (two-column) environment.
     """
     from matplotlib.lines import Line2D
 
-    # Sizes tuned per target width so pt fonts render at appropriate
-    # relative scale: the wide variant is 7.8" (reports); the compact
-    # variant is 3.4" (single column in ICML two-column format).
-    if compact:
-        figsize = (3.4, 4.0)
-        title_fs, axis_fs, tick_fs = 8.5, 8.0, 6.5
-        leg_fs, leg_title_fs, annotate_fs = 6.5, 6.5, 6.0
-        s_ind, s_overall, s_star = 16, 70, 20
-        overall_edge_lw, ind_sig_lw, ind_nosig_lw = 0.9, 0.6, 0.3
-        leg_ms_test, leg_ms_overall, leg_ms_star, leg_ms_outl = 6, 8, 7, 5
-        star_off_pts = 4
-        rect = [0, 0.22, 1, 1]
-        out_dir = PAPER_FIGS_DIR
-    else:
-        figsize = (7.8, 4.8)
-        title_fs, axis_fs, tick_fs = 11.0, 10.5, 9.0
-        leg_fs, leg_title_fs, annotate_fs = 9.0, 9.5, 8.5
-        s_ind, s_overall, s_star = 38, 170, 40
-        overall_edge_lw, ind_sig_lw, ind_nosig_lw = 1.3, 0.9, 0.4
-        leg_ms_test, leg_ms_overall, leg_ms_star, leg_ms_outl = 9, 11, 10, 7
-        star_off_pts = 6
-        rect = [0, 0.18, 1, 1]
-        out_dir = FIGS_DIR
+    figsize = (7.8, 4.8)
+    title_fs, axis_fs, tick_fs = 11.0, 10.5, 9.0
+    leg_fs, leg_title_fs, annotate_fs = 9.0, 9.5, 8.5
+    s_ind, s_overall, s_star = 38, 170, 40
+    overall_edge_lw, ind_sig_lw, ind_nosig_lw = 1.3, 0.9, 0.4
+    leg_ms_test, leg_ms_overall, leg_ms_star, leg_ms_outl = 9, 11, 10, 7
+    star_off_pts = 6
+    rect = [0, 0.18, 1, 1]
+    out_dirs = [FIGS_DIR, PAPER_FIGS_DIR]
 
     # Colors encode tests. 6 well-separated categorical samples from Batlow;
     # upper bound capped at 0.82 so PACE stays saturated.
@@ -1567,47 +1552,30 @@ def fig_headline(compact=False):
                label="outlined: sig. one axis"),
     ]
 
-    if compact:
-        # Stacked: Test on top, Indicators below.
-        leg_tests = fig.legend(
-            handles=test_handles, title="Test",
-            loc="lower center", bbox_to_anchor=(0.5, 0.10),
-            ncol=3, frameon=False, fontsize=leg_fs, title_fontsize=leg_title_fs,
-            handletextpad=0.3, columnspacing=1.0, labelspacing=0.25,
-        )
-        leg_tests._legend_box.align = "center"
-        fig.add_artist(leg_tests)
-        leg_ind = fig.legend(
-            handles=indicator_handles, title=None,
-            loc="lower center", bbox_to_anchor=(0.5, -0.01),
-            ncol=1, frameon=False, fontsize=leg_fs,
-            handletextpad=0.4, labelspacing=0.20,
-        )
-        leg_ind._legend_box.align = "center"
-    else:
-        leg_tests = fig.legend(
-            handles=test_handles, title="Test",
-            loc="lower center", bbox_to_anchor=(0.28, -0.01),
-            ncol=3, frameon=False, fontsize=leg_fs, title_fontsize=leg_title_fs,
-            handletextpad=0.3, columnspacing=1.2, labelspacing=0.35,
-        )
-        leg_tests._legend_box.align = "left"
-        fig.add_artist(leg_tests)
-        leg_ind = fig.legend(
-            handles=indicator_handles, title="Indicators",
-            loc="lower center", bbox_to_anchor=(0.76, -0.01),
-            ncol=1, frameon=False, fontsize=leg_fs, title_fontsize=leg_title_fs,
-            handletextpad=0.4, labelspacing=0.45,
-        )
-        leg_ind._legend_box.align = "left"
+    leg_tests = fig.legend(
+        handles=test_handles, title="Test",
+        loc="lower center", bbox_to_anchor=(0.28, -0.01),
+        ncol=3, frameon=False, fontsize=leg_fs, title_fontsize=leg_title_fs,
+        handletextpad=0.3, columnspacing=1.2, labelspacing=0.35,
+    )
+    leg_tests._legend_box.align = "left"
+    fig.add_artist(leg_tests)
+    leg_ind = fig.legend(
+        handles=indicator_handles, title="Indicators",
+        loc="lower center", bbox_to_anchor=(0.76, -0.01),
+        ncol=1, frameon=False, fontsize=leg_fs, title_fontsize=leg_title_fs,
+        handletextpad=0.4, labelspacing=0.45,
+    )
+    leg_ind._legend_box.align = "left"
 
     fig.tight_layout(rect=rect)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    out = out_dir / "fig_headline.pdf"
-    plt.savefig(out)
-    plt.savefig(out.with_suffix(".png"))
+    for out_dir in out_dirs:
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out = out_dir / "fig_headline.pdf"
+        plt.savefig(out)
+        plt.savefig(out.with_suffix(".png"))
+        print(f"Saved {out}")
     plt.close()
-    print(f"Saved {out}")
 
 
 def fig_qualitative_embedding():
@@ -1924,7 +1892,6 @@ def main():
     fig_scatter_by_embedding(benchmarks)
     fig_validity_specificity(benchmarks)
     fig_headline()
-    fig_headline(compact=True)
 
     print(f"\nAll figures saved to {FIGS_DIR}")
 
