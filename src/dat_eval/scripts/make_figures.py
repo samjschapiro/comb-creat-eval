@@ -82,6 +82,7 @@ C_GREY   = "#4d4d4d"
 
 
 FIGS_DIR = Path(__file__).parent.parent.parent.parent / "docs" / "reports" / "2026-04-12_preliminary_correlations" / "figures"
+PAPER_FIGS_DIR = Path(__file__).parent.parent.parent.parent / "papers" / "iccc-2026" / "figures"
 RESULTS_DIR = Path(__file__).parent.parent.parent.parent / "data" / "dat_eval" / "run_v1" / "downstream" / "scores_v1" / "results"
 BENCH_PATH = Path(__file__).parent.parent.parent.parent / "configs" / "comb_eval" / "benchmarks.json"
 
@@ -871,9 +872,9 @@ def fig_benchmark_correlations(benchmarks):
 
     # Panel (a): capability proxies + outcome benchmarks (unchanged logic)
     keys_a = ["arena_overall", "mmlu_pro", "arena_cw", "eq_bench_cw",
-              "mazur_cw_v2", "hivemind_diversity", "noveltybench_distinct"]
+              "mazur_cw_v2", "hivemind_diversity", "noveltybench_utility"]
     labels_a = ["Arena Ovr", "MMLU-Pro", "Arena CW", "EQ-B. CW",
-                "Mazur V2", "Hive. Div.", "NovBench"]
+                "Mazur V2", "Hive. Div.", "NovB. Util."]
     na = len(keys_a)
     mat_a = np.full((na, na), np.nan)
     for i, ki in enumerate(keys_a):
@@ -1352,6 +1353,263 @@ def fig_validity_specificity(benchmarks):
     print(f"Saved {out}")
 
 
+def fig_headline(compact=False):
+    """Two-panel headline scatter pulling the ``Overall'' (mean z-score
+    across GloVe / FastText / SBERT) block from Table~1. Left panel =
+    Creative Writing benchmarks (Arena CW, EQ-Bench CW, Mazur CW v2),
+    right panel = Divergent Thinking benchmarks (Hivemind diversity,
+    NoveltyBench utility). Colours encode tests; small translucent
+    circles are per-benchmark cells and the large black-outlined circle
+    per test is the within-panel benchmark average (``Overall'').
+
+    When ``compact=True``, a column-width-native variant is saved to
+    ``papers/iccc-2026/figures/`` for single-column placement in the
+    paper; otherwise the default wide variant is saved to the report's
+    figures directory.
+    """
+    from matplotlib.lines import Line2D
+
+    # Sizes tuned per target width so pt fonts render at appropriate
+    # relative scale: the wide variant is 7.8" (reports); the compact
+    # variant is 3.4" (single column in ICML two-column format).
+    if compact:
+        figsize = (3.4, 4.0)
+        title_fs, axis_fs, tick_fs = 8.5, 8.0, 6.5
+        leg_fs, leg_title_fs, annotate_fs = 6.5, 6.5, 6.0
+        s_ind, s_overall, s_star = 16, 70, 20
+        overall_edge_lw, ind_sig_lw, ind_nosig_lw = 0.9, 0.6, 0.3
+        leg_ms_test, leg_ms_overall, leg_ms_star, leg_ms_outl = 6, 8, 7, 5
+        star_off_pts = 4
+        rect = [0, 0.22, 1, 1]
+        out_dir = PAPER_FIGS_DIR
+    else:
+        figsize = (7.8, 4.8)
+        title_fs, axis_fs, tick_fs = 11.0, 10.5, 9.0
+        leg_fs, leg_title_fs, annotate_fs = 9.0, 9.5, 8.5
+        s_ind, s_overall, s_star = 38, 170, 40
+        overall_edge_lw, ind_sig_lw, ind_nosig_lw = 1.3, 0.9, 0.4
+        leg_ms_test, leg_ms_overall, leg_ms_star, leg_ms_outl = 9, 11, 10, 7
+        star_off_pts = 6
+        rect = [0, 0.18, 1, 1]
+        out_dir = FIGS_DIR
+
+    # Colors encode tests. 6 well-separated categorical samples from Batlow;
+    # upper bound capped at 0.82 so PACE stays saturated.
+    test_samples = CMAP_SEQ(np.linspace(0.05, 0.82, 6))
+    test_colors = {
+        "DAT":      test_samples[0],
+        "CDAT":     test_samples[1],
+        "CDAT-N":   test_samples[2],
+        "CDAT-A":   test_samples[3],
+        "CDAT-N×A": test_samples[4],
+        "PACE":     test_samples[5],
+    }
+    test_order = ["DAT", "CDAT", "CDAT-N", "CDAT-A", "CDAT-N×A", "PACE"]
+
+    cw_benchmarks = ["Arena CW", "EQ-Bench CW", "Mazur CW v2"]
+    dt_benchmarks = ["Hivemind Div.", "NovBench Util."]
+
+    # Overall (mean z-score across 3 embeddings) block of Table 1.
+    # Each entry: (validity r, specificity r | g, val_sig, spec_sig).
+    # Significance flags follow the paper's bolding (p < 0.05, any direction).
+    cw_data = {
+        "DAT":      [(+0.44, +0.08, True,  False),
+                     (+0.71, +0.50, True,  True),
+                     (+0.59, +0.50, True,  True)],
+        "CDAT":     [(-0.13, +0.28, False, False),
+                     (-0.06, +0.13, False, False),
+                     (+0.07, +0.39, False, False)],
+        "CDAT-N":   [(-0.18, +0.23, False, False),
+                     (-0.14, +0.15, False, False),
+                     (+0.09, +0.35, False, False)],
+        "CDAT-A":   [(+0.54, -0.12, True,  False),
+                     (+0.47, -0.02, True,  False),
+                     (+0.24, -0.21, False, False)],
+        "CDAT-N×A": [(+0.40, +0.30, True,  True),
+                     (+0.39, +0.28, True,  False),
+                     (+0.54, +0.43, True,  False)],
+        "PACE":     [(+0.72, +0.05, True,  False),
+                     (+0.70, +0.20, True,  False),
+                     (+0.75, +0.18, True,  False)],
+    }
+    dt_data = {
+        "DAT":      [(+0.33, +0.26, False, False),
+                     (+0.15, -0.26, False, False)],
+        "CDAT":     [(+0.25, +0.19, False, False),
+                     (+0.60, +0.57, False, False)],
+        "CDAT-N":   [(+0.24, +0.17, False, False),
+                     (+0.54, +0.46, True,  False)],
+        "CDAT-A":   [(-0.39, -0.16, False, False),
+                     (-0.67, -0.40, True,  False)],
+        "CDAT-N×A": [(-0.07, +0.14, False, False),
+                     (+0.33, +0.25, False, False)],
+        "PACE":     [(-0.05, +0.37, False, False),
+                     (+0.18, -0.06, False, False)],
+    }
+
+    # Per-panel label placement for the black "Overall" composite points.
+    # (dx, dy, horizontal-align, vertical-align) in data coordinates.
+    label_offsets = {
+        "Creative Writing": {
+            "DAT":      (+0.030, +0.008, "left",   "center"),
+            "CDAT":     ( 0.000, +0.042, "center", "bottom"),
+            "CDAT-N":   ( 0.000, -0.042, "center", "top"),
+            "CDAT-A":   ( 0.000, -0.042, "center", "top"),
+            "CDAT-N×A": ( 0.000, +0.048, "center", "bottom"),
+            "PACE":     (-0.030, +0.008, "right",  "center"),
+        },
+        "Divergent Thinking": {
+            "DAT":      ( 0.000, -0.042, "center", "top"),
+            "CDAT":     (+0.030, +0.008, "left",   "center"),
+            "CDAT-N":   (-0.030, +0.008, "right",  "center"),
+            "CDAT-A":   ( 0.000, +0.048, "center", "bottom"),
+            "CDAT-N×A": ( 0.000, +0.048, "center", "bottom"),
+            "PACE":     ( 0.000, -0.048, "center", "top"),
+        },
+    }
+
+    fig, (ax_l, ax_r) = plt.subplots(
+        1, 2, figsize=figsize, sharex=True, sharey=True,
+    )
+    import matplotlib.transforms as mtransforms
+
+    def _plot(ax, data, benchmarks, title):
+        ax.axhline(0, color=C_GREY, linewidth=0.5, linestyle=":", alpha=0.7, zorder=0)
+        ax.axvline(0, color=C_GREY, linewidth=0.5, linestyle=":", alpha=0.7, zorder=0)
+        # Offset transform for the tiny gold "both-sig" star sitting to the
+        # upper-right of its parent marker.
+        star_trans = mtransforms.offset_copy(
+            ax.transData, fig=fig,
+            x=star_off_pts, y=star_off_pts, units="points",
+        )
+        for test in test_order:
+            pts = data[test]
+            color = test_colors[test]
+            for bench_label, (val, spec, val_sig, spec_sig) in zip(benchmarks, pts):
+                any_sig = val_sig or spec_sig
+                both_pos_sig = (val_sig and spec_sig
+                                and val > 0 and spec > 0)
+                ax.scatter(
+                    val, spec,
+                    marker="o", s=s_ind,
+                    c=[color],
+                    edgecolor=("black" if any_sig else "white"),
+                    linewidth=(ind_sig_lw if any_sig else ind_nosig_lw),
+                    zorder=3, alpha=0.55,
+                )
+                if both_pos_sig:
+                    ax.scatter(
+                        val, spec,
+                        marker="*", s=s_star,
+                        facecolor="#ffcc00", edgecolor="black",
+                        linewidth=0.4, zorder=5, transform=star_trans,
+                    )
+            # Within-panel "Overall" composite = unweighted mean across benchmarks.
+            vals = [v for v, _, *_ in pts]
+            specs = [s for _, s, *_ in pts]
+            mx, my = float(np.mean(vals)), float(np.mean(specs))
+            ax.scatter(
+                mx, my,
+                marker="o", s=s_overall,
+                c=[color],
+                edgecolor="black", linewidth=overall_edge_lw,
+                zorder=4,
+            )
+            dx, dy, ha, va = label_offsets[title][test]
+            ax.annotate(
+                test, xy=(mx, my), xytext=(mx + dx, my + dy),
+                ha=ha, va=va, fontsize=annotate_fs, fontweight="bold",
+                color="black", zorder=6,
+                bbox=dict(facecolor="white", edgecolor="none",
+                          pad=1.0, alpha=0.85),
+            )
+        ax.set_title(title, fontsize=title_fs)
+        ax.tick_params(axis="both", labelsize=tick_fs)
+        ax.set_xlabel(r"Validity  ($r$)", fontsize=axis_fs)
+
+    _plot(ax_l, cw_data, cw_benchmarks, "Creative Writing")
+    _plot(ax_r, dt_data, dt_benchmarks, "Divergent Thinking")
+    ax_l.set_ylabel(r"Specificity  ($r \mid g$)", fontsize=axis_fs)
+
+    # Axis limits: include composite points too.
+    all_vals, all_specs = [], []
+    for data in (cw_data, dt_data):
+        for pts in data.values():
+            for v, s, *_ in pts:
+                all_vals.append(v); all_specs.append(s)
+            all_vals.append(float(np.mean([v for v, _, *_ in pts])))
+            all_specs.append(float(np.mean([s for _, s, *_ in pts])))
+    xpad = 0.12 * (max(all_vals) - min(all_vals))
+    ypad = 0.10 * (max(all_specs) - min(all_specs))
+    for ax in (ax_l, ax_r):
+        ax.set_xlim(min(all_vals) - xpad, max(all_vals) + xpad)
+        ax.set_ylim(min(all_specs) - ypad, max(all_specs) + ypad)
+
+    # --- Shared bottom legend: test colors + indicator key. ---
+    test_handles = [
+        Line2D([], [], marker="o", linestyle="none",
+               markerfacecolor=test_colors[t], markeredgecolor="black",
+               markeredgewidth=1.0, markersize=leg_ms_test, label=t)
+        for t in test_order
+    ]
+    indicator_handles = [
+        Line2D([], [], marker="o", linestyle="none",
+               markerfacecolor=C_GREY, markeredgecolor="black",
+               markeredgewidth=1.3, markersize=leg_ms_overall,
+               label="Overall (avg. across benchmarks)"),
+        Line2D([], [], marker="*", linestyle="none",
+               markerfacecolor="#ffcc00", markeredgecolor="black",
+               markeredgewidth=0.4, markersize=leg_ms_star,
+               label=r"sig. both axes ($p{<}.05$)"),
+        Line2D([], [], marker="o", linestyle="none",
+               markerfacecolor=C_GREY, markeredgecolor="black",
+               markeredgewidth=1.0, markersize=leg_ms_outl,
+               label="outlined: sig. one axis"),
+    ]
+
+    if compact:
+        # Stacked: Test on top, Indicators below.
+        leg_tests = fig.legend(
+            handles=test_handles, title="Test",
+            loc="lower center", bbox_to_anchor=(0.5, 0.10),
+            ncol=3, frameon=False, fontsize=leg_fs, title_fontsize=leg_title_fs,
+            handletextpad=0.3, columnspacing=1.0, labelspacing=0.25,
+        )
+        leg_tests._legend_box.align = "center"
+        fig.add_artist(leg_tests)
+        leg_ind = fig.legend(
+            handles=indicator_handles, title=None,
+            loc="lower center", bbox_to_anchor=(0.5, -0.01),
+            ncol=1, frameon=False, fontsize=leg_fs,
+            handletextpad=0.4, labelspacing=0.20,
+        )
+        leg_ind._legend_box.align = "center"
+    else:
+        leg_tests = fig.legend(
+            handles=test_handles, title="Test",
+            loc="lower center", bbox_to_anchor=(0.28, -0.01),
+            ncol=3, frameon=False, fontsize=leg_fs, title_fontsize=leg_title_fs,
+            handletextpad=0.3, columnspacing=1.2, labelspacing=0.35,
+        )
+        leg_tests._legend_box.align = "left"
+        fig.add_artist(leg_tests)
+        leg_ind = fig.legend(
+            handles=indicator_handles, title="Indicators",
+            loc="lower center", bbox_to_anchor=(0.76, -0.01),
+            ncol=1, frameon=False, fontsize=leg_fs, title_fontsize=leg_title_fs,
+            handletextpad=0.4, labelspacing=0.45,
+        )
+        leg_ind._legend_box.align = "left"
+
+    fig.tight_layout(rect=rect)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = out_dir / "fig_headline.pdf"
+    plt.savefig(out)
+    plt.savefig(out.with_suffix(".png"))
+    plt.close()
+    print(f"Saved {out}")
+
+
 def fig_qualitative_embedding():
     """Per-test 2D t-SNE projections of response words from three
     models across DAT, CDAT, and PACE.
@@ -1665,6 +1923,8 @@ def main():
     fig_benchmark_correlations(benchmarks)
     fig_scatter_by_embedding(benchmarks)
     fig_validity_specificity(benchmarks)
+    fig_headline()
+    fig_headline(compact=True)
 
     print(f"\nAll figures saved to {FIGS_DIR}")
 

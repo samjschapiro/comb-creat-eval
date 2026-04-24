@@ -307,7 +307,7 @@ def correlate(scores_by_model: dict[str, dict[str, float]], benchmarks: dict) ->
     """
     tasks = ["dat", "cdat", "pace"]
     bench_keys = ["arena_cw", "eq_bench_cw", "mazur_cw_v2",
-                  "hivemind_diversity", "noveltybench_distinct",
+                  "hivemind_diversity", "noveltybench_utility",
                   "arc_agi_v2"]
     result: dict[str, dict] = {bk: {} for bk in bench_keys}
 
@@ -412,7 +412,7 @@ def main():
         "eq_bench_cw": "EQ-Bench CW",
         "mazur_cw_v2": "Mazur V2",
         "hivemind_diversity": "Hivemind diversity",
-        "noveltybench_distinct": "NoveltyBench Distinct",
+        "noveltybench_utility": "NoveltyBench Utility",
         "arc_agi_v2": "ARC-AGI v2",
     }
     for bk, bench_label in bench_labels.items():
