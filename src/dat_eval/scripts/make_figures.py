@@ -872,12 +872,14 @@ def fig_benchmark_correlations(benchmarks):
 
     # Panel (a): capability proxies + outcome benchmarks (unchanged logic)
     keys_a = ["arena_overall", "mmlu_pro", "arena_cw", "eq_bench_cw",
-              "mazur_cw_v2", "hivemind_diversity", "noveltybench_utility"]
+              "mazur_cw_v2", "hivemind_diversity", "noveltybench_utility",
+              "liveideabench"]
     # Prefix tags: [G] general capability, [CW] creative writing,
-    # [DT] divergent thinking.
+    # [DT] divergent thinking, [SI] scientific ideation.
     labels_a = ["[G] Arena Ovr", "[G] MMLU-Pro",
                 "[CW] Arena CW", "[CW] EQ-B. CW", "[CW] Mazur V2",
-                "[DT] Hive. Div.", "[DT] NovB. Util."]
+                "[DT] Hive. Div.", "[DT] NovB. Util.",
+                "[SI] LiveIdea"]
     na = len(keys_a)
     mat_a = np.full((na, na), np.nan)
     for i, ki in enumerate(keys_a):
@@ -1634,6 +1636,7 @@ def fig_specificity_ceilings():
         "Mazur CW v2":     "mazur_cw_v2",
         "Hivemind Div.":   "hivemind_diversity",
         "NovBench Util.":  "noveltybench_utility",
+        "LiveIdeaBench":   "liveideabench",
     }
     test_key = {
         "DAT":      "dat",
@@ -1680,7 +1683,7 @@ def fig_specificity_ceilings():
 
     v_grid = np.linspace(-1, 1, 400)
 
-    fig, axes = plt.subplots(1, 5, figsize=(15.0, 3.8),
+    fig, axes = plt.subplots(1, 6, figsize=(17.0, 3.8),
                               sharex=True, sharey=True)
 
     for ax, (bench_name, c) in zip(axes, benchmarks):
