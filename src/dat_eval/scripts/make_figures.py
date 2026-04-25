@@ -873,8 +873,11 @@ def fig_benchmark_correlations(benchmarks):
     # Panel (a): capability proxies + outcome benchmarks (unchanged logic)
     keys_a = ["arena_overall", "mmlu_pro", "arena_cw", "eq_bench_cw",
               "mazur_cw_v2", "hivemind_diversity", "noveltybench_utility"]
-    labels_a = ["Arena Ovr", "MMLU-Pro", "Arena CW", "EQ-B. CW",
-                "Mazur V2", "Hive. Div.", "NovB. Util."]
+    # Prefix tags: [G] general capability, [CW] creative writing,
+    # [DT] divergent thinking.
+    labels_a = ["[G] Arena Ovr", "[G] MMLU-Pro",
+                "[CW] Arena CW", "[CW] EQ-B. CW", "[CW] Mazur V2",
+                "[DT] Hive. Div.", "[DT] NovB. Util."]
     na = len(keys_a)
     mat_a = np.full((na, na), np.nan)
     for i, ki in enumerate(keys_a):
@@ -960,11 +963,13 @@ def fig_benchmark_correlations(benchmarks):
     cbar.set_label("Pearson $r$", fontsize=8)
     cbar.ax.tick_params(labelsize=7)
 
-    out = FIGS_DIR / "fig_benchmark_correlations.pdf"
-    plt.savefig(out, bbox_inches="tight")
-    plt.savefig(out.with_suffix(".png"), bbox_inches="tight")
+    for out_dir in [FIGS_DIR, PAPER_FIGS_DIR]:
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out = out_dir / "fig_benchmark_correlations.pdf"
+        plt.savefig(out, bbox_inches="tight")
+        plt.savefig(out.with_suffix(".png"), bbox_inches="tight")
+        print(f"Saved {out}")
     plt.close()
-    print(f"Saved {out}")
 
 
 def fig_inter_metric_triangle(corr):
