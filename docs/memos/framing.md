@@ -8,9 +8,9 @@ results (n=17, scientific ideation as a 3rd construct).
 ## Theme
 
 > Semantic-distance creativity tests for LLMs need construct-validity
-> audits that treat general capability as a confound. We provide the first
-> such audit, and the result reshapes when these tests should and shouldn't
-> be used.
+> evaluations that treat general capability as a confound. We provide
+> the first such evaluation, and the result reshapes when these tests
+> should and shouldn't be used.
 
 ## Three claims
 
@@ -45,7 +45,7 @@ not a vague aspiration.
 
 ## Gap the paper fills
 
-A first-of-its-kind **construct-validity audit of SD creativity tests for
+A first-of-its-kind **construct-validity evaluation of SD creativity tests for
 LLMs**: 52+ models x 3 embeddings x 6 benchmarks (3 creative writing, 2
 divergent thinking, 1 scientific ideation), capability residualised on a
 2-proxy stack, plus a covariance-PSD bound on attainable specificity. The
