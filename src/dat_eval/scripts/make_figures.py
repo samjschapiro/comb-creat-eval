@@ -1378,18 +1378,17 @@ def fig_headline():
     rect = [0, 0.09, 1, 1]
     out_dirs = [FIGS_DIR, PAPER_FIGS_DIR]
 
-    # Colors encode tests. 6 well-separated categorical samples from Batlow;
+    # Colors encode tests. 5 well-separated categorical samples from Batlow;
     # upper bound capped at 0.82 so PACE stays saturated.
-    test_samples = CMAP_SEQ(np.linspace(0.05, 0.82, 6))
+    test_samples = CMAP_SEQ(np.linspace(0.05, 0.82, 5))
     test_colors = {
         "DAT":      test_samples[0],
         "CDAT":     test_samples[1],
         "CDAT-N":   test_samples[2],
         "CDAT-A":   test_samples[3],
-        "CDAT-N×A": test_samples[4],
-        "PACE":     test_samples[5],
+        "PACE":     test_samples[4],
     }
-    test_order = ["DAT", "CDAT", "CDAT-N", "CDAT-A", "CDAT-N×A", "PACE"]
+    test_order = ["DAT", "CDAT", "CDAT-N", "CDAT-A", "PACE"]
 
     cw_benchmarks = ["Arena CW", "EQ-Bench CW", "Mazur CW v2"]
     dt_benchmarks = ["Hivemind Div.", "NovBench Util."]
@@ -1410,9 +1409,6 @@ def fig_headline():
         "CDAT-A":   [(+0.54, -0.12, True,  False),
                      (+0.47, -0.02, True,  False),
                      (+0.24, -0.21, False, False)],
-        "CDAT-N×A": [(+0.40, +0.30, True,  True),
-                     (+0.39, +0.28, True,  False),
-                     (+0.54, +0.43, True,  False)],
         "PACE":     [(+0.72, +0.05, True,  False),
                      (+0.70, +0.20, True,  False),
                      (+0.75, +0.18, True,  False)],
@@ -1426,8 +1422,6 @@ def fig_headline():
                      (+0.54, +0.46, True,  False)],
         "CDAT-A":   [(-0.39, -0.16, False, False),
                      (-0.67, -0.40, True,  False)],
-        "CDAT-N×A": [(-0.07, +0.14, False, False),
-                     (+0.33, +0.25, False, False)],
         "PACE":     [(-0.05, +0.37, False, False),
                      (+0.18, -0.06, False, False)],
     }
@@ -1440,7 +1434,6 @@ def fig_headline():
             "CDAT":     ( 0.000, +0.042, "center", "bottom"),
             "CDAT-N":   ( 0.000, -0.042, "center", "top"),
             "CDAT-A":   ( 0.000, -0.042, "center", "top"),
-            "CDAT-N×A": ( 0.000, +0.048, "center", "bottom"),
             "PACE":     (-0.030, +0.008, "right",  "center"),
         },
         "Divergent Thinking": {
@@ -1448,7 +1441,6 @@ def fig_headline():
             "CDAT":     (+0.030, +0.008, "left",   "center"),
             "CDAT-N":   (-0.030, +0.008, "right",  "center"),
             "CDAT-A":   ( 0.000, +0.048, "center", "bottom"),
-            "CDAT-N×A": ( 0.000, +0.048, "center", "bottom"),
             "PACE":     ( 0.000, -0.048, "center", "top"),
         },
     }
@@ -1553,7 +1545,7 @@ def fig_headline():
     leg_tests = fig.legend(
         handles=test_handles,
         loc="lower center", bbox_to_anchor=(0.5, 0.00),
-        ncol=6, frameon=False, fontsize=leg_fs,
+        ncol=5, frameon=False, fontsize=leg_fs,
         handletextpad=0.3, columnspacing=1.6,
     )
     leg_tests._legend_box.align = "center"
@@ -1582,16 +1574,15 @@ def fig_specificity_ceilings():
     """
     from matplotlib.lines import Line2D
 
-    test_samples = CMAP_SEQ(np.linspace(0.05, 0.82, 6))
+    test_samples = CMAP_SEQ(np.linspace(0.05, 0.82, 5))
     test_colors = {
         "DAT":      test_samples[0],
         "CDAT":     test_samples[1],
         "CDAT-N":   test_samples[2],
         "CDAT-A":   test_samples[3],
-        "CDAT-N×A": test_samples[4],
-        "PACE":     test_samples[5],
+        "PACE":     test_samples[4],
     }
-    test_order = ["DAT", "CDAT", "CDAT-N", "CDAT-A", "CDAT-N×A", "PACE"]
+    test_order = ["DAT", "CDAT", "CDAT-N", "CDAT-A", "PACE"]
 
     # Recompute (validity, specificity) for each (test, benchmark) on the
     # same n-subset that defines the multiple-R for that benchmark --- the
@@ -1606,21 +1597,9 @@ def fig_specificity_ceilings():
     with open(BENCH_PATH) as f:
         BMARKS = json.load(f)
 
-    # Build CDAT-NxA = CDAT-N * CDAT-A per embedding so the composite matches
-    # the paper's "simple multiplicative (no-gating) composite".
-    for emb in me:
-        for m in me[emb]:
-            n = me[emb][m].get("cdat_novelty")
-            a = me[emb][m].get("cdat_appropriateness")
-            if (n is not None and a is not None
-                    and not (np.isnan(n) or np.isnan(a))
-                    and n != 0 and a != 0):
-                me[emb][m]["cdat_nxa"] = n * a
-
     # Composite = mean z-score across the 3 embeddings.
     embs = sorted(me.keys())
-    tasks_all = ["dat", "cdat", "cdat_novelty", "cdat_appropriateness",
-                 "cdat_nxa", "pace"]
+    tasks_all = ["dat", "cdat", "cdat_novelty", "cdat_appropriateness", "pace"]
     all_models = sorted({m for emb in embs for m in me[emb]})
     composite: dict[str, dict[str, float]] = {}
     for t in tasks_all:
@@ -1656,7 +1635,6 @@ def fig_specificity_ceilings():
         "CDAT":     "cdat",
         "CDAT-N":   "cdat_novelty",
         "CDAT-A":   "cdat_appropriateness",
-        "CDAT-N×A": "cdat_nxa",
         "PACE":     "pace",
     }
 
