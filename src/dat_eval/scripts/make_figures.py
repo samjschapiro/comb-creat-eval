@@ -939,7 +939,7 @@ def fig_benchmark_correlations(benchmarks):
                 txt = "—" if i == j else f"{v:+.2f}"
                 color = "white" if v < -0.2 else "black"
                 ax.text(j, i, txt, ha="center", va="center",
-                        fontsize=7.5, color=color, zorder=3)
+                        fontsize=6.0, color=color, zorder=3)
         ax.tick_params(axis="both", which="major", length=0)
         return im
 
@@ -955,9 +955,9 @@ def fig_benchmark_correlations(benchmarks):
     im1 = draw_triangle(ax1, mat_a, labels_a)
     draw_triangle(ax2, mat_b, labels_b)
 
-    ax1.set_title("(a) capability proxies + outcome benchmarks",
+    ax1.set_title("(a) Inter-benchmark correlations",
                    fontsize=8.5, loc="left", pad=4)
-    ax2.set_title("(b) inter-test correlations\n(composite across embeddings)",
+    ax2.set_title("(b) Inter-test correlations",
                    fontsize=8.5, loc="left", pad=4)
 
     cbar = fig.colorbar(im1, ax=[ax1, ax2], shrink=0.55, pad=0.04,
