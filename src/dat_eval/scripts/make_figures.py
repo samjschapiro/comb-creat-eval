@@ -1375,7 +1375,7 @@ def fig_headline():
     """
     from matplotlib.lines import Line2D
 
-    figsize = (8.4, 4.8)
+    figsize = (12.6, 4.8)
     title_fs, axis_fs, tick_fs = 14.0, 10.5, 9.0
     leg_fs, leg_title_fs, annotate_fs = 12.0, 12.0, 8.5
     s_ind, s_overall, s_star = 38, 170, 40
@@ -1399,6 +1399,7 @@ def fig_headline():
 
     cw_benchmarks = ["Arena CW", "EQ-Bench CW", "Mazur CW v2"]
     dt_benchmarks = ["Hivemind Div.", "NovBench Util."]
+    si_benchmarks = ["LiveIdeaBench"]
 
     # Overall (mean z-score across 3 embeddings) block of Table 1.
     # Each entry: (validity r, specificity r | g, val_sig, spec_sig).
@@ -1432,6 +1433,14 @@ def fig_headline():
         "PACE":     [(-0.05, +0.37, False, False),
                      (+0.18, -0.06, False, False)],
     }
+    # Scientific Ideation (LiveIdeaBench, n=17): no test reaches p<.05.
+    si_data = {
+        "DAT":      [(-0.01, +0.28, False, False)],
+        "CDAT":     [(+0.06, +0.26, False, False)],
+        "CDAT-N":   [(-0.09, +0.11, False, False)],
+        "CDAT-A":   [(+0.16, -0.01, False, False)],
+        "PACE":     [(+0.07, -0.07, False, False)],
+    }
 
     # Per-panel label placement for the black "Overall" composite points.
     # (dx, dy, horizontal-align, vertical-align) in data coordinates.
@@ -1450,10 +1459,17 @@ def fig_headline():
             "CDAT-A":   ( 0.000, +0.048, "center", "bottom"),
             "PACE":     ( 0.000, -0.048, "center", "top"),
         },
+        "Scientific Ideation": {
+            "DAT":      ( 0.000, +0.048, "center", "bottom"),
+            "CDAT":     (+0.030, +0.008, "left",   "center"),
+            "CDAT-N":   ( 0.000, -0.048, "center", "top"),
+            "CDAT-A":   (+0.030, +0.008, "left",   "center"),
+            "PACE":     (-0.030, +0.008, "right",  "center"),
+        },
     }
 
-    fig, (ax_l, ax_r) = plt.subplots(
-        1, 2, figsize=figsize, sharex=True, sharey=True,
+    fig, (ax_l, ax_m, ax_r) = plt.subplots(
+        1, 3, figsize=figsize, sharex=True, sharey=True,
     )
     import matplotlib.transforms as mtransforms
 
@@ -1523,12 +1539,13 @@ def fig_headline():
         ax.set_xlabel(r"Validity  ($r$)", fontsize=axis_fs)
 
     _plot(ax_l, cw_data, cw_benchmarks, "Creative Writing")
-    _plot(ax_r, dt_data, dt_benchmarks, "Divergent Thinking")
+    _plot(ax_m, dt_data, dt_benchmarks, "Divergent Thinking")
+    _plot(ax_r, si_data, si_benchmarks, "Scientific Ideation")
     ax_l.set_ylabel(r"Specificity  ($r \mid g$)", fontsize=axis_fs)
 
     # Axis limits: include composite points too.
     all_vals, all_specs = [], []
-    for data in (cw_data, dt_data):
+    for data in (cw_data, dt_data, si_data):
         for pts in data.values():
             for v, s, *_ in pts:
                 all_vals.append(v); all_specs.append(s)
@@ -1536,7 +1553,7 @@ def fig_headline():
             all_specs.append(float(np.mean([s for _, s, *_ in pts])))
     xpad = 0.12 * (max(all_vals) - min(all_vals))
     ypad = 0.10 * (max(all_specs) - min(all_specs))
-    for ax in (ax_l, ax_r):
+    for ax in (ax_l, ax_m, ax_r):
         ax.set_xlim(min(all_vals) - xpad, max(all_vals) + xpad)
         ax.set_ylim(min(all_specs) - ypad, max(all_specs) + ypad)
 
