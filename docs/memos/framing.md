@@ -1,8 +1,9 @@
-# Paper framing memo (2026-04-25)
+# Paper framing memo (2026-04-25, updated)
 
 Synthesized from a literature deep-dive on DAT/CDAT/PACE for LLMs, the
 broader landscape of LLM creativity evaluation, and the human-psychometric
-tradition on creativity-vs-g.
+tradition on creativity-vs-g. Updated 2026-04-25 to fold in LiveIdeaBench
+results (n=17, scientific ideation as a 3rd construct).
 
 ## Theme
 
@@ -23,10 +24,14 @@ and do not use Arena CW (which is ~98% capability) to validate creativity
 tests; these are the constructions that have been moving into RL reward
 signals.
 
-**Claim 2 (diagnostic, strong).** The right SD test depends on the
-construct, and one of them is wrongly labelled. CDAT (ungated novelty) is
-the only SD test viable for divergent thinking; DAT is the only one viable
-for creative writing. CDAT's appropriateness facet (CDAT-A) is structurally
+**Claim 2 (diagnostic, strong).** What an SD test is good for depends on
+the construct, and one of them is wrongly labelled. CDAT (ungated
+novelty) is the only SD test viable for divergent thinking; DAT is the
+only one viable for creative writing (and only on EQ-Bench / Mazur). On
+**scientific ideation** (LiveIdeaBench, n=17, exploratory), DAT and CDAT
+both show modest positive specificity (~0.27) -- the divergent-association
+tests do appear to carry idea-quality signal that the creative-writing
+benchmarks miss. CDAT's appropriateness facet (CDAT-A) is structurally
 a convergent-thinking measure -- its sign flips on both diversity
 benchmarks, exactly as a quality/coherence-favouring metric should.
 
@@ -41,9 +46,10 @@ not a vague aspiration.
 ## Gap the paper fills
 
 A first-of-its-kind **construct-validity audit of SD creativity tests for
-LLMs**: 52 models x 3 embeddings x 5 benchmarks, capability residualised
-on a 2-proxy stack, plus a covariance-PSD bound on attainable specificity.
-The combination doesn't exist anywhere in the LLM literature, and is the
+LLMs**: 52+ models x 3 embeddings x 6 benchmarks (3 creative writing, 2
+divergent thinking, 1 scientific ideation), capability residualised on a
+2-proxy stack, plus a covariance-PSD bound on attainable specificity. The
+combination doesn't exist anywhere in the LLM literature, and is the
 natural extension of the human-psychometric fluency-confound tradition
 (Forthmann/Silvia/Benedek/Beaty) to machines.
 
@@ -62,9 +68,13 @@ natural extension of the human-psychometric fluency-confound tradition
 - **Ilic & Gignac 2024 LLM g-factor** -- documents one g-factor across
   591 LLMs accounting for ~85% of variance; we show this g pollutes
   *specifically* the SD creativity tests.
-- **LiveIdeaBench (2026, Nature Communications)** -- qualitatively
-  observes ideation can dissociate from g (QwQ-32B-preview beats stronger
-  models); we provide the quantitative residualisation across SD tests.
+- **LiveIdeaBench (Ruan et al. 2024, arXiv 2412.17596)** --
+  qualitatively observes scientific ideation can dissociate from g
+  (QwQ-32B-preview beats larger frontier models on Originality). We use
+  it as a 6th benchmark (n=17, exploratory) and find that DAT and CDAT
+  both carry modest creativity-specific signal there, in contrast to
+  the creative-writing pattern. So far the only benchmark on which a
+  semantic-distance test looks like a *creativity*-specific predictor.
 - **"Measuring what Matters" (arXiv 2511.04703, 2025)** -- argues
   construct-validity failure is systemic across 445 benchmarks; we
   instantiate the argument for SD creativity tests at scale.
@@ -145,14 +155,18 @@ concern**: SD-style scores are now propagating into LLM training:
 
 ## Status of the implementation
 
-- Headline figure (fig:headline) and specificity-ceilings figure
-  (fig:spec-ceilings) align with this framing.
+- Headline figure (fig:headline) is now 3 panels (CW / DT / SI).
+- Specificity-ceilings figure (fig:spec-ceilings) is now 6 panels.
 - Table 1 highlights the best test per benchmark via green cells;
-  Overall block sits at the top.
+  Overall block sits at the top; LiveIdeaBench column added.
 - Appendix A.2 contains the bound proof.
 - CDAT-NxA was removed (2026-04-25) for clarity.
-- Section 2.2 has qualitative descriptions of the five benchmarks
-  (paragraph form, with equations only for Hivemind and NovBench).
+- Section 2.2 has qualitative descriptions of all six benchmarks in
+  paragraph form (CW / Output Diversity / Scientific Ideation
+  subsubsections). Equations only for Hivemind and NovBench.
+- Section 3.3 now discusses idiosyncrasies of the three embedding
+  models (static vs contextual; subword info; each test's "home"
+  embedding).
 
-Next steps before submission: implement the abstract / intro / background
-edits above, and add LiveIdeaBench scores as a sixth benchmark.
+Next steps before submission: implement the abstract / intro /
+discussion edits below.
