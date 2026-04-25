@@ -65,7 +65,7 @@
     "hivemind_diversity": 0.11699999999999999,
     "noveltybench_distinct": 2.88,
     "noveltybench_utility": 3.27,
-    "liveideabench": 6.99
+    "liveideabench": 6.69
   },
   "openai_gpt-5": {
     "arena_overall": 1433,
@@ -113,7 +113,7 @@
     "eq_bench_cw_rubric": 15.68,
     "mmlu_pro": 0.844,
     "mazur_cw_v2": 8.3,
-    "liveideabench": 7.49
+    "liveideabench": 7.16
   },
   "deepseek_deepseek-chat-v3-0324": {
     "arena_overall": 1395,
@@ -183,7 +183,7 @@
     "hivemind_diversity": 0.14500000000000002,
     "noveltybench_distinct": 2.81,
     "noveltybench_utility": 3.17,
-    "liveideabench": 7.08
+    "liveideabench": 7.07
   },
   "deepseek_deepseek-chat": {
     "arena_overall": 1358,
@@ -192,7 +192,7 @@
     "hivemind_pct_sim_above_0_8": 81.0,
     "mmlu_pro": 0.833,
     "hivemind_diversity": 0.139,
-    "liveideabench": 7.03
+    "liveideabench": 6.72
   },
   "cohere_command-a": {
     "arena_overall": 1353,
@@ -209,7 +209,7 @@
     "mmlu_pro": 0.791,
     "mazur_cw_v2": 6.15,
     "hivemind_diversity": 0.16700000000000004,
-    "liveideabench": 6.93
+    "liveideabench": 6.51
   },
   "qwen_qwen3-32b": {
     "arena_overall": 1347,
@@ -233,7 +233,7 @@
     "eq_bench_cw_rubric": 14.19,
     "mmlu_pro": 0.764,
     "mazur_cw_v2": 8.02,
-    "liveideabench": 7.37
+    "liveideabench": 7.06
   },
   "meta-llama_llama-4-maverick": {
     "arena_overall": 1327,
@@ -255,7 +255,7 @@
     "hivemind_diversity": 0.10999999999999999,
     "noveltybench_distinct": 1.94,
     "noveltybench_utility": 2.5,
-    "liveideabench": 6.72
+    "liveideabench": 6.37
   },
   "openai_gpt-4-turbo": {
     "arena_overall": 1323,
@@ -264,7 +264,7 @@
     "hivemind_pct_sim_above_0_8": 82.0,
     "mmlu_pro": 0.694,
     "hivemind_diversity": 0.14100000000000001,
-    "liveideabench": 6.8
+    "liveideabench": 6.56
   },
   "meta-llama_llama-4-scout": {
     "arena_overall": 1322,
@@ -289,7 +289,7 @@
     "hivemind_diversity": 0.131,
     "noveltybench_distinct": 2.49,
     "noveltybench_utility": 2.87,
-    "liveideabench": 6.3
+    "liveideabench": 6.06
   },
   "openai_gpt-4o-mini": {
     "arena_overall": 1317,
@@ -303,7 +303,7 @@
     "hivemind_diversity": 0.11399999999999999,
     "noveltybench_distinct": 2.65,
     "noveltybench_utility": 3.11,
-    "liveideabench": 6.66
+    "liveideabench": 6.25
   },
   "mistralai_mistral-large-2407": {
     "arena_overall": 1313,
@@ -323,7 +323,7 @@
     "mmlu_pro": 0.683,
     "mazur_cw_v2": 6.9,
     "hivemind_diversity": 0.14300000000000002,
-    "liveideabench": 6.92
+    "liveideabench": 6.79
   },
   "qwen_qwen-2-5-72b-instruct": {
     "arena_overall": 1302,
@@ -332,7 +332,7 @@
     "hivemind_pct_sim_above_0_8": 74.0,
     "mmlu_pro": 0.7159,
     "hivemind_diversity": 0.14100000000000001,
-    "liveideabench": 6.87
+    "liveideabench": 6.62
   },
   "nvidia_llama-3-1-nemotron-70b-instruct": {
     "arena_overall": 1298,
@@ -348,7 +348,7 @@
     "hivemind_pct_sim_above_0_8": 67.0,
     "mmlu_pro": 0.676,
     "hivemind_diversity": 0.18000000000000005,
-    "liveideabench": 6.66
+    "liveideabench": 6.62
   },
   "google_gemma-2-27b-it": {
     "arena_overall": 1288,
@@ -359,7 +359,7 @@
     "hivemind_diversity": 0.15800000000000003,
     "noveltybench_distinct": 3.03,
     "noveltybench_utility": 3.77,
-    "liveideabench": 6.57
+    "liveideabench": 6.65
   },
   "cohere_command-r-plus-08-2024": {
     "arena_overall": 1276,
@@ -401,7 +401,7 @@
     "mmlu_pro": 0.714,
     "mazur_cw_v2": 6.26,
     "hivemind_diversity": 0.14700000000000002,
-    "liveideabench": 6.87
+    "liveideabench": 6.79
   },
   "openai_gpt-3-5-turbo": {
     "arena_overall": 1223,
@@ -457,7 +457,7 @@
     "hivemind_pct_sim_above_0_8": 70.0,
     "mmlu_pro": 0.652,
     "hivemind_diversity": 0.18000000000000005,
-    "liveideabench": 6.29
+    "liveideabench": 6.41
   },
   "qwen_qwen3-14b": {
     "hivemind_intra_sim": 0.87,
@@ -479,22 +479,22 @@
   "anthropic_claude-3-5-sonnet": {
     "noveltybench_distinct": 1.76,
     "noveltybench_utility": 2.36,
-    "liveideabench": 7.03
+    "liveideabench": 6.92
   },
   "anthropic_claude-3-opus": {
     "noveltybench_distinct": 2.04,
     "noveltybench_utility": 2.67,
-    "liveideabench": 6.68
+    "liveideabench": 6.36
   },
   "google_gemini-1-5-pro": {
     "noveltybench_distinct": 1.85,
     "noveltybench_utility": 2.73,
-    "liveideabench": 7.0
+    "liveideabench": 6.85
   },
   "google_gemini-2-0-pro": {
     "noveltybench_distinct": 2.25,
     "noveltybench_utility": 2.64,
-    "liveideabench": 7.18
+    "liveideabench": 7.03
   },
   "google_gemma-2-2b-it": {
     "noveltybench_distinct": 5.66,
@@ -503,7 +503,7 @@
   "meta-llama_llama-3-1-405b-instruct": {
     "noveltybench_distinct": 3.2,
     "noveltybench_utility": 3.39,
-    "liveideabench": 6.74
+    "liveideabench": 6.62
   },
   "cohere_command-r-08-2024": {
     "arena_overall": 1249,
@@ -517,7 +517,7 @@
     "mmlu_pro": 0.724,
     "noveltybench_distinct": 2.83,
     "noveltybench_utility": 3.2,
-    "liveideabench": 6.66
+    "liveideabench": 6.6
   },
   "cohere_command-r7b-12-2024": {
     "noveltybench_distinct": 3.58,
