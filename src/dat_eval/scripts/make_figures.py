@@ -877,8 +877,8 @@ def fig_benchmark_correlations(benchmarks):
     # Prefix tags: [G] general capability, [CW] creative writing,
     # [DT] divergent thinking, [SI] scientific ideation.
     labels_a = ["[G] Arena Ovr", "[G] MMLU-Pro",
-                "[CW] Arena CW", "[CW] EQ-B. CW", "[CW] Mazur V2",
-                "[DT] Hive. Div.", "[DT] NovB. Util.",
+                "[CW] Arena CW", "[CW] EqBench CW", "[CW] Mazur V2",
+                "[DT] HiveMind", "[DT] NoveltyBench",
                 "[SI] LiveIdea"]
     na = len(keys_a)
     mat_a = np.full((na, na), np.nan)
