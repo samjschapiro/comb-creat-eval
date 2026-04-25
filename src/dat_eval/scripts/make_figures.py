@@ -1593,58 +1593,107 @@ def fig_specificity_ceilings():
     }
     test_order = ["DAT", "CDAT", "CDAT-N", "CDAT-A", "CDAT-N×A", "PACE"]
 
-    # (benchmark label, c = r(Y, Arena Overall) computed from benchmarks.json)
-    benchmarks = [
-        ("Arena CW",        +0.98),
-        ("EQ-Bench CW",     +0.83),
-        ("Mazur CW v2",     +0.79),
-        ("Hivemind Div.",   -0.67),
-        ("NovBench Util.",  -0.27),
-    ]
+    # Recompute (validity, specificity) for each (test, benchmark) on the
+    # same n-subset that defines the multiple-R for that benchmark --- the
+    # subset of models with Y, Arena Overall, and MMLU-Pro all present. This
+    # keeps the lens and the observed points on the same joint distribution,
+    # which matters at small n (NovBench Util. has n=11 and the Table 1
+    # numbers mix validity-n with specificity-n, enough to push points just
+    # outside the population lens).
+    me_path = RESULTS_DIR / "multi_embed_scores.json"
+    with open(me_path) as f:
+        me = json.load(f)
+    with open(BENCH_PATH) as f:
+        BMARKS = json.load(f)
 
-    # Overall block from Table 1: {benchmark: {test: (validity, specificity)}}.
-    bench_data = {
-        "Arena CW": {
-            "DAT":      (+0.44, +0.08),
-            "CDAT":     (-0.13, +0.28),
-            "CDAT-N":   (-0.18, +0.23),
-            "CDAT-A":   (+0.54, -0.12),
-            "CDAT-N×A": (+0.40, +0.30),
-            "PACE":     (+0.72, +0.05),
-        },
-        "EQ-Bench CW": {
-            "DAT":      (+0.71, +0.50),
-            "CDAT":     (-0.06, +0.13),
-            "CDAT-N":   (-0.14, +0.15),
-            "CDAT-A":   (+0.47, -0.02),
-            "CDAT-N×A": (+0.39, +0.28),
-            "PACE":     (+0.70, +0.20),
-        },
-        "Mazur CW v2": {
-            "DAT":      (+0.59, +0.50),
-            "CDAT":     (+0.07, +0.39),
-            "CDAT-N":   (+0.09, +0.35),
-            "CDAT-A":   (+0.24, -0.21),
-            "CDAT-N×A": (+0.54, +0.43),
-            "PACE":     (+0.75, +0.18),
-        },
-        "Hivemind Div.": {
-            "DAT":      (+0.33, +0.26),
-            "CDAT":     (+0.25, +0.19),
-            "CDAT-N":   (+0.24, +0.17),
-            "CDAT-A":   (-0.39, -0.16),
-            "CDAT-N×A": (-0.07, +0.14),
-            "PACE":     (-0.05, +0.37),
-        },
-        "NovBench Util.": {
-            "DAT":      (+0.15, -0.26),
-            "CDAT":     (+0.60, +0.57),
-            "CDAT-N":   (+0.54, +0.46),
-            "CDAT-A":   (-0.67, -0.40),
-            "CDAT-N×A": (+0.33, +0.25),
-            "PACE":     (+0.18, -0.06),
-        },
+    # Build CDAT-NxA = CDAT-N * CDAT-A per embedding so the composite matches
+    # the paper's "simple multiplicative (no-gating) composite".
+    for emb in me:
+        for m in me[emb]:
+            n = me[emb][m].get("cdat_novelty")
+            a = me[emb][m].get("cdat_appropriateness")
+            if (n is not None and a is not None
+                    and not (np.isnan(n) or np.isnan(a))
+                    and n != 0 and a != 0):
+                me[emb][m]["cdat_nxa"] = n * a
+
+    # Composite = mean z-score across the 3 embeddings.
+    embs = sorted(me.keys())
+    tasks_all = ["dat", "cdat", "cdat_novelty", "cdat_appropriateness",
+                 "cdat_nxa", "pace"]
+    all_models = sorted({m for emb in embs for m in me[emb]})
+    composite: dict[str, dict[str, float]] = {}
+    for t in tasks_all:
+        stats = {}
+        for emb in embs:
+            vals = [me[emb].get(m, {}).get(t) for m in all_models]
+            vals = [v for v in vals if v is not None
+                    and not (isinstance(v, float) and (np.isnan(v) or v == 0))]
+            if vals:
+                stats[emb] = (float(np.mean(vals)), float(np.std(vals)) or 1.0)
+        for m in all_models:
+            zs = []
+            for emb in embs:
+                if emb not in stats:
+                    continue
+                v = me[emb].get(m, {}).get(t)
+                if v is None or (isinstance(v, float) and (np.isnan(v) or v == 0)):
+                    continue
+                mu, sd = stats[emb]
+                zs.append((v - mu) / sd)
+            if zs:
+                composite.setdefault(m, {})[t] = float(np.mean(zs))
+
+    bench_keys = {
+        "Arena CW":        "arena_cw",
+        "EQ-Bench CW":     "eq_bench_cw",
+        "Mazur CW v2":     "mazur_cw_v2",
+        "Hivemind Div.":   "hivemind_diversity",
+        "NovBench Util.":  "noveltybench_utility",
     }
+    test_key = {
+        "DAT":      "dat",
+        "CDAT":     "cdat",
+        "CDAT-N":   "cdat_novelty",
+        "CDAT-A":   "cdat_appropriateness",
+        "CDAT-N×A": "cdat_nxa",
+        "PACE":     "pace",
+    }
+
+    benchmarks = []
+    bench_data: dict[str, dict[str, tuple[float, float]]] = {}
+    for blabel, bkey in bench_keys.items():
+        ms_yg = [m for m, d in BMARKS.items()
+                 if bkey in d and "arena_overall" in d and "mmlu_pro" in d]
+        ys = np.array([BMARKS[m][bkey] for m in ms_yg], dtype=float)
+        A = np.array([[BMARKS[m]["arena_overall"], BMARKS[m]["mmlu_pro"]]
+                      for m in ms_yg], dtype=float)
+        A1 = np.column_stack([np.ones(len(ys)), A])
+        beta = np.linalg.lstsq(A1, ys, rcond=None)[0]
+        yhat = A1 @ beta
+        R2 = 1.0 - np.sum((ys - yhat) ** 2) / np.sum((ys - ys.mean()) ** 2)
+        R = float(np.sqrt(max(0.0, R2)))
+        # Sign R by the sign of the dominant proxy (Arena Overall) correlation.
+        if np.corrcoef(A[:, 0], ys)[0, 1] < 0:
+            R = -R
+        benchmarks.append((blabel, R))
+
+        resid_by_m = dict(zip(ms_yg, ys - yhat))
+        y_by_m = dict(zip(ms_yg, ys))
+
+        pts: dict[str, tuple[float, float]] = {}
+        for tlabel in test_order:
+            tk = test_key[tlabel]
+            kept = [m for m in ms_yg if composite.get(m, {}).get(tk) is not None]
+            if len(kept) < 5:
+                continue
+            xs = np.array([composite[m][tk] for m in kept])
+            ys_k = np.array([y_by_m[m] for m in kept])
+            rs_k = np.array([resid_by_m[m] for m in kept])
+            v = float(np.corrcoef(xs, ys_k)[0, 1])
+            s = float(np.corrcoef(xs, rs_k)[0, 1])
+            pts[tlabel] = (v, s)
+        bench_data[blabel] = pts
 
     v_grid = np.linspace(-1, 1, 400)
 
@@ -1671,13 +1720,16 @@ def fig_specificity_ceilings():
         ax.axvline(0, color=C_GREY, linewidth=0.5, linestyle=":", alpha=0.7, zorder=0)
 
         for test in test_order:
-            v, spec = bench_data[bench_name][test]
+            pt = bench_data[bench_name].get(test)
+            if pt is None:
+                continue
+            v, spec = pt
             ax.scatter(v, spec, marker="o", s=55,
                        c=[test_colors[test]],
                        edgecolor="black", linewidth=0.8,
                        zorder=3, alpha=0.95)
 
-        ax.set_title(f"{bench_name}  ($c = {c:+.2f}$)", fontsize=11)
+        ax.set_title(f"{bench_name}  ($R = {c:+.2f}$)", fontsize=11)
         ax.tick_params(axis="both", labelsize=9)
         ax.set_xlabel(r"Validity  ($r$)", fontsize=10.5)
         ax.set_xlim(-1.02, 1.02)
