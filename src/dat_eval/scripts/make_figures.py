@@ -64,20 +64,22 @@ CMAP_SEQ = cmc.batlow       # sequential (for gradient fills)
 CMAP_DIV = cmc.vik          # diverging  (for correlation heatmap with natural zero)
 CMAP_CAT = cmc.batlowS      # categorical (100 distinct colors sampled from batlow)
 
-# Pick 4 well-separated categorical colors from Batlow for the four metrics.
-# Sampling at low-mid-high of the perceptual range gives distinct-but-harmonious tones.
-_BATLOW_SAMPLES = CMAP_SEQ(np.linspace(0.10, 0.88, 4))
-C_DAT     = _BATLOW_SAMPLES[0]   # deep purple-blue
-C_CNOV    = _BATLOW_SAMPLES[1]   # teal
-C_CAPP    = _BATLOW_SAMPLES[2]   # olive-green
-C_PACE    = _BATLOW_SAMPLES[3]   # warm yellow
+# Per-test categorical palette (Okabe-Ito — colorblind-safe, picked so DAT
+# and CDAT are maximally separated rather than adjacent samples of a
+# sequential map). Five entries covering the full headline-figure test set:
+# DAT, CDAT (gated), CDAT-N (ungated novelty), CDAT-A (ungated approp.), PACE.
+C_DAT   = "#0072B2"   # blue
+C_CDAT  = "#D55E00"   # vermillion (gated CDAT)
+C_CNOV  = "#009E73"   # bluish green (CDAT novelty)
+C_CAPP  = "#CC79A7"   # reddish purple (CDAT appropriateness)
+C_PACE  = "#E69F00"   # orange
 
-# Legacy aliases used by old plotting code paths — kept consistent with Batlow.
-C_BLUE   = C_PACE      # "highlight" color: warm yellow from Batlow's bright end
-C_ORANGE = _BATLOW_SAMPLES[1]
-C_GREEN  = _BATLOW_SAMPLES[2]
-C_RED    = CMAP_DIV(0.92)   # vik's red end for trend lines (paired with batlow)
-C_PURPLE = _BATLOW_SAMPLES[0]
+# Legacy aliases.
+C_BLUE   = C_DAT
+C_ORANGE = C_PACE
+C_GREEN  = C_CNOV
+C_RED    = CMAP_DIV(0.92)   # vik's red end for trend lines
+C_PURPLE = C_CAPP
 C_GREY   = "#4d4d4d"
 
 
@@ -354,7 +356,7 @@ def _scatter_panel(
 # Panel-color mapping shared by all metric grids — Batlow-sampled
 _METRIC_PANELS = [
     ("dat",                 "DAT score",              C_DAT),
-    ("cdat",                "CDAT (gated novelty)",   C_CAPP),
+    ("cdat",                "CDAT (gated novelty)",   C_CDAT),
     ("pace",                "PACE score",             C_PACE),
 ]
 
@@ -919,7 +921,8 @@ def fig_benchmark_correlations(benchmarks):
     def draw_triangle(ax, mat, labels):
         n = len(labels)
         display = np.where(np.isnan(mat), 0.0, mat)
-        im = ax.imshow(display, vmin=-1, vmax=1, cmap=CMAP_SEQ, aspect="equal")
+        im = ax.imshow(display, vmin=-1, vmax=1,
+                       cmap=cmc.bam, aspect="equal")
         for i in range(n):
             for j in range(n):
                 if j > i:
@@ -937,7 +940,7 @@ def fig_benchmark_correlations(benchmarks):
                 if np.isnan(v):
                     continue
                 txt = "—" if i == j else f"{v:+.2f}"
-                color = "white" if v < -0.2 else "black"
+                color = "white" if abs(v) > 0.6 else "black"
                 ax.text(j, i, txt, ha="center", va="center",
                         fontsize=6.0, color=color, zorder=3)
         ax.tick_params(axis="both", which="major", length=0)
@@ -1234,7 +1237,7 @@ def fig_validity_specificity(benchmarks):
     ]
     tests = [
         ("dat",  "DAT",  C_DAT),
-        ("cdat", "CDAT", C_CNOV),
+        ("cdat", "CDAT", C_CDAT),
         ("pace", "PACE", C_PACE),
     ]
     benchs = [
@@ -1360,6 +1363,44 @@ def fig_validity_specificity(benchmarks):
     print(f"Saved {out}")
 
 
+def _benchmark_signed_R(bench_key: str, BMARKS: dict) -> float | None:
+    """Signed multiple correlation R of bench_key on the capability stack
+    g = (Arena Overall, MMLU-Pro). Sign follows the dominant Arena Overall
+    direction (matches fig_specificity_ceilings). Returns None if the
+    intersection has fewer than 5 models.
+    """
+    ms = [m for m, d in BMARKS.items()
+          if bench_key in d and "arena_overall" in d and "mmlu_pro" in d]
+    if len(ms) < 5:
+        return None
+    ys = np.array([BMARKS[m][bench_key] for m in ms], dtype=float)
+    A = np.array([[BMARKS[m]["arena_overall"], BMARKS[m]["mmlu_pro"]]
+                  for m in ms], dtype=float)
+    A1 = np.column_stack([np.ones(len(ys)), A])
+    beta = np.linalg.lstsq(A1, ys, rcond=None)[0]
+    yhat = A1 @ beta
+    R2 = 1.0 - np.sum((ys - yhat) ** 2) / np.sum((ys - ys.mean()) ** 2)
+    R = float(np.sqrt(max(0.0, R2)))
+    if np.corrcoef(A[:, 0], ys)[0, 1] < 0:
+        R = -R
+    return R
+
+
+def _panel_avg_ceiling(R_list: list[float], v_grid: np.ndarray) -> np.ndarray:
+    """Mean across a panel's benchmarks of the per-benchmark specificity ceiling
+    upper envelope ceiling_b(v) = v sqrt(1 - R_b^2) + |R_b| sqrt(1 - v^2). The
+    average is taken at each v (mean-of-ceilings, not ceiling-of-mean-R), so a
+    single test that hit every benchmark's individual ceiling would land on
+    this curve."""
+    if not R_list:
+        return np.zeros_like(v_grid)
+    upper = np.zeros_like(v_grid)
+    root1mv2 = np.sqrt(np.clip(1 - v_grid ** 2, 0, None))
+    for R in R_list:
+        upper = upper + v_grid * np.sqrt(max(0.0, 1 - R ** 2)) + abs(R) * root1mv2
+    return upper / len(R_list)
+
+
 def fig_headline():
     """Two-panel headline scatter pulling the ``Overall'' (mean z-score
     across GloVe / FastText / SBERT) block from Table~1. Left panel =
@@ -1368,6 +1409,13 @@ def fig_headline():
     NoveltyBench utility). Colours encode tests; small translucent
     circles are per-benchmark cells and the large black-outlined circle
     per test is the within-panel benchmark average (``Overall'').
+
+    Each panel also draws the construct-level theoretical specificity
+    ceiling: the unweighted mean of the per-benchmark ceiling curves
+    ceiling(v) = v sqrt(1 - R^2) + |R| sqrt(1 - v^2), where R is the
+    signed multiple correlation of each benchmark on the capability
+    stack g = (Arena Overall, MMLU-Pro). Computed from benchmarks.json
+    so it tracks any future benchmark coverage updates.
 
     Saved to both the report's figures directory and the ICCC paper's
     figures directory so the paper can reference the same file via a
@@ -1400,6 +1448,23 @@ def fig_headline():
     cw_benchmarks = ["Arena CW", "EQ-Bench CW", "Mazur CW v2"]
     dt_benchmarks = ["Hivemind Div.", "NovBench Util."]
     si_benchmarks = ["LiveIdeaBench"]
+
+    # Per-panel benchmark keys for the theoretical-ceiling computation.
+    panel_bench_keys = {
+        "Creative Writing":    ["arena_cw", "eq_bench_cw", "mazur_cw_v2"],
+        "Divergent Thinking":  ["hivemind_diversity", "noveltybench_utility"],
+        "Scientific Ideation": ["liveideabench"],
+    }
+    with open(BENCH_PATH) as _f:
+        _BMARKS = json.load(_f)
+    panel_R = {}
+    for panel, keys in panel_bench_keys.items():
+        Rs = []
+        for k in keys:
+            R = _benchmark_signed_R(k, _BMARKS)
+            if R is not None:
+                Rs.append(R)
+        panel_R[panel] = Rs
 
     # Overall (mean z-score across 3 embeddings) block of Table 1.
     # Each entry: (validity r, specificity r | g, val_sig, spec_sig).
@@ -1487,6 +1552,15 @@ def fig_headline():
         ))
         ax.axhline(0, color=C_GREY, linewidth=0.5, linestyle=":", alpha=0.7, zorder=0)
         ax.axvline(0, color=C_GREY, linewidth=0.5, linestyle=":", alpha=0.7, zorder=0)
+
+        # Construct-level theoretical specificity ceiling (mean of the
+        # per-benchmark ceiling curves over this panel's benchmarks).
+        v_grid = np.linspace(-1, 1, 400)
+        R_list = panel_R.get(title, [])
+        if R_list:
+            ceil_curve = _panel_avg_ceiling(R_list, v_grid)
+            ax.plot(v_grid, ceil_curve, color="black", linewidth=1.0,
+                    linestyle="-", alpha=0.85, zorder=1)
         # Offset transform for the tiny gold "both-sig" star sitting to the
         # upper-right of its parent marker.
         star_trans = mtransforms.offset_copy(
@@ -1553,9 +1627,21 @@ def fig_headline():
             all_specs.append(float(np.mean([s for _, s, *_ in pts])))
     xpad = 0.12 * (max(all_vals) - min(all_vals))
     ypad = 0.10 * (max(all_specs) - min(all_specs))
+    xlim_lo = min(all_vals) - xpad
+    xlim_hi = max(all_vals) + xpad
+
+    # Stretch ymax so the ceiling curve is fully visible within the data x-range.
+    v_for_ceil = np.linspace(xlim_lo, xlim_hi, 200)
+    ceil_maxes = [
+        _panel_avg_ceiling(Rs, v_for_ceil).max()
+        for Rs in panel_R.values() if Rs
+    ]
+    ymax_data = max(all_specs) + ypad
+    ymax = max(ymax_data, (max(ceil_maxes) + 0.04) if ceil_maxes else ymax_data)
+    ymin = min(all_specs) - ypad
     for ax in (ax_l, ax_m, ax_r):
-        ax.set_xlim(min(all_vals) - xpad, max(all_vals) + xpad)
-        ax.set_ylim(min(all_specs) - ypad, max(all_specs) + ypad)
+        ax.set_xlim(xlim_lo, xlim_hi)
+        ax.set_ylim(ymin, ymax)
 
     # --- Single flat Test legend at the bottom. Indicator conventions
     # (Overall marker, both-axes star, one-axis outline) are explained
@@ -1566,10 +1652,12 @@ def fig_headline():
                markeredgewidth=1.0, markersize=leg_ms_test, label=t)
         for t in test_order
     ]
+    ceiling_handle = Line2D([], [], color="black", linewidth=1.0,
+                             linestyle="-", label="theoretical ceiling")
     leg_tests = fig.legend(
-        handles=test_handles,
+        handles=[*test_handles, ceiling_handle],
         loc="lower center", bbox_to_anchor=(0.5, 0.00),
-        ncol=5, frameon=False, fontsize=leg_fs,
+        ncol=6, frameon=False, fontsize=leg_fs,
         handletextpad=0.3, columnspacing=1.6,
     )
     leg_tests._legend_box.align = "center"
@@ -1758,6 +1846,345 @@ def fig_specificity_ceilings():
     for out_dir in [FIGS_DIR, PAPER_FIGS_DIR]:
         out_dir.mkdir(parents=True, exist_ok=True)
         out = out_dir / "fig_specificity_ceilings.pdf"
+        plt.savefig(out)
+        plt.savefig(out.with_suffix(".png"))
+        print(f"Saved {out}")
+    plt.close()
+
+
+def fig_headline_combined():
+    """Combined headline + per-benchmark ceilings figure.
+
+    Top row (3 panels) is the construct-level scatter (Creative Writing,
+    Divergent Thinking, Scientific Ideation) with the panel-averaged
+    theoretical ceiling overlay. Bottom row (6 panels) is the per-benchmark
+    feasible-region lens with observed test points. A single legend for
+    test colours and the theoretical-ceiling line sits at the bottom.
+
+    Saved as fig_headline.pdf, replacing the previous standalone version.
+    """
+    from matplotlib.lines import Line2D
+    from matplotlib.gridspec import GridSpec
+    from matplotlib.patches import Rectangle
+    import matplotlib.transforms as mtransforms
+
+    test_colors = {
+        "DAT":      C_DAT,
+        "CDAT":     C_CDAT,
+        "CDAT-N":   C_CNOV,
+        "CDAT-A":   C_CAPP,
+        "PACE":     C_PACE,
+    }
+    test_order = ["DAT", "CDAT", "CDAT-N", "CDAT-A", "PACE"]
+    test_key = {
+        "DAT":      "dat",
+        "CDAT":     "cdat",
+        "CDAT-N":   "cdat_novelty",
+        "CDAT-A":   "cdat_appropriateness",
+        "PACE":     "pace",
+    }
+
+    # ---------- Top-row data (Overall block of Table 1, hardcoded) ----------
+    cw_benchmarks = ["Arena CW", "EQ-Bench CW", "Mazur CW v2"]
+    dt_benchmarks = ["Hivemind Div.", "NovBench Util."]
+    si_benchmarks = ["LiveIdeaBench"]
+    cw_data = {
+        "DAT":      [(+0.44, +0.08, True,  False),
+                     (+0.71, +0.50, True,  True),
+                     (+0.59, +0.50, True,  True)],
+        "CDAT":     [(-0.13, +0.28, False, False),
+                     (-0.06, +0.13, False, False),
+                     (+0.07, +0.39, False, False)],
+        "CDAT-N":   [(-0.18, +0.23, False, False),
+                     (-0.14, +0.15, False, False),
+                     (+0.09, +0.35, False, False)],
+        "CDAT-A":   [(+0.54, -0.12, True,  False),
+                     (+0.47, -0.02, True,  False),
+                     (+0.24, -0.21, False, False)],
+        "PACE":     [(+0.72, +0.05, True,  False),
+                     (+0.70, +0.20, True,  False),
+                     (+0.75, +0.18, True,  False)],
+    }
+    dt_data = {
+        "DAT":      [(+0.33, +0.26, False, False),
+                     (+0.15, -0.26, False, False)],
+        "CDAT":     [(+0.25, +0.19, False, False),
+                     (+0.60, +0.57, False, False)],
+        "CDAT-N":   [(+0.24, +0.17, False, False),
+                     (+0.54, +0.46, True,  False)],
+        "CDAT-A":   [(-0.39, -0.16, False, False),
+                     (-0.67, -0.40, True,  False)],
+        "PACE":     [(-0.05, +0.37, False, False),
+                     (+0.18, -0.06, False, False)],
+    }
+    si_data = {
+        "DAT":      [(-0.01, +0.28, False, False)],
+        "CDAT":     [(+0.06, +0.26, False, False)],
+        "CDAT-N":   [(-0.09, +0.11, False, False)],
+        "CDAT-A":   [(+0.16, -0.01, False, False)],
+        "PACE":     [(+0.07, -0.07, False, False)],
+    }
+    label_offsets = {
+        "Creative Writing": {
+            "DAT":      (+0.030, +0.008, "left",   "center"),
+            "CDAT":     ( 0.000, +0.042, "center", "bottom"),
+            "CDAT-N":   ( 0.000, -0.042, "center", "top"),
+            "CDAT-A":   ( 0.000, -0.042, "center", "top"),
+            "PACE":     (-0.030, +0.008, "right",  "center"),
+        },
+        "Divergent Thinking": {
+            "DAT":      ( 0.000, -0.042, "center", "top"),
+            "CDAT":     (+0.030, +0.008, "left",   "center"),
+            "CDAT-N":   (-0.030, +0.008, "right",  "center"),
+            "CDAT-A":   ( 0.000, +0.048, "center", "bottom"),
+            "PACE":     ( 0.000, -0.048, "center", "top"),
+        },
+        "Scientific Ideation": {
+            "DAT":      ( 0.000, +0.048, "center", "bottom"),
+            "CDAT":     (+0.030, +0.008, "left",   "center"),
+            "CDAT-N":   ( 0.000, -0.048, "center", "top"),
+            "CDAT-A":   (+0.030, +0.008, "left",   "center"),
+            "PACE":     (-0.030, +0.008, "right",  "center"),
+        },
+    }
+
+    # ---------- Bottom-row data (recomputed per benchmark) ----------
+    bench_keys = {
+        "Arena CW":        "arena_cw",
+        "EQ-Bench CW":     "eq_bench_cw",
+        "Mazur CW v2":     "mazur_cw_v2",
+        "Hivemind Div.":   "hivemind_diversity",
+        "NovBench Util.":  "noveltybench_utility",
+        "LiveIdeaBench":   "liveideabench",
+    }
+    me_path = RESULTS_DIR / "multi_embed_scores.json"
+    with open(me_path) as f:
+        me = json.load(f)
+    with open(BENCH_PATH) as f:
+        BMARKS = json.load(f)
+
+    embs = sorted(me.keys())
+    tasks_all = ["dat", "cdat", "cdat_novelty", "cdat_appropriateness", "pace"]
+    all_models = sorted({m for emb in embs for m in me[emb]})
+    composite: dict[str, dict[str, float]] = {}
+    for t in tasks_all:
+        stats = {}
+        for emb in embs:
+            vals = [me[emb].get(m, {}).get(t) for m in all_models]
+            vals = [v for v in vals if v is not None
+                    and not (isinstance(v, float) and (np.isnan(v) or v == 0))]
+            if vals:
+                stats[emb] = (float(np.mean(vals)), float(np.std(vals)) or 1.0)
+        for m in all_models:
+            zs = []
+            for emb in embs:
+                if emb not in stats:
+                    continue
+                v = me[emb].get(m, {}).get(t)
+                if v is None or (isinstance(v, float) and (np.isnan(v) or v == 0)):
+                    continue
+                mu, sd = stats[emb]
+                zs.append((v - mu) / sd)
+            if zs:
+                composite.setdefault(m, {})[t] = float(np.mean(zs))
+
+    bottom_panels = []  # (label, R, {test: (v, s)})
+    for blabel, bkey in bench_keys.items():
+        ms_yg = [m for m, d in BMARKS.items()
+                 if bkey in d and "arena_overall" in d and "mmlu_pro" in d]
+        ys = np.array([BMARKS[m][bkey] for m in ms_yg], dtype=float)
+        A = np.array([[BMARKS[m]["arena_overall"], BMARKS[m]["mmlu_pro"]]
+                      for m in ms_yg], dtype=float)
+        A1 = np.column_stack([np.ones(len(ys)), A])
+        beta = np.linalg.lstsq(A1, ys, rcond=None)[0]
+        yhat = A1 @ beta
+        R2 = 1.0 - np.sum((ys - yhat) ** 2) / np.sum((ys - ys.mean()) ** 2)
+        R = float(np.sqrt(max(0.0, R2)))
+        if np.corrcoef(A[:, 0], ys)[0, 1] < 0:
+            R = -R
+        resid_by_m = dict(zip(ms_yg, ys - yhat))
+        y_by_m = dict(zip(ms_yg, ys))
+        pts: dict[str, tuple[float, float]] = {}
+        for tlabel in test_order:
+            tk = test_key[tlabel]
+            kept = [m for m in ms_yg if composite.get(m, {}).get(tk) is not None]
+            if len(kept) < 5:
+                continue
+            xs = np.array([composite[m][tk] for m in kept])
+            ys_k = np.array([y_by_m[m] for m in kept])
+            rs_k = np.array([resid_by_m[m] for m in kept])
+            v = float(np.corrcoef(xs, ys_k)[0, 1])
+            s = float(np.corrcoef(xs, rs_k)[0, 1])
+            pts[tlabel] = (v, s)
+        bottom_panels.append((blabel, R, pts))
+
+    # Top-row panel-average ceilings need R values per construct
+    panel_bench_keys = {
+        "Creative Writing":    ["arena_cw", "eq_bench_cw", "mazur_cw_v2"],
+        "Divergent Thinking":  ["hivemind_diversity", "noveltybench_utility"],
+        "Scientific Ideation": ["liveideabench"],
+    }
+    panel_R = {}
+    for panel, keys in panel_bench_keys.items():
+        Rs = [_benchmark_signed_R(k, BMARKS) for k in keys]
+        panel_R[panel] = [r for r in Rs if r is not None]
+
+    # ---------- LAYOUT ----------
+    fig = plt.figure(figsize=(17.0, 10.4))
+    gs = GridSpec(
+        2, 6, figure=fig,
+        height_ratios=[1.30, 1.00],
+        hspace=0.55, wspace=0.20,
+        left=0.045, right=0.99, top=0.935, bottom=0.165,
+    )
+    ax_top_l = fig.add_subplot(gs[0, 0:2])
+    ax_top_m = fig.add_subplot(gs[0, 2:4], sharex=ax_top_l, sharey=ax_top_l)
+    ax_top_r = fig.add_subplot(gs[0, 4:6], sharex=ax_top_l, sharey=ax_top_l)
+    axes_bot = [fig.add_subplot(gs[1, i]) for i in range(6)]
+    for ax in axes_bot[1:]:
+        ax.sharex(axes_bot[0]); ax.sharey(axes_bot[0])
+
+    # Row-level subplot titles (above each row, centred on the figure).
+    fig.text(0.5, 0.975, "(a) Prediction by construct",
+             ha="center", va="bottom", fontsize=18.0, fontweight="bold")
+    fig.text(0.5, 0.485, "(b) Prediction by benchmark",
+             ha="center", va="bottom", fontsize=18.0, fontweight="bold")
+
+    # ---------- TOP ROW ----------
+    title_fs_top, axis_fs_top, tick_fs_top, annotate_fs_top = 16.0, 14.5, 12.5, 9.0
+    s_ind, s_overall, s_star = 38, 170, 40
+    overall_edge_lw, ind_sig_lw, ind_nosig_lw = 1.3, 0.9, 0.4
+    star_off_pts = 6
+
+    def draw_top(ax, data, benchmarks, title):
+        ax.add_patch(Rectangle(
+            (0, 0), 10, 10,
+            facecolor="#7ec587", alpha=0.10,
+            edgecolor="none", zorder=-1,
+        ))
+        ax.axhline(0, color=C_GREY, linewidth=0.5, linestyle=":", alpha=0.7, zorder=0)
+        ax.axvline(0, color=C_GREY, linewidth=0.5, linestyle=":", alpha=0.7, zorder=0)
+        v_grid = np.linspace(-1, 1, 400)
+        R_list = panel_R.get(title, [])
+        if R_list:
+            ax.plot(v_grid, _panel_avg_ceiling(R_list, v_grid),
+                    color="black", linewidth=1.0, linestyle="-",
+                    alpha=0.85, zorder=1)
+        star_trans = mtransforms.offset_copy(
+            ax.transData, fig=fig,
+            x=star_off_pts, y=star_off_pts, units="points",
+        )
+        for test in test_order:
+            pts = data[test]
+            color = test_colors[test]
+            for bench_label, (val, spec, val_sig, spec_sig) in zip(benchmarks, pts):
+                any_sig = val_sig or spec_sig
+                both_pos_sig = (val_sig and spec_sig and val > 0 and spec > 0)
+                ax.scatter(val, spec, marker="o", s=s_ind, c=[color],
+                           edgecolor=("black" if any_sig else "white"),
+                           linewidth=(ind_sig_lw if any_sig else ind_nosig_lw),
+                           zorder=3, alpha=0.55)
+                if both_pos_sig:
+                    ax.scatter(val, spec, marker="*", s=s_star,
+                               facecolor="#ffcc00", edgecolor="black",
+                               linewidth=0.4, zorder=5, transform=star_trans)
+            vals = [v for v, _, *_ in pts]
+            specs = [s for _, s, *_ in pts]
+            mx, my = float(np.mean(vals)), float(np.mean(specs))
+            ax.scatter(mx, my, marker="o", s=s_overall, c=[color],
+                       edgecolor="black", linewidth=overall_edge_lw, zorder=4)
+            dx, dy, ha, va = label_offsets[title][test]
+            ax.annotate(
+                test, xy=(mx, my), xytext=(mx + dx, my + dy),
+                ha=ha, va=va, fontsize=annotate_fs_top, fontweight="bold",
+                color="black", zorder=6,
+                bbox=dict(facecolor="white", edgecolor="none",
+                          pad=1.0, alpha=0.85),
+            )
+        ax.set_title(title, fontsize=title_fs_top)
+        ax.tick_params(axis="both", labelsize=tick_fs_top)
+        ax.set_xlabel(r"Validity  ($r$)", fontsize=axis_fs_top)
+
+    draw_top(ax_top_l, cw_data, cw_benchmarks, "Creative Writing")
+    draw_top(ax_top_m, dt_data, dt_benchmarks, "Divergent Thinking")
+    draw_top(ax_top_r, si_data, si_benchmarks, "Scientific Ideation")
+    ax_top_l.set_ylabel(r"Specificity  ($r \mid g$)", fontsize=axis_fs_top)
+
+    all_vals, all_specs = [], []
+    for data in (cw_data, dt_data, si_data):
+        for pts in data.values():
+            for v, s, *_ in pts:
+                all_vals.append(v); all_specs.append(s)
+            all_vals.append(float(np.mean([v for v, _, *_ in pts])))
+            all_specs.append(float(np.mean([s for _, s, *_ in pts])))
+    xpad = 0.12 * (max(all_vals) - min(all_vals))
+    ypad = 0.10 * (max(all_specs) - min(all_specs))
+    xlim_lo = min(all_vals) - xpad
+    xlim_hi = max(all_vals) + xpad
+    v_for_ceil = np.linspace(xlim_lo, xlim_hi, 200)
+    ceil_maxes = [_panel_avg_ceiling(Rs, v_for_ceil).max()
+                   for Rs in panel_R.values() if Rs]
+    ymax_data = max(all_specs) + ypad
+    ymax_top = max(ymax_data, (max(ceil_maxes) + 0.04) if ceil_maxes else ymax_data)
+    ymin_top = min(all_specs) - ypad
+    ax_top_l.set_xlim(xlim_lo, xlim_hi)
+    ax_top_l.set_ylim(ymin_top, ymax_top)
+    for ax in (ax_top_m, ax_top_r):
+        plt.setp(ax.get_yticklabels(), visible=False)
+
+    # ---------- BOTTOM ROW ----------
+    v_grid_full = np.linspace(-1, 1, 400)
+    title_fs_bot = 14.0
+    for ax, (bench_name, c, pts) in zip(axes_bot, bottom_panels):
+        root1mc2 = np.sqrt(max(0.0, 1 - c**2))
+        root1mv2 = np.sqrt(np.clip(1 - v_grid_full**2, 0, None))
+        upper = v_grid_full * root1mc2 + abs(c) * root1mv2
+        lower = v_grid_full * root1mc2 - abs(c) * root1mv2
+        ax.fill_between(v_grid_full, lower, upper,
+                         color="#d0d0d0", alpha=0.35, zorder=0)
+        ax.plot(v_grid_full, upper, color="black", linewidth=1.0,
+                linestyle="-", zorder=1)
+        ax.plot(v_grid_full, lower, color="black", linewidth=0.6,
+                linestyle=":", alpha=0.5, zorder=1)
+        ax.axhline(0, color=C_GREY, linewidth=0.5, linestyle=":",
+                    alpha=0.7, zorder=0)
+        ax.axvline(0, color=C_GREY, linewidth=0.5, linestyle=":",
+                    alpha=0.7, zorder=0)
+        for test in test_order:
+            pt = pts.get(test)
+            if pt is None:
+                continue
+            v, spec = pt
+            ax.scatter(v, spec, marker="o", s=55, c=[test_colors[test]],
+                       edgecolor="black", linewidth=0.8, zorder=3, alpha=0.95)
+        ax.set_title(f"{bench_name}  ($R = {c:+.2f}$)", fontsize=title_fs_bot)
+        ax.tick_params(axis="both", labelsize=12.5)
+        ax.set_xlabel(r"Validity  ($r$)", fontsize=14.5)
+    axes_bot[0].set_xlim(-1.02, 1.02)
+    axes_bot[0].set_ylim(-1.05, 1.05)
+    axes_bot[0].set_ylabel(r"Specificity  ($r \mid g$)", fontsize=14.5)
+    for ax in axes_bot[1:]:
+        plt.setp(ax.get_yticklabels(), visible=False)
+
+    # ---------- LEGEND ----------
+    test_handles = [
+        Line2D([], [], marker="o", linestyle="none",
+               markerfacecolor=test_colors[t], markeredgecolor="black",
+               markeredgewidth=1.0, markersize=12, label=t)
+        for t in test_order
+    ]
+    ceiling_handle = Line2D([], [], color="black", linewidth=1.2,
+                             linestyle="-", label="theoretical ceiling")
+    fig.legend(
+        handles=[*test_handles, ceiling_handle],
+        loc="lower center", bbox_to_anchor=(0.5, 0.005),
+        ncol=6, frameon=False, fontsize=18,
+        handletextpad=0.4, columnspacing=2.0,
+    )
+
+    for out_dir in [FIGS_DIR, PAPER_FIGS_DIR]:
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out = out_dir / "fig_headline.pdf"
         plt.savefig(out)
         plt.savefig(out.with_suffix(".png"))
         print(f"Saved {out}")
@@ -2077,8 +2504,7 @@ def main():
     fig_benchmark_correlations(benchmarks)
     fig_scatter_by_embedding(benchmarks)
     fig_validity_specificity(benchmarks)
-    fig_headline()
-    fig_specificity_ceilings()
+    fig_headline_combined()
 
     print(f"\nAll figures saved to {FIGS_DIR}")
 

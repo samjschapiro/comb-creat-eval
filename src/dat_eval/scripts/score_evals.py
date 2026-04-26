@@ -845,6 +845,128 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False):
             _add_both_partial("partial_mazur_control_both",
                               aligned_models, metric_vals, mazur_vals, mazur_keys)
 
+    # =====================================================================
+    # ARC-AGI v2 analysis (n_max = 10 in the current benchmarks file).
+    # Uses a parallel inclusion gate ("model has metric + has arc_agi_v2"),
+    # not the arena_cw gate that the main loop above uses, so models like
+    # openai_gpt-5-2 / google_gemini-3-1-pro-preview that have ARC-AGI but
+    # no Arena CW score still contribute to the ARC-AGI sample.
+    # =====================================================================
+    arc_keys = [k for k, v in benchmarks.items() if "arc_agi_v2" in v]
+    print(f"\n{'='*60}")
+    print(f"ARC-AGI v2 analysis (pool size {len(arc_keys)})")
+    print(f"{'='*60}")
+
+    for metric in metrics_to_correlate:
+        aligned = [
+            k for k in arc_keys
+            if k in model_scores
+            and metric in model_scores[k]
+            and model_scores[k][metric] not in (0, None)
+        ]
+        if len(aligned) < 5:
+            print(f"  {metric} vs ARC-AGI: only n={len(aligned)}, skipping")
+            continue
+        x = np.array([model_scores[k][metric] for k in aligned])
+        y = np.array([benchmarks[k]["arc_agi_v2"] for k in aligned])
+        rho, p = spearman_corr(x.tolist(), y.tolist())
+        r, p_r = pearson_corr(x.tolist(), y.tolist())
+        boot = bootstrap_spearman(x, y, n_iter=n_bootstrap)
+        corr_results.setdefault(metric, {})["vs_arc_agi"] = {
+            "spearman_rho": rho, "spearman_p": p,
+            "pearson_r": r, "pearson_p": p_r,
+            "p_value": p, "n_models": len(aligned),
+            "bootstrap": boot, "models": aligned,
+        }
+        print(f"{metric.upper()} vs ARC-AGI: rho={rho:.3f} (p={p:.4f}), r={r:.3f} (p={p_r:.4f}), n={len(aligned)}")
+
+        # Partials are skipped for ARC-AGI when n < 7 (one control) or n < 8
+        # (two controls): at n=5, partial rank correlations on residuals
+        # routinely return |rho|=1 or NaN as a small-sample artifact, not a
+        # real signal. The current ARC-AGI ∩ {Arena Overall, MMLU-Pro}
+        # intersection sits at n=6, so the partials are intentionally
+        # omitted here and the raw n=10 correlation is the reportable
+        # quantity.
+        sub_overall = [k for k in aligned if "arena_overall" in benchmarks[k]]
+        sub_mmlu = [k for k in aligned if "mmlu_pro" in benchmarks[k]]
+        sub_both = [k for k in aligned
+                    if "arena_overall" in benchmarks[k]
+                    and "mmlu_pro" in benchmarks[k]]
+        if len(sub_overall) >= 7:
+            xs = np.array([model_scores[k][metric] for k in sub_overall])
+            ys = np.array([benchmarks[k]["arc_agi_v2"] for k in sub_overall])
+            ao = np.array([benchmarks[k]["arena_overall"] for k in sub_overall])
+            part_rho, part_p = partial_spearman(target=ys, predictor=xs, control=ao)
+            part_r, part_r_p = partial_pearson(target=ys, predictor=xs, control=ao)
+            corr_results[metric]["partial_arc_agi_control_overall"] = {
+                "spearman_rho": part_rho, "spearman_p": part_p,
+                "pearson_r": part_r, "pearson_p": part_r_p,
+                "p_value": part_p, "n_models": len(sub_overall),
+            }
+            print(f"{metric.upper()} partial ARC-AGI (| Overall): rho={part_rho:.3f} (p={part_p:.4f}), r={part_r:.3f} (p={part_r_p:.4f}), n={len(sub_overall)}")
+        if len(sub_mmlu) >= 7:
+            xs = np.array([model_scores[k][metric] for k in sub_mmlu])
+            ys = np.array([benchmarks[k]["arc_agi_v2"] for k in sub_mmlu])
+            mp = np.array([benchmarks[k]["mmlu_pro"] for k in sub_mmlu])
+            part_rho, part_p = partial_spearman(target=ys, predictor=xs, control=mp)
+            part_r, part_r_p = partial_pearson(target=ys, predictor=xs, control=mp)
+            corr_results[metric]["partial_arc_agi_control_mmlu_pro"] = {
+                "spearman_rho": part_rho, "spearman_p": part_p,
+                "pearson_r": part_r, "pearson_p": part_r_p,
+                "p_value": part_p, "n_models": len(sub_mmlu),
+            }
+            print(f"{metric.upper()} partial ARC-AGI (| MMLU-Pro): rho={part_rho:.3f} (p={part_p:.4f}), r={part_r:.3f} (p={part_r_p:.4f}), n={len(sub_mmlu)}")
+        if len(sub_both) >= 8:
+            xs = np.array([model_scores[k][metric] for k in sub_both])
+            ys = np.array([benchmarks[k]["arc_agi_v2"] for k in sub_both])
+            ao = np.array([benchmarks[k]["arena_overall"] for k in sub_both])
+            mp = np.array([benchmarks[k]["mmlu_pro"] for k in sub_both])
+            part_rho, part_p = partial_spearman_multi(ys, xs, [ao, mp])
+            part_r, part_r_p = partial_pearson_multi(ys, xs, [ao, mp])
+            corr_results[metric]["partial_arc_agi_control_both"] = {
+                "spearman_rho": part_rho, "spearman_p": part_p,
+                "pearson_r": part_r, "pearson_p": part_r_p,
+                "p_value": part_p, "n_models": len(sub_both),
+            }
+            print(f"{metric.upper()} partial ARC-AGI (| Overall+MMLU): rho={part_rho:.3f} (p={part_p:.4f}), r={part_r:.3f} (p={part_r_p:.4f}), n={len(sub_both)}")
+
+    # ARC-AGI vs every other benchmark in the suite (benchmark-vs-benchmark).
+    print(f"\nARC-AGI vs other benchmarks:")
+    arc_vs_bench = {}
+    other_benchmarks = [
+        "arena_overall", "arena_cw", "eq_bench_cw", "eq_bench_cw_rubric",
+        "mmlu_pro", "hivemind_diversity", "mazur_cw_v2",
+    ]
+
+    def _bench_value(model_bench, field):
+        if field == "hivemind_diversity":
+            if "hivemind_diversity" in model_bench:
+                return model_bench["hivemind_diversity"]
+            if "hivemind_intra_sim" in model_bench:
+                return 1.0 - model_bench["hivemind_intra_sim"]
+            return None
+        return model_bench.get(field)
+
+    for field in other_benchmarks:
+        sub = [k for k in arc_keys if _bench_value(benchmarks[k], field) is not None]
+        if len(sub) < 5:
+            arc_vs_bench[field] = {"n_models": len(sub), "skipped_reason": "n<5"}
+            print(f"  ARC-AGI vs {field}: only n={len(sub)}, skipping")
+            continue
+        x = np.array([benchmarks[k]["arc_agi_v2"] for k in sub])
+        y = np.array([_bench_value(benchmarks[k], field) for k in sub])
+        rho, p = spearman_corr(x.tolist(), y.tolist())
+        r, p_r = pearson_corr(x.tolist(), y.tolist())
+        boot = bootstrap_spearman(x, y, n_iter=n_bootstrap)
+        arc_vs_bench[field] = {
+            "spearman_rho": rho, "spearman_p": p,
+            "pearson_r": r, "pearson_p": p_r,
+            "p_value": p, "n_models": len(sub),
+            "bootstrap": boot, "models": sub,
+        }
+        print(f"  ARC-AGI vs {field}: rho={rho:.3f} (p={p:.4f}), r={r:.3f} (p={p_r:.4f}), n={len(sub)}")
+    corr_results["arc_agi_vs_benchmarks"] = arc_vs_bench
+
     # Inter-metric correlations
     metrics_available = [m for m in ["dat", "cdat", "pace"]
                          if any(m in v for v in model_scores.values())]

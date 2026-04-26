@@ -184,6 +184,92 @@ Path of least resistance for ICCC: **option 2**. The CDS finding is a full
 paper's worth of work; the ICCC short paper is already complete and its PACE
 framing is correct.
 
+### 2026-04-26 — Headline figure: combine with per-benchmark ceilings + add construct ceiling
+
+`fig_headline` and `fig_specificity_ceilings` merged into a single
+two-row figure (`fig_headline.pdf`, replaces both). Top row keeps the
+3 construct-level scatter panels (Creative Writing / Divergent Thinking
+/ Scientific Ideation) but now overlays the construct-level theoretical
+specificity ceiling --- the unweighted mean across the panel's
+benchmarks of the per-benchmark bound
+$|r(X,Y\!\mid\!g)| \leq v\sqrt{1\!-\!R^2} + |R|\sqrt{1\!-\!v^2}$
+($g$ = Arena Overall + MMLU-Pro). Bottom row is the previous 6-panel
+per-benchmark lens diagram. Single shared legend (test colours +
+"theoretical ceiling") at the bottom.
+
+Implementation: `_benchmark_signed_R(bench_key, BMARKS)` and
+`_panel_avg_ceiling(R_list, v_grid)` helpers in `make_figures.py` so the
+construct-level ceiling tracks any future benchmark coverage updates.
+Per-panel R values used (computed on the n-subset with Y, Arena
+Overall, MMLU-Pro all present): CW = +0.98 / +0.83 / +0.80; DT = -0.68
+/ -0.33; SI = +0.62.
+
+LaTeX: `fig:spec-ceilings` figure environment removed from
+`05_discussion.tex`; refs in `05_discussion.tex` and `07_appendix.tex`
+redirected to `fig:headline`; caption in `03_method.tex` updated to
+describe both rows.
+
+Heads-up: `multi_embed_appendix.py` writes its `multi_embed_scores.json`
+inside the `--overwrite`-able `output_dir`, so re-running
+`score_evals.py --overwrite` deletes it. Today I had to regenerate via
+`uv run python src/dat_eval/scripts/multi_embed_appendix.py` (~3 min)
+to feed the bottom-row recomputation. Worth moving the file one level
+up (next to `cdat_gated_scores.json`) so it survives.
+
+### 2026-04-25 — ARC-AGI v2 correlations (n=10, exploratory)
+
+Added an ARC-AGI v2 block to `score_evals.py` covering (a) each creativity
+metric vs ARC-AGI and (b) ARC-AGI vs every other benchmark in the suite.
+ARC-AGI v2 only exists for 10 models in our pool (frontier reasoning
+models on the public llm-stats.com leaderboard); intersections with
+Arena CW / MMLU-Pro / EQ-Bench CW are n=5–6, with Hivemind n=0 and
+Mazur n=2. Partials are gated at n≥7 (single control) and n≥8 (two
+controls) — at the actual n=6 intersection they are skipped to avoid
+the |ρ|=1 / NaN small-sample artifact that the rank-residual partial
+returns at n=5.
+
+Headline at n=10:
+
+| Pair | r (n) | p |
+|---|---|---|
+| DAT vs ARC-AGI | +0.39 (10) | 0.26 |
+| CDAT-Novelty vs ARC-AGI | −0.27 (9) | 0.49 |
+| CDAT-Appropriateness vs ARC-AGI | +0.40 (9) | 0.28 |
+| PACE vs ARC-AGI | −0.35 (10) | 0.32 |
+
+ARC-AGI vs other benchmarks (small-n, exploratory only):
+
+| Pair | r (n) | p |
+|---|---|---|
+| ARC-AGI vs Arena Overall | +0.80 (6) | 0.06 |
+| ARC-AGI vs Arena CW | +0.44 (6) | 0.38 |
+| ARC-AGI vs EQ-Bench CW | +0.98 (5) | 0.003 |
+| ARC-AGI vs EQ-Bench CW (rubric) | +0.89 (5) | 0.05 |
+| ARC-AGI vs MMLU-Pro | +0.89 (6) | 0.02 |
+| ARC-AGI vs Hivemind | n=0 — skipped |
+| ARC-AGI vs Mazur CW v2 | n=2 — skipped |
+
+Reading: at n=10 none of the four creativity metrics meaningfully
+predicts ARC-AGI (all |r|<0.5, all p>0.26). On the benchmark side
+ARC-AGI tightly tracks MMLU-Pro (r=0.89) and EQ-Bench CW (r=0.98) at
+n=5–6, while its correlation with Arena CW is much weaker (r=0.44),
+i.e. the ARC-AGI-eligible subsample shows reasoning capability
+separating from Arena creative-writing rankings.
+Both observations are directionally consistent with the paper's
+"creativity ≠ general capability" framing, but n is too small for
+inferential weight; reportable only as an appendix exploratory column.
+
+Public leaderboard checked 2026-04-25: the 5 leaderboard models we
+don't have (GPT-5.5, GPT-5.2 Pro, Claude Opus 4, Muse Spark, Gemini 3
+Pro non-image) are either not on OpenRouter (Muse, Gemini 3 Pro) or
+absent from our dat_eval pool; running them would lift the ARC-AGI
+sample to ~13.
+
+Results saved to:
+`data/dat_eval/run_v1/downstream/scores_v1/results/correlation_analysis.json`
+under each metric's `vs_arc_agi` and `partial_arc_agi_*` keys, plus
+top-level `arc_agi_vs_benchmarks`.
+
 ### 2026-04-14 — MMLU-Pro coverage expanded
 
 Scraped MMLU-Pro scores from TIGER-Lab's public leaderboard to fill coverage
