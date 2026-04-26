@@ -922,7 +922,7 @@ def fig_benchmark_correlations(benchmarks):
         n = len(labels)
         display = np.where(np.isnan(mat), 0.0, mat)
         im = ax.imshow(display, vmin=-1, vmax=1,
-                       cmap=cmc.bam, aspect="equal")
+                       cmap=cmc.broc, aspect="equal")
         for i in range(n):
             for j in range(n):
                 if j > i:
