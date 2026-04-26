@@ -209,6 +209,34 @@ LaTeX: `fig:spec-ceilings` figure environment removed from
 redirected to `fig:headline`; caption in `03_method.tex` updated to
 describe both rows.
 
+Per-test palette switched to a 5-entry Okabe-Ito categorical (DAT blue,
+CDAT vermillion, CDAT-N green, CDAT-A pink, PACE orange) so DAT and
+CDAT are clearly distinguishable rather than adjacent samples of a
+sequential map. Propagated to globals; `C_CDAT` is a new constant for
+gated CDAT, with `fig2_combined_grid` and `fig_validity_specificity`
+updated to reference it instead of `C_CAPP` / `C_CNOV`.
+
+`fig_benchmark_correlations` heatmap recoloured: settled on
+`cmc.broc` (Crameri perceptually-uniform blue/cream/brown,
+colorblind-safe) after iterating through `RdBu_r`, `cmc.cork`,
+`cmc.bam`, `RdYlGn_r`. Upper-triangle masking changed from
+"white-rectangle overlay" to "masked imshow array" to remove the
+faint anti-aliased edges at the top and right of each heatmap;
+spines explicitly hidden.
+
+Paper-side §1.1 rewrite: subsection renamed from "Problems" to
+"Three Untested Premises" (user later promoted the three blocks to
+inline §1 paragraphs on Overleaf, dropping the subsection wrapper).
+Three sentence-style problem statements anchored on validity:
+machine-validity unestablished / human-validity modestly established
+/ specificity required beyond capability. Greedy-DAT failure-mode
+demo activated as Appendix~\ref{app:greedy} (Algorithm 1 +
+`fig:greedy-baseline` figure), with a leading paragraph linking
+algorithmic-circuits in transformers (Olsson induction heads, Nanda
+modular-arithmetic) to the concrete worry that a high LLM DAT score
+need not reflect creativity. Added `algorithm`+`algorithmic` packages
+to `main.tex`.
+
 Heads-up: `multi_embed_appendix.py` writes its `multi_embed_scores.json`
 inside the `--overwrite`-able `output_dir`, so re-running
 `score_evals.py --overwrite` deletes it. Today I had to regenerate via

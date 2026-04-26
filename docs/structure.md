@@ -8,7 +8,11 @@ src/
 │   └── scripts/
 │       ├── fetch_arena_scores.py     # scrape Chatbot Arena via Playwright
 │       ├── add_eqbench_scores.py     # match OpenRouter ↔ EQ-Bench v3
-│       └── add_hivemind_scores.py    # match OpenRouter ↔ Hivemind paper
+│       ├── add_hivemind_scores.py    # match OpenRouter ↔ Hivemind paper
+│       ├── add_mazur_scores.py       # match OpenRouter ↔ Mazur CW v2
+│       ├── add_mmlu_pro_scores.py    # scrape MMLU-Pro via TIGER-Lab leaderboard
+│       ├── add_noveltybench_scores.py # match OpenRouter ↔ NoveltyBench Utility
+│       └── add_arc_agi_scores.py     # ARC-AGI v2 via llm-stats leaderboard
 └── dat_eval/                   # primary track (ICCC 2026 short paper)
     ├── llm.py                  # OpenRouter sync + async client
     ├── dat.py                  # DAT scoring (GloVe 840B)
