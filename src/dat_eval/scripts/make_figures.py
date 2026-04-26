@@ -920,14 +920,14 @@ def fig_benchmark_correlations(benchmarks):
 
     def draw_triangle(ax, mat, labels):
         n = len(labels)
-        display = np.where(np.isnan(mat), 0.0, mat)
+        # Mask the upper triangle so imshow simply doesn't draw those cells
+        # (avoids the faint anti-aliased edge that white-rectangle overlays
+        # leave at the top and right of the bounding square).
+        upper_mask = ~np.tri(n, dtype=bool)
+        display = np.ma.masked_array(np.where(np.isnan(mat), 0.0, mat),
+                                     mask=upper_mask)
         im = ax.imshow(display, vmin=-1, vmax=1,
                        cmap=cmc.broc, aspect="equal")
-        for i in range(n):
-            for j in range(n):
-                if j > i:
-                    ax.add_patch(plt.Rectangle((j - 0.5, i - 0.5), 1, 1,
-                                                color="white", zorder=2))
         ax.set_xticks(range(n))
         ax.set_yticks(range(n))
         ax.set_xticklabels(labels, rotation=35, ha="right", fontsize=8)
@@ -944,6 +944,8 @@ def fig_benchmark_correlations(benchmarks):
                 ax.text(j, i, txt, ha="center", va="center",
                         fontsize=6.0, color=color, zorder=3)
         ax.tick_params(axis="both", which="major", length=0)
+        for s in ax.spines.values():
+            s.set_visible(False)
         return im
 
     # Two stacked panels. Panel (a) spans the full width; panel (b) is
