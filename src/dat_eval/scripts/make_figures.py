@@ -861,49 +861,98 @@ def fig_correlation_summary_heatmap(corr):
     print(f"Saved {out}")
 
 
-def fig_benchmark_correlations(benchmarks):
-    """Two vertically stacked Pearson correlation triangles:
+def _draw_corr_triangle(ax, mat, labels, rotation=20, label_fs=14,
+                         cell_fs=14):
+    """Lower-triangular Pearson correlation heatmap with cell annotations."""
+    n = len(labels)
+    upper_mask = ~np.tri(n, dtype=bool)
+    display = np.ma.masked_array(np.where(np.isnan(mat), 0.0, mat),
+                                 mask=upper_mask)
+    im = ax.imshow(display, vmin=-1, vmax=1, cmap="RdBu_r", aspect="auto")
+    ax.set_xticks(range(n))
+    ax.set_yticks(range(n))
+    ax.set_xticklabels(labels, rotation=rotation,
+                       ha=("center" if rotation == 0 else "right"),
+                       fontsize=label_fs)
+    ax.set_yticklabels(labels, fontsize=label_fs)
+    for i in range(n):
+        for j in range(n):
+            if j > i:
+                continue
+            v = mat[i, j]
+            if np.isnan(v):
+                continue
+            txt = "—" if i == j else f"{v:+.2f}"
+            color = "white" if abs(v) > 0.6 else "black"
+            ax.text(j, i, txt, ha="center", va="center",
+                    fontsize=cell_fs, color=color, zorder=3)
+    ax.tick_params(axis="both", which="major", length=0)
+    for s in ax.spines.values():
+        s.set_visible(False)
+    return im
 
-      (a) capability proxies + outcome benchmarks (6x6)
-      (b) inter-test correlations among DAT, CDAT, PACE using composite
-          z-scores across all 3 embeddings (3x3, scaled down)
+
+def fig_inter_benchmark(benchmarks):
+    """Inter-benchmark Pearson correlation triangle (two-column figure).
+
+    Capability proxies + outcome benchmarks across general capability,
+    creative writing, divergent thinking, and scientific ideation. Saved
+    as fig_inter_benchmark.pdf.
     """
     from scipy.stats import pearsonr
-    from matplotlib.gridspec import GridSpec
 
-    # Panel (a): capability proxies + outcome benchmarks (unchanged logic)
-    keys_a = ["arena_overall", "mmlu_pro", "arena_cw", "eq_bench_cw",
-              "mazur_cw_v2", "hivemind_diversity", "noveltybench_utility",
-              "liveideabench"]
-    labels_a = ["Arena Ovr", "MMLU-Pro",
-                "Arena CW", "EqBench CW", "Mazur V2",
-                "HiveMind", "NoveltyBench",
-                "LiveIdea"]
-    na = len(keys_a)
-    mat_a = np.full((na, na), np.nan)
-    for i, ki in enumerate(keys_a):
-        for j, kj in enumerate(keys_a):
+    keys = ["arena_overall", "mmlu_pro", "arena_cw", "eq_bench_cw",
+            "mazur_cw_v2", "hivemind_diversity", "noveltybench_utility",
+            "liveideabench"]
+    labels = ["Arena Ovr", "MMLU-Pro",
+              "Arena CW", "EqBench CW", "Mazur V2",
+              "HiveMind", "NoveltyBench", "LiveIdea"]
+    n = len(keys)
+    mat = np.full((n, n), np.nan)
+    for i, ki in enumerate(keys):
+        for j, kj in enumerate(keys):
             xs, ys = [], []
             for _, v in benchmarks.items():
                 if ki in v and kj in v:
-                    xs.append(v[ki])
-                    ys.append(v[kj])
+                    xs.append(v[ki]); ys.append(v[kj])
             if len(xs) >= 3:
                 r, _ = pearsonr(xs, ys)
-                mat_a[i, j] = r
+                mat[i, j] = r
 
-    # Panel (b): inter-test correlations with composite (overall z-score)
+    fig, ax = plt.subplots(figsize=(10.0, 6.5))
+    im = _draw_corr_triangle(ax, mat, labels, rotation=20,
+                              label_fs=14, cell_fs=14)
+    cbar = fig.colorbar(im, ax=ax, shrink=0.85, pad=0.03)
+    cbar.set_label("Pearson $r$", fontsize=14)
+    cbar.ax.tick_params(labelsize=12)
+
+    for out_dir in [FIGS_DIR, PAPER_FIGS_DIR]:
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out = out_dir / "fig_inter_benchmark.pdf"
+        plt.savefig(out, bbox_inches="tight")
+        plt.savefig(out.with_suffix(".png"), bbox_inches="tight")
+        print(f"Saved {out}")
+    plt.close()
+
+
+def fig_inter_test():
+    """Inter-test Pearson correlation triangle (one-column figure).
+
+    Composite z-scores of DAT, CDAT, CDAT-N, CDAT-A, PACE across GloVe,
+    FastText, and SBERT. Saved as fig_inter_test.pdf.
+    """
+    from scipy.stats import pearsonr
+
     composite = load_composite_scores()
     tasks = ["dat", "cdat", "cdat_novelty", "cdat_appropriateness", "pace"]
-    labels_b = ["DAT", "CDAT", "CDAT-N", "CDAT-A", "PACE"]
-    nb = len(tasks)
-    mat_b = np.full((nb, nb), np.nan)
+    labels = ["DAT", "CDAT", "CDAT-N", "CDAT-A", "PACE"]
+    n = len(tasks)
+    mat = np.full((n, n), np.nan)
     for i, ti in enumerate(tasks):
         for j, tj in enumerate(tasks):
             xs, ys = [], []
             for _, sc in composite.items():
-                vi = sc.get(ti)
-                vj = sc.get(tj)
+                vi = sc.get(ti); vj = sc.get(tj)
                 if vi is None or vj is None:
                     continue
                 if isinstance(vi, float) and np.isnan(vi):
@@ -913,65 +962,18 @@ def fig_benchmark_correlations(benchmarks):
                 xs.append(vi); ys.append(vj)
             if len(xs) >= 3:
                 r, _ = pearsonr(xs, ys)
-                mat_b[i, j] = r
+                mat[i, j] = r
 
-    def draw_triangle(ax, mat, labels, rotation=35):
-        n = len(labels)
-        # Mask the upper triangle so imshow simply doesn't draw those cells
-        # (avoids the faint anti-aliased edge that white-rectangle overlays
-        # leave at the top and right of the bounding square).
-        upper_mask = ~np.tri(n, dtype=bool)
-        display = np.ma.masked_array(np.where(np.isnan(mat), 0.0, mat),
-                                     mask=upper_mask)
-        im = ax.imshow(display, vmin=-1, vmax=1,
-                       cmap="RdBu_r", aspect="auto")
-        ax.set_xticks(range(n))
-        ax.set_yticks(range(n))
-        ax.set_xticklabels(labels, rotation=rotation,
-                           ha=("center" if rotation == 0 else "right"),
-                           fontsize=11)
-        ax.set_yticklabels(labels, fontsize=11)
-        for i in range(n):
-            for j in range(n):
-                if j > i:
-                    continue
-                v = mat[i, j]
-                if np.isnan(v):
-                    continue
-                txt = "—" if i == j else f"{v:+.2f}"
-                color = "white" if abs(v) > 0.6 else "black"
-                ax.text(j, i, txt, ha="center", va="center",
-                        fontsize=11.5, color=color, zorder=3)
-        ax.tick_params(axis="both", which="major", length=0)
-        for s in ax.spines.values():
-            s.set_visible(False)
-        return im
-
-    # Two stacked panels. Panel (a) spans the full width; panel (b) is
-    # half-width so its cells stay the same visual size as panel (a).
-    fig = plt.figure(figsize=(7.0, 9.5))
-    gs = GridSpec(2, 2, figure=fig,
-                   height_ratios=[na, nb], width_ratios=[nb, na - nb],
-                   hspace=0.25, wspace=0.0)
-    ax1 = fig.add_subplot(gs[0, :])
-    ax2 = fig.add_subplot(gs[1, 0])
-
-    im1 = draw_triangle(ax1, mat_a, labels_a, rotation=20)
-    draw_triangle(ax2, mat_b, labels_b, rotation=20)
-
-    ax1.set_title("(a) Inter-benchmark correlations",
-                   fontsize=12, loc="left", pad=4)
-    ax2.set_title("(b) Inter-test correlations",
-                   fontsize=12, loc="left", pad=4)
-
-    cbar = fig.colorbar(im1, ax=[ax1, ax2], shrink=0.55, pad=0.04,
-                         location="right")
-    cbar.set_label("Pearson $r$", fontsize=11)
+    fig, ax = plt.subplots(figsize=(5.0, 4.5))
+    im = _draw_corr_triangle(ax, mat, labels, rotation=20,
+                              label_fs=12, cell_fs=12)
+    cbar = fig.colorbar(im, ax=ax, shrink=0.85, pad=0.04)
+    cbar.set_label("Pearson $r$", fontsize=12)
     cbar.ax.tick_params(labelsize=10)
 
     for out_dir in [FIGS_DIR, PAPER_FIGS_DIR]:
         out_dir.mkdir(parents=True, exist_ok=True)
-        out = out_dir / "fig_benchmark_correlations.pdf"
+        out = out_dir / "fig_inter_test.pdf"
         plt.savefig(out, bbox_inches="tight")
         plt.savefig(out.with_suffix(".png"), bbox_inches="tight")
         print(f"Saved {out}")
@@ -2502,7 +2504,8 @@ def main():
     fig4_cdat_by_temperature(corr)
     fig_correlation_summary_heatmap(corr)
     fig_inter_metric_triangle(corr)
-    fig_benchmark_correlations(benchmarks)
+    fig_inter_benchmark(benchmarks)
+    fig_inter_test()
     fig_scatter_by_embedding(benchmarks)
     fig_validity_specificity(benchmarks)
     fig_headline_combined()
