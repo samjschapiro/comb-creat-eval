@@ -31,8 +31,8 @@ OPENROUTER_KEY_TO_AA_NAME: dict[str, str | None] = {
     "anthropic_claude-sonnet-4-5": "Claude 4.5 Sonnet (Non-reasoning)",
     "anthropic_claude-sonnet-4": "Claude 4 Sonnet (Non-reasoning)",
     "anthropic_claude-haiku-4-5": "Claude 4.5 Haiku (Non-reasoning)",
-    "anthropic_claude-3-5-haiku": None,  # AA may lack this
-    "anthropic_claude-3-haiku": None,
+    "anthropic_claude-3-5-haiku": "Claude 3.5 Haiku",
+    "anthropic_claude-3-haiku": None,  # AA value is null in current snapshot
     # --- OpenAI ---
     "openai_gpt-5-4": None,  # GPT-5.4 not on AA (they have 5.2)
     "openai_gpt-5-4-mini": None,
@@ -58,12 +58,13 @@ OPENROUTER_KEY_TO_AA_NAME: dict[str, str | None] = {
     "google_gemma-2-27b-it": None,
     "google_gemma-2-9b-it": None,
     # --- Meta ---
-    "meta-llama_llama-4-maverick": None,  # may not be on AA
+    "meta-llama_llama-4-maverick": "Llama 4 Maverick",
     "meta-llama_llama-4-scout": None,
     "meta-llama_llama-3-3-70b-instruct": None,  # AA has 3.3 Nemotron, not plain
     "meta-llama_llama-3-1-70b-instruct": "Llama 3.1 Instruct 70B",
     "meta-llama_llama-3-1-8b-instruct": None,  # not in scraped list
     "meta-llama_llama-3-2-3b-instruct": "Llama 3.2 Instruct 3B",
+    "meta-llama_llama-3-2-1b-instruct": "Llama 3.2 Instruct 1B",
     # --- DeepSeek ---
     "deepseek_deepseek-r1": "DeepSeek R1 (Jan '25)",
     "deepseek_deepseek-chat-v3-0324": "DeepSeek V3 0324",
