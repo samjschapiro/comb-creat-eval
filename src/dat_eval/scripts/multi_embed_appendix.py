@@ -282,12 +282,24 @@ def rescore_model(model_dir: Path, emb: Embedder, glove_vocab: GloVeEmbeddings) 
 # Correlation helpers
 # ---------------------------------------------------------------------------
 def joint_partial_r(target, predictor, controls):
-    """Joint partial Pearson r controlling for a stack of controls."""
+    """Joint partial Pearson r controlling for a stack of controls.
+
+    Returns (r, p) where p uses df = n - 2 - k for k = len(controls), the
+    correct partial-correlation degrees of freedom. (scipy.stats.pearsonr
+    on residuals would use df = n - 2 and slightly overstate significance.)
+    """
     X = np.column_stack([np.ones_like(target)] + [np.asarray(c) for c in controls])
     bt, *_ = np.linalg.lstsq(X, target, rcond=None)
     bp, *_ = np.linalg.lstsq(X, predictor, rcond=None)
     rt, rp = target - X @ bt, predictor - X @ bp
-    return pearsonr(rt, rp)
+    r = float(pearsonr(rt, rp).statistic)
+    n, k = len(target), len(controls)
+    df = n - 2 - k
+    if df <= 0 or not (-1.0 < r < 1.0):
+        return r, float("nan")
+    from scipy.stats import t as _t
+    tval = r * np.sqrt(df / (1.0 - r * r))
+    return r, float(2.0 * _t.sf(abs(tval), df))
 
 
 def joint_partial_rho(target, predictor, controls):

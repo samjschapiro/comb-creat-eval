@@ -178,20 +178,36 @@ def pearson_corr(x: list[float], y: list[float]) -> tuple[float, float]:
     return float(result.statistic), float(result.pvalue)
 
 
+def _partial_p(r: float, n: int, k: int) -> float:
+    """Two-sided p-value for a partial Pearson correlation with k controls.
+
+    Uses t = r·sqrt((n - 2 - k)/(1 - r^2)) ~ t_{n - 2 - k}. This is the
+    same form scipy.stats.pearsonr uses but with the residual-correlation
+    df reduced by k, the number of variables regressed out.
+    """
+    df = n - 2 - k
+    if df <= 0 or not (-1.0 < r < 1.0):
+        return float("nan")
+    t = r * np.sqrt(df / (1.0 - r * r))
+    return float(2.0 * stats.t.sf(abs(t), df))
+
+
 def partial_pearson(
     target: np.ndarray,
     predictor: np.ndarray,
     control: np.ndarray,
 ) -> tuple[float, float]:
     """Pearson partial correlation — regress out linear effect of control
-    from target and predictor, then compute Pearson on the residuals."""
+    from target and predictor, then compute Pearson on the residuals.
+    P-value uses df = n - 3 to account for the regressed-out control."""
     slope_t, intercept_t, _, _, _ = stats.linregress(control, target)
     resid_target = target - (slope_t * control + intercept_t)
 
     slope_p, intercept_p, _, _, _ = stats.linregress(control, predictor)
     resid_predictor = predictor - (slope_p * control + intercept_p)
 
-    return pearson_corr(resid_target.tolist(), resid_predictor.tolist())
+    r, _ = pearson_corr(resid_target.tolist(), resid_predictor.tolist())
+    return r, _partial_p(r, len(target), k=1)
 
 
 def partial_spearman(
@@ -241,14 +257,16 @@ def partial_pearson_multi(
     """Pearson partial correlation controlling for multiple variables.
 
     Regresses target and predictor each on the stack of control variables
-    via least squares, then Pearson-correlates the residuals.
+    via least squares, then Pearson-correlates the residuals. P-value uses
+    df = n - 2 - k where k is the number of controls.
     """
     X = np.column_stack([np.ones(len(target))] + [np.asarray(c) for c in controls])
     beta_t, *_ = np.linalg.lstsq(X, target, rcond=None)
     resid_target = target - X @ beta_t
     beta_p, *_ = np.linalg.lstsq(X, predictor, rcond=None)
     resid_predictor = predictor - X @ beta_p
-    return pearson_corr(resid_target.tolist(), resid_predictor.tolist())
+    r, _ = pearson_corr(resid_target.tolist(), resid_predictor.tolist())
+    return r, _partial_p(r, len(target), k=len(controls))
 
 
 def partial_spearman_multi(
