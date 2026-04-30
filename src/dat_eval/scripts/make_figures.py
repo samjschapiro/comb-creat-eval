@@ -876,12 +876,10 @@ def fig_benchmark_correlations(benchmarks):
     keys_a = ["arena_overall", "mmlu_pro", "arena_cw", "eq_bench_cw",
               "mazur_cw_v2", "hivemind_diversity", "noveltybench_utility",
               "liveideabench"]
-    # Prefix tags: [G] general capability, [CW] creative writing,
-    # [DT] divergent thinking, [SI] scientific ideation.
-    labels_a = ["[G] Arena Ovr", "[G] MMLU-Pro",
-                "[CW] Arena CW", "[CW] EqBench CW", "[CW] Mazur V2",
-                "[DT] HiveMind", "[DT] NoveltyBench",
-                "[SI] LiveIdea"]
+    labels_a = ["Arena Ovr", "MMLU-Pro",
+                "Arena CW", "EqBench CW", "Mazur V2",
+                "HiveMind", "NoveltyBench",
+                "LiveIdea"]
     na = len(keys_a)
     mat_a = np.full((na, na), np.nan)
     for i, ki in enumerate(keys_a):
@@ -927,11 +925,11 @@ def fig_benchmark_correlations(benchmarks):
         display = np.ma.masked_array(np.where(np.isnan(mat), 0.0, mat),
                                      mask=upper_mask)
         im = ax.imshow(display, vmin=-1, vmax=1,
-                       cmap=cmc.broc, aspect="equal")
+                       cmap="RdBu_r", aspect="equal")
         ax.set_xticks(range(n))
         ax.set_yticks(range(n))
-        ax.set_xticklabels(labels, rotation=35, ha="right", fontsize=8)
-        ax.set_yticklabels(labels, fontsize=8)
+        ax.set_xticklabels(labels, rotation=35, ha="right", fontsize=11)
+        ax.set_yticklabels(labels, fontsize=11)
         for i in range(n):
             for j in range(n):
                 if j > i:
@@ -942,7 +940,7 @@ def fig_benchmark_correlations(benchmarks):
                 txt = "—" if i == j else f"{v:+.2f}"
                 color = "white" if abs(v) > 0.6 else "black"
                 ax.text(j, i, txt, ha="center", va="center",
-                        fontsize=6.0, color=color, zorder=3)
+                        fontsize=8.5, color=color, zorder=3)
         ax.tick_params(axis="both", which="major", length=0)
         for s in ax.spines.values():
             s.set_visible(False)
@@ -950,7 +948,7 @@ def fig_benchmark_correlations(benchmarks):
 
     # Two stacked panels. Panel (a) spans the full width; panel (b) is
     # half-width so its cells stay the same visual size as panel (a).
-    fig = plt.figure(figsize=(3.6, 5.4))
+    fig = plt.figure(figsize=(5.2, 7.6))
     gs = GridSpec(2, 2, figure=fig,
                    height_ratios=[na, nb], width_ratios=[nb, na - nb],
                    hspace=0.55, wspace=0.0)
@@ -961,14 +959,14 @@ def fig_benchmark_correlations(benchmarks):
     draw_triangle(ax2, mat_b, labels_b)
 
     ax1.set_title("(a) Inter-benchmark correlations",
-                   fontsize=8.5, loc="left", pad=4)
+                   fontsize=12, loc="left", pad=4)
     ax2.set_title("(b) Inter-test correlations",
-                   fontsize=8.5, loc="left", pad=4)
+                   fontsize=12, loc="left", pad=4)
 
     cbar = fig.colorbar(im1, ax=[ax1, ax2], shrink=0.55, pad=0.04,
                          location="right")
-    cbar.set_label("Pearson $r$", fontsize=8)
-    cbar.ax.tick_params(labelsize=7)
+    cbar.set_label("Pearson $r$", fontsize=11)
+    cbar.ax.tick_params(labelsize=10)
 
     for out_dir in [FIGS_DIR, PAPER_FIGS_DIR]:
         out_dir.mkdir(parents=True, exist_ok=True)
