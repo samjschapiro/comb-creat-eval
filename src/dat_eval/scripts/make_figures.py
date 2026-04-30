@@ -25,13 +25,12 @@ from cmcrameri import cm as cmc
 
 # --- Camera-ready styling ---
 mpl.rcParams.update({
-    # Clean sans-serif — Helvetica is the scientific-publication standard.
-    "font.family": "sans-serif",
-    "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"],
+    "font.family": "serif",
+    "font.serif": ["Times New Roman", "Times", "DejaVu Serif"],
     "mathtext.fontset": "custom",
-    "mathtext.rm": "Helvetica",
-    "mathtext.it": "Helvetica:italic",
-    "mathtext.bf": "Helvetica:bold",
+    "mathtext.rm": "Times New Roman",
+    "mathtext.it": "Times New Roman:italic",
+    "mathtext.bf": "Times New Roman:bold",
     "font.size": 10,
     "axes.labelsize": 10,
     "axes.titlesize": 11,
@@ -916,7 +915,7 @@ def fig_benchmark_correlations(benchmarks):
                 r, _ = pearsonr(xs, ys)
                 mat_b[i, j] = r
 
-    def draw_triangle(ax, mat, labels):
+    def draw_triangle(ax, mat, labels, rotation=35):
         n = len(labels)
         # Mask the upper triangle so imshow simply doesn't draw those cells
         # (avoids the faint anti-aliased edge that white-rectangle overlays
@@ -925,10 +924,12 @@ def fig_benchmark_correlations(benchmarks):
         display = np.ma.masked_array(np.where(np.isnan(mat), 0.0, mat),
                                      mask=upper_mask)
         im = ax.imshow(display, vmin=-1, vmax=1,
-                       cmap="RdBu_r", aspect="equal")
+                       cmap="RdBu_r", aspect="auto")
         ax.set_xticks(range(n))
         ax.set_yticks(range(n))
-        ax.set_xticklabels(labels, rotation=35, ha="right", fontsize=11)
+        ax.set_xticklabels(labels, rotation=rotation,
+                           ha=("center" if rotation == 0 else "right"),
+                           fontsize=11)
         ax.set_yticklabels(labels, fontsize=11)
         for i in range(n):
             for j in range(n):
@@ -940,7 +941,7 @@ def fig_benchmark_correlations(benchmarks):
                 txt = "—" if i == j else f"{v:+.2f}"
                 color = "white" if abs(v) > 0.6 else "black"
                 ax.text(j, i, txt, ha="center", va="center",
-                        fontsize=8.5, color=color, zorder=3)
+                        fontsize=11.5, color=color, zorder=3)
         ax.tick_params(axis="both", which="major", length=0)
         for s in ax.spines.values():
             s.set_visible(False)
@@ -948,15 +949,15 @@ def fig_benchmark_correlations(benchmarks):
 
     # Two stacked panels. Panel (a) spans the full width; panel (b) is
     # half-width so its cells stay the same visual size as panel (a).
-    fig = plt.figure(figsize=(5.2, 7.6))
+    fig = plt.figure(figsize=(7.0, 9.5))
     gs = GridSpec(2, 2, figure=fig,
                    height_ratios=[na, nb], width_ratios=[nb, na - nb],
-                   hspace=0.55, wspace=0.0)
+                   hspace=0.25, wspace=0.0)
     ax1 = fig.add_subplot(gs[0, :])
     ax2 = fig.add_subplot(gs[1, 0])
 
-    im1 = draw_triangle(ax1, mat_a, labels_a)
-    draw_triangle(ax2, mat_b, labels_b)
+    im1 = draw_triangle(ax1, mat_a, labels_a, rotation=20)
+    draw_triangle(ax2, mat_b, labels_b, rotation=20)
 
     ax1.set_title("(a) Inter-benchmark correlations",
                    fontsize=12, loc="left", pad=4)
