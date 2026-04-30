@@ -862,13 +862,13 @@ def fig_correlation_summary_heatmap(corr):
 
 
 def _draw_corr_triangle(ax, mat, labels, rotation=20, label_fs=14,
-                         cell_fs=14):
+                         cell_fs=14, aspect="auto"):
     """Lower-triangular Pearson correlation heatmap with cell annotations."""
     n = len(labels)
     upper_mask = ~np.tri(n, dtype=bool)
     display = np.ma.masked_array(np.where(np.isnan(mat), 0.0, mat),
                                  mask=upper_mask)
-    im = ax.imshow(display, vmin=-1, vmax=1, cmap="RdBu_r", aspect="auto")
+    im = ax.imshow(display, vmin=-1, vmax=1, cmap="RdBu_r", aspect=aspect)
     ax.set_xticks(range(n))
     ax.set_yticks(range(n))
     ax.set_xticklabels(labels, rotation=rotation,
@@ -892,62 +892,39 @@ def _draw_corr_triangle(ax, mat, labels, rotation=20, label_fs=14,
     return im
 
 
-def fig_inter_benchmark(benchmarks):
-    """Inter-benchmark Pearson correlation triangle (two-column figure).
+def fig_benchmark_correlations(benchmarks):
+    """Side-by-side Pearson correlation triangles (two-column figure).
 
-    Capability proxies + outcome benchmarks across general capability,
-    creative writing, divergent thinking, and scientific ideation. Saved
-    as fig_inter_benchmark.pdf.
+      (a) Inter-benchmark: 8x8 over capability proxies + outcome benchmarks.
+      (b) Inter-test: 5x5 over DAT, CDAT, CDAT-N, CDAT-A, PACE composite
+          z-scores across GloVe, FastText, and SBERT.
     """
     from scipy.stats import pearsonr
+    from matplotlib.gridspec import GridSpec
 
-    keys = ["arena_overall", "mmlu_pro", "arena_cw", "eq_bench_cw",
-            "mazur_cw_v2", "hivemind_diversity", "noveltybench_utility",
-            "liveideabench"]
-    labels = ["Arena Ovr", "MMLU-Pro",
-              "Arena CW", "EqBench CW", "Mazur V2",
-              "HiveMind", "NoveltyBench", "LiveIdea"]
-    n = len(keys)
-    mat = np.full((n, n), np.nan)
-    for i, ki in enumerate(keys):
-        for j, kj in enumerate(keys):
+    keys_a = ["arena_overall", "mmlu_pro", "arena_cw", "eq_bench_cw",
+              "mazur_cw_v2", "hivemind_diversity", "noveltybench_utility",
+              "liveideabench"]
+    labels_a = ["Arena Ovr", "MMLU-Pro",
+                "Arena CW", "EqBench CW", "Mazur V2",
+                "HiveMind", "NoveltyBench", "LiveIdea"]
+    na = len(keys_a)
+    mat_a = np.full((na, na), np.nan)
+    for i, ki in enumerate(keys_a):
+        for j, kj in enumerate(keys_a):
             xs, ys = [], []
             for _, v in benchmarks.items():
                 if ki in v and kj in v:
                     xs.append(v[ki]); ys.append(v[kj])
             if len(xs) >= 3:
                 r, _ = pearsonr(xs, ys)
-                mat[i, j] = r
-
-    fig, ax = plt.subplots(figsize=(10.0, 6.5))
-    im = _draw_corr_triangle(ax, mat, labels, rotation=20,
-                              label_fs=14, cell_fs=14)
-    cbar = fig.colorbar(im, ax=ax, shrink=0.85, pad=0.03)
-    cbar.set_label("Pearson $r$", fontsize=14)
-    cbar.ax.tick_params(labelsize=12)
-
-    for out_dir in [FIGS_DIR, PAPER_FIGS_DIR]:
-        out_dir.mkdir(parents=True, exist_ok=True)
-        out = out_dir / "fig_inter_benchmark.pdf"
-        plt.savefig(out, bbox_inches="tight")
-        plt.savefig(out.with_suffix(".png"), bbox_inches="tight")
-        print(f"Saved {out}")
-    plt.close()
-
-
-def fig_inter_test():
-    """Inter-test Pearson correlation triangle (one-column figure).
-
-    Composite z-scores of DAT, CDAT, CDAT-N, CDAT-A, PACE across GloVe,
-    FastText, and SBERT. Saved as fig_inter_test.pdf.
-    """
-    from scipy.stats import pearsonr
+                mat_a[i, j] = r
 
     composite = load_composite_scores()
     tasks = ["dat", "cdat", "cdat_novelty", "cdat_appropriateness", "pace"]
-    labels = ["DAT", "CDAT", "CDAT-N", "CDAT-A", "PACE"]
-    n = len(tasks)
-    mat = np.full((n, n), np.nan)
+    labels_b = ["DAT", "CDAT", "CDAT-N", "CDAT-A", "PACE"]
+    nb = len(tasks)
+    mat_b = np.full((nb, nb), np.nan)
     for i, ti in enumerate(tasks):
         for j, tj in enumerate(tasks):
             xs, ys = [], []
@@ -962,18 +939,39 @@ def fig_inter_test():
                 xs.append(vi); ys.append(vj)
             if len(xs) >= 3:
                 r, _ = pearsonr(xs, ys)
-                mat[i, j] = r
+                mat_b[i, j] = r
 
-    fig, ax = plt.subplots(figsize=(5.0, 4.5))
-    im = _draw_corr_triangle(ax, mat, labels, rotation=20,
-                              label_fs=12, cell_fs=12)
-    cbar = fig.colorbar(im, ax=ax, shrink=0.85, pad=0.04)
-    cbar.set_label("Pearson $r$", fontsize=12)
-    cbar.ax.tick_params(labelsize=10)
+    fig = plt.figure(figsize=(15.0, 6.5))
+    gs = GridSpec(1, 2, figure=fig, width_ratios=[na, nb], wspace=0.20)
+    ax1 = fig.add_subplot(gs[0, 0])
+    ax2 = fig.add_subplot(gs[0, 1])
+
+    im = _draw_corr_triangle(ax1, mat_a, labels_a, rotation=20,
+                              label_fs=14, cell_fs=14)
+    _draw_corr_triangle(ax2, mat_b, labels_b, rotation=20,
+                        label_fs=14, cell_fs=14, aspect="auto")
+
+    # Resize panel (b) so each cell matches panel (a)'s physical size
+    # (no vertical stretching), anchored to the bottom of the gridspec
+    # slot so heatmap bottoms align with panel (a)'s.
+    fig.canvas.draw()
+    pos1 = ax1.get_position()
+    cell_size = pos1.height / na
+    pos2 = ax2.get_position()
+    ax2.set_position([pos2.x0, pos1.y0, pos2.width, cell_size * nb])
+
+    ax1.set_title("(a) Inter-benchmark correlations",
+                   fontsize=15, loc="left", pad=6)
+    ax2.set_title("(b) Inter-test correlations",
+                   fontsize=15, loc="left", pad=6)
+
+    cbar = fig.colorbar(im, ax=[ax1, ax2], shrink=0.7, pad=0.03)
+    cbar.set_label("Pearson $r$", fontsize=14)
+    cbar.ax.tick_params(labelsize=12)
 
     for out_dir in [FIGS_DIR, PAPER_FIGS_DIR]:
         out_dir.mkdir(parents=True, exist_ok=True)
-        out = out_dir / "fig_inter_test.pdf"
+        out = out_dir / "fig_benchmark_correlations.pdf"
         plt.savefig(out, bbox_inches="tight")
         plt.savefig(out.with_suffix(".png"), bbox_inches="tight")
         print(f"Saved {out}")
@@ -2504,8 +2502,7 @@ def main():
     fig4_cdat_by_temperature(corr)
     fig_correlation_summary_heatmap(corr)
     fig_inter_metric_triangle(corr)
-    fig_inter_benchmark(benchmarks)
-    fig_inter_test()
+    fig_benchmark_correlations(benchmarks)
     fig_scatter_by_embedding(benchmarks)
     fig_validity_specificity(benchmarks)
     fig_headline_combined()
