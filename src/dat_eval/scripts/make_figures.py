@@ -2047,15 +2047,15 @@ def fig_headline_combined():
 
     # Row-level subplot titles (above each row, centred on the figure).
     fig.text(0.5, 0.975, "(a) Prediction by construct",
-             ha="center", va="bottom", fontsize=18.0, fontweight="bold")
+             ha="center", va="bottom", fontsize=22.0, fontweight="bold")
     fig.text(0.5, 0.485, "(b) Prediction by benchmark",
-             ha="center", va="bottom", fontsize=18.0, fontweight="bold")
+             ha="center", va="bottom", fontsize=22.0, fontweight="bold")
 
     # ---------- TOP ROW ----------
-    title_fs_top, axis_fs_top, tick_fs_top, annotate_fs_top = 16.0, 14.5, 12.5, 9.0
-    s_ind, s_overall, s_star = 38, 170, 40
-    overall_edge_lw, ind_sig_lw, ind_nosig_lw = 1.3, 0.9, 0.4
-    star_off_pts = 6
+    title_fs_top, axis_fs_top, tick_fs_top, annotate_fs_top = 19.0, 17.0, 14.0, 11.0
+    s_ind, s_overall, s_star = 50, 230, 55
+    overall_edge_lw, ind_sig_lw, ind_nosig_lw = 1.4, 1.0, 0.4
+    star_off_pts = 7
 
     def draw_top(ax, data, benchmarks, title):
         ax.add_patch(Rectangle(
@@ -2067,10 +2067,27 @@ def fig_headline_combined():
         ax.axvline(0, color=C_GREY, linewidth=0.5, linestyle=":", alpha=0.7, zorder=0)
         v_grid = np.linspace(-1, 1, 400)
         R_list = panel_R.get(title, [])
+        ceil_y = None
         if R_list:
-            ax.plot(v_grid, _panel_avg_ceiling(R_list, v_grid),
-                    color="black", linewidth=1.0, linestyle="-",
-                    alpha=0.85, zorder=1)
+            ceil_y = _panel_avg_ceiling(R_list, v_grid)
+            ax.plot(v_grid, ceil_y,
+                    color="black", linewidth=1.6, linestyle="-",
+                    alpha=0.9, zorder=1)
+            # Mark the point on the ceiling that maximises v + r(X,Y|g).
+            opt_idx = int(np.argmax(v_grid + ceil_y))
+            v_opt, s_opt = v_grid[opt_idx], ceil_y[opt_idx]
+            ax.scatter(v_opt, s_opt, marker="D", s=70,
+                       facecolor="black", edgecolor="black",
+                       linewidth=0.8, zorder=7)
+            ax.annotate(
+                f"$(v^*, s^*)=({v_opt:+.2f}, {s_opt:+.2f})$",
+                xy=(v_opt, s_opt),
+                xytext=(-10, -6), textcoords="offset points",
+                fontsize=15.0, ha="right", va="top", color="black",
+                zorder=8,
+                bbox=dict(facecolor="white", edgecolor="none",
+                          pad=1.5, alpha=0.85),
+            )
         star_trans = mtransforms.offset_copy(
             ax.transData, fig=fig,
             x=star_off_pts, y=star_off_pts, units="points",
@@ -2118,15 +2135,22 @@ def fig_headline_combined():
                 all_vals.append(v); all_specs.append(s)
             all_vals.append(float(np.mean([v for v, _, *_ in pts])))
             all_specs.append(float(np.mean([s for _, s, *_ in pts])))
+    # Include the per-panel optima so the diamond markers aren't clipped.
+    v_grid_full = np.linspace(-1, 1, 400)
+    opt_xs, opt_ys = [], []
+    for Rs in panel_R.values():
+        if Rs:
+            ceil = _panel_avg_ceiling(Rs, v_grid_full)
+            j = int(np.argmax(v_grid_full + ceil))
+            opt_xs.append(v_grid_full[j])
+            opt_ys.append(ceil[j])
     xpad = 0.12 * (max(all_vals) - min(all_vals))
     ypad = 0.10 * (max(all_specs) - min(all_specs))
     xlim_lo = min(all_vals) - xpad
-    xlim_hi = max(all_vals) + xpad
-    v_for_ceil = np.linspace(xlim_lo, xlim_hi, 200)
-    ceil_maxes = [_panel_avg_ceiling(Rs, v_for_ceil).max()
-                   for Rs in panel_R.values() if Rs]
+    xlim_hi = max(max(all_vals), max(opt_xs) if opt_xs else 0) + xpad
     ymax_data = max(all_specs) + ypad
-    ymax_top = max(ymax_data, (max(ceil_maxes) + 0.04) if ceil_maxes else ymax_data)
+    ymax_top = max(ymax_data,
+                   (max(opt_ys) + 0.06) if opt_ys else ymax_data)
     ymin_top = min(all_specs) - ypad
     ax_top_l.set_xlim(xlim_lo, xlim_hi)
     ax_top_l.set_ylim(ymin_top, ymax_top)
@@ -2135,35 +2159,41 @@ def fig_headline_combined():
 
     # ---------- BOTTOM ROW ----------
     v_grid_full = np.linspace(-1, 1, 400)
-    title_fs_bot = 14.0
-    for ax, (bench_name, c, pts) in zip(axes_bot, bottom_panels):
+    title_fs_bot = 16.5
+    for i, (ax, (bench_name, c, pts)) in enumerate(zip(axes_bot, bottom_panels)):
         root1mc2 = np.sqrt(max(0.0, 1 - c**2))
         root1mv2 = np.sqrt(np.clip(1 - v_grid_full**2, 0, None))
         upper = v_grid_full * root1mc2 + abs(c) * root1mv2
         lower = v_grid_full * root1mc2 - abs(c) * root1mv2
         ax.fill_between(v_grid_full, lower, upper,
                          color="#d0d0d0", alpha=0.35, zorder=0)
-        ax.plot(v_grid_full, upper, color="black", linewidth=1.0,
+        ax.plot(v_grid_full, upper, color="black", linewidth=1.6,
                 linestyle="-", zorder=1)
-        ax.plot(v_grid_full, lower, color="black", linewidth=0.6,
+        ax.plot(v_grid_full, lower, color="black", linewidth=0.7,
                 linestyle=":", alpha=0.5, zorder=1)
         ax.axhline(0, color=C_GREY, linewidth=0.5, linestyle=":",
                     alpha=0.7, zorder=0)
         ax.axvline(0, color=C_GREY, linewidth=0.5, linestyle=":",
                     alpha=0.7, zorder=0)
+        # Mark the point on the upper ceiling that maximises v + s.
+        opt_idx = int(np.argmax(v_grid_full + upper))
+        v_opt, s_opt = v_grid_full[opt_idx], upper[opt_idx]
+        ax.scatter(v_opt, s_opt, marker="D", s=55,
+                   facecolor="black", edgecolor="black",
+                   linewidth=0.8, zorder=7)
         for test in test_order:
             pt = pts.get(test)
             if pt is None:
                 continue
             v, spec = pt
-            ax.scatter(v, spec, marker="o", s=55, c=[test_colors[test]],
-                       edgecolor="black", linewidth=0.8, zorder=3, alpha=0.95)
+            ax.scatter(v, spec, marker="o", s=85, c=[test_colors[test]],
+                       edgecolor="black", linewidth=0.9, zorder=3, alpha=0.95)
         ax.set_title(f"{bench_name}  ($R = {c:+.2f}$)", fontsize=title_fs_bot)
-        ax.tick_params(axis="both", labelsize=12.5)
-        ax.set_xlabel(r"Validity  ($r$)", fontsize=14.5)
+        ax.tick_params(axis="both", labelsize=14.0)
+        ax.set_xlabel(r"Validity  ($r$)", fontsize=17.0)
     axes_bot[0].set_xlim(-1.02, 1.02)
     axes_bot[0].set_ylim(-1.05, 1.05)
-    axes_bot[0].set_ylabel(r"Specificity  ($r \mid g$)", fontsize=14.5)
+    axes_bot[0].set_ylabel(r"Specificity  ($r \mid g$)", fontsize=17.0)
     for ax in axes_bot[1:]:
         plt.setp(ax.get_yticklabels(), visible=False)
 
@@ -2176,11 +2206,14 @@ def fig_headline_combined():
     ]
     ceiling_handle = Line2D([], [], color="black", linewidth=1.2,
                              linestyle="-", label="theoretical ceiling")
+    optimum_handle = Line2D([], [], marker="D", linestyle="none",
+                             markerfacecolor="black", markeredgecolor="black",
+                             markersize=8, label=r"$(v^*, s^*) = \arg\max\,(v + s)$")
     fig.legend(
-        handles=[*test_handles, ceiling_handle],
+        handles=[*test_handles, ceiling_handle, optimum_handle],
         loc="lower center", bbox_to_anchor=(0.5, 0.005),
-        ncol=6, frameon=False, fontsize=18,
-        handletextpad=0.4, columnspacing=2.0,
+        ncol=7, frameon=False, fontsize=20,
+        handletextpad=0.5, columnspacing=2.0,
     )
 
     for out_dir in [FIGS_DIR, PAPER_FIGS_DIR]:
