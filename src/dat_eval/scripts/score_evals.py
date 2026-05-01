@@ -197,16 +197,15 @@ def partial_pearson(
     predictor: np.ndarray,
     control: np.ndarray,
 ) -> tuple[float, float]:
-    """Pearson partial correlation — regress out linear effect of control
-    from target and predictor, then compute Pearson on the residuals.
-    P-value uses df = n - 3 to account for the regressed-out control."""
+    """Semi-partial Pearson correlation r(predictor, target | control)
+    := r(predictor, target - control_predicted). The control's linear
+    effect is removed from the target only; the predictor is left raw.
+    This matches the paper's specificity definition. P-value uses
+    df = n - 2 - k where k = 1 (the single control)."""
     slope_t, intercept_t, _, _, _ = stats.linregress(control, target)
     resid_target = target - (slope_t * control + intercept_t)
 
-    slope_p, intercept_p, _, _, _ = stats.linregress(control, predictor)
-    resid_predictor = predictor - (slope_p * control + intercept_p)
-
-    r, _ = pearson_corr(resid_target.tolist(), resid_predictor.tolist())
+    r, _ = pearson_corr(predictor.tolist(), resid_target.tolist())
     return r, _partial_p(r, len(target), k=1)
 
 
@@ -254,18 +253,17 @@ def partial_pearson_multi(
     predictor: np.ndarray,
     controls: list[np.ndarray],
 ) -> tuple[float, float]:
-    """Pearson partial correlation controlling for multiple variables.
-
-    Regresses target and predictor each on the stack of control variables
-    via least squares, then Pearson-correlates the residuals. P-value uses
-    df = n - 2 - k where k is the number of controls.
+    """Semi-partial Pearson correlation r(predictor, target | controls)
+    := r(predictor, target - controls_predicted). Regresses target on the
+    stack of control variables via least squares, then correlates the
+    raw predictor with the target residuals. This matches the paper's
+    specificity definition. P-value uses df = n - 2 - k where k is the
+    number of controls.
     """
     X = np.column_stack([np.ones(len(target))] + [np.asarray(c) for c in controls])
     beta_t, *_ = np.linalg.lstsq(X, target, rcond=None)
     resid_target = target - X @ beta_t
-    beta_p, *_ = np.linalg.lstsq(X, predictor, rcond=None)
-    resid_predictor = predictor - X @ beta_p
-    r, _ = pearson_corr(resid_target.tolist(), resid_predictor.tolist())
+    r, _ = pearson_corr(predictor.tolist(), resid_target.tolist())
     return r, _partial_p(r, len(target), k=len(controls))
 
 

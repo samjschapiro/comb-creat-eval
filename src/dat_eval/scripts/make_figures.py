@@ -1891,41 +1891,41 @@ def fig_headline_combined():
     si_benchmarks = ["LiveIdeaBench"]
     cw_data = {
         # (val_r, spec_r, val_sig, spec_sig) per (test, benchmark) using the
-        # Overall block of Table~\ref{tab:correlations} after the TIGER-Lab
-        # MMLU-Pro switch.
-        "DAT":      [(+0.47, +0.06, True,  False),
-                     (+0.72, +0.50, True,  True),
-                     (+0.60, +0.56, True,  True)],
-        "CDAT":     [(-0.13, +0.23, False, False),
+        # Overall block of Table~\ref{tab:correlations} (TIGER-Lab MMLU-Pro,
+        # true semi-partial r(X, Y - Y_hat_g)).
+        "DAT":      [(+0.47, +0.05, True,  False),
+                     (+0.72, +0.41, True,  True),
+                     (+0.60, +0.49, True,  False)],
+        "CDAT":     [(-0.13, +0.22, False, False),
                      (-0.06, +0.03, False, False),
-                     (+0.07, +0.44, False, False)],
-        "CDAT-N":   [(-0.18, +0.21, False, False),
+                     (+0.07, +0.43, False, False)],
+        "CDAT-N":   [(-0.18, +0.20, False, False),
                      (-0.14, +0.08, False, False),
                      (+0.09, +0.40, False, False)],
-        "CDAT-A":   [(+0.54, -0.06, True,  False),
-                     (+0.48, +0.06, True,  False),
-                     (+0.24, -0.30, False, False)],
-        "PACE":     [(+0.71, +0.18, True,  False),
-                     (+0.71, +0.32, True,  False),
-                     (+0.76, +0.23, True,  False)],
+        "CDAT-A":   [(+0.54, -0.05, True,  False),
+                     (+0.48, +0.05, True,  False),
+                     (+0.24, -0.28, False, False)],
+        "PACE":     [(+0.71, +0.11, True,  False),
+                     (+0.71, +0.21, True,  False),
+                     (+0.76, +0.14, True,  False)],
     }
     dt_data = {
         "DAT":      [(+0.33, +0.01, False, False),
                      (+0.15, -0.21, False, False)],
-        "CDAT":     [(+0.25, +0.12, False, False),
-                     (+0.60, +0.96, False, True)],
-        "CDAT-N":   [(+0.24, +0.09, False, False),
-                     (+0.54, +0.80, True,  True)],
-        "CDAT-A":   [(-0.39, -0.11, False, False),
-                     (-0.67, -0.73, True,  True)],
-        "PACE":     [(-0.05, +0.41, False, False),
+        "CDAT":     [(+0.25, +0.10, False, False),
+                     (+0.60, +0.60, False, False)],
+        "CDAT-N":   [(+0.24, +0.08, False, False),
+                     (+0.54, +0.45, True,  False)],
+        "CDAT-A":   [(-0.39, -0.09, False, False),
+                     (-0.67, -0.40, True,  False)],
+        "PACE":     [(-0.05, +0.33, False, False),
                      (+0.18, -0.00, False, False)],
     }
     si_data = {
-        "DAT":      [(-0.01, +0.26, False, False)],
-        "CDAT":     [(+0.03, +0.25, False, False)],
+        "DAT":      [(-0.01, +0.24, False, False)],
+        "CDAT":     [(+0.03, +0.21, False, False)],
         "CDAT-N":   [(-0.11, +0.02, False, False)],
-        "CDAT-A":   [(+0.20, +0.10, False, False)],
+        "CDAT-A":   [(+0.20, +0.08, False, False)],
         "PACE":     [(+0.11, -0.00, False, False)],
     }
     label_offsets = {
