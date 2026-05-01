@@ -1,16 +1,18 @@
-"""Add MMLU-Pro scores to benchmarks.json.
+"""Add MMLU-Pro scores to benchmarks.json using the TIGER-Lab leaderboard.
 
-Pulls from data/dat_eval/mmlu_pro_raw.json (scraped from artificialanalysis.ai)
-and matches models to our OpenRouter IDs. Writes `mmlu_pro` field (0-1 accuracy).
+Source: results.csv from
+    https://huggingface.co/datasets/TIGER-Lab/mmlu_pro_leaderboard_submission
+which is the table powering https://huggingface.co/spaces/TIGER-Lab/MMLU-Pro.
 
-Matching strategy:
-  1. Explicit Artificial-Analysis display name per OpenRouter ID (preferred — AA
-     has many variants with suffixes like "(Non-reasoning)", "(Reasoning)",
-     "(May '24)" that we need to disambiguate deliberately).
-  2. For reasoning models we pick the "(Reasoning)" variant where the model is
-     reasoning-capable by default (o3, DeepSeek R1, QwQ).
-  3. For non-reasoning models we pick the "(Non-reasoning)" variant where AA
-     offers both.
+We use this rather than artificialanalysis.ai because the TIGER-Lab leaderboard
+is methodologically tied to the original MMLU-Pro paper~(Wang et al., 2024) and
+covers a much broader pool of models. Where TIGER-Lab evaluates a model
+themselves we use that row; otherwise we fall back to a self-reported number
+on the same leaderboard. Models without any TIGER-Lab entry get no
+``mmlu_pro`` field.
+
+Local snapshot at ``data/dat_eval/mmlu_pro_raw.json`` is keyed by TIGER-Lab
+model names verbatim. To refresh the snapshot, re-fetch the CSV.
 
 Usage:
     uv run python src/comb_eval/scripts/add_mmlu_pro_scores.py
@@ -20,115 +22,125 @@ import json
 from pathlib import Path
 
 
-# Map each OpenRouter key in our eval set to the exact Artificial Analysis display
-# name. `None` means no MMLU-Pro score exists for this model on AA (we tried).
-# Where AA lacks the exact model, we leave it None rather than pick a close cousin.
-OPENROUTER_KEY_TO_AA_NAME: dict[str, str | None] = {
+# Map our OpenRouter model keys to the TIGER-Lab leaderboard's model-name
+# strings. Order within each list = priority (first match wins). ``[]`` means
+# no usable TIGER-Lab entry; the script will leave ``mmlu_pro`` unset.
+OPENROUTER_KEY_TO_TIGERLAB: dict[str, list[str]] = {
     # --- Anthropic ---
-    "anthropic_claude-opus-4-6": None,  # AA goes 4.1 Opus -> 4.5 Sonnet; no Opus 4.5/4.6 entry
-    "anthropic_claude-opus-4-5": None,  # AA has no Opus 4.5 (only 4.5 Sonnet/Haiku); do not substitute Sonnet for Opus
-    "anthropic_claude-sonnet-4-6": None,
-    "anthropic_claude-sonnet-4-5": "Claude 4.5 Sonnet (Non-reasoning)",
-    "anthropic_claude-sonnet-4": "Claude 4 Sonnet (Non-reasoning)",
-    "anthropic_claude-haiku-4-5": "Claude 4.5 Haiku (Non-reasoning)",
-    "anthropic_claude-3-5-haiku": "Claude 3.5 Haiku",
-    "anthropic_claude-3-haiku": None,  # AA value is null in current snapshot
+    "anthropic_claude-3-5-sonnet":     ["Claude-3.5-Sonnet (2024-10-22)", "Claude-3.5-Sonnet (2024-06-20)"],
+    "anthropic_claude-3-5-haiku":      ["Claude-3-5-Haiku-20241022"],
+    "anthropic_claude-3-opus":         ["Claude-3-Opus"],
+    "anthropic_claude-3-haiku":        ["Claude-3-Haiku-20240307"],
+    "anthropic_claude-sonnet-4":       ["Claude-4-Sonnet"],
+    "anthropic_claude-sonnet-4-5":     ["Claude-4.5-Sonnet(Thinking)"],
+    "anthropic_claude-sonnet-4-6":     ["Claude-4.6-Sonnet(Thinking)"],
+    "anthropic_claude-haiku-4-5":      [],
+    "anthropic_claude-opus-4-5":       ["Claude-4.5-Opus(Thinking)"],
+    "anthropic_claude-opus-4-6":       ["Claude-4.6-Opus(Thinking)"],
     # --- OpenAI ---
-    "openai_gpt-5-4": None,  # GPT-5.4 not on AA (they have 5.2)
-    "openai_gpt-5-4-mini": None,
-    "openai_gpt-5-4-nano": None,
-    "openai_gpt-5": "GPT-5 (low)",  # closest to our GPT-5 medium
-    "openai_gpt-5-mini": "GPT-5 mini (medium)",
-    "openai_gpt-5-nano": "GPT-5 nano (medium)",
-    "openai_gpt-4o": "GPT-4o (March 2025, chatgpt-4o-latest)",
-    "openai_gpt-4o-mini": None,  # AA may or may not; try fallback
-    "openai_gpt-4-1": "GPT-4.1",
-    "openai_gpt-4-1-mini": "GPT-4.1 mini",
-    "openai_gpt-4-1-nano": "GPT-4.1 nano",
-    "openai_gpt-4-turbo": "GPT-4 Turbo",
-    "openai_gpt-3-5-turbo": "GPT-3.5 Turbo",
-    "openai_o3": "o3",
-    "openai_o3-mini": "o3-mini",
-    "openai_o4-mini": "o4-mini (high)",
+    "openai_gpt-4o":                   ["GPT-4o (2024-08-06)", "GPT-4o (2024-11-20)", "GPT-4o (2024-05-13)"],
+    "openai_gpt-4o-mini":              ["GPT-4o-mini"],
+    "openai_gpt-4-1":                  ["GPT-4.1"],
+    "openai_gpt-4-1-mini":             [],
+    "openai_gpt-4-1-nano":             [],
+    "openai_gpt-4-turbo":              ["GPT-4-Turbo"],
+    "openai_gpt-3-5-turbo":            [],
+    "openai_o3":                       ["GPT-o3-high"],
+    "openai_o3-mini":                  ["GPT-o3-mini"],
+    "openai_o4-mini":                  [],
+    "openai_gpt-5":                    ["GPT-5(high)"],
+    "openai_gpt-5-mini":               [],
+    "openai_gpt-5-nano":               [],
+    "openai_gpt-5-4":                  ["GPT-5.4"],
+    "openai_gpt-5-4-mini":             [],
+    "openai_gpt-5-4-nano":             [],
     # --- Google ---
-    "google_gemini-2-5-pro": "Gemini 2.5 Pro Preview (May' 25)",
-    "google_gemini-2-5-flash": "Gemini 2.5 Flash (Non-reasoning)",
-    "google_gemini-2-0-flash-001": "Gemini 2.0 Flash (Feb '25)",
-    "google_gemma-3-27b-it": None,  # AA doesn't carry gemma-3-27b in current snapshot
-    "google_gemma-2-27b-it": None,
-    "google_gemma-2-9b-it": None,
-    # --- Meta ---
-    "meta-llama_llama-4-maverick": "Llama 4 Maverick",
-    "meta-llama_llama-4-scout": None,
-    "meta-llama_llama-3-3-70b-instruct": None,  # AA has 3.3 Nemotron, not plain
-    "meta-llama_llama-3-1-70b-instruct": "Llama 3.1 Instruct 70B",
-    "meta-llama_llama-3-1-8b-instruct": None,  # not in scraped list
-    "meta-llama_llama-3-2-3b-instruct": "Llama 3.2 Instruct 3B",
-    "meta-llama_llama-3-2-1b-instruct": "Llama 3.2 Instruct 1B",
+    "google_gemini-2-5-pro":           ["Gemini-2.5-Pro", "Gemini-2.5-Pro-Exp-03-25"],
+    "google_gemini-2-5-flash":         [],
+    "google_gemini-2-0-flash-001":     ["Gemini-2.0-Flash", "Gemini-2.0-Flash-exp"],
+    "google_gemini-2-0-flash-lite-001":["Gemini-2.0-Flash-Lite"],
+    "google_gemini-1-5-pro":           ["Gemini-1.5-Pro-002", "Gemini-1.5-Pro"],
+    "google_gemini-2-0-pro":           ["Gemini-2.0-Pro"],
+    "google_gemma-3-27b-it":           ["Gemma-3-27B-it"],
+    "google_gemma-2-27b-it":           ["Gemma-2-27B-it"],
+    "google_gemma-2-9b-it":            ["Gemma-2-9B-it"],
+    "google_gemma-2-2b-it":            ["Gemma-2-2B-it"],
     # --- DeepSeek ---
-    "deepseek_deepseek-r1": "DeepSeek R1 (Jan '25)",
-    "deepseek_deepseek-chat-v3-0324": "DeepSeek V3 0324",
-    "deepseek_deepseek-chat": "DeepSeek V3.1 (Non-reasoning)",  # closest
+    "deepseek_deepseek-r1":            ["DeepSeek-R1"],
+    "deepseek_deepseek-chat-v3-0324":  ["Deepseek-V3-0324"],
+    "deepseek_deepseek-chat":          ["Deepseek-V3"],
     # --- Qwen ---
-    "qwen_qwen3-235b-a22b": "Qwen3 235B A22B (Non-reasoning)",
-    "qwen_qwen-2-5-72b-instruct": None,  # AA has Qwen2.5 32B/Max, not 72B
-    "qwen_qwen3-32b": "Qwen3 32B (Non-reasoning)",
-    "qwen_qwen3-14b": "Qwen3 14B (Non-reasoning)",
-    "qwen_qwen3-8b": "Qwen3 8B (Non-reasoning)",
-    "qwen_qwq-32b": "QwQ 32B",
+    "qwen_qwen3-235b-a22b":            ["Qwen3-235B-A22B-Instruct-2507", "Qwen3-235B-A22B"],
+    "qwen_qwq-32b":                    ["QwQ-32B"],
+    "qwen_qwen-2-5-72b-instruct":      ["Qwen2.5-72B"],
+    "qwen_qwen3-32b":                  [],
+    "qwen_qwen3-14b":                  [],
+    "qwen_qwen3-8b":                   [],
     # --- Mistral ---
-    "mistralai_mistral-large-2407": "Mistral Large 2 (Jul '24)",
-    "mistralai_mistral-large-2411": "Mistral Large 2 (Jul '24)",  # same family, no Nov '24 AA entry
-    "mistralai_mistral-nemo": None,
-    "mistralai_mistral-7b-instruct-v0-1": "Mistral 7B Instruct",
-    "mistralai_mistral-small-24b-instruct-2501": "Mistral Small 3",
+    "mistralai_mistral-large-2407":    ["Mistral-Large-Instruct-2407"],
+    "mistralai_mistral-large-2411":    ["Mistral-Large-Instruct-2411"],
+    "mistralai_mistral-nemo":          ["Mistral-Nemo-Instruct-2407"],
+    "mistralai_mistral-7b-instruct-v0-1": ["Mistral-7B-Instruct-v0.1"],
+    "mistralai_mistral-small-24b-instruct-2501": ["Mistral-Small-instruct"],
+    # --- Microsoft ---
+    "microsoft_phi-4":                 ["Phi-4"],
+    # --- Meta ---
+    "meta-llama_llama-3-3-70b-instruct":   ["Llama-3.3-70B-Instruct"],
+    "meta-llama_llama-3-1-70b-instruct":   ["Llama-3.1-70B-Instruct"],
+    "meta-llama_llama-3-1-8b-instruct":    ["Llama-3.1-8B-Instruct"],
+    "meta-llama_llama-3-1-405b-instruct":  ["Llama-3.1-405B-Instruct"],
+    "meta-llama_llama-4-maverick":         ["Llama4-Maverick"],
+    "meta-llama_llama-4-scout":            ["Llama4-Scout"],
+    "meta-llama_llama-3-2-3b-instruct":    ["Llama-3.2-3B"],
+    "meta-llama_llama-3-2-1b-instruct":    ["Llama-3.2-1B"],
     # --- Cohere ---
-    "cohere_command-a": "Command A",
-    "cohere_command-r-plus-08-2024": "Command-R+ (Apr '24)",
-    # --- Other ---
-    "microsoft_phi-4": "Phi-4",
-    "nvidia_llama-3-1-nemotron-70b-instruct": "Llama 3.1 Nemotron Instruct 70B",
+    "cohere_command-a":                [],
+    "cohere_command-r-plus-08-2024":   [],
+    "cohere_command-r-08-2024":        [],
+    "cohere_command-r7b-12-2024":      [],
+    # --- NVIDIA ---
+    "nvidia_llama-3-1-nemotron-70b-instruct": ["Llama-3.1-Nemotron-70B-Instruct-HF"],
 }
 
 
 def main():
     raw_path = Path("data/dat_eval/mmlu_pro_raw.json")
-    with open(raw_path) as f:
-        aa_scores = json.load(f)
-
     bench_path = Path("configs/comb_eval/benchmarks.json")
+    with open(raw_path) as f:
+        tigerlab = json.load(f)
     with open(bench_path) as f:
         benchmarks = json.load(f)
 
-    print(f"Artificial Analysis MMLU-Pro entries: {len(aa_scores)}")
+    print(f"TIGER-Lab leaderboard rows: {len(tigerlab)}")
     print(f"Our benchmark entries: {len(benchmarks)}")
     print()
 
-    matched = 0
-    unmatched = []
-
-    for or_key, bench_entry in benchmarks.items():
-        aa_name = OPENROUTER_KEY_TO_AA_NAME.get(or_key)
-        if aa_name is None:
-            unmatched.append(or_key)
+    set_, cleared, missing = 0, 0, []
+    for or_key in benchmarks:
+        names = OPENROUTER_KEY_TO_TIGERLAB.get(or_key)
+        if not names:
+            if "mmlu_pro" in benchmarks[or_key]:
+                del benchmarks[or_key]["mmlu_pro"]
+                cleared += 1
+            missing.append(or_key)
             continue
-        if aa_name not in aa_scores:
-            print(f"  {or_key} (wanted='{aa_name}'): NOT FOUND in AA scores")
-            unmatched.append(or_key)
+        match = next((n for n in names if n in tigerlab), None)
+        if match is None:
+            if "mmlu_pro" in benchmarks[or_key]:
+                del benchmarks[or_key]["mmlu_pro"]
+                cleared += 1
+            print(f"  {or_key}: requested {names!r}, none found in TIGER-Lab")
+            missing.append(or_key)
             continue
-        bench_entry["mmlu_pro"] = aa_scores[aa_name]
-        print(f"  {or_key} -> {aa_name}  (mmlu_pro={aa_scores[aa_name]:.3f})")
-        matched += 1
+        benchmarks[or_key]["mmlu_pro"] = float(tigerlab[match])
+        print(f"  {or_key} -> {match}  (mmlu_pro={tigerlab[match]:.4f})")
+        set_ += 1
 
     with open(bench_path, "w") as f:
         json.dump(benchmarks, f, indent=2)
 
-    print(f"\nMatched {matched}/{len(benchmarks)} models.")
-    if unmatched:
-        print(f"Unmatched ({len(unmatched)}):")
-        for m in unmatched:
-            print(f"  - {m}")
-    print(f"\nSaved to {bench_path}")
+    print(f"\nSet {set_}, cleared {cleared}, no match for {len(missing)}.")
+    print(f"Saved to {bench_path}")
 
 
 if __name__ == "__main__":

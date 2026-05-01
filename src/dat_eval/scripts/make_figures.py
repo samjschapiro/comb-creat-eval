@@ -1890,40 +1890,43 @@ def fig_headline_combined():
     dt_benchmarks = ["Hivemind Div.", "NovBench Util."]
     si_benchmarks = ["LiveIdeaBench"]
     cw_data = {
-        "DAT":      [(+0.44, +0.08, True,  False),
-                     (+0.71, +0.50, True,  True),
-                     (+0.59, +0.50, True,  True)],
-        "CDAT":     [(-0.13, +0.28, False, False),
-                     (-0.06, +0.13, False, False),
-                     (+0.07, +0.39, False, False)],
-        "CDAT-N":   [(-0.18, +0.23, False, False),
-                     (-0.14, +0.15, False, False),
-                     (+0.09, +0.35, False, False)],
-        "CDAT-A":   [(+0.54, -0.12, True,  False),
-                     (+0.47, -0.02, True,  False),
-                     (+0.24, -0.21, False, False)],
-        "PACE":     [(+0.72, +0.05, True,  False),
-                     (+0.70, +0.20, True,  False),
-                     (+0.75, +0.18, True,  False)],
+        # (val_r, spec_r, val_sig, spec_sig) per (test, benchmark) using the
+        # Overall block of Table~\ref{tab:correlations} after the TIGER-Lab
+        # MMLU-Pro switch.
+        "DAT":      [(+0.47, +0.06, True,  False),
+                     (+0.72, +0.50, True,  True),
+                     (+0.60, +0.56, True,  True)],
+        "CDAT":     [(-0.13, +0.23, False, False),
+                     (-0.06, +0.03, False, False),
+                     (+0.07, +0.44, False, False)],
+        "CDAT-N":   [(-0.18, +0.21, False, False),
+                     (-0.14, +0.08, False, False),
+                     (+0.09, +0.40, False, False)],
+        "CDAT-A":   [(+0.54, -0.06, True,  False),
+                     (+0.48, +0.06, True,  False),
+                     (+0.24, -0.30, False, False)],
+        "PACE":     [(+0.71, +0.18, True,  False),
+                     (+0.71, +0.32, True,  False),
+                     (+0.76, +0.23, True,  False)],
     }
     dt_data = {
-        "DAT":      [(+0.33, +0.26, False, False),
-                     (+0.15, -0.26, False, False)],
-        "CDAT":     [(+0.25, +0.19, False, False),
-                     (+0.60, +0.57, False, False)],
-        "CDAT-N":   [(+0.24, +0.17, False, False),
-                     (+0.54, +0.46, True,  False)],
-        "CDAT-A":   [(-0.39, -0.16, False, False),
-                     (-0.67, -0.40, True,  False)],
-        "PACE":     [(-0.05, +0.37, False, False),
-                     (+0.18, -0.06, False, False)],
+        "DAT":      [(+0.33, +0.01, False, False),
+                     (+0.15, -0.21, False, False)],
+        "CDAT":     [(+0.25, +0.12, False, False),
+                     (+0.60, +0.96, False, True)],
+        "CDAT-N":   [(+0.24, +0.09, False, False),
+                     (+0.54, +0.80, True,  True)],
+        "CDAT-A":   [(-0.39, -0.11, False, False),
+                     (-0.67, -0.73, True,  True)],
+        "PACE":     [(-0.05, +0.41, False, False),
+                     (+0.18, -0.00, False, False)],
     }
     si_data = {
-        "DAT":      [(-0.01, +0.28, False, False)],
-        "CDAT":     [(+0.06, +0.26, False, False)],
-        "CDAT-N":   [(-0.09, +0.11, False, False)],
-        "CDAT-A":   [(+0.16, -0.01, False, False)],
-        "PACE":     [(+0.07, -0.07, False, False)],
+        "DAT":      [(-0.01, +0.26, False, False)],
+        "CDAT":     [(+0.03, +0.25, False, False)],
+        "CDAT-N":   [(-0.11, +0.02, False, False)],
+        "CDAT-A":   [(+0.20, +0.10, False, False)],
+        "PACE":     [(+0.11, -0.00, False, False)],
     }
     label_offsets = {
         "Creative Writing": {
