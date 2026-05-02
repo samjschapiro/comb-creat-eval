@@ -961,9 +961,9 @@ def fig_benchmark_correlations(benchmarks):
     ax2.set_position([pos2.x0, pos1.y0, pos2.width, cell_size * nb])
 
     ax1.set_title("(a) Inter-benchmark correlations",
-                   fontsize=15, loc="left", pad=6)
+                   fontsize=19, loc="left", pad=6)
     ax2.set_title("(b) Inter-test correlations",
-                   fontsize=15, loc="left", pad=6)
+                   fontsize=19, loc="left", pad=6)
 
     cbar = fig.colorbar(im, ax=[ax1, ax2], shrink=0.7, pad=0.03)
     cbar.set_label("Pearson $r$", fontsize=14)
