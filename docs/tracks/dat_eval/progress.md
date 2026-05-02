@@ -305,3 +305,42 @@ gaps. Went from 36/55 models to 53/55. Only gpt-5.4-mini and gpt-5.4-nano
 remain missing (not yet on the TIGER-Lab leaderboard). This expansion
 is what enables the n=49 Arena-CW-BOTH-control partial correlation reported
 above, where the earlier n=33 version was marginal.
+
+### 2026-05-02 — TIGER-Lab MMLU-Pro switch + semi-partial bug fix + NeurIPS variant
+
+**Bug fix (load-bearing):** caught a silent error where
+`partial_pearson_multi` was computing the *full* partial
+`r(X − X̂_g, Y − Ŷ_g)` instead of the paper-defined *semi-partial*
+`r(X, Y − Ŷ_g)`. Fixed in `src/dat_eval/scripts/score_evals.py` and
+`src/dat_eval/scripts/multi_embed_appendix.joint_partial_r`. Reran
+the full pipeline. Most-affected cell: NoveltyBench × CDAT
+specificity dropped from a frontier-violating +0.96** (n=8) to the
+correctly-bounded +0.60. EQ-Bench DAT spec **(0.50** → 0.41*) and
+Mazur DAT spec (+0.56* → +0.49) also lost stars.
+
+**MMLU-Pro source:** switched from artificialanalysis.ai to the
+TIGER-Lab leaderboard CSV
+(`TIGER-Lab/mmlu_pro_leaderboard_submission`). 47 of our 64 model
+entries map; 13 cleared (no TIGER-Lab entry). Specificity n's
+shrunk slightly (Arena CW 49 → 40, EQ-Bench 32 → 27, etc.) but
+methodology is now tied to the original MMLU-Pro paper. Documented
+in §07 appendix.
+
+**Significance methodology:** paper now states two-sided Pearson
+t-test with df = n−2−k explicitly; matched in code.
+
+**NeurIPS 2026 submission variant:** parallel `main_neurips.tex` +
+`sections_neurips/` + `tables_neurips/` + `neurips_2025.sty`
+alongside the ICML files. Bibliography switched to plain (no
+natbib); `\citet/\citep` swept to `\cite` in the NeurIPS sections;
+Table 1 wrapped in `\resizebox{\textwidth}{!}`; Figures 1 and 2
+converted to `wrapfigure` for vertical-space efficiency.
+
+**Auto-generator:** `src/comb_eval/scripts/build_per_benchmark_table.py`
+now regenerates the appendix per-model benchmark table from
+`benchmarks.json`, replacing the previously hand-edited table that
+had drifted (Claude-Sonnet-4.6 EQ-Bench Elo was stale at 1938 vs
+live 1991).
+
+**Pool count standardised** to 54 throughout (largest validity n,
+on Arena CW).

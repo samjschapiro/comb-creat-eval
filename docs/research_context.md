@@ -9,40 +9,51 @@ tracking general model capability?
 
 ## Active tracks
 
-### dat_eval (primary, ICML 2026 GenAI-Creativity workshop)
+### dat_eval (primary, ICML 2026 GenAI-Creativity workshop + NeurIPS 2026)
 
 Evaluates three psycholinguistic semantic-distance creativity tests
 — DAT, CDAT (and its novelty / appropriateness components), PACE —
-on 52 LLMs across three embedding models (GloVe, FastText, SBERT)
+on 54 LLMs across three embedding models (GloVe, FastText, SBERT)
 and six external benchmarks spanning three target constructs:
-creative writing (Arena CW, EQ-Bench CW, Mazur CW v2), divergent
+creative writing (Arena CW, EQ-Bench CW, Mazur CW), divergent
 thinking (Hivemind, NoveltyBench Utility), and scientific ideation
 (LiveIdeaBench). Each test is measured on two criteria: *validity*
-(raw Pearson r with the benchmark) and *specificity* (semi-partial r
-after residualising the benchmark on a 2-proxy capability stack of
+(raw Pearson r with the benchmark) and *specificity* (semi-partial
+r(X, Y − Ŷ_g), Y residualised on a 2-proxy capability stack of
 Arena Overall + MMLU-Pro). A covariance-PSD bound (proven in the
 appendix) gives a per-benchmark theoretical ceiling on attainable
 specificity.
 
-**Status**: full eval run complete; analysis pipeline complete; ICML
-draft on Overleaf (`papers/iccc-2026/`, name retained from the ICCC
-short-paper precursor) past first-draft, mid-rewrite for ICML
-submission. Outstanding writing holes: empty Results section, empty
-Conclusion, abstract sentence 3 unfinished, contributions item 3
-unfinished, background §2.4 placeholder. Bibliography contains
-AI-generated entries flagged for human verification.
+**Status**: full eval run complete; analysis pipeline complete;
+draft past second-pass rewrite, near submission. Two parallel
+submission variants live in `papers/iccc-2026/`: `main.tex` (ICML
+2026 GenAI-Creativity workshop) and `main_neurips.tex` (NeurIPS
+2026 main track). Section files (`sections/`) and tables
+(`tables/`) feed the ICML build; NeurIPS-only variants live in
+`sections_neurips/` and `tables_neurips/`.
 
 **Headline findings**:
-- Semantic-distance test effectiveness varies sharply by construct.
-  DAT is the most valid and specific predictor of creative writing;
-  CDAT is the most valid and specific predictor of divergent thinking;
-  PACE is *not* a valid-and-specific predictor on either construct
-  once capability is partialled out.
+- Specificity, not validity, is what separates a creativity test
+  from a capability proxy.
+- Test effectiveness varies sharply by construct: DAT is the best
+  predictor of creative writing; CDAT is the best predictor of
+  divergent thinking; PACE has high raw validity on creative
+  writing but its specificity collapses under capability control,
+  so it is mostly a capability proxy.
 - None of the three tests is a valid-and-specific predictor of
   scientific ideation (LiveIdeaBench, n=17): all observed
   specificities are exploratory.
 - Across all panels, observed tests sit well below the theoretical
   ceiling — leaving meaningful room for new test designs.
+
+**Sources of truth** (key values updated 2026-05-02):
+- MMLU-Pro: TIGER-Lab leaderboard CSV
+  (`TIGER-Lab/mmlu_pro_leaderboard_submission`), not AA.
+- Mazur CW: `lechmazur/writing` GitHub at commit `80b7f17`.
+- EQ-Bench CW: `eqbench.com/creative_writing.js`
+  (`leaderboardDataCreativeWritingV3`).
+- Specificity computation: true semi-partial `r(X, Y − Ŷ_g)`
+  (was full partial pre-2026-05-02; values shifted accordingly).
 
 ### comb_eval (background / exploratory)
 
