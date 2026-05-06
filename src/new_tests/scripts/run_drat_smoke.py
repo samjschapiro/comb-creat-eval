@@ -65,8 +65,10 @@ async def run_pair_for_model(
     max_tokens: int,
     seed: int | None,
     top_p: float,
+    prompt_style: str = "default",
+    reasoning: dict | None = None,
 ):
-    prompt = drat_prompt(anchor_a, anchor_b)
+    prompt = drat_prompt(anchor_a, anchor_b, style=prompt_style)
     raw = await call_llm_async(
         async_client,
         messages=[{"role": "user", "content": prompt}],
@@ -75,6 +77,7 @@ async def run_pair_for_model(
         max_tokens=max_tokens,
         seed=seed,
         top_p=top_p,
+        reasoning=reasoning,
     )
     words = extract_words_from_response(raw, expected_count=10)
     score = score_drat(words, anchor_a, anchor_b, embeddings, tau, n_min)
@@ -121,41 +124,99 @@ async def main_async(config: dict, output_dir: Path) -> None:
             f, indent=2,
         )
 
-    # LLM calls
+    # LLM calls — concurrent with a semaphore. Sequential when concurrency=1.
     n_models = len(config["models"])
     n_pairs = len(config["anchor_pairs"])
-    print(f"\nRunning {n_models} model(s) × {n_pairs} pair(s) = {n_models * n_pairs} call(s)...")
+    concurrency = config.get("concurrency", 10)
+    print(f"\nRunning {n_models} model(s) × {n_pairs} pair(s) "
+          f"= {n_models * n_pairs} call(s) at concurrency={concurrency}...")
     async_client = get_async_client()
+    sem = asyncio.Semaphore(concurrency)
 
-    results = []
-    for model in config["models"]:
-        for pair in config["anchor_pairs"]:
-            a, b = pair["anchor_a"], pair["anchor_b"]
-            tau = pair_taus[(a, b)]["tau"]
-            r = await run_pair_for_model(
-                async_client,
-                model=model,
-                anchor_a=a,
-                anchor_b=b,
-                embeddings=embeddings,
-                tau=tau,
-                n_min=config.get("n_min", 5),
-                temperature=config.get("temperature", 1.0),
-                max_tokens=config.get("max_tokens", 256),
-                seed=config.get("seed"),
-                top_p=config.get("top_p", 1.0),
-            )
-            results.append(r)
-            s = r["score"]
-            survivors_str = (
-                f"survivors={s['n_survivors']}/{s['n_valid']}"
-                if s["sufficient"]
-                else f"GATE FAIL: {s.get('reason', 'unknown')}"
-            )
-            print(
-                f"  {model} | ({a!r}, {b!r}): "
-                f"DRAT={s['drat']:.2f} | {survivors_str}"
-            )
+    max_retries = config.get("max_retries", 4)
+
+    reasoning_models = set(config.get("reasoning_models", []))
+    reasoning_cfg = config.get("reasoning")
+    reasoning_mult = config.get("reasoning_max_tokens_multiplier", 4)
+
+    async def bounded(model: str, pair: dict) -> dict:
+        a, b = pair["anchor_a"], pair["anchor_b"]
+        tau = pair_taus[(a, b)]["tau"]
+        is_reasoning = model in reasoning_models
+        eff_max_tokens = (
+            config.get("max_tokens", 256) * reasoning_mult
+            if is_reasoning
+            else config.get("max_tokens", 256)
+        )
+        eff_reasoning = reasoning_cfg if is_reasoning else None
+        async with sem:
+            last_err: Exception | None = None
+            for attempt in range(max_retries):
+                try:
+                    r = await run_pair_for_model(
+                        async_client,
+                        model=model,
+                        anchor_a=a,
+                        anchor_b=b,
+                        embeddings=embeddings,
+                        tau=tau,
+                        n_min=config.get("n_min", 5),
+                        temperature=config.get("temperature", 1.0),
+                        max_tokens=eff_max_tokens,
+                        seed=config.get("seed"),
+                        top_p=config.get("top_p", 1.0),
+                        prompt_style=config.get("prompt_style", "default"),
+                        reasoning=eff_reasoning,
+                    )
+                    last_err = None
+                    break
+                except Exception as e:
+                    last_err = e
+                    msg = str(e).lower()
+                    is_rate_limit = "429" in msg or "rate" in msg
+                    is_transient = is_rate_limit or "503" in msg or "timeout" in msg
+                    if not is_transient or attempt == max_retries - 1:
+                        break
+                    backoff = 2 ** attempt + 0.5  # 1.5, 2.5, 4.5, 8.5 ...
+                    print(f"  retry {attempt+1}/{max_retries} for {model} on "
+                          f"({a!r}, {b!r}) after {backoff:.1f}s: {type(e).__name__}")
+                    await asyncio.sleep(backoff)
+        if last_err is not None:
+            print(f"  ERROR {model} | ({a!r}, {b!r}): {type(last_err).__name__}: {last_err}")
+            return {
+                "model": model,
+                "anchor_a": a,
+                "anchor_b": b,
+                "raw_response": None,
+                "extracted_words": [],
+                "error": f"{type(last_err).__name__}: {last_err}",
+                "score": {
+                    "drat": 0.0,
+                    "n_valid": 0,
+                    "n_survivors": 0,
+                    "survivors": [],
+                    "scored_words": [],
+                    "utilities": [],
+                    "tau": tau,
+                    "sufficient": False,
+                    "reason": f"call failed: {type(last_err).__name__}",
+                },
+            }
+        s = r["score"]
+        survivors_str = (
+            f"survivors={s['n_survivors']}/{s['n_valid']}"
+            if s["sufficient"]
+            else f"GATE FAIL: {s.get('reason', 'unknown')}"
+        )
+        print(f"  {model} | ({a!r}, {b!r}): DRAT={s['drat']:.2f} | {survivors_str}")
+        return r
+
+    tasks = [
+        bounded(model, pair)
+        for model in config["models"]
+        for pair in config["anchor_pairs"]
+    ]
+    results = await asyncio.gather(*tasks, return_exceptions=False)
 
     with open(output_dir / "raw_results.json", "w") as f:
         json.dump(results, f, indent=2)

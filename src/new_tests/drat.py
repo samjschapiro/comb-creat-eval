@@ -19,12 +19,27 @@ from scipy.spatial.distance import cosine as cosine_distance
 from src.dat_eval.cdat import SBERTEmbeddings, validate_words_sbert
 
 
-def drat_prompt(anchor_a: str, anchor_b: str) -> str:
-    """Generate the DRAT prompt for an anchor pair."""
+def drat_prompt(anchor_a: str, anchor_b: str, style: str = "default") -> str:
+    """Generate the DRAT prompt for an anchor pair.
+
+    Args:
+        style: "default" — standard "connects" framing.
+               "analogical" — "metaphorically applied to both" framing per the
+                 design doc's analogy-literature motivation.
+    """
+    if style == "default":
+        bridge_clause = f'each of which connects "{anchor_a}" and "{anchor_b}"'
+    elif style == "analogical":
+        bridge_clause = (
+            f'each of which could be metaphorically applied to both '
+            f'"{anchor_a}" and "{anchor_b}"'
+        )
+    else:
+        raise ValueError(f"unknown prompt style: {style!r}")
+
     return (
         f'Please give 10 words that are as different from each other as possible, '
-        f'in all meanings and uses of the words, and each of which connects '
-        f'"{anchor_a}" and "{anchor_b}".\n\n'
+        f'in all meanings and uses of the words, and {bridge_clause}.\n\n'
         f'Only use single nouns. Do not use proper nouns. '
         f'Do not use the anchor words themselves or variations of them.\n\n'
         f'Respond with ONLY a JSON array of exactly 10 words, like: '

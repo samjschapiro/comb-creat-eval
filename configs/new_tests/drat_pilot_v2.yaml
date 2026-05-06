@@ -1,0 +1,81 @@
+# DRAT Pilot v2 — Phase 2: mid-tier LIB-17 models
+#
+# Adds 4 mid-cost LIB-17 models on top of Phase 1's 6 cheap models.
+# Combined with Phase 1, this gives n = 10 within LIB-17 (n = 9 if
+# mistral-small remains broken on the task).
+#
+# Same anchor bank as pilot_v1 (locked since 96fa9cf). Same noun pool,
+# tau percentile, n_min, and sampling parameters — only the model
+# list and output_dir change.
+
+output_dir: "data/new_tests/drat/pilot_v2"
+
+models:
+  - openai/gpt-4o-mini
+  - anthropic/claude-3.5-haiku
+  - deepseek/deepseek-chat
+  - qwen/qwen-2.5-72b-instruct
+
+anchor_pairs:
+  # life x physical
+  - {anchor_a: "heart",            anchor_b: "engine",                  division_a: "life",        division_b: "physical"}
+  - {anchor_a: "photosynthesis",   anchor_b: "combustion",              division_a: "life",        division_b: "physical"}
+  - {anchor_a: "virus",            anchor_b: "crystal",                 division_a: "life",        division_b: "physical"}
+
+  # life x social
+  - {anchor_a: "immune system",    anchor_b: "marketplace",             division_a: "life",        division_b: "social"}
+  - {anchor_a: "evolution",        anchor_b: "election",                division_a: "life",        division_b: "social"}
+  - {anchor_a: "ecosystem",        anchor_b: "neighborhood",            division_a: "life",        division_b: "social"}
+
+  # life x formal
+  - {anchor_a: "genome",           anchor_b: "algorithm",               division_a: "life",        division_b: "formal"}
+  - {anchor_a: "neuron",           anchor_b: "graph",                   division_a: "life",        division_b: "formal"}
+  - {anchor_a: "heartbeat",        anchor_b: "oscillator",              division_a: "life",        division_b: "formal"}
+
+  # life x engineering
+  - {anchor_a: "immune system",    anchor_b: "supply chain",            division_a: "life",        division_b: "engineering"}
+  - {anchor_a: "lung",             anchor_b: "turbine",                 division_a: "life",        division_b: "engineering"}
+  - {anchor_a: "ant colony",       anchor_b: "factory",                 division_a: "life",        division_b: "engineering"}
+
+  # physical x social
+  - {anchor_a: "phase transition", anchor_b: "revolution",              division_a: "physical",    division_b: "social"}
+  - {anchor_a: "friction",         anchor_b: "negotiation",             division_a: "physical",    division_b: "social"}
+  - {anchor_a: "gravity",          anchor_b: "hierarchy",               division_a: "physical",    division_b: "social"}
+
+  # physical x formal
+  - {anchor_a: "entropy",          anchor_b: "information",             division_a: "physical",    division_b: "formal"}
+  - {anchor_a: "wave",             anchor_b: "function",                division_a: "physical",    division_b: "formal"}
+  - {anchor_a: "lattice",          anchor_b: "matrix",                  division_a: "physical",    division_b: "formal"}
+
+  # physical x engineering
+  - {anchor_a: "turbulence",       anchor_b: "traffic",                 division_a: "physical",    division_b: "engineering"}
+  - {anchor_a: "conductivity",     anchor_b: "circuit",                 division_a: "physical",    division_b: "engineering"}
+  - {anchor_a: "heat",             anchor_b: "refrigerator",            division_a: "physical",    division_b: "engineering"}
+
+  # social x formal
+  - {anchor_a: "democracy",        anchor_b: "voting algorithm",        division_a: "social",      division_b: "formal"}
+  - {anchor_a: "contract",         anchor_b: "proof",                   division_a: "social",      division_b: "formal"}
+  - {anchor_a: "rumor",            anchor_b: "broadcast",               division_a: "social",      division_b: "formal"}
+
+  # social x engineering
+  - {anchor_a: "supply chain",     anchor_b: "organization",            division_a: "social",      division_b: "engineering"}
+  - {anchor_a: "city",             anchor_b: "machine",                 division_a: "social",      division_b: "engineering"}
+  - {anchor_a: "parliament",       anchor_b: "pipeline",                division_a: "social",      division_b: "engineering"}
+
+  # formal x engineering
+  - {anchor_a: "algorithm",        anchor_b: "factory",                 division_a: "formal",      division_b: "engineering"}
+  - {anchor_a: "theorem",          anchor_b: "blueprint",               division_a: "formal",      division_b: "engineering"}
+  - {anchor_a: "recursion",        anchor_b: "assembly line",           division_a: "formal",      division_b: "engineering"}
+
+noun_pool_source: "cdat_default_cues"
+
+tau_percentile: 90.0
+n_min: 5
+
+temperature: 1.0
+max_tokens: 256
+seed: 42
+top_p: 1.0
+
+concurrency: 10
+max_retries: 4
