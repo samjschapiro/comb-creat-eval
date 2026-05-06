@@ -1,0 +1,35 @@
+# SMOKE TEST ONLY: 3 hand-crafted pairs to verify DRAT pipeline works
+# end-to-end. The real pilot bank is pre-registered separately and lives in
+# a different config (drat_pilot_v1.yaml).
+
+output_dir: "data/new_tests/drat/smoke_v1"
+
+# Single cheap model — smoke test is about pipeline correctness, not coverage.
+models:
+  - google/gemini-2.0-flash-lite-001
+
+# Hand-crafted anchor pairs spanning different top-level scientific divisions.
+anchor_pairs:
+  - anchor_a: "immune system"
+    anchor_b: "supply chain"        # life × engineering
+  - anchor_a: "phase transition"
+    anchor_b: "neural network training"   # physical × formal
+  - anchor_a: "ecosystem"
+    anchor_b: "economy"             # life × social
+
+# Random-noun pool for null calibration.
+# Reuses CDAT's 50 default cues (defined in src/dat_eval/cdat.py).
+# Real pilot uses a larger pool (200+).
+noun_pool_source: "cdat_default_cues"
+
+# Threshold = 90th percentile of Utility(noun | A, B) over the pool.
+tau_percentile: 90.0
+
+# Minimum survivors required for the response to score (else DRAT = 0).
+n_min: 5
+
+# Sampling — single call per pair at temp 1.0 (smoke test, not variance estimate).
+temperature: 1.0
+max_tokens: 256
+seed: 42
+top_p: 1.0
