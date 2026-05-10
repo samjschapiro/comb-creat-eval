@@ -1,0 +1,105 @@
+# DRAT Pilot — 3-anchor variant on all 16 LIB-17 cheap+mid+expensive models.
+#
+# Bank: 30 hand-curated 3-anchor triples, balanced across the 10
+# inter-division triples (C(5,3) = 10) of {life, physical, social,
+# formal, engineering}, 3 triples per inter-division triple.
+#
+# Same prompt style (analogical), same noun pool, same n_min=5,
+# tau percentile, sampling, reasoning controls as the 2-anchor
+# pilot_phase3 run. Only the anchor cardinality changes.
+
+output_dir: "data/new_tests/drat/pilot_3anchor_v1"
+
+prompt_style: "analogical"
+
+models:
+  - google/gemini-2.0-flash-lite-001
+  - microsoft/phi-4
+  - google/gemma-2-27b-it
+  - mistralai/mistral-small-24b-instruct-2501
+  - google/gemini-2.0-flash-001
+  - meta-llama/llama-3.3-70b-instruct
+  - openai/gpt-4o-mini
+  - anthropic/claude-3.5-haiku
+  - deepseek/deepseek-chat
+  - qwen/qwen-2.5-72b-instruct
+  - meta-llama/llama-3.1-70b-instruct
+  - mistralai/mistral-large-2411
+  - openai/gpt-4o
+  - openai/gpt-4-turbo
+  - deepseek/deepseek-r1
+  - openai/o3-mini
+
+reasoning_models:
+  - deepseek/deepseek-r1
+  - openai/o3-mini
+
+reasoning:
+  effort: "low"
+  exclude: true
+
+reasoning_max_tokens_multiplier: 4
+
+# 30 anchor triples. Each has anchors: list[str] and divisions: list[str].
+anchor_groups:
+  # life × physical × social
+  - {anchors: ["heart", "engine", "marketplace"],          divisions: ["life", "physical", "social"]}
+  - {anchors: ["immune system", "fire", "organization"],   divisions: ["life", "physical", "social"]}
+  - {anchors: ["evolution", "friction", "election"],       divisions: ["life", "physical", "social"]}
+
+  # life × physical × formal
+  - {anchors: ["genome", "lattice", "algorithm"],          divisions: ["life", "physical", "formal"]}
+  - {anchors: ["heartbeat", "wave", "oscillator"],         divisions: ["life", "physical", "formal"]}
+  - {anchors: ["neuron", "particle", "graph"],             divisions: ["life", "physical", "formal"]}
+
+  # life × physical × engineering
+  - {anchors: ["lung", "turbulence", "turbine"],           divisions: ["life", "physical", "engineering"]}
+  - {anchors: ["immune system", "friction", "supply chain"], divisions: ["life", "physical", "engineering"]}
+  - {anchors: ["cell", "crystal", "factory"],              divisions: ["life", "physical", "engineering"]}
+
+  # life × social × formal
+  - {anchors: ["genome", "contract", "proof"],             divisions: ["life", "social", "formal"]}
+  - {anchors: ["evolution", "marketplace", "algorithm"],   divisions: ["life", "social", "formal"]}
+  - {anchors: ["ecosystem", "neighborhood", "graph"],      divisions: ["life", "social", "formal"]}
+
+  # life × social × engineering
+  - {anchors: ["immune system", "marketplace", "supply chain"], divisions: ["life", "social", "engineering"]}
+  - {anchors: ["ant colony", "organization", "factory"],   divisions: ["life", "social", "engineering"]}
+  - {anchors: ["heart", "parliament", "machine"],          divisions: ["life", "social", "engineering"]}
+
+  # life × formal × engineering
+  - {anchors: ["genome", "algorithm", "factory"],          divisions: ["life", "formal", "engineering"]}
+  - {anchors: ["heartbeat", "oscillator", "pipeline"],     divisions: ["life", "formal", "engineering"]}
+  - {anchors: ["neuron", "graph", "circuit"],              divisions: ["life", "formal", "engineering"]}
+
+  # physical × social × formal
+  - {anchors: ["phase transition", "revolution", "function"], divisions: ["physical", "social", "formal"]}
+  - {anchors: ["entropy", "hierarchy", "information"],     divisions: ["physical", "social", "formal"]}
+  - {anchors: ["gravity", "hierarchy", "lattice"],         divisions: ["physical", "social", "formal"]}
+
+  # physical × social × engineering
+  - {anchors: ["turbulence", "traffic", "pipeline"],       divisions: ["physical", "social", "engineering"]}
+  - {anchors: ["heat", "marketplace", "refrigerator"],     divisions: ["physical", "social", "engineering"]}
+  - {anchors: ["gravity", "hierarchy", "machine"],         divisions: ["physical", "social", "engineering"]}
+
+  # physical × formal × engineering
+  - {anchors: ["entropy", "information", "circuit"],       divisions: ["physical", "formal", "engineering"]}
+  - {anchors: ["wave", "function", "antenna"],             divisions: ["physical", "formal", "engineering"]}
+  - {anchors: ["lattice", "matrix", "blueprint"],          divisions: ["physical", "formal", "engineering"]}
+
+  # social × formal × engineering
+  - {anchors: ["democracy", "voting algorithm", "pipeline"], divisions: ["social", "formal", "engineering"]}
+  - {anchors: ["contract", "proof", "blueprint"],          divisions: ["social", "formal", "engineering"]}
+  - {anchors: ["rumor", "broadcast", "transmission"],      divisions: ["social", "formal", "engineering"]}
+
+noun_pool_source: "cdat_default_cues"
+tau_percentile: 90.0
+n_min: 5
+
+temperature: 1.0
+max_tokens: 256
+seed: 42
+top_p: 1.0
+
+concurrency: 6
+max_retries: 4

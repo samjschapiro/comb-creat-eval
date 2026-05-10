@@ -1,0 +1,44 @@
+# RAT expansion re-run — models that returned null/partial-null in the
+# main expansion run because the 32-token cap killed reasoning before a
+# final answer was emitted. Bumps max_tokens to 128 and uses a wider
+# reasoning multiplier (8x) so reasoning-by-default models have headroom.
+#
+# Treat every model here as a reasoning model (gpt-5 family, qwen3-14b/32b,
+# gemini-3.1-pro-preview, o3, o4-mini) so they all get the multiplier.
+
+output_dir: "data/new_tests/rat/expansion_v1_rerun"
+
+models:
+  - openai/gpt-5
+  - openai/gpt-5.2
+  - openai/gpt-5-mini
+  - openai/gpt-5-nano
+  - openai/o3
+  - openai/o4-mini
+  - google/gemini-3.1-pro-preview
+  - qwen/qwen3-14b
+  - qwen/qwen3-32b
+
+reasoning_models:
+  - openai/gpt-5
+  - openai/gpt-5.2
+  - openai/gpt-5-mini
+  - openai/gpt-5-nano
+  - openai/o3
+  - openai/o4-mini
+  - google/gemini-3.1-pro-preview
+  - qwen/qwen3-14b
+  - qwen/qwen3-32b
+
+reasoning:
+  effort: "low"
+  exclude: true
+
+reasoning_max_tokens_multiplier: 8
+
+temperature: 0.0
+max_tokens: 128
+seed: 42
+
+concurrency: 10
+max_retries: 4

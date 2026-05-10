@@ -1,0 +1,71 @@
+# Phase 4 — 3-anchor DRAT on the working Phase 4 models only.
+# Skips the 10 models that 404'd in the 2-anchor run (deprecated by OpenRouter).
+
+output_dir: "data/new_tests/drat/pilot_phase4_3anchor"
+prompt_style: "analogical"
+
+models:
+  - anthropic/claude-3.7-sonnet
+  - anthropic/claude-3.7-sonnet:thinking
+  - deepseek/deepseek-r1-distill-llama-70b
+  - deepseek/deepseek-r1-distill-qwen-32b
+  - qwen/qwen-max
+  - qwen/qwen-2.5-coder-32b-instruct
+  - qwen/qwen-2.5-7b-instruct
+  - mistralai/mistral-nemo
+  - nvidia/llama-3.1-nemotron-70b-instruct
+  - amazon/nova-pro-v1
+  - amazon/nova-lite-v1
+
+reasoning_models:
+  - anthropic/claude-3.7-sonnet:thinking
+  - deepseek/deepseek-r1-distill-qwen-32b
+  - deepseek/deepseek-r1-distill-llama-70b
+
+reasoning:
+  effort: "low"
+  exclude: true
+
+reasoning_max_tokens_multiplier: 4
+
+anchor_groups:
+  - {anchors: ["heart", "engine", "marketplace"]}
+  - {anchors: ["immune system", "fire", "organization"]}
+  - {anchors: ["evolution", "friction", "election"]}
+  - {anchors: ["genome", "lattice", "algorithm"]}
+  - {anchors: ["heartbeat", "wave", "oscillator"]}
+  - {anchors: ["neuron", "particle", "graph"]}
+  - {anchors: ["lung", "turbulence", "turbine"]}
+  - {anchors: ["immune system", "friction", "supply chain"]}
+  - {anchors: ["cell", "crystal", "factory"]}
+  - {anchors: ["genome", "contract", "proof"]}
+  - {anchors: ["evolution", "marketplace", "algorithm"]}
+  - {anchors: ["ecosystem", "neighborhood", "graph"]}
+  - {anchors: ["immune system", "marketplace", "supply chain"]}
+  - {anchors: ["ant colony", "organization", "factory"]}
+  - {anchors: ["heart", "parliament", "machine"]}
+  - {anchors: ["genome", "algorithm", "factory"]}
+  - {anchors: ["heartbeat", "oscillator", "pipeline"]}
+  - {anchors: ["neuron", "graph", "circuit"]}
+  - {anchors: ["phase transition", "revolution", "function"]}
+  - {anchors: ["entropy", "hierarchy", "information"]}
+  - {anchors: ["gravity", "hierarchy", "lattice"]}
+  - {anchors: ["turbulence", "traffic", "pipeline"]}
+  - {anchors: ["heat", "marketplace", "refrigerator"]}
+  - {anchors: ["gravity", "hierarchy", "machine"]}
+  - {anchors: ["entropy", "information", "circuit"]}
+  - {anchors: ["wave", "function", "antenna"]}
+  - {anchors: ["lattice", "matrix", "blueprint"]}
+  - {anchors: ["democracy", "voting algorithm", "pipeline"]}
+  - {anchors: ["contract", "proof", "blueprint"]}
+  - {anchors: ["rumor", "broadcast", "transmission"]}
+
+noun_pool_source: "cdat_default_cues"
+tau_percentile: 90.0
+n_min: 5
+temperature: 1.0
+max_tokens: 256
+seed: 42
+top_p: 1.0
+concurrency: 6
+max_retries: 4

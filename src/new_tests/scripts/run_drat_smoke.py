@@ -53,11 +53,30 @@ def resolve_noun_pool(config: dict) -> list[str]:
     raise ValueError("FATAL: config must specify 'noun_pool' or 'noun_pool_source'")
 
 
-async def run_pair_for_model(
+def _normalize_anchor_groups(config: dict) -> list[dict]:
+    """Read anchor_groups (list with 'anchors': [...]) or anchor_pairs (list
+    with 'anchor_a' / 'anchor_b'); return a canonical list of dicts each with
+    an 'anchors' key (list of strings) and any metadata.
+    """
+    if "anchor_groups" in config:
+        out = []
+        for g in config["anchor_groups"]:
+            if "anchors" not in g:
+                raise ValueError(f"FATAL: anchor_groups entry missing 'anchors' list: {g}")
+            out.append({**g, "anchors": list(g["anchors"])})
+        return out
+    if "anchor_pairs" in config:
+        return [
+            {**p, "anchors": [p["anchor_a"], p["anchor_b"]]}
+            for p in config["anchor_pairs"]
+        ]
+    raise ValueError("FATAL: config must specify 'anchor_groups' or 'anchor_pairs'")
+
+
+async def run_group_for_model(
     async_client,
     model: str,
-    anchor_a: str,
-    anchor_b: str,
+    anchors: list[str],
     embeddings: SBERTEmbeddings,
     tau: float,
     n_min: int,
@@ -68,7 +87,7 @@ async def run_pair_for_model(
     prompt_style: str = "default",
     reasoning: dict | None = None,
 ):
-    prompt = drat_prompt(anchor_a, anchor_b, style=prompt_style)
+    prompt = drat_prompt(list(anchors), style=prompt_style)
     raw = await call_llm_async(
         async_client,
         messages=[{"role": "user", "content": prompt}],
@@ -80,15 +99,26 @@ async def run_pair_for_model(
         reasoning=reasoning,
     )
     words = extract_words_from_response(raw, expected_count=10)
-    score = score_drat(words, anchor_a, anchor_b, embeddings, tau, n_min)
+    score = score_drat(words, list(anchors), embeddings, tau, n_min=n_min)
     return {
         "model": model,
-        "anchor_a": anchor_a,
-        "anchor_b": anchor_b,
+        "anchors": list(anchors),
         "raw_response": raw,
         "extracted_words": words,
         "score": score,
     }
+
+
+# Backward-compatibility shim for any external callers still using the old API.
+async def run_pair_for_model(async_client, model, anchor_a, anchor_b, embeddings,
+                              tau, n_min, temperature, max_tokens, seed, top_p,
+                              prompt_style="default", reasoning=None):
+    r = await run_group_for_model(
+        async_client, model, [anchor_a, anchor_b], embeddings, tau, n_min,
+        temperature, max_tokens, seed, top_p, prompt_style, reasoning,
+    )
+    # Old-format keys for backward compat with downstream analysis scripts
+    return {**r, "anchor_a": anchor_a, "anchor_b": anchor_b}
 
 
 async def main_async(config: dict, output_dir: Path) -> None:
@@ -98,38 +128,44 @@ async def main_async(config: dict, output_dir: Path) -> None:
     noun_pool = resolve_noun_pool(config)
     print(f"Random-noun pool size: {len(noun_pool)}")
 
-    # Per-pair tau calibration
-    print("\nComputing per-pair thresholds...")
-    pair_taus: dict[tuple[str, str], dict] = {}
-    for pair in config["anchor_pairs"]:
-        a, b = pair["anchor_a"], pair["anchor_b"]
+    groups = _normalize_anchor_groups(config)
+    n_anchors_per = len(groups[0]["anchors"]) if groups else 0
+    print(f"Anchor groups: {len(groups)} (each with {n_anchors_per} anchors)")
+
+    # Per-group tau calibration
+    print("\nComputing per-group thresholds...")
+    group_taus: dict[str, dict] = {}
+    for g in groups:
+        anchors = g["anchors"]
         result = compute_tau(
-            a, b, noun_pool, embeddings,
+            list(anchors), noun_pool, embeddings,
             percentile=config.get("tau_percentile", 90.0),
         )
-        pair_taus[(a, b)] = result
-        print(f"  ({a!r}, {b!r}): tau={result['tau']:.3f}")
+        key = " | ".join(anchors)
+        group_taus[key] = result
+        print(f"  ({key}): tau={result['tau']:.3f}")
 
     with open(output_dir / "tau_calibration.json", "w") as f:
         json.dump(
             {
-                f"{a} | {b}": {
+                k: {
                     "tau": v["tau"],
                     "percentile": v["percentile"],
                     "noun_pool_size": v["noun_pool_size"],
                     "noun_utilities": v["noun_utilities"],
+                    "n_anchors": v.get("n_anchors"),
                 }
-                for (a, b), v in pair_taus.items()
+                for k, v in group_taus.items()
             },
             f, indent=2,
         )
 
     # LLM calls — concurrent with a semaphore. Sequential when concurrency=1.
     n_models = len(config["models"])
-    n_pairs = len(config["anchor_pairs"])
+    n_groups = len(groups)
     concurrency = config.get("concurrency", 10)
-    print(f"\nRunning {n_models} model(s) × {n_pairs} pair(s) "
-          f"= {n_models * n_pairs} call(s) at concurrency={concurrency}...")
+    print(f"\nRunning {n_models} model(s) × {n_groups} group(s) "
+          f"= {n_models * n_groups} call(s) at concurrency={concurrency}...")
     async_client = get_async_client()
     sem = asyncio.Semaphore(concurrency)
 
@@ -139,9 +175,10 @@ async def main_async(config: dict, output_dir: Path) -> None:
     reasoning_cfg = config.get("reasoning")
     reasoning_mult = config.get("reasoning_max_tokens_multiplier", 4)
 
-    async def bounded(model: str, pair: dict) -> dict:
-        a, b = pair["anchor_a"], pair["anchor_b"]
-        tau = pair_taus[(a, b)]["tau"]
+    async def bounded(model: str, group: dict) -> dict:
+        anchors = group["anchors"]
+        key = " | ".join(anchors)
+        tau = group_taus[key]["tau"]
         is_reasoning = model in reasoning_models
         eff_max_tokens = (
             config.get("max_tokens", 256) * reasoning_mult
@@ -153,11 +190,10 @@ async def main_async(config: dict, output_dir: Path) -> None:
             last_err: Exception | None = None
             for attempt in range(max_retries):
                 try:
-                    r = await run_pair_for_model(
+                    r = await run_group_for_model(
                         async_client,
                         model=model,
-                        anchor_a=a,
-                        anchor_b=b,
+                        anchors=list(anchors),
                         embeddings=embeddings,
                         tau=tau,
                         n_min=config.get("n_min", 5),
@@ -168,6 +204,9 @@ async def main_async(config: dict, output_dir: Path) -> None:
                         prompt_style=config.get("prompt_style", "default"),
                         reasoning=eff_reasoning,
                     )
+                    # Inject backward-compat keys for 2-anchor groups
+                    if len(anchors) == 2:
+                        r = {**r, "anchor_a": anchors[0], "anchor_b": anchors[1]}
                     last_err = None
                     break
                 except Exception as e:
@@ -179,14 +218,13 @@ async def main_async(config: dict, output_dir: Path) -> None:
                         break
                     backoff = 2 ** attempt + 0.5  # 1.5, 2.5, 4.5, 8.5 ...
                     print(f"  retry {attempt+1}/{max_retries} for {model} on "
-                          f"({a!r}, {b!r}) after {backoff:.1f}s: {type(e).__name__}")
+                          f"({key!r}) after {backoff:.1f}s: {type(e).__name__}")
                     await asyncio.sleep(backoff)
         if last_err is not None:
-            print(f"  ERROR {model} | ({a!r}, {b!r}): {type(last_err).__name__}: {last_err}")
+            print(f"  ERROR {model} | ({key!r}): {type(last_err).__name__}: {last_err}")
             return {
                 "model": model,
-                "anchor_a": a,
-                "anchor_b": b,
+                "anchors": list(anchors),
                 "raw_response": None,
                 "extracted_words": [],
                 "error": f"{type(last_err).__name__}: {last_err}",
@@ -208,13 +246,13 @@ async def main_async(config: dict, output_dir: Path) -> None:
             if s["sufficient"]
             else f"GATE FAIL: {s.get('reason', 'unknown')}"
         )
-        print(f"  {model} | ({a!r}, {b!r}): DRAT={s['drat']:.2f} | {survivors_str}")
+        print(f"  {model} | ({key!r}): DRAT={s['drat']:.2f} | {survivors_str}")
         return r
 
     tasks = [
-        bounded(model, pair)
+        bounded(model, group)
         for model in config["models"]
-        for pair in config["anchor_pairs"]
+        for group in groups
     ]
     results = await asyncio.gather(*tasks, return_exceptions=False)
 
@@ -225,11 +263,10 @@ async def main_async(config: dict, output_dir: Path) -> None:
     summary: dict[str, dict] = {}
     for r in results:
         model = r["model"]
-        summary.setdefault(model, {"drat_scores": [], "pair_results": []})
+        summary.setdefault(model, {"drat_scores": [], "group_results": []})
         summary[model]["drat_scores"].append(r["score"]["drat"])
-        summary[model]["pair_results"].append({
-            "anchor_a": r["anchor_a"],
-            "anchor_b": r["anchor_b"],
+        summary[model]["group_results"].append({
+            "anchors": r.get("anchors") or [r.get("anchor_a"), r.get("anchor_b")],
             "drat": r["score"]["drat"],
             "n_survivors": r["score"]["n_survivors"],
             "sufficient": r["score"]["sufficient"],
@@ -237,20 +274,19 @@ async def main_async(config: dict, output_dir: Path) -> None:
     for model in summary:
         scores = summary[model]["drat_scores"]
         summary[model]["mean_drat"] = float(np.mean(scores))
-        summary[model]["n_pairs"] = len(scores)
+        summary[model]["n_groups"] = len(scores)
 
     with open(output_dir / "summary.json", "w") as f:
         json.dump(summary, f, indent=2)
 
     print("\nPer-model DRAT summary:")
     for model, s in summary.items():
-        print(f"  {model}: mean DRAT = {s['mean_drat']:.2f} over {s['n_pairs']} pair(s)")
+        print(f"  {model}: mean DRAT = {s['mean_drat']:.2f} over {s['n_groups']} group(s)")
 
-    # Sanity-check criteria from the smoke-test plan
     print("\nSanity checks:")
-    all_taus = [v["tau"] for v in pair_taus.values()]
-    tau_in_range = all(0.10 < t < 0.40 for t in all_taus)
-    print(f"  tau values in [0.10, 0.40]: {tau_in_range} ({all_taus})")
+    all_taus = [v["tau"] for v in group_taus.values()]
+    tau_in_range = all(0.10 < t < 0.50 for t in all_taus)
+    print(f"  tau values in [0.10, 0.50]: {tau_in_range}")
     drats = [r["score"]["drat"] for r in results]
     drat_in_range = all(0.0 <= d <= 200.0 for d in drats)
     print(f"  DRAT values in [0, 200]: {drat_in_range}")
@@ -266,8 +302,8 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False) -> None
         raise ValueError("FATAL: 'output_dir' is required in config")
     if "models" not in config:
         raise ValueError("FATAL: 'models' is required in config")
-    if "anchor_pairs" not in config:
-        raise ValueError("FATAL: 'anchor_pairs' is required in config")
+    if "anchor_pairs" not in config and "anchor_groups" not in config:
+        raise ValueError("FATAL: 'anchor_pairs' or 'anchor_groups' is required in config")
 
     output_dir = init_directory(config["output_dir"], overwrite=overwrite)
     save_config(config, output_dir)

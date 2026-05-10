@@ -1,0 +1,15 @@
+test_model: "openai/gpt-4o-mini"
+judge_model: "anthropic/claude-sonnet-4"
+iterations: 3
+threads: 16
+
+# Run id used by the EQ-Bench CLI to organise results. Default is the
+# model key from src.dat_eval.llm.model_id_to_key.
+run_id: null
+
+# Path inside resources/repos/creative-writing-bench/. Default is the
+# canonical runs file the EQ-Bench leaderboard uses.
+runs_file: "creative_bench_runs.json"
+creative_prompts_file: "data/creative_writing_prompts_v3.json"
+
+output_dir: "data/new_tests/eqbench_cw/gpt-4o-mini"

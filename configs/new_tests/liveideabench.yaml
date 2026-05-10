@@ -1,0 +1,7 @@
+idea_model: "openai/gpt-4o-mini"
+provider: "openrouter"
+
+# Specific keywords to test (null = all ~1,180 keywords across 22 disciplines).
+keywords: null
+
+output_dir: "data/new_tests/liveideabench/gpt-4o-mini"

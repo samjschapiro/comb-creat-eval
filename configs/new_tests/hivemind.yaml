@@ -1,0 +1,30 @@
+# Hivemind config — see src/new_tests/hivemind.py for the canonical-vs-
+# implementation differences. Most importantly, we substitute NB-WildChat
+# for the unreleased Infinity-Chat prompt set.
+
+test_model: "openai/gpt-4o-mini"
+
+# Prompt source — see run_hivemind.py for accepted values.
+# 'infinite-chats-eval'    — 100 prompts, the canonical small eval subset
+# 'infinite-chats-taxonomy' — full 26K open-ended Infinity-Chat
+prompt_source: "infinite-chats-eval"
+
+# Cap on prompts (null = all). infinite-chats-eval has 100; -taxonomy has 26K.
+max_prompts: null
+
+# Generation knobs. Paper uses temperature 1.0 to allow diversity.
+k: 8
+temperature: 1.0
+top_p: 1.0
+max_tokens: 512
+
+# Embedding model. The paper uses OpenAI's text-embedding-3-small. If you
+# don't have an OPENAI_API_KEY set you can substitute a local sentence-
+# transformers model — e.g. 'sentence-transformers/all-mpnet-base-v2'.
+# Substitution changes the absolute similarity scale but typically preserves
+# relative orderings between models.
+embedding_model: "sentence-transformers/all-mpnet-base-v2"
+
+generation_concurrency: 8
+
+output_dir: "data/new_tests/hivemind/gpt-4o-mini_eval"

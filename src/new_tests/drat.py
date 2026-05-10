@@ -19,20 +19,46 @@ from scipy.spatial.distance import cosine as cosine_distance
 from src.dat_eval.cdat import SBERTEmbeddings, validate_words_sbert
 
 
-def drat_prompt(anchor_a: str, anchor_b: str, style: str = "default") -> str:
-    """Generate the DRAT prompt for an anchor pair.
+def _anchor_list_str(anchors: list[str], joiner: str = "and") -> str:
+    """Format anchor list for prompt: '"A" and "B"' or '"A", "B", and "C"'."""
+    quoted = [f'"{a}"' for a in anchors]
+    if len(quoted) == 1:
+        return quoted[0]
+    if len(quoted) == 2:
+        return f"{quoted[0]} {joiner} {quoted[1]}"
+    return f"{', '.join(quoted[:-1])}, {joiner} {quoted[-1]}"
 
-    Args:
-        style: "default" — standard "connects" framing.
-               "analogical" — "metaphorically applied to both" framing per the
-                 design doc's analogy-literature motivation.
+
+def drat_prompt(anchors_or_a, anchor_b: str | None = None, style: str = "default") -> str:
+    """Generate the DRAT prompt.
+
+    Two call signatures supported for backward compatibility:
+      - drat_prompt(anchor_a, anchor_b, style="...")  — original 2-anchor.
+      - drat_prompt(["A", "B", "C", ...], style="...") — N-anchor.
     """
+    if isinstance(anchors_or_a, list):
+        anchors = anchors_or_a
+    else:
+        anchors = [anchors_or_a]
+        if anchor_b is not None:
+            anchors.append(anchor_b)
+
+    if len(anchors) < 2:
+        raise ValueError(f"drat_prompt needs >= 2 anchors, got {len(anchors)}")
+
+    anchor_str = _anchor_list_str(anchors)
+
     if style == "default":
-        bridge_clause = f'each of which connects "{anchor_a}" and "{anchor_b}"'
+        bridge_clause = (
+            f'each of which connects {anchor_str}'
+            if len(anchors) == 2
+            else f'each of which connects all of {anchor_str}'
+        )
     elif style == "analogical":
         bridge_clause = (
-            f'each of which could be metaphorically applied to both '
-            f'"{anchor_a}" and "{anchor_b}"'
+            f'each of which could be metaphorically applied to both {anchor_str}'
+            if len(anchors) == 2
+            else f'each of which could be metaphorically applied to all of {anchor_str}'
         )
     else:
         raise ValueError(f"unknown prompt style: {style!r}")
@@ -48,37 +74,37 @@ def drat_prompt(anchor_a: str, anchor_b: str, style: str = "default") -> str:
 
 
 def compute_tau(
-    anchor_a: str,
-    anchor_b: str,
-    noun_pool: list[str],
-    embeddings: SBERTEmbeddings,
+    anchors_or_a,
+    anchor_b_or_pool,
+    noun_pool_or_embeddings=None,
+    embeddings: SBERTEmbeddings | None = None,
     percentile: float = 90.0,
 ) -> dict:
-    """Compute the per-pair utility threshold from a random-noun null distribution.
+    """Compute the per-anchor-group utility threshold from a random-noun null.
 
-    For each random noun n in the pool, compute Utility(n | A, B). Return the
-    `percentile`th percentile as tau. Higher percentile = stricter gate.
-
-    Args:
-        anchor_a, anchor_b: The two anchor strings.
-        noun_pool: List of random nouns to compute the null distribution.
-        embeddings: SBERT model.
-        percentile: Quantile (0-100) of the null to use as tau.
-
-    Returns:
-        Dict with tau, noun_utilities (list), noun_pool_size, percentile.
+    Two call signatures supported:
+      compute_tau(anchor_a, anchor_b, noun_pool, embeddings, percentile=...)
+      compute_tau([A, B, C, ...], noun_pool, embeddings, percentile=...)
     """
-    all_to_encode = [anchor_a, anchor_b] + list(noun_pool)
-    vectors = embeddings.encode_batch(all_to_encode)
-    a_vec = vectors[0]
-    b_vec = vectors[1]
-    noun_vecs = vectors[2:]
+    if isinstance(anchors_or_a, list):
+        anchors = anchors_or_a
+        noun_pool = anchor_b_or_pool
+        emb = noun_pool_or_embeddings
+    else:
+        anchors = [anchors_or_a, anchor_b_or_pool]
+        noun_pool = noun_pool_or_embeddings
+        emb = embeddings
+
+    all_to_encode = list(anchors) + list(noun_pool)
+    vectors = emb.encode_batch(all_to_encode)
+    n_anchors = len(anchors)
+    anchor_vecs = vectors[:n_anchors]
+    noun_vecs = vectors[n_anchors:]
 
     utilities = []
     for v in noun_vecs:
-        cos_a = float(1.0 - cosine_distance(v, a_vec))
-        cos_b = float(1.0 - cosine_distance(v, b_vec))
-        utilities.append(max(cos_a, cos_b))
+        sims = [float(1.0 - cosine_distance(v, av)) for av in anchor_vecs]
+        utilities.append(max(sims))  # max-utility (anchor in any of the n)
 
     tau = float(np.percentile(utilities, percentile))
     return {
@@ -86,30 +112,38 @@ def compute_tau(
         "noun_utilities": utilities,
         "noun_pool_size": len(noun_pool),
         "percentile": percentile,
+        "n_anchors": n_anchors,
     }
 
 
 def score_drat(
     words: list[str],
-    anchor_a: str,
-    anchor_b: str,
-    embeddings: SBERTEmbeddings,
-    tau: float,
-    n_min: int = 5,
+    anchors_or_a,
+    anchor_b_or_emb=None,
+    embeddings_or_tau=None,
+    tau_or_n_min=None,
+    n_min: int | None = None,
 ) -> dict:
     """Score a model response with the DRAT metric.
 
-    Args:
-        words: Raw list of words from the model.
-        anchor_a, anchor_b: The two anchors for this item.
-        embeddings: SBERT model.
-        tau: Per-pair utility threshold (from compute_tau).
-        n_min: Minimum number of survivors required to score.
-
-    Returns:
-        Dict with drat (float), n_valid, n_survivors, survivors, scored_words,
-        utilities, mean_pairwise_distance, tau, sufficient (bool), reason (if not).
+    Two call signatures supported (preserves backward-compat with 2-anchor):
+      score_drat(words, anchor_a, anchor_b, embeddings, tau, n_min=...)
+      score_drat(words, [A, B, C, ...], embeddings, tau, n_min=...)
     """
+    # Disambiguate: list -> N-anchor, str -> 2-anchor backward compat
+    if isinstance(anchors_or_a, list):
+        anchors = anchors_or_a
+        embeddings = anchor_b_or_emb
+        tau = embeddings_or_tau
+        if n_min is None:
+            n_min = tau_or_n_min if tau_or_n_min is not None else 5
+    else:
+        anchors = [anchors_or_a, anchor_b_or_emb]
+        embeddings = embeddings_or_tau
+        tau = tau_or_n_min
+        if n_min is None:
+            n_min = 5
+
     valid = validate_words_sbert(words)
 
     if len(valid) < n_min:
@@ -121,6 +155,7 @@ def score_drat(
             "scored_words": valid,
             "utilities": [],
             "tau": tau,
+            "n_anchors": len(anchors),
             "sufficient": False,
             "reason": f"only {len(valid)} valid words; need >= {n_min}",
         }
@@ -128,18 +163,17 @@ def score_drat(
     # Use up to first 10 valid words (matches DAT/CDAT convention; gate runs after)
     scored_words = valid[:10]
 
-    all_to_encode = [anchor_a, anchor_b] + scored_words
+    all_to_encode = list(anchors) + scored_words
     vectors = embeddings.encode_batch(all_to_encode)
-    a_vec = vectors[0]
-    b_vec = vectors[1]
-    word_vecs = vectors[2:]
+    n_anchors = len(anchors)
+    anchor_vecs = vectors[:n_anchors]
+    word_vecs = vectors[n_anchors:]
 
-    # Per-word utility: max(cos(w, A), cos(w, B))
+    # Per-word utility: max(cos(w, A_i)) over all anchors A_i
     utilities = []
     for v in word_vecs:
-        cos_a = float(1.0 - cosine_distance(v, a_vec))
-        cos_b = float(1.0 - cosine_distance(v, b_vec))
-        utilities.append(max(cos_a, cos_b))
+        sims = [float(1.0 - cosine_distance(v, av)) for av in anchor_vecs]
+        utilities.append(max(sims))
 
     # Survivor set: words with utility above tau
     survivor_indices = [i for i, u in enumerate(utilities) if u > tau]
@@ -154,6 +188,7 @@ def score_drat(
             "scored_words": scored_words,
             "utilities": utilities,
             "tau": tau,
+            "n_anchors": n_anchors,
             "sufficient": False,
             "reason": f"only {len(survivors)} survivors above tau={tau:.3f}; need >= {n_min}",
         }
@@ -177,6 +212,7 @@ def score_drat(
         "scored_words": scored_words,
         "utilities": utilities,
         "tau": tau,
+        "n_anchors": n_anchors,
         "sufficient": True,
         "mean_pairwise_distance": mean_distance,
     }

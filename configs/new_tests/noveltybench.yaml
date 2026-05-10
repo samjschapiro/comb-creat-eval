@@ -1,0 +1,42 @@
+# NoveltyBench config — see src/new_tests/noveltybench.py for the
+# canonical-vs-implementation differences (LLM-judge stand-ins for the
+# DeBERTa equivalence classifier and the Skywork-Reward quality model).
+
+test_model: "openai/gpt-4o-mini"
+
+# Subset of NoveltyBench prompts: "NB-Curated" (100 prompts, all hand-
+# crafted) or "NB-WildChat" (1000 prompts from real-user ChatGPT logs).
+# The paper reports leaderboard numbers on the union.
+subset: "NB-Curated"
+
+# Optional cap on prompts processed (null = all). Useful for piloting.
+max_prompts: null
+
+# Generation knobs.
+k: 10
+temperature: 1.0
+top_p: 1.0
+max_tokens: 512
+
+# Utility_k patience parameter. Paper uses 0.8.
+patience: 0.8
+
+# Distinctness backend. 'deberta' (default, paper-faithful) loads
+# yimingzhang/deberta-v3-large-generation-similarity locally. 'llm' uses
+# distinctness_judge_model via OpenRouter (less faithful — useful when
+# the local classifier can't be loaded).
+distinctness_method: "deberta"
+distinctness_threshold: 0.5
+distinctness_device: "cpu"  # set to "mps" or "cuda" if available
+distinctness_judge_model: "anthropic/claude-haiku-4-5"  # only used if method == "llm"
+
+# Quality. Paper uses Skywork-Reward-Gemma-2-27B-v0.2 (not OpenRouter-
+# accessible); we substitute an LLM-judge with a 1-10 rubric.
+quality_judge_model: "openai/gpt-4o-mini"
+
+# Concurrency.
+generation_concurrency: 8
+judge_concurrency: 8
+
+# Where outputs land.
+output_dir: "data/new_tests/noveltybench/gpt-4o-mini_curated"

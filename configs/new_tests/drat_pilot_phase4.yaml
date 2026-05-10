@@ -1,0 +1,99 @@
+# DRAT Pilot — Phase 4: model-suite expansion using LiveIdeaBench leaderboard.
+#
+# Adds models that are on the LIB leaderboard but not yet in our DRAT pool.
+# Two groups:
+#   (a) Models in our dat_eval pool that already have DAT/CDAT/PACE but
+#       weren't in our previous DRAT runs. Adding DRAT lets us include
+#       them in test-test analysis at higher n.
+#   (b) Genuinely new models from the LIB leaderboard not in dat_eval pool.
+#       These add to LIB×DRAT joint coverage but not to test-test.
+#
+# Same anchor bank, prompt, params as analogical_v1 / phase3.
+
+output_dir: "data/new_tests/drat/pilot_phase4"
+
+prompt_style: "analogical"
+
+models:
+  # (a) Already in dat_eval pool — adding DRAT closes test-test gaps
+  - anthropic/claude-3.5-sonnet
+  - anthropic/claude-3-opus
+  - google/gemini-pro-1.5
+  - google/gemini-2.0-pro-exp-02-05
+  - meta-llama/llama-3.1-405b-instruct
+  - mistralai/mistral-nemo
+  - nvidia/llama-3.1-nemotron-70b-instruct
+
+  # (b) New LIB-leaderboard models not in dat_eval pool
+  - anthropic/claude-3.7-sonnet
+  - anthropic/claude-3.7-sonnet:thinking      # reasoning
+  - openai/o1-mini                            # reasoning
+  - openai/o3-mini-high                       # reasoning
+  - google/gemini-2.0-flash-thinking-exp:free # may need :free suffix on OR
+  - deepseek/deepseek-r1-distill-llama-70b
+  - deepseek/deepseek-r1-distill-qwen-32b
+  - qwen/qwen-max
+  - qwen/qwen-2.5-coder-32b-instruct
+  - qwen/qwen-2.5-7b-instruct
+  - mistralai/mistral-small
+  - x-ai/grok-2-1212
+  - amazon/nova-pro-v1
+  - amazon/nova-lite-v1
+
+reasoning_models:
+  - anthropic/claude-3.7-sonnet:thinking
+  - openai/o1-mini
+  - openai/o3-mini-high
+  - google/gemini-2.0-flash-thinking-exp:free
+  - deepseek/deepseek-r1-distill-qwen-32b
+  - deepseek/deepseek-r1-distill-llama-70b
+
+reasoning:
+  effort: "low"
+  exclude: true
+
+reasoning_max_tokens_multiplier: 4
+
+anchor_pairs:
+  - {anchor_a: "heart",            anchor_b: "engine",                  division_a: "life",        division_b: "physical"}
+  - {anchor_a: "photosynthesis",   anchor_b: "combustion",              division_a: "life",        division_b: "physical"}
+  - {anchor_a: "virus",            anchor_b: "crystal",                 division_a: "life",        division_b: "physical"}
+  - {anchor_a: "immune system",    anchor_b: "marketplace",             division_a: "life",        division_b: "social"}
+  - {anchor_a: "evolution",        anchor_b: "election",                division_a: "life",        division_b: "social"}
+  - {anchor_a: "ecosystem",        anchor_b: "neighborhood",            division_a: "life",        division_b: "social"}
+  - {anchor_a: "genome",           anchor_b: "algorithm",               division_a: "life",        division_b: "formal"}
+  - {anchor_a: "neuron",           anchor_b: "graph",                   division_a: "life",        division_b: "formal"}
+  - {anchor_a: "heartbeat",        anchor_b: "oscillator",              division_a: "life",        division_b: "formal"}
+  - {anchor_a: "immune system",    anchor_b: "supply chain",            division_a: "life",        division_b: "engineering"}
+  - {anchor_a: "lung",             anchor_b: "turbine",                 division_a: "life",        division_b: "engineering"}
+  - {anchor_a: "ant colony",       anchor_b: "factory",                 division_a: "life",        division_b: "engineering"}
+  - {anchor_a: "phase transition", anchor_b: "revolution",              division_a: "physical",    division_b: "social"}
+  - {anchor_a: "friction",         anchor_b: "negotiation",             division_a: "physical",    division_b: "social"}
+  - {anchor_a: "gravity",          anchor_b: "hierarchy",               division_a: "physical",    division_b: "social"}
+  - {anchor_a: "entropy",          anchor_b: "information",             division_a: "physical",    division_b: "formal"}
+  - {anchor_a: "wave",             anchor_b: "function",                division_a: "physical",    division_b: "formal"}
+  - {anchor_a: "lattice",          anchor_b: "matrix",                  division_a: "physical",    division_b: "formal"}
+  - {anchor_a: "turbulence",       anchor_b: "traffic",                 division_a: "physical",    division_b: "engineering"}
+  - {anchor_a: "conductivity",     anchor_b: "circuit",                 division_a: "physical",    division_b: "engineering"}
+  - {anchor_a: "heat",             anchor_b: "refrigerator",            division_a: "physical",    division_b: "engineering"}
+  - {anchor_a: "democracy",        anchor_b: "voting algorithm",        division_a: "social",      division_b: "formal"}
+  - {anchor_a: "contract",         anchor_b: "proof",                   division_a: "social",      division_b: "formal"}
+  - {anchor_a: "rumor",            anchor_b: "broadcast",               division_a: "social",      division_b: "formal"}
+  - {anchor_a: "supply chain",     anchor_b: "organization",            division_a: "social",      division_b: "engineering"}
+  - {anchor_a: "city",             anchor_b: "machine",                 division_a: "social",      division_b: "engineering"}
+  - {anchor_a: "parliament",       anchor_b: "pipeline",                division_a: "social",      division_b: "engineering"}
+  - {anchor_a: "algorithm",        anchor_b: "factory",                 division_a: "formal",      division_b: "engineering"}
+  - {anchor_a: "theorem",          anchor_b: "blueprint",               division_a: "formal",      division_b: "engineering"}
+  - {anchor_a: "recursion",        anchor_b: "assembly line",           division_a: "formal",      division_b: "engineering"}
+
+noun_pool_source: "cdat_default_cues"
+tau_percentile: 90.0
+n_min: 5
+
+temperature: 1.0
+max_tokens: 256
+seed: 42
+top_p: 1.0
+
+concurrency: 6
+max_retries: 4

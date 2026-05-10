@@ -1,0 +1,88 @@
+# DRAT k=4 ConceptNet relation-distant ablation. Numberbatch tau<0.20.
+
+output_dir: "data/new_tests/drat/ablation_k4_conceptnet"
+prompt_style: "analogical"
+
+models:
+  - google/gemini-2.0-flash-lite-001
+  - microsoft/phi-4
+  - google/gemma-2-27b-it
+  - mistralai/mistral-small-24b-instruct-2501
+  - google/gemini-2.0-flash-001
+  - meta-llama/llama-3.3-70b-instruct
+  - openai/gpt-4o-mini
+  - anthropic/claude-3.5-haiku
+  - deepseek/deepseek-chat
+  - qwen/qwen-2.5-72b-instruct
+  - meta-llama/llama-3.1-70b-instruct
+  - mistralai/mistral-large-2411
+  - openai/gpt-4o
+  - openai/gpt-4-turbo
+  - deepseek/deepseek-r1
+  - openai/o3-mini
+  - anthropic/claude-3.7-sonnet
+  - anthropic/claude-3.7-sonnet:thinking
+  - deepseek/deepseek-r1-distill-llama-70b
+  - deepseek/deepseek-r1-distill-qwen-32b
+  - qwen/qwen-max
+  - qwen/qwen-2.5-coder-32b-instruct
+  - qwen/qwen-2.5-7b-instruct
+  - mistralai/mistral-nemo
+  - nvidia/llama-3.1-nemotron-70b-instruct
+  - amazon/nova-pro-v1
+  - amazon/nova-lite-v1
+
+reasoning_models:
+  - deepseek/deepseek-r1
+  - openai/o3-mini
+  - anthropic/claude-3.7-sonnet:thinking
+  - deepseek/deepseek-r1-distill-llama-70b
+  - deepseek/deepseek-r1-distill-qwen-32b
+
+reasoning:
+  effort: "low"
+  exclude: true
+
+reasoning_max_tokens_multiplier: 4
+
+anchor_groups:
+  - {anchors: ['constitution', 'bark', 'whale', 'neighborhood']}
+  - {anchors: ['branch', 'blood', 'embryo', 'refrigerator']}
+  - {anchors: ['dream', 'knife', 'rabbit', 'tribe']}
+  - {anchors: ['canyon', 'vein', 'hope', 'enzyme']}
+  - {anchors: ['bee', 'robot', 'festival', 'axiom']}
+  - {anchors: ['rumor', 'wind', 'pipeline', 'petal']}
+  - {anchors: ['rice', 'particle', 'alliance', 'ecosystem']}
+  - {anchors: ['decay', 'fern', 'vein', 'wind']}
+  - {anchors: ['information', 'decay', 'wind', 'hammer']}
+  - {anchors: ['scale', 'antenna', 'gravity', 'wine']}
+  - {anchors: ['scale', 'artery', 'pollen', 'supply chain']}
+  - {anchors: ['spoon', 'lens', 'hammer', 'forest']}
+  - {anchors: ['battery', 'glacier', 'dawn', 'joint']}
+  - {anchors: ['neighborhood', 'constitution', 'hope', 'joint']}
+  - {anchors: ['moss', 'neuron', 'crystal', 'metric']}
+  - {anchors: ['thread', 'ritual', 'dam', 'eagle']}
+  - {anchors: ['crystal', 'blood', 'feather', 'function']}
+  - {anchors: ['tea', 'broadcast', 'desert', 'microscope']}
+  - {anchors: ['circuit', 'election', 'vacuum', 'ice']}
+  - {anchors: ['gas', 'embryo', 'village', 'lung']}
+  - {anchors: ['atom', 'fog', 'whale', 'hammer']}
+  - {anchors: ['ant', 'hope', 'voting algorithm', 'information']}
+  - {anchors: ['ant colony', 'moss', 'topology', 'thunder']}
+  - {anchors: ['wine', 'bread', 'graph', 'feather']}
+  - {anchors: ['telegram', 'cell', 'marketplace', 'hormone']}
+  - {anchors: ['crystal', 'mountain', 'immune system', 'salmon']}
+  - {anchors: ['wave', 'supply chain', 'chaos', 'engine']}
+  - {anchors: ['silence', 'function', 'hope', 'leaf']}
+  - {anchors: ['cavern', 'bacterium', 'forest', 'memory']}
+  - {anchors: ['theorem', 'fog', 'chaos', 'transmission']}
+
+noun_pool_source: "cdat_default_cues"
+tau_percentile: 90.0
+n_min: 3
+temperature: 1.0
+max_tokens: 256
+seed: 42
+top_p: 1.0
+concurrency: 6
+max_retries: 4

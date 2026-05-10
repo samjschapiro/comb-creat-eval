@@ -18,6 +18,11 @@ dependencies = [
     "sentence-transformers>=5.4.0",
     "cmcrameri>=1.9",
     "nltk>=3.9.4",
+    "datasets>=4.8.5",
+    "tiktoken>=0.12.0",
+    "sentencepiece>=0.2.1",
+    "transformers>=4.45,<4.50",
+    "protobuf>=7.34.1",
 ]
 
 [tool.hatch.build.targets.wheel]
