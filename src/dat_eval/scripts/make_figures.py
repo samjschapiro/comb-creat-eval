@@ -868,7 +868,7 @@ def _draw_corr_triangle(ax, mat, labels, rotation=20, label_fs=14,
     upper_mask = ~np.tri(n, dtype=bool)
     display = np.ma.masked_array(np.where(np.isnan(mat), 0.0, mat),
                                  mask=upper_mask)
-    im = ax.imshow(display, vmin=-1, vmax=1, cmap="RdBu_r", aspect=aspect)
+    im = ax.imshow(display, vmin=-1, vmax=1, cmap="coolwarm", aspect=aspect)
     ax.set_xticks(range(n))
     ax.set_yticks(range(n))
     ax.set_xticklabels(labels, rotation=rotation,
@@ -1425,6 +1425,19 @@ def _panel_avg_ceiling(R_list: list[float], v_grid: np.ndarray) -> np.ndarray:
     for R in R_list:
         upper = upper + v_grid * np.sqrt(max(0.0, 1 - R ** 2)) + abs(R) * root1mv2
     return upper / len(R_list)
+
+
+def _panel_max_ceiling(R_list: list[float], v_grid: np.ndarray) -> np.ndarray:
+    """Single curve from the panel benchmark with the largest |R|. Its
+    ceiling sits above all the others' across the bulk of the moderate-v
+    range where observed test points cluster, so it serves as the
+    construct-level ceiling reference (rather than an elementwise envelope
+    or a mean-of-curves)."""
+    if not R_list:
+        return np.zeros_like(v_grid)
+    R = max(R_list, key=abs)
+    root1mv2 = np.sqrt(np.clip(1 - v_grid ** 2, 0, None))
+    return v_grid * np.sqrt(max(0.0, 1 - R ** 2)) + abs(R) * root1mv2
 
 
 def fig_headline():
@@ -2003,9 +2016,9 @@ def fig_headline_combined():
             "DAT":      (-0.060, +0.045, "right",  "bottom"),  # above-left
             "CDAT":     (-0.060, +0.000, "right",  "center"),  # left
             "CDAT-N":   ( 0.000, -0.060, "center", "top"),     # below
-            "CDAT-A":   (-0.060, -0.045, "right",  "top"),     # below-left
+            "CDAT-A":   ( 0.060, -0.045, "left",   "top"),     # below-right (away from CDAT dot)
             "PACE":     ( 0.060, +0.045, "left",   "bottom"),  # above-right
-            "RAT":      ( 0.060, -0.045, "left",   "top"),     # below-right
+            "RAT":      ( 0.060, +0.000, "left",   "center"),  # right (RAT separated horizontally)
         },
     }
 
@@ -2069,7 +2082,9 @@ def fig_headline_combined():
             if zs:
                 composite.setdefault(m, {})[t] = float(np.mean(zs))
 
+    from scipy.stats import pearsonr as _pearsonr
     bottom_panels = []  # (label, R, {test: (v, s)})
+    bottom_panel_sig = {}  # label -> {test: (p_v < .05, p_s < .05)}
     for blabel, bkey in bench_keys.items():
         ms_yg = [m for m, d in BMARKS.items()
                  if bkey in d and "arena_overall" in d and "mmlu_pro" in d]
@@ -2101,9 +2116,13 @@ def fig_headline_combined():
                 xs = np.array([composite[m][tk] for m in kept])
             ys_k = np.array([y_by_m[m] for m in kept])
             rs_k = np.array([resid_by_m[m] for m in kept])
-            v = float(np.corrcoef(xs, ys_k)[0, 1])
-            s = float(np.corrcoef(xs, rs_k)[0, 1])
+            v_r, p_v = _pearsonr(xs, ys_k)
+            s_r, p_s = _pearsonr(xs, rs_k)
+            v = float(v_r); s = float(s_r)
             pts[tlabel] = (v, s)
+            bottom_panel_sig.setdefault(blabel, {})[tlabel] = (
+                float(p_v) < 0.05, float(p_s) < 0.05,
+            )
         bottom_panels.append((blabel, R, pts))
 
     # Top-row panel-average ceilings need R values per construct
@@ -2156,7 +2175,7 @@ def fig_headline_combined():
         R_list = panel_R.get(title, [])
         ceil_y = None
         if R_list:
-            ceil_y = _panel_avg_ceiling(R_list, v_grid)
+            ceil_y = _panel_max_ceiling(R_list, v_grid)
             ax.plot(v_grid, ceil_y,
                     color="black", linewidth=1.6, linestyle="-",
                     alpha=0.9, zorder=1)
@@ -2210,6 +2229,20 @@ def fig_headline_combined():
         ax.tick_params(axis="both", labelsize=tick_fs_top)
         ax.set_xlabel(r"Validity  ($r$)", fontsize=axis_fs_top)
 
+    # SI panel has only one benchmark (LiveIdeaBench), so its top-row
+    # data must equal the bottom-row LIB cells exactly. Rebuild si_data
+    # live from bottom_panels so the two panels can't drift apart.
+    _lib_pts = next((pts for blabel, _R, pts in bottom_panels
+                     if blabel == "LiveIdeaBench"), None)
+    _lib_sig = bottom_panel_sig.get("LiveIdeaBench", {})
+    if _lib_pts is not None:
+        si_data = {
+            t: [(v, s,
+                 _lib_sig.get(t, (False, False))[0],
+                 _lib_sig.get(t, (False, False))[1])]
+            for t, (v, s) in _lib_pts.items()
+        }
+
     draw_top(ax_top_l, cw_data, cw_benchmarks, "Creative Writing")
     draw_top(ax_top_m, dt_data, dt_benchmarks, "Divergent Thinking")
     draw_top(ax_top_r, si_data, si_benchmarks, "Scientific Ideation")
@@ -2227,7 +2260,7 @@ def fig_headline_combined():
     opt_xs, opt_ys = [], []
     for Rs in panel_R.values():
         if Rs:
-            ceil = _panel_avg_ceiling(Rs, v_grid_full)
+            ceil = _panel_max_ceiling(Rs, v_grid_full)
             j = int(np.argmax(v_grid_full + ceil))
             opt_xs.append(v_grid_full[j])
             opt_ys.append(ceil[j])

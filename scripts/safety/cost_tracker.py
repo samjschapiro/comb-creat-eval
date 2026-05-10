@@ -100,6 +100,18 @@ PRICING = {
     "openai/gpt-5.2":                   (1.75, 14.00),
     "google/gemini-3-flash-preview":    (0.50, 3.00),
     "x-ai/grok-4":                      (3.00, 15.00),
+    # --- LIB-pool gap-fill additions (2026-05-10) ---
+    # Prices conservative (rounded up from OpenRouter listed rates).
+    "anthropic/claude-3-opus":          (15.00, 75.00),
+    "anthropic/claude-3.7-sonnet":      (3.00, 15.00),
+    "anthropic/claude-3.7-sonnet:thinking": (3.00, 15.00),
+    "deepseek/deepseek-r1-distill-llama-70b": (0.20, 0.60),
+    "deepseek/deepseek-r1-distill-qwen-32b": (0.20, 0.60),
+    "qwen/qwen-max":                    (1.60, 6.40),
+    "qwen/qwen-2.5-coder-32b-instruct": (0.10, 0.30),
+    "qwen/qwen-2.5-7b-instruct":        (0.05, 0.10),
+    "amazon/nova-pro-v1":               (0.80, 3.20),
+    "amazon/nova-lite-v1":              (0.06, 0.24),
 }
 
 

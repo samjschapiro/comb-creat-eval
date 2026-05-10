@@ -1,0 +1,59 @@
+# LIB-pool gap fill: 10 models that have LiveIdeaBench + RAT scores but no
+# DAT/CDAT/PACE coverage from the original dat_eval run.
+#
+# Writes into the same run_v1 directory; run_evals.py's per-model, per-temp
+# skip-existing logic prevents any overlap with the 54-model cohort already
+# scored. No --overwrite — running it without that flag is safe.
+#
+# Zero-DAT retries (claude-3.5-sonnet, llama-3.1-405b) are intentionally
+# excluded per user direction; see option A in the n-discrepancy thread.
+
+output_dir: "data/dat_eval/run_v1"
+
+# Safety budget cap. The full 54-model run cost ~$30-50; this is 10 models
+# so $10 is a generous ceiling that triggers an abort before runaway spend.
+budget_usd: 10.0
+
+# Conservative concurrency given we're adding to an existing dir; cuts the
+# blast radius if anything misbehaves.
+concurrency: 10
+
+reasoning:
+  effort: "low"
+  exclude: true
+
+dat_temperatures: [1.0, 1.5, 2.0]
+cdat_temperatures: [1.0, 1.5, 2.0]
+pace_temperatures: [0.0]
+
+dat_top_p: 1.0
+dat_top_k: 0
+cdat_top_p: 1.0
+cdat_top_k: 0
+
+dat_max_tokens: 256
+cdat_max_tokens: 256
+pace_stage1_max_tokens: 400
+pace_stage2_max_tokens: 1200
+reasoning_max_tokens_multiplier: 4
+
+dat_trials: 40
+
+evals:
+  - dat
+  - cdat
+  - pace
+
+# 8 LIB-pool models missing DAT/CDAT/PACE coverage.
+# Intentionally excluded:
+#   - anthropic/claude-3-opus               (~$17 estimated; older model, marginal value)
+#   - anthropic/claude-3.7-sonnet:thinking  (~$10 as reasoning model; non-thinking variant kept)
+models:
+  - anthropic/claude-3.7-sonnet
+  - deepseek/deepseek-r1-distill-llama-70b
+  - deepseek/deepseek-r1-distill-qwen-32b
+  - qwen/qwen-max
+  - qwen/qwen-2.5-coder-32b-instruct
+  - qwen/qwen-2.5-7b-instruct
+  - amazon/nova-pro-v1
+  - amazon/nova-lite-v1
