@@ -921,20 +921,45 @@ def fig_benchmark_correlations(benchmarks):
                 mat_a[i, j] = r
 
     composite = load_composite_scores()
+    # RAT scores (zero-shot strict accuracy). Pilot wins on overlap; keys
+    # converted from OR-id form to the ormap form used in `composite`.
+    PROJECT_ROOT = Path(__file__).resolve().parents[3]
+    rat_orm: dict[str, float] = {}
+    def _ormap(s: str) -> str:
+        return s.replace("/", "_").replace(".", "-").replace(":", "_")
+    for _path in [
+        PROJECT_ROOT / "data/new_tests/rat/expansion_v1/summary.json",
+        PROJECT_ROOT / "data/new_tests/rat/pilot_v1/summary.json",
+    ]:
+        if _path.exists():
+            with open(_path) as f:
+                _rsum = json.load(f)
+            for _m, _s in _rsum.items():
+                if _s.get("n_total", 0) > 0 and _s.get("n_errors", 0) < _s["n_total"]:
+                    rat_orm[_ormap(_m)] = _s["zs_accuracy_strict"]
+
     tasks = ["dat", "cdat", "cdat_novelty", "cdat_appropriateness", "pace"]
-    labels_b = ["DAT", "CDAT", "CDAT-N", "CDAT-A", "PACE"]
-    nb = len(tasks)
+    labels_b = ["DAT", "CDAT", "CDAT-N", "CDAT-A", "PACE", "RAT"]
+    label_to_task = dict(zip(labels_b, tasks + [None]))  # None means RAT (special-cased)
+
+    def get_score(label: str, model: str):
+        if label == "RAT":
+            return rat_orm.get(model)
+        tk = label_to_task[label]
+        v = composite.get(model, {}).get(tk)
+        if v is None or (isinstance(v, float) and np.isnan(v)):
+            return None
+        return v
+
+    all_b_models = set(composite.keys()) | set(rat_orm.keys())
+    nb = len(labels_b)
     mat_b = np.full((nb, nb), np.nan)
-    for i, ti in enumerate(tasks):
-        for j, tj in enumerate(tasks):
+    for i, ti in enumerate(labels_b):
+        for j, tj in enumerate(labels_b):
             xs, ys = [], []
-            for _, sc in composite.items():
-                vi = sc.get(ti); vj = sc.get(tj)
+            for m in all_b_models:
+                vi = get_score(ti, m); vj = get_score(tj, m)
                 if vi is None or vj is None:
-                    continue
-                if isinstance(vi, float) and np.isnan(vi):
-                    continue
-                if isinstance(vj, float) and np.isnan(vj):
                     continue
                 xs.append(vi); ys.append(vj)
             if len(xs) >= 3:
@@ -1434,8 +1459,9 @@ def fig_headline():
     rect = [0, 0.09, 1, 1]
     out_dirs = [FIGS_DIR, PAPER_FIGS_DIR]
 
-    # Colors encode tests. 5 well-separated categorical samples from Batlow;
-    # upper bound capped at 0.82 so PACE stays saturated.
+    # Colors encode tests. 5 well-separated categorical samples from Batlow
+    # for the original semantic-distance tests; RAT gets a distinct warm
+    # brown so it reads as a different test family at a glance.
     test_samples = CMAP_SEQ(np.linspace(0.05, 0.82, 5))
     test_colors = {
         "DAT":      test_samples[0],
@@ -1443,8 +1469,9 @@ def fig_headline():
         "CDAT-N":   test_samples[2],
         "CDAT-A":   test_samples[3],
         "PACE":     test_samples[4],
+        "RAT":      "#8C5A3D",
     }
-    test_order = ["DAT", "CDAT", "CDAT-N", "CDAT-A", "PACE"]
+    test_order = ["DAT", "CDAT", "CDAT-N", "CDAT-A", "PACE", "RAT"]
 
     cw_benchmarks = ["Arena CW", "EQ-Bench CW", "Mazur CW v2"]
     dt_benchmarks = ["Hivemind Div.", "NovBench Util."]
@@ -1486,6 +1513,9 @@ def fig_headline():
         "PACE":     [(+0.72, +0.05, True,  False),
                      (+0.70, +0.20, True,  False),
                      (+0.75, +0.18, True,  False)],
+        "RAT":      [(+0.76, -0.03, True,  False),
+                     (+0.57, -0.04, True,  False),
+                     (+0.50, +0.08, True,  False)],
     }
     dt_data = {
         "DAT":      [(+0.33, +0.26, False, False),
@@ -1498,6 +1528,8 @@ def fig_headline():
                      (-0.67, -0.40, True,  False)],
         "PACE":     [(-0.05, +0.37, False, False),
                      (+0.18, -0.06, False, False)],
+        "RAT":      [(-0.55, +0.05, True,  False),
+                     (-0.30, -0.05, False, False)],
     }
     # Scientific Ideation (LiveIdeaBench, n=17): no test reaches p<.05.
     si_data = {
@@ -1506,6 +1538,7 @@ def fig_headline():
         "CDAT-N":   [(-0.09, +0.11, False, False)],
         "CDAT-A":   [(+0.16, -0.01, False, False)],
         "PACE":     [(+0.07, -0.07, False, False)],
+        "RAT":      [(+0.30, +0.12, False, False)],
     }
 
     # Per-panel label placement for the black "Overall" composite points.
@@ -1517,6 +1550,7 @@ def fig_headline():
             "CDAT-N":   ( 0.000, -0.042, "center", "top"),
             "CDAT-A":   ( 0.000, -0.042, "center", "top"),
             "PACE":     (-0.030, +0.008, "right",  "center"),
+            "RAT":      (+0.030, -0.014, "left",   "center"),
         },
         "Divergent Thinking": {
             "DAT":      ( 0.000, -0.042, "center", "top"),
@@ -1524,6 +1558,7 @@ def fig_headline():
             "CDAT-N":   (-0.030, +0.008, "right",  "center"),
             "CDAT-A":   ( 0.000, +0.048, "center", "bottom"),
             "PACE":     ( 0.000, -0.048, "center", "top"),
+            "RAT":      (-0.030, +0.008, "right",  "center"),
         },
         "Scientific Ideation": {
             "DAT":      ( 0.000, +0.048, "center", "bottom"),
@@ -1531,6 +1566,7 @@ def fig_headline():
             "CDAT-N":   ( 0.000, -0.048, "center", "top"),
             "CDAT-A":   (+0.030, +0.008, "left",   "center"),
             "PACE":     (-0.030, +0.008, "right",  "center"),
+            "RAT":      (+0.030, +0.008, "left",   "center"),
         },
     }
 
@@ -1875,8 +1911,9 @@ def fig_headline_combined():
         "CDAT-N":   C_CNOV,
         "CDAT-A":   C_CAPP,
         "PACE":     C_PACE,
+        "RAT":      "#8C5A3D",
     }
-    test_order = ["DAT", "CDAT", "CDAT-N", "CDAT-A", "PACE"]
+    test_order = ["DAT", "CDAT", "CDAT-N", "CDAT-A", "PACE", "RAT"]
     test_key = {
         "DAT":      "dat",
         "CDAT":     "cdat",
@@ -1908,6 +1945,9 @@ def fig_headline_combined():
         "PACE":     [(+0.71, +0.11, True,  False),
                      (+0.71, +0.21, True,  False),
                      (+0.76, +0.14, True,  False)],
+        "RAT":      [(+0.76, -0.03, True,  False),
+                     (+0.57, -0.04, True,  False),
+                     (+0.50, +0.08, True,  False)],
     }
     dt_data = {
         "DAT":      [(+0.33, +0.01, False, False),
@@ -1920,35 +1960,52 @@ def fig_headline_combined():
                      (-0.67, -0.40, True,  False)],
         "PACE":     [(-0.05, +0.33, False, False),
                      (+0.18, -0.00, False, False)],
+        "RAT":      [(-0.55, +0.05, True,  False),
+                     (-0.30, -0.05, False, False)],
     }
+    # LIB Average (5-facet mean from the live-page leaderboard, including
+    # Clarity for v2 models). These mirror the Average panel in fig:si-headline.
     si_data = {
-        "DAT":      [(-0.01, +0.24, False, False)],
-        "CDAT":     [(+0.03, +0.21, False, False)],
-        "CDAT-N":   [(-0.11, +0.02, False, False)],
-        "CDAT-A":   [(+0.20, +0.08, False, False)],
-        "PACE":     [(+0.11, -0.00, False, False)],
+        "DAT":      [(+0.18, +0.22, False, False)],
+        "CDAT":     [(+0.02, +0.29, False, False)],
+        "CDAT-N":   [(-0.08, -0.05, False, False)],
+        "CDAT-A":   [(+0.15, +0.12, False, False)],
+        "PACE":     [(+0.23, +0.22, False, False)],
+        "RAT":      [(+0.20, +0.10, False, False)],
     }
+    # Composite-mean positions (rough, for offset-design intuition):
+    #   CW:  DAT (+.60,+.32)  CDAT (-.04,+.23)  CDAT-N (-.08,+.23)
+    #        CDAT-A (+.42,-.09)  PACE (+.73,+.15)  RAT (+.61,+.00)
+    #   DT:  DAT (+.24,-.10)  CDAT (+.43,+.35)  CDAT-N (+.39,+.27)
+    #        CDAT-A (-.53,-.25)  PACE (+.07,+.17)  RAT (-.43,+.00)
+    #   SI:  DAT (+.18,+.22)  CDAT (+.02,+.29)  CDAT-N (-.08,-.05)
+    #        CDAT-A (+.15,+.12)  PACE (+.23,+.22)  RAT (+.20,+.10)
     label_offsets = {
         "Creative Writing": {
-            "DAT":      (+0.030, +0.008, "left",   "center"),
-            "CDAT":     ( 0.000, +0.042, "center", "bottom"),
-            "CDAT-N":   ( 0.000, -0.042, "center", "top"),
-            "CDAT-A":   ( 0.000, -0.042, "center", "top"),
-            "PACE":     (-0.030, +0.008, "right",  "center"),
+            "DAT":      ( 0.045, +0.045, "left",   "bottom"),  # above-right (DAT high & isolated)
+            "CDAT":     ( 0.045, +0.000, "left",   "center"),  # right (CDAT/CDAT-N stacked)
+            "CDAT-N":   (-0.045, +0.000, "right",  "center"),  # left
+            "CDAT-A":   ( 0.000, -0.060, "center", "top"),     # below (CDAT-A low + isolated)
+            "PACE":     ( 0.045, +0.045, "left",   "bottom"),  # above-right
+            "RAT":      ( 0.045, -0.045, "left",   "top"),     # below-right (separates from DAT)
         },
         "Divergent Thinking": {
-            "DAT":      ( 0.000, -0.042, "center", "top"),
-            "CDAT":     (+0.030, +0.008, "left",   "center"),
-            "CDAT-N":   (-0.030, +0.008, "right",  "center"),
-            "CDAT-A":   ( 0.000, +0.048, "center", "bottom"),
-            "PACE":     ( 0.000, -0.048, "center", "top"),
+            "DAT":      ( 0.000, -0.060, "center", "top"),     # below (DAT isolated low)
+            "CDAT":     ( 0.045, +0.045, "left",   "bottom"),  # above-right (CDAT/CDAT-N stacked)
+            "CDAT-N":   (-0.045, -0.045, "right",  "top"),     # below-left
+            "CDAT-A":   ( 0.045, +0.000, "left",   "center"),  # right (CDAT-A bottom-left, far from cluster)
+            "PACE":     ( 0.000, +0.060, "center", "bottom"),  # above (PACE in middle)
+            "RAT":      (-0.045, +0.000, "right",  "center"),  # left (RAT left side)
         },
         "Scientific Ideation": {
-            "DAT":      ( 0.000, +0.048, "center", "bottom"),
-            "CDAT":     (+0.030, +0.008, "left",   "center"),
-            "CDAT-N":   ( 0.000, -0.048, "center", "top"),
-            "CDAT-A":   (+0.030, +0.008, "left",   "center"),
-            "PACE":     (-0.030, +0.008, "right",  "center"),
+            # Two pairs: {DAT, PACE} at (~+.18-.23, +.22) and {CDAT-A, RAT}
+            # at (~+.15-.20, +.10-.12). Spread vertically + horizontally.
+            "DAT":      (-0.060, +0.045, "right",  "bottom"),  # above-left
+            "CDAT":     (-0.060, +0.000, "right",  "center"),  # left
+            "CDAT-N":   ( 0.000, -0.060, "center", "top"),     # below
+            "CDAT-A":   (-0.060, -0.045, "right",  "top"),     # below-left
+            "PACE":     ( 0.060, +0.045, "left",   "bottom"),  # above-right
+            "RAT":      ( 0.060, -0.045, "left",   "top"),     # below-right
         },
     }
 
@@ -1966,6 +2023,26 @@ def fig_headline_combined():
         me = json.load(f)
     with open(BENCH_PATH) as f:
         BMARKS = json.load(f)
+
+    # RAT scores (zero-shot strict accuracy). Pilot + expansion summaries;
+    # pilot wins on overlap. Keys are OpenRouter ids ("openai/gpt-4o");
+    # we lookup against ms_yg (ormap form) via a converted map.
+    PROJECT_ROOT = Path(__file__).resolve().parents[3]
+    rat_zs: dict[str, float] = {}
+    for _path in [
+        PROJECT_ROOT / "data/new_tests/rat/expansion_v1/summary.json",
+        PROJECT_ROOT / "data/new_tests/rat/pilot_v1/summary.json",
+    ]:
+        if _path.exists():
+            with open(_path) as f:
+                _rat_summary = json.load(f)
+            for _m, _s in _rat_summary.items():
+                if _s.get("n_total", 0) > 0 and _s.get("n_errors", 0) < _s["n_total"]:
+                    rat_zs[_m] = _s["zs_accuracy_strict"]
+
+    def _ormap(s: str) -> str:
+        return s.replace("/", "_").replace(".", "-").replace(":", "_")
+    rat_orm = {_ormap(m): v for m, v in rat_zs.items()}
 
     embs = sorted(me.keys())
     tasks_all = ["dat", "cdat", "cdat_novelty", "cdat_appropriateness", "pace"]
@@ -2010,11 +2087,18 @@ def fig_headline_combined():
         y_by_m = dict(zip(ms_yg, ys))
         pts: dict[str, tuple[float, float]] = {}
         for tlabel in test_order:
-            tk = test_key[tlabel]
-            kept = [m for m in ms_yg if composite.get(m, {}).get(tk) is not None]
-            if len(kept) < 5:
-                continue
-            xs = np.array([composite[m][tk] for m in kept])
+            if tlabel == "RAT":
+                # RAT — accuracy from rat_orm (ormap-keyed); no embedding.
+                kept = [m for m in ms_yg if m in rat_orm]
+                if len(kept) < 5:
+                    continue
+                xs = np.array([rat_orm[m] for m in kept])
+            else:
+                tk = test_key[tlabel]
+                kept = [m for m in ms_yg if composite.get(m, {}).get(tk) is not None]
+                if len(kept) < 5:
+                    continue
+                xs = np.array([composite[m][tk] for m in kept])
             ys_k = np.array([y_by_m[m] for m in kept])
             rs_k = np.array([resid_by_m[m] for m in kept])
             v = float(np.corrcoef(xs, ys_k)[0, 1])
@@ -2034,7 +2118,7 @@ def fig_headline_combined():
         panel_R[panel] = [r for r in Rs if r is not None]
 
     # ---------- LAYOUT ----------
-    fig = plt.figure(figsize=(17.0, 10.4))
+    fig = plt.figure(figsize=(20.0, 12.4))
     gs = GridSpec(
         2, 6, figure=fig,
         height_ratios=[1.30, 1.00],
@@ -2050,15 +2134,15 @@ def fig_headline_combined():
 
     # Row-level subplot titles (above each row, centred on the figure).
     fig.text(0.5, 0.975, "(a) Prediction by construct",
-             ha="center", va="bottom", fontsize=22.0, fontweight="bold")
+             ha="center", va="bottom", fontsize=28.0, fontweight="bold")
     fig.text(0.5, 0.485, "(b) Prediction by benchmark",
-             ha="center", va="bottom", fontsize=22.0, fontweight="bold")
+             ha="center", va="bottom", fontsize=28.0, fontweight="bold")
 
     # ---------- TOP ROW ----------
-    title_fs_top, axis_fs_top, tick_fs_top, annotate_fs_top = 19.0, 17.0, 14.0, 11.0
-    s_ind, s_overall, s_star = 50, 230, 55
+    title_fs_top, axis_fs_top, tick_fs_top, annotate_fs_top = 25.0, 22.0, 18.0, 16.0
+    s_ind, s_overall, s_star = 60, 290, 65
     overall_edge_lw, ind_sig_lw, ind_nosig_lw = 1.4, 1.0, 0.4
-    star_off_pts = 7
+    star_off_pts = 8
 
     def draw_top(ax, data, benchmarks, title):
         ax.add_patch(Rectangle(
@@ -2085,11 +2169,11 @@ def fig_headline_combined():
             ax.annotate(
                 f"$(v^*, s^*)=({v_opt:+.2f}, {s_opt:+.2f})$",
                 xy=(v_opt, s_opt),
-                xytext=(-10, -6), textcoords="offset points",
-                fontsize=15.0, ha="right", va="top", color="black",
+                xytext=(-12, -8), textcoords="offset points",
+                fontsize=19.0, ha="right", va="top", color="black",
                 zorder=8,
                 bbox=dict(facecolor="white", edgecolor="none",
-                          pad=1.5, alpha=0.85),
+                          pad=2.0, alpha=0.85),
             )
         star_trans = mtransforms.offset_copy(
             ax.transData, fig=fig,
@@ -2162,7 +2246,7 @@ def fig_headline_combined():
 
     # ---------- BOTTOM ROW ----------
     v_grid_full = np.linspace(-1, 1, 400)
-    title_fs_bot = 16.5
+    title_fs_bot = 21.0
     for i, (ax, (bench_name, c, pts)) in enumerate(zip(axes_bot, bottom_panels)):
         root1mc2 = np.sqrt(max(0.0, 1 - c**2))
         root1mv2 = np.sqrt(np.clip(1 - v_grid_full**2, 0, None))
@@ -2191,12 +2275,12 @@ def fig_headline_combined():
             v, spec = pt
             ax.scatter(v, spec, marker="o", s=85, c=[test_colors[test]],
                        edgecolor="black", linewidth=0.9, zorder=3, alpha=0.95)
-        ax.set_title(f"{bench_name}  ($R = {c:+.2f}$)", fontsize=title_fs_bot)
-        ax.tick_params(axis="both", labelsize=14.0)
-        ax.set_xlabel(r"Validity  ($r$)", fontsize=17.0)
+        ax.set_title(bench_name, fontsize=title_fs_bot)
+        ax.tick_params(axis="both", labelsize=18.0)
+        ax.set_xlabel(r"Validity  ($r$)", fontsize=22.0)
     axes_bot[0].set_xlim(-1.02, 1.02)
     axes_bot[0].set_ylim(-1.05, 1.05)
-    axes_bot[0].set_ylabel(r"Specificity  ($r \mid g$)", fontsize=17.0)
+    axes_bot[0].set_ylabel(r"Specificity  ($r \mid g$)", fontsize=22.0)
     for ax in axes_bot[1:]:
         plt.setp(ax.get_yticklabels(), visible=False)
 
@@ -2204,19 +2288,19 @@ def fig_headline_combined():
     test_handles = [
         Line2D([], [], marker="o", linestyle="none",
                markerfacecolor=test_colors[t], markeredgecolor="black",
-               markeredgewidth=1.0, markersize=12, label=t)
+               markeredgewidth=1.0, markersize=15, label=t)
         for t in test_order
     ]
-    ceiling_handle = Line2D([], [], color="black", linewidth=1.2,
+    ceiling_handle = Line2D([], [], color="black", linewidth=1.4,
                              linestyle="-", label="theoretical ceiling")
     optimum_handle = Line2D([], [], marker="D", linestyle="none",
                              markerfacecolor="black", markeredgecolor="black",
-                             markersize=8, label=r"$(v^*, s^*) = \arg\max\,(v + s)$")
+                             markersize=10, label=r"$(v^*, s^*) = \arg\max\,(v + s)$")
     fig.legend(
         handles=[*test_handles, ceiling_handle, optimum_handle],
         loc="lower center", bbox_to_anchor=(0.5, 0.005),
-        ncol=7, frameon=False, fontsize=20,
-        handletextpad=0.5, columnspacing=2.0,
+        ncol=len(test_handles) + 2, frameon=False, fontsize=22,
+        handletextpad=0.4, columnspacing=1.4,
     )
 
     for out_dir in [FIGS_DIR, PAPER_FIGS_DIR]:

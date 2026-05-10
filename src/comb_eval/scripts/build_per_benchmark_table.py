@@ -40,7 +40,7 @@ COLUMNS = [
 def main():
     root = Path(__file__).resolve().parents[3]
     bench_path = root / "configs" / "comb_eval" / "benchmarks.json"
-    out_path = root / "papers" / "iccc-2026" / "tables" / "per_benchmark_scores.tex"
+    out_path = root / "papers" / "iccc-2026" / "tables_jmlr" / "per_benchmark_scores.tex"
     bench = json.loads(bench_path.read_text())
 
     groups: dict[str, list] = defaultdict(list)
@@ -54,7 +54,7 @@ def main():
         groups[k].sort(key=lambda x: x[0])
 
     def fmt_row(name, fields):
-        cells = [r"\texttt{" + name + r"}"]
+        cells = [r"\texttt{" + name.replace("_", r"\_") + r"}"]
         for col, formatter in COLUMNS:
             cells.append(formatter(fields[col]) if col in fields else "---")
         return " & ".join(cells) + r" \\"

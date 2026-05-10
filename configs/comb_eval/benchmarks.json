@@ -68,7 +68,11 @@
     "hivemind_diversity": 0.11699999999999999,
     "noveltybench_distinct": 2.88,
     "noveltybench_utility": 3.27,
-    "liveideabench": 6.69
+    "liveideabench_originality": 7.59,
+    "liveideabench_flexibility": 7.0,
+    "liveideabench_feasibility": 6.34,
+    "liveideabench_fluency": 8.37,
+    "liveideabench": 7.324999999999999
   },
   "openai_gpt-5": {
     "arena_overall": 1433,
@@ -114,7 +118,12 @@
     "eq_bench_cw_rubric": 15.68,
     "mmlu_pro": 0.84,
     "mazur_cw_v2": 8.3,
-    "liveideabench": 7.18
+    "liveideabench": 7.184,
+    "liveideabench_originality": 7.84,
+    "liveideabench_flexibility": 6.83,
+    "liveideabench_feasibility": 6.52,
+    "liveideabench_fluency": 6.63,
+    "liveideabench_clarity": 8.1
   },
   "deepseek_deepseek-chat-v3-0324": {
     "arena_overall": 1395,
@@ -181,7 +190,11 @@
     "hivemind_diversity": 0.14500000000000002,
     "noveltybench_distinct": 2.81,
     "noveltybench_utility": 3.17,
-    "liveideabench": 7.07
+    "liveideabench_originality": 7.07,
+    "liveideabench_flexibility": 7.33,
+    "liveideabench_feasibility": 6.78,
+    "liveideabench_fluency": 8.72,
+    "liveideabench": 7.4750000000000005
   },
   "deepseek_deepseek-chat": {
     "arena_overall": 1358,
@@ -190,7 +203,12 @@
     "hivemind_pct_sim_above_0_8": 0.81,
     "mmlu_pro": 0.7587,
     "hivemind_diversity": 0.139,
-    "liveideabench": 6.72
+    "liveideabench": 6.723999999999999,
+    "liveideabench_originality": 7.31,
+    "liveideabench_flexibility": 6.38,
+    "liveideabench_feasibility": 6.04,
+    "liveideabench_fluency": 6.15,
+    "liveideabench_clarity": 7.74
   },
   "cohere_command-a": {
     "arena_overall": 1353,
@@ -206,7 +224,12 @@
     "mmlu_pro": 0.794,
     "mazur_cw_v2": 6.15,
     "hivemind_diversity": 0.16700000000000004,
-    "liveideabench": 6.51
+    "liveideabench": 6.514,
+    "liveideabench_originality": 7.45,
+    "liveideabench_flexibility": 6.21,
+    "liveideabench_feasibility": 5.91,
+    "liveideabench_fluency": 5.57,
+    "liveideabench_clarity": 7.43
   },
   "qwen_qwen3-32b": {
     "arena_overall": 1347,
@@ -228,7 +251,12 @@
     "eq_bench_cw_rubric": 14.19,
     "mmlu_pro": 0.6907,
     "mazur_cw_v2": 8.02,
-    "liveideabench": 7.06
+    "liveideabench": 7.06,
+    "liveideabench_originality": 7.77,
+    "liveideabench_flexibility": 6.75,
+    "liveideabench_feasibility": 6.35,
+    "liveideabench_fluency": 6.45,
+    "liveideabench_clarity": 7.98
   },
   "meta-llama_llama-4-maverick": {
     "arena_overall": 1327,
@@ -250,7 +278,11 @@
     "hivemind_diversity": 0.10999999999999999,
     "noveltybench_distinct": 1.94,
     "noveltybench_utility": 2.5,
-    "liveideabench": 6.37
+    "liveideabench": 6.795,
+    "liveideabench_originality": 7.74,
+    "liveideabench_flexibility": 6.22,
+    "liveideabench_feasibility": 5.64,
+    "liveideabench_fluency": 7.58
   },
   "openai_gpt-4-turbo": {
     "arena_overall": 1323,
@@ -259,7 +291,12 @@
     "hivemind_pct_sim_above_0_8": 0.82,
     "mmlu_pro": 0.6371,
     "hivemind_diversity": 0.14100000000000001,
-    "liveideabench": 6.56
+    "liveideabench": 6.553999999999999,
+    "liveideabench_originality": 7.08,
+    "liveideabench_flexibility": 6.25,
+    "liveideabench_feasibility": 5.62,
+    "liveideabench_fluency": 6.14,
+    "liveideabench_clarity": 7.68
   },
   "meta-llama_llama-4-scout": {
     "arena_overall": 1322,
@@ -283,7 +320,12 @@
     "hivemind_diversity": 0.131,
     "noveltybench_distinct": 2.49,
     "noveltybench_utility": 2.87,
-    "liveideabench": 6.06
+    "liveideabench": 6.064,
+    "liveideabench_originality": 6.32,
+    "liveideabench_flexibility": 5.75,
+    "liveideabench_feasibility": 5.69,
+    "liveideabench_fluency": 5.68,
+    "liveideabench_clarity": 6.88
   },
   "openai_gpt-4o-mini": {
     "arena_overall": 1317,
@@ -297,7 +339,12 @@
     "hivemind_diversity": 0.11399999999999999,
     "noveltybench_distinct": 2.65,
     "noveltybench_utility": 3.11,
-    "liveideabench": 6.25
+    "liveideabench": 6.252000000000001,
+    "liveideabench_originality": 6.67,
+    "liveideabench_flexibility": 6.0,
+    "liveideabench_feasibility": 5.86,
+    "liveideabench_fluency": 5.28,
+    "liveideabench_clarity": 7.45
   },
   "mistralai_mistral-large-2407": {
     "arena_overall": 1313,
@@ -317,7 +364,12 @@
     "mmlu_pro": 0.6794,
     "mazur_cw_v2": 6.9,
     "hivemind_diversity": 0.14300000000000002,
-    "liveideabench": 6.79
+    "liveideabench": 6.787999999999999,
+    "liveideabench_originality": 7.01,
+    "liveideabench_flexibility": 6.5,
+    "liveideabench_feasibility": 6.06,
+    "liveideabench_fluency": 6.68,
+    "liveideabench_clarity": 7.69
   },
   "qwen_qwen-2-5-72b-instruct": {
     "arena_overall": 1302,
@@ -326,12 +378,22 @@
     "hivemind_pct_sim_above_0_8": 0.74,
     "mmlu_pro": 0.7159,
     "hivemind_diversity": 0.14100000000000001,
-    "liveideabench": 6.62
+    "liveideabench": 6.616,
+    "liveideabench_originality": 6.91,
+    "liveideabench_flexibility": 6.29,
+    "liveideabench_feasibility": 5.99,
+    "liveideabench_fluency": 6.17,
+    "liveideabench_clarity": 7.72
   },
   "nvidia_llama-3-1-nemotron-70b-instruct": {
     "arena_overall": 1298,
     "arena_cw": 1277,
-    "mmlu_pro": 0.6278
+    "mmlu_pro": 0.6278,
+    "liveideabench_originality": 7.54,
+    "liveideabench_flexibility": 6.89,
+    "liveideabench_feasibility": 6.34,
+    "liveideabench_fluency": 8.21,
+    "liveideabench": 7.245
   },
   "meta-llama_llama-3-1-70b-instruct": {
     "arena_overall": 1293,
@@ -342,7 +404,12 @@
     "hivemind_pct_sim_above_0_8": 0.67,
     "mmlu_pro": 0.6284,
     "hivemind_diversity": 0.18000000000000005,
-    "liveideabench": 6.62
+    "liveideabench": 6.616,
+    "liveideabench_originality": 7.16,
+    "liveideabench_flexibility": 6.38,
+    "liveideabench_feasibility": 5.49,
+    "liveideabench_fluency": 6.71,
+    "liveideabench_clarity": 7.34
   },
   "google_gemma-2-27b-it": {
     "arena_overall": 1288,
@@ -353,7 +420,12 @@
     "hivemind_diversity": 0.15800000000000003,
     "noveltybench_distinct": 3.03,
     "noveltybench_utility": 3.77,
-    "liveideabench": 6.65
+    "liveideabench": 6.656000000000001,
+    "liveideabench_originality": 6.86,
+    "liveideabench_flexibility": 6.38,
+    "liveideabench_feasibility": 5.5,
+    "liveideabench_fluency": 7.18,
+    "liveideabench_clarity": 7.36
   },
   "cohere_command-r-plus-08-2024": {
     "arena_overall": 1276,
@@ -394,7 +466,12 @@
     "mmlu_pro": 0.704,
     "mazur_cw_v2": 6.26,
     "hivemind_diversity": 0.14700000000000002,
-    "liveideabench": 6.72
+    "liveideabench": 6.7219999999999995,
+    "liveideabench_originality": 7.24,
+    "liveideabench_flexibility": 6.42,
+    "liveideabench_feasibility": 5.8,
+    "liveideabench_fluency": 6.58,
+    "liveideabench_clarity": 7.57
   },
   "openai_gpt-3-5-turbo": {
     "arena_overall": 1223,
@@ -422,7 +499,12 @@
     "hivemind_intra_sim": 0.796,
     "hivemind_pct_sim_above_0_8": 0.61,
     "mmlu_pro": 0.4481,
-    "hivemind_diversity": 0.20399999999999996
+    "hivemind_diversity": 0.20399999999999996,
+    "liveideabench_originality": 6.78,
+    "liveideabench_flexibility": 6.89,
+    "liveideabench_feasibility": 6.3,
+    "liveideabench_fluency": 8.98,
+    "liveideabench": 7.2375
   },
   "meta-llama_llama-3-2-3b-instruct": {
     "arena_overall": 1166,
@@ -449,7 +531,12 @@
     "hivemind_pct_sim_above_0_8": 0.7,
     "mmlu_pro": 0.663,
     "hivemind_diversity": 0.18000000000000005,
-    "liveideabench": 6.41
+    "liveideabench": 6.414,
+    "liveideabench_originality": 6.61,
+    "liveideabench_flexibility": 6.12,
+    "liveideabench_feasibility": 5.66,
+    "liveideabench_fluency": 7.07,
+    "liveideabench_clarity": 6.61
   },
   "qwen_qwen3-14b": {
     "hivemind_intra_sim": 0.87,
@@ -469,25 +556,33 @@
   "anthropic_claude-3-5-sonnet": {
     "noveltybench_distinct": 1.76,
     "noveltybench_utility": 2.36,
-    "liveideabench": 6.92,
-    "mmlu_pro": 0.78
+    "liveideabench": 6.9239999999999995,
+    "mmlu_pro": 0.78,
+    "liveideabench_originality": 7.83,
+    "liveideabench_flexibility": 6.62,
+    "liveideabench_feasibility": 5.42,
+    "liveideabench_fluency": 6.9,
+    "liveideabench_clarity": 7.85
   },
   "anthropic_claude-3-opus": {
     "noveltybench_distinct": 2.04,
     "noveltybench_utility": 2.67,
-    "liveideabench": 6.36,
-    "mmlu_pro": 0.6845
+    "liveideabench": 6.364,
+    "mmlu_pro": 0.6845,
+    "liveideabench_originality": 6.66,
+    "liveideabench_flexibility": 6.04,
+    "liveideabench_feasibility": 5.66,
+    "liveideabench_fluency": 5.74,
+    "liveideabench_clarity": 7.72
   },
   "google_gemini-1-5-pro": {
     "noveltybench_distinct": 1.85,
     "noveltybench_utility": 2.73,
-    "liveideabench": 6.85,
     "mmlu_pro": 0.7025
   },
   "google_gemini-2-0-pro": {
     "noveltybench_distinct": 2.25,
     "noveltybench_utility": 2.64,
-    "liveideabench": 7.03,
     "mmlu_pro": 0.791
   },
   "google_gemma-2-2b-it": {
@@ -498,8 +593,13 @@
   "meta-llama_llama-3-1-405b-instruct": {
     "noveltybench_distinct": 3.2,
     "noveltybench_utility": 3.39,
-    "liveideabench": 6.62,
-    "mmlu_pro": 0.733
+    "liveideabench": 6.624,
+    "mmlu_pro": 0.733,
+    "liveideabench_originality": 7.18,
+    "liveideabench_flexibility": 6.33,
+    "liveideabench_feasibility": 5.56,
+    "liveideabench_fluency": 6.57,
+    "liveideabench_clarity": 7.48
   },
   "cohere_command-r-08-2024": {
     "arena_overall": 1249,
@@ -515,7 +615,12 @@
     "mmlu_pro": 0.716,
     "noveltybench_distinct": 2.83,
     "noveltybench_utility": 3.2,
-    "liveideabench": 6.6
+    "liveideabench": 6.596000000000001,
+    "liveideabench_originality": 6.92,
+    "liveideabench_flexibility": 6.25,
+    "liveideabench_feasibility": 5.61,
+    "liveideabench_fluency": 6.73,
+    "liveideabench_clarity": 7.47
   },
   "cohere_command-r7b-12-2024": {
     "noveltybench_distinct": 3.58,
@@ -535,5 +640,87 @@
   "google_gemini-3-1-pro-preview": {
     "arc_agi_v2": 0.771,
     "mazur_cw_thurstone": -0.7073
+  },
+  "anthropic_claude-3-7-sonnet": {
+    "liveideabench": 7.12,
+    "arena_overall": 1301,
+    "mmlu_pro": 0.784,
+    "liveideabench_originality": 7.81,
+    "liveideabench_flexibility": 6.92,
+    "liveideabench_feasibility": 5.46,
+    "liveideabench_fluency": 7.8,
+    "liveideabench_clarity": 7.61
+  },
+  "anthropic_claude-3-7-sonnet_thinking": {
+    "liveideabench": 7.218000000000001,
+    "arena_overall": 1316,
+    "mmlu_pro": 0.784,
+    "liveideabench_originality": 8.06,
+    "liveideabench_flexibility": 7.04,
+    "liveideabench_feasibility": 5.7,
+    "liveideabench_fluency": 7.48,
+    "liveideabench_clarity": 7.81
+  },
+  "deepseek_deepseek-r1-distill-llama-70b": {
+    "liveideabench": 6.709999999999999,
+    "liveideabench_originality": 6.98,
+    "liveideabench_flexibility": 6.41,
+    "liveideabench_feasibility": 6.07,
+    "liveideabench_fluency": 6.66,
+    "liveideabench_clarity": 7.43
+  },
+  "deepseek_deepseek-r1-distill-qwen-32b": {
+    "liveideabench": 6.864,
+    "liveideabench_originality": 7.13,
+    "liveideabench_flexibility": 6.62,
+    "liveideabench_feasibility": 6.08,
+    "liveideabench_fluency": 7.06,
+    "liveideabench_clarity": 7.43
+  },
+  "qwen_qwen-max": {
+    "liveideabench": 6.587999999999999,
+    "arena_overall": 1367,
+    "mmlu_pro": 0.761,
+    "liveideabench_originality": 7.51,
+    "liveideabench_flexibility": 6.29,
+    "liveideabench_feasibility": 5.83,
+    "liveideabench_fluency": 5.64,
+    "liveideabench_clarity": 7.67
+  },
+  "qwen_qwen-2-5-coder-32b-instruct": {
+    "liveideabench": 6.56,
+    "arena_overall": 1235,
+    "liveideabench_originality": 6.9,
+    "liveideabench_flexibility": 6.25,
+    "liveideabench_feasibility": 5.76,
+    "liveideabench_fluency": 6.58,
+    "liveideabench_clarity": 7.31
+  },
+  "qwen_qwen-2-5-7b-instruct": {
+    "liveideabench": 6.4719999999999995,
+    "arena_overall": 1090,
+    "liveideabench_originality": 6.34,
+    "liveideabench_flexibility": 6.17,
+    "liveideabench_feasibility": 6.02,
+    "liveideabench_fluency": 6.66,
+    "liveideabench_clarity": 7.17
+  },
+  "amazon_nova-pro-v1": {
+    "liveideabench": 6.578,
+    "arena_overall": 1262,
+    "liveideabench_originality": 6.59,
+    "liveideabench_flexibility": 6.25,
+    "liveideabench_feasibility": 6.19,
+    "liveideabench_fluency": 6.45,
+    "liveideabench_clarity": 7.41
+  },
+  "amazon_nova-lite-v1": {
+    "liveideabench": 6.052,
+    "arena_overall": 1233,
+    "liveideabench_originality": 6.6,
+    "liveideabench_flexibility": 5.71,
+    "liveideabench_feasibility": 6.06,
+    "liveideabench_fluency": 4.51,
+    "liveideabench_clarity": 7.38
   }
 }
