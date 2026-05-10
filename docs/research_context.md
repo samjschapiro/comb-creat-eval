@@ -55,6 +55,36 @@ submission variants live in `papers/iccc-2026/`: `main.tex` (ICML
 - Specificity computation: true semi-partial `r(X, Y − Ŷ_g)`
   (was full partial pre-2026-05-02; values shifted accordingly).
 
+### new_tests (active, JMLR/ICML preprint in `papers/iccc-2026`)
+
+Designs and evaluates *new* creativity tests on top of the dat_eval
+infrastructure, motivated by the dat_eval finding that no existing
+semantic-distance test is a valid-and-specific predictor of
+LiveIdeaBench (scientific ideation). Headline test:
+**DRAT (Divergent Remote Association Test)** — a hybrid of RAT and
+DAT. The model produces $\geq 10$ words bridging a $k$-anchor
+quadruple ($k = 4$ in the headline configuration); each word is
+gated by an embedding-based "near any anchor" utility ($\max$
+aggregator over per-anchor cosine), and survivors are scored by
+mean pairwise embedding distance — DAT scoring on a RAT-style
+constrained vocabulary.
+
+Other benchmark wrappers added under `src/new_tests/` to support
+the broader pool: `eqbench_cw`, `hivemind`, `liveideabench`,
+`noveltybench`, `rat` (zero-shot strict accuracy on classic 30-item
+RAT). Configs in `configs/new_tests/`, runners in
+`scripts/new_tests/` and `src/new_tests/scripts/`. Detailed
+ongoing notes in `docs/tracks/new_tests/progress.md`.
+
+**Status (2026-05-09)**: DRAT pool n = 20 on LIB after the LIB
+facet refresh. Headline $k=4$ scientific-terms cell is significant
+on both axes ($v = +0.57^{**}$, $s = +0.50^{*}$). Anchor banks +
+RAT prompt now documented in the appendix. Two ablations live —
+anchor count $k \in \{2,3,4\}$ and vocabulary corpus
+(scientific-terms vs. ConceptNet relation-distant) — both reported
+in `04_drat.tex`. Utility-gate aggregator ablation
+($\max$ / $\min$ / $\mathrm{avg}$) in `06_appendix.tex`.
+
 ### comb_eval (background / exploratory)
 
 Earlier track exploring combinatorial-creativity-style evaluation.

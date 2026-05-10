@@ -17,6 +17,44 @@ already cares about (creative writing, divergent thinking, scientific
 ideation), measured directly. There is no separate "transfer"
 question.
 
+## Status — 2026-05-09 (paper polish + LIB pool refresh)
+
+DRAT scoring pool grew to **n = 20** on LiveIdeaBench after adding the
+per-facet LIB rows (originality / flexibility / feasibility / fluency /
+clarity) to `configs/comb_eval/benchmarks.json`. Re-ran the
+utility-gate ablation (`scratch/drat_paper_comparison/compute_gate_ablation.py`)
+on the new pool. Headline result strengthens:
+
+- **$\max$ gate (used) on LIB**: $v = +0.57^{**}$ ($p = .008$),
+  $s = +0.50^{*}$ ($p = .018$). Sig on both axes.
+- $\min$ on LIB: $v = +0.32, s = +0.21$ — both lose significance at
+  the new $n$.
+- $\mathrm{avg}$ on LIB: $v = +0.44, s = +0.34$ — validity now $p < .10$
+  rather than $p < .05$; specificity $p = .12$.
+
+The earlier "validity is roughly invariant to the gate" claim no
+longer holds. New picture: $\max$ is the only gate to clear
+significance on either axis on LIB, and clears both. The cross-anchor
+coverage requirement (enforced by $\min$ in the strict reading) costs
+too much variance; the per-word "near *any* anchor" reading
+($\max$) preserves enough variance for specificity to surface.
+
+The (k, vocab) ablation in `04_drat.tex` cites pre-refresh values
+(k=4 scientific terms: $v=+0.56^{*}, s=+0.35^{*}$; monotonic
+$+0.33 \to +0.50 \to +0.56$ for validity at expert k=2,3,4); the
+latest `ablation_results.json` shows k=4 scientific-terms at
+$v=+0.57^{**}, s=+0.50^{*}$ at $n=20$. Worth aligning the paragraph
+numbers next session.
+
+Naming: the "expert curated" anchor bank is now called the
+"scientific-terms" bank throughout the paper and the plot legend
+(commit b6a7b5a → 1cb410a in `papers/iccc-2026/`).
+The full 30 quadruples for both banks (scientific terms +
+ConceptNet relation-distant) are now documented in the appendix
+under `\subsection{DRAT Anchor Banks}` (`app:anchor_banks`).
+The RAT prompt template from `src/new_tests/rat.py:rat_prompt` is
+now in the Prompts appendix.
+
 ## Status — 2026-05-06 (PM)
 
 DRAT pilot run end-to-end: Phase 1 (6 cheap LIB-17 models) + Phase 2
