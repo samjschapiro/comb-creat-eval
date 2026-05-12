@@ -869,6 +869,15 @@ def _draw_corr_triangle(ax, mat, labels, rotation=20, label_fs=14,
     display = np.ma.masked_array(np.where(np.isnan(mat), 0.0, mat),
                                  mask=upper_mask)
     im = ax.imshow(display, vmin=-1, vmax=1, cmap="coolwarm", aspect=aspect)
+    # Per-cell black borders on the lower-triangular cells. No separate
+    # rectangle around the full NxN area — cells along the staircase edge
+    # of the lower triangle naturally form the visible outer outline.
+    from matplotlib.patches import Rectangle
+    for i in range(n):
+        for j in range(i + 1):
+            ax.add_patch(Rectangle((j - 0.5, i - 0.5), 1, 1,
+                                    fill=False, edgecolor="black",
+                                    linewidth=0.2, zorder=4))
     ax.set_xticks(range(n))
     ax.set_yticks(range(n))
     ax.set_xticklabels(labels, rotation=rotation,
@@ -2011,14 +2020,16 @@ def fig_headline_combined():
             "RAT":      (-0.045, +0.000, "right",  "center"),  # left (RAT left side)
         },
         "Scientific Ideation": {
-            # Two pairs: {DAT, PACE} at (~+.18-.23, +.22) and {CDAT-A, RAT}
-            # at (~+.15-.20, +.10-.12). Spread vertically + horizontally.
-            "DAT":      (-0.060, +0.045, "right",  "bottom"),  # above-left
+            # Post-spec-pool layout: CDAT (+.02,+.34), DAT (+.22,+.28),
+            # PACE (+.32,+.30) cluster horizontally in the upper band;
+            # CDAT-A (+.20,+.17) and RAT (+.20,+.10) stack vertically below
+            # the DAT/PACE column; CDAT-N (-.13,-.10) sits bottom-left.
+            "DAT":      ( 0.000, +0.060, "center", "bottom"),  # directly above
             "CDAT":     (-0.060, +0.000, "right",  "center"),  # left
-            "CDAT-N":   ( 0.000, -0.060, "center", "top"),     # below
-            "CDAT-A":   ( 0.060, -0.045, "left",   "top"),     # below-right (away from CDAT dot)
-            "PACE":     ( 0.060, +0.045, "left",   "bottom"),  # above-right
-            "RAT":      ( 0.060, +0.000, "left",   "center"),  # right (RAT separated horizontally)
+            "CDAT-N":   ( 0.060, +0.000, "left",   "center"),  # right
+            "CDAT-A":   (-0.060, +0.000, "right",  "center"),  # left (away from RAT)
+            "PACE":     ( 0.060, +0.000, "left",   "center"),  # right
+            "RAT":      ( 0.000, -0.060, "center", "top"),     # directly below (away from CDAT-A)
         },
     }
 
