@@ -1,0 +1,90 @@
+# First MCNS-RL full run.
+# Budget target: ~$5-6 (≈ 2.7 hr on 1×A100 SXM4 at $1.99/hr).
+# Same hyperparams as smoke test, scaled up: more prompts, more clusters,
+# 30x more steps. Public/ungated models (Qwen2.5-1.5B + DeBERTa RM).
+# Future runs: swap to Llama + Skywork once HF gating is confirmed.
+
+output_dir: data/creativity_rl/runs/full_run_v1
+
+seed: 17
+
+dataset:
+  train:
+    hf_name: liweijiang/infinite-chats-taxonomy
+    split: train
+    max_prompts: 2000
+    text_field: messages            # conversational; extracts user content
+  test:
+    hf_name: liweijiang/infinite-chats-eval
+    split: train
+    text_field: query               # eval set uses flat schema
+
+policy:
+  base_model: Qwen/Qwen2.5-1.5B-Instruct
+  lora:
+    rank: 16
+    alpha: 32
+    dropout: 0.05
+    target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+
+ref_policy:
+  model: null
+
+appropriateness:
+  rm_model: OpenAssistant/reward-model-deberta-v3-large-v2
+  rm_load_in_4bit: false
+  rm_max_length: 512
+  threshold_tau: -2.5938           # calibrated 2026-05-15: p20 of 300 base-policy samples (mean=-1.06, std=1.66)
+  calibration:
+    n_samples_for_tau: 300         # base-policy samples used to find tau
+    pass_rate_target: 0.80
+  recalibrate_every_steps: null    # static tau for v1; revisit if drift observed
+
+novelty:
+  embedding_model: sentence-transformers/all-mpnet-base-v2
+  distance: cosine
+  k_nearest: 5                     # smaller k so partly-filled clusters still give meaningful distances
+  archive:
+    scope: per_prompt_cluster
+    n_clusters: 15                 # 2000 prompts / 15 clusters = ~133 prompts/cluster; per-cluster fills faster
+    cluster_embedding_model: sentence-transformers/all-mpnet-base-v2
+    index_type: hnsw
+    hnsw_m: 32
+    hnsw_ef_construction: 200
+    max_size_per_cluster: 5000
+    admission_novelty_threshold: median
+    warmup_admissions: 8
+
+reward:
+  type: mcns_hard
+  soft_temperature: null
+
+rl:
+  algorithm: grpo
+  group_size_K: 4                  # same as smoke for budget reasons
+  kl_coefficient_beta: 0.05
+  learning_rate: 1.0e-5
+  total_steps: 1500
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 4
+  prompts_per_step: 4
+  generation:
+    max_new_tokens: 128
+    temperature: 1.0
+    top_p: 1.0
+  save_every_steps: 500
+  eval_every_steps: null
+
+logging:
+  wandb:
+    enabled: true
+    project: comb-creat-eval
+    group: creativity_rl
+    run_name: full_run_v1
+    tags: [mcns, grpo, lora, qwen-1.5b, full]
+  log_every_steps: 5
+  log_generations_every_steps: 100
+  log_archive_stats_every_steps: 25
+
+budget:
+  max_usd: 10

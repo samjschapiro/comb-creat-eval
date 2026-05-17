@@ -97,6 +97,10 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False) -> None
         quality_judge_model=config.get(
             "quality_judge_model", "openai/gpt-4o-mini"
         ),
+        quality_judge_models=config.get(
+            "quality_judge_models",
+            [config.get("quality_judge_model", "openai/gpt-4o-mini")],
+        ),
         judge_concurrency=config.get("judge_concurrency", 16),
         generation_concurrency=config.get("generation_concurrency", 16),
     )

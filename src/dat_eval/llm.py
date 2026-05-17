@@ -14,26 +14,42 @@ from openai import OpenAI, AsyncOpenAI
 load_dotenv()
 
 
-def get_client() -> OpenAI:
-    """Create a synchronous OpenRouter client."""
+def _endpoint() -> tuple[str, str]:
+    """(base_url, api_key). Defaults to OpenRouter; override with
+    LLM_BASE_URL + LLM_API_KEY to point harnesses at a local vLLM
+    OpenAI-compatible server (e.g. http://localhost:8000/v1). Behavior
+    is unchanged when those env vars are unset.
+    """
+    base_url = os.environ.get("LLM_BASE_URL")
+    if base_url:
+        # Local vLLM accepts any api_key string; default to a placeholder.
+        return base_url, os.environ.get("LLM_API_KEY", "EMPTY")
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
         raise ValueError("FATAL: OPENROUTER_API_KEY not set")
-    return OpenAI(
-        base_url="https://openrouter.ai/api/v1",
-        api_key=api_key,
-    )
+    return "https://openrouter.ai/api/v1", api_key
+
+
+def get_client() -> OpenAI:
+    """Synchronous client (OpenRouter, or local vLLM via LLM_BASE_URL)."""
+    base_url, api_key = _endpoint()
+    return OpenAI(base_url=base_url, api_key=api_key)
 
 
 def get_async_client() -> AsyncOpenAI:
-    """Create an async OpenRouter client for concurrent requests."""
+    """Async client (OpenRouter, or local server via LLM_BASE_URL)."""
+    base_url, api_key = _endpoint()
+    return AsyncOpenAI(base_url=base_url, api_key=api_key)
+
+
+def get_async_client_openrouter() -> AsyncOpenAI:
+    """Always OpenRouter, ignoring LLM_BASE_URL. For calls that must hit a
+    hosted model (e.g. a NoveltyBench quality judge) even while a local
+    server is serving the model under test."""
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
         raise ValueError("FATAL: OPENROUTER_API_KEY not set")
-    return AsyncOpenAI(
-        base_url="https://openrouter.ai/api/v1",
-        api_key=api_key,
-    )
+    return AsyncOpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
 
 
 def call_llm(

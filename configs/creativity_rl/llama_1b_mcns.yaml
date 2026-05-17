@@ -1,0 +1,97 @@
+# MCNS-RL on Llama-3.2-1B-Instruct, full run.
+# See docs/tracks/creativity_rl/progress.md for design.
+
+output_dir: data/creativity_rl/runs/llama_1b_mcns_v1
+
+seed: 17
+
+# --- Data ---
+dataset:
+  train:
+    hf_name: liweijiang/infinite-chats-taxonomy
+    split: train
+    max_prompts: 5000    # subsample for first runs; null = full set
+    text_field: prompt
+  test:
+    hf_name: liweijiang/infinite-chats-eval
+    split: train
+    text_field: prompt
+
+# --- Policy ---
+policy:
+  base_model: meta-llama/Llama-3.2-1B-Instruct
+  lora:
+    rank: 16
+    alpha: 32
+    dropout: 0.05
+    target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+
+# --- Reference policy ---
+ref_policy:
+  # null = use base_model frozen (LoRA disabled). Set to a path to use a
+  # different SFT checkpoint as reference.
+  model: null
+
+# --- Appropriateness gate ---
+appropriateness:
+  rm_model: Skywork/Skywork-Reward-Llama-3.1-8B
+  rm_head: null            # off-the-shelf RM has a single scalar head
+  threshold_tau: null      # filled in by calibration step; FAIL if null
+  calibration:
+    n_samples_for_tau: 500
+    pass_rate_target: 0.80  # τ = (1 - 0.80) = 20th percentile of A under π_ref
+  recalibrate_every_steps: 200
+
+# --- Novelty signal ---
+novelty:
+  embedding_model: sentence-transformers/all-mpnet-base-v2
+  distance: cosine
+  k_nearest: 15
+  # Archive
+  archive:
+    scope: per_prompt_cluster   # per_prompt | per_prompt_cluster | global
+    n_clusters: 100
+    cluster_embedding_model: sentence-transformers/all-mpnet-base-v2
+    index_type: hnsw
+    hnsw_m: 32
+    hnsw_ef_construction: 200
+    max_size_per_cluster: 5000
+    admission_novelty_threshold: median  # median | scalar value | null
+
+# --- Reward composition ---
+reward:
+  type: mcns_hard         # mcns_hard | mcns_soft | appropriateness_only
+  soft_temperature: null  # required if type=mcns_soft
+
+# --- RL algorithm ---
+rl:
+  algorithm: grpo
+  group_size_K: 8
+  kl_coefficient_beta: 0.05
+  learning_rate: 1.0e-5
+  total_steps: 2000
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 8
+  prompts_per_step: 8
+  generation:
+    max_new_tokens: 256
+    temperature: 1.0
+    top_p: 1.0
+  save_every_steps: 200
+  eval_every_steps: 200
+
+# --- Logging ---
+logging:
+  wandb:
+    enabled: true
+    project: comb-creat-eval
+    group: creativity_rl
+    run_name: llama_1b_mcns_v1
+    tags: [mcns, grpo, lora, llama-1b]
+  log_every_steps: 10
+  log_generations_every_steps: 50
+  log_archive_stats_every_steps: 50
+
+# --- Budget cap (per repo convention) ---
+budget:
+  max_usd: 100   # hard abort if estimated cost exceeds this

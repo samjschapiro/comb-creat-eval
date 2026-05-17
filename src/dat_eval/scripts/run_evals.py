@@ -10,6 +10,7 @@ Usage:
 import argparse
 import asyncio
 import json
+import os
 import sys
 import time
 import traceback
@@ -98,6 +99,11 @@ def estimate_model_cost(
     n_seeds: int,
 ) -> float:
     """Estimate USD cost of running remaining work for a given model."""
+    # Local serving (LLM_BASE_URL set) is free; the OpenRouter price
+    # table does not apply. Behavior is unchanged when serving via
+    # OpenRouter (env unset).
+    if os.environ.get("LLM_BASE_URL"):
+        return 0.0
     pricing = PRICING.get(model_id)
     if pricing is None:
         return float("inf")  # can't run what we can't price

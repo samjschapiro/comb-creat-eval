@@ -25,6 +25,34 @@ dependencies = [
     "protobuf>=7.34.1",
 ]
 
+[project.optional-dependencies]
+creativity_rl = [
+    # torch pinned to a CUDA 12.4 build: Lambda hosts vary in NVIDIA
+    # driver version, and newer cu128/cu130 wheels fail on driver 570
+    # (CUDA 12.8 max). 2.6.0+cu124 works on driver 570 and 580 alike.
+    "torch==2.6.0",
+    "accelerate>=1.0",
+    "peft>=0.13",
+    "trl>=0.16,<0.22",
+    "bitsandbytes>=0.45",
+    "faiss-cpu>=1.8",
+    "scikit-learn>=1.5",
+    "wandb>=0.18",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+]
+
+# Resolve torch from the PyTorch CUDA 12.4 index so uv (including the
+# implicit re-sync on every `uv run`) stays consistent with the pin
+# above, instead of pulling the default cu130 wheel from PyPI.
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu124" }
+
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
 

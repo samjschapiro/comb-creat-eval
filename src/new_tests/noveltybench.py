@@ -37,11 +37,13 @@ from __future__ import annotations
 import asyncio
 import json
 import re
+import statistics
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Sequence
 
 from src.new_tests.llm import call_llm_async, get_async_client
+from src.dat_eval.llm import get_async_client_openrouter
 
 
 async def _judge_call(
@@ -141,6 +143,12 @@ class NoveltyBenchConfig:
     distinctness_threshold: float = 0.5
     distinctness_device: str = "cpu"
     quality_judge_model: str = "openai/gpt-4o-mini"
+    # Quality is judge-dependent, so it is scored by an ensemble of
+    # independent judges (different providers) and aggregated per
+    # generation by the median — robust to a single outlier/broken judge.
+    quality_judge_models: list[str] = field(
+        default_factory=lambda: ["openai/gpt-4o-mini"]
+    )
     judge_concurrency: int = 16
     generation_concurrency: int = 16
 
@@ -151,8 +159,11 @@ class PerPromptResult:
     prompt: str
     generations: list[str]
     classes: list[int]  # generation i -> equivalence class id
-    qualities: list[int]  # generation i -> u_i in {1..10}
+    qualities: list[float]  # generation i -> u_i (median over judges)
     utility_k: float
+    # judge model id -> per-generation raw scores (None if that judge
+    # failed for that generation).
+    quality_by_judge: dict[str, list[int | None]] = field(default_factory=dict)
 
 
 @dataclass
@@ -163,6 +174,8 @@ class NoveltyBenchResult:
     mean_utility_k: float
     fraction_distinct: float = field(default=0.0)
     mean_quality: float = field(default=0.0)
+    # judge model id -> mean raw score over all cells it scored.
+    mean_quality_by_judge: dict = field(default_factory=dict)
 
 
 # -----------------------------------------------------------------------------
@@ -335,21 +348,56 @@ async def _quality_score(
     return max(1, min(10, val))
 
 
+async def _quality_score_safe(
+    async_client,
+    judge_model: str,
+    sem: asyncio.Semaphore,
+    prompt: str,
+    response: str,
+) -> int | None:
+    """_quality_score that returns None instead of raising, so one flaky
+    judge/provider does not abort the ensemble for that generation."""
+    try:
+        return await _quality_score(async_client, judge_model, sem, prompt, response)
+    except Exception:
+        return None
+
+
 async def _score_qualities(
     async_client,
     cfg: NoveltyBenchConfig,
     prompt: str,
     generations: Sequence[str],
-) -> list[int]:
+) -> tuple[list[float], dict[str, list[int | None]]]:
+    """Score each generation with every judge in cfg.quality_judge_models,
+    then aggregate per generation by the median of the judges that
+    returned a score. Robust to a single outlier or broken judge.
+
+    Returns (aggregated, by_judge): aggregated[i] is the median quality
+    for generation i; by_judge[m][i] is judge m's raw score (or None).
+    """
+    judges = cfg.quality_judge_models or [cfg.quality_judge_model]
     sem = asyncio.Semaphore(cfg.judge_concurrency)
-    return list(
-        await asyncio.gather(
-            *(
-                _quality_score(async_client, cfg.quality_judge_model, sem, prompt, g)
-                for g in generations
+    # by_judge[m] = [score per generation]; gather all (judge, gen) cells.
+    by_judge: dict[str, list[int | None]] = {}
+    for m in judges:
+        by_judge[m] = list(
+            await asyncio.gather(
+                *(
+                    _quality_score_safe(async_client, m, sem, prompt, g)
+                    for g in generations
+                )
             )
         )
-    )
+    aggregated: list[float] = []
+    for i in range(len(generations)):
+        scores = [by_judge[m][i] for m in judges if by_judge[m][i] is not None]
+        if not scores:
+            raise RuntimeError(
+                f"All {len(judges)} quality judges failed for a generation"
+            )
+        aggregated.append(float(statistics.median(scores)))
+    return aggregated, by_judge
 
 
 # -----------------------------------------------------------------------------
@@ -389,15 +437,22 @@ async def score_model(
     test_model: str,
     prompts: list[dict],  # each dict has 'id' and 'prompt' keys
 ) -> NoveltyBenchResult:
+    # Generation hits async_client (the local server when LLM_BASE_URL is
+    # set). The quality/distinctness LLM judges must hit a hosted model,
+    # so they use a separate always-OpenRouter client. (Distinctness via
+    # 'deberta' ignores its client arg; only 'llm' uses it.)
     async_client = get_async_client()
+    judge_client = get_async_client_openrouter()
     gen_sem = asyncio.Semaphore(cfg.generation_concurrency)
     per_prompt: list[PerPromptResult] = []
     for item in prompts:
         pid = str(item["id"])
         ptxt = item["prompt"]
         gens = await _generate_for_prompt(cfg, async_client, test_model, ptxt, gen_sem)
-        classes = await _assign_classes(async_client, cfg, ptxt, gens)
-        qualities = await _score_qualities(async_client, cfg, ptxt, gens)
+        classes = await _assign_classes(judge_client, cfg, ptxt, gens)
+        qualities, quality_by_judge = await _score_qualities(
+            judge_client, cfg, ptxt, gens
+        )
         u = utility_k(classes, qualities, cfg.patience)
         per_prompt.append(
             PerPromptResult(
@@ -407,6 +462,7 @@ async def score_model(
                 classes=classes,
                 qualities=qualities,
                 utility_k=u,
+                quality_by_judge=quality_by_judge,
             )
         )
 
@@ -420,6 +476,18 @@ async def score_model(
     )
     frac_distinct = distinct_cells / max(1, total_cells)
     mean_q = sum(sum(r.qualities) for r in per_prompt) / max(1, total_cells)
+    # Per-judge means (over the cells each judge actually scored) so an
+    # outlier judge is visible in the summary.
+    judge_ids = cfg.quality_judge_models or [cfg.quality_judge_model]
+    mean_q_by_judge: dict = {}
+    for m in judge_ids:
+        vals = [
+            s
+            for r in per_prompt
+            for s in r.quality_by_judge.get(m, [])
+            if s is not None
+        ]
+        mean_q_by_judge[m] = (sum(vals) / len(vals)) if vals else None
 
     return NoveltyBenchResult(
         test_model=test_model,
@@ -435,12 +503,16 @@ async def score_model(
                 else None
             ),
             "distinctness_threshold": cfg.distinctness_threshold,
-            "quality_judge_model": cfg.quality_judge_model,
+            "quality_judge_models": (
+                cfg.quality_judge_models or [cfg.quality_judge_model]
+            ),
+            "quality_aggregation": "median",
             "implementation_notes": (
                 "Distinctness via canonical yimingzhang/deberta-v3-large-"
                 "generation-similarity classifier (paper-faithful). "
-                "Quality via LLM judge 1-10 (paper: Skywork-Reward-Gemma-2-27B "
-                "calibrated to MT-Bench/GPT-4 1-10 scale)."
+                "Quality via ENSEMBLE of independent LLM judges (1-10), "
+                "aggregated per generation by median (paper: single "
+                "Skywork-Reward-Gemma-2-27B calibrated to MT-Bench/GPT-4)."
                 if cfg.distinctness_method == "deberta"
                 else "Distinctness via LLM judge fallback (NOT paper-faithful). "
                 "Quality via LLM judge 1-10."
@@ -450,6 +522,7 @@ async def score_model(
         mean_utility_k=mean_u,
         fraction_distinct=frac_distinct,
         mean_quality=mean_q,
+        mean_quality_by_judge=mean_q_by_judge,
     )
 
 
@@ -464,6 +537,7 @@ def save_result(result: NoveltyBenchResult, output_dir: Path) -> Path:
         "mean_utility_k": result.mean_utility_k,
         "fraction_distinct": result.fraction_distinct,
         "mean_quality": result.mean_quality,
+        "mean_quality_by_judge": result.mean_quality_by_judge,
     }
     summary_path.write_text(json.dumps(summary, indent=2, ensure_ascii=False))
     detail = [
@@ -473,6 +547,7 @@ def save_result(result: NoveltyBenchResult, output_dir: Path) -> Path:
             "generations": r.generations,
             "classes": r.classes,
             "qualities": r.qualities,
+            "quality_by_judge": r.quality_by_judge,
             "utility_k": r.utility_k,
         }
         for r in result.per_prompt

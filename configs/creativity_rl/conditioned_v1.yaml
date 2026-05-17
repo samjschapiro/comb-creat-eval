@@ -1,0 +1,129 @@
+# Conditioned divergence, v1: supervised training on conditioned positives.
+# The data build and the training are separate stages with separate
+# output dirs (the training stage reads the build stage as upstream).
+
+# ---- stage 1: data build ----
+build:
+  output_dir: data/creativity_rl/conditioned_v1/data
+  seed: 17
+  dataset:
+    # Training source is the 26K open-ended InfinityChat (taxonomy).
+    # infinite-chats-eval is held out for the diversity evaluation and
+    # must never be a training source. text_field=messages -> the loader
+    # extracts the first user turn from the conversational schema.
+    hf_name: liweijiang/infinite-chats-taxonomy
+    split: train
+    text_field: messages
+    max_prompts: 300        # validation-size build; scale up once records look right
+  policy:
+    # Data generator only (option A): a stronger model so the candidate
+    # pool actually contains appropriate AND divergent responses. The
+    # trained policy is still Llama-3.2-1B (see train / train_rl below).
+    # The generator need not equal the trained model.
+    base_model: Qwen/Qwen2.5-7B-Instruct
+  conditioning:
+    s_size: 3            # number of prior answers placed in the prompt
+    s_pool: 8            # base samples drawn before the appropriateness filter
+    n_candidates: 6      # candidates generated per (x, S)
+  appropriateness:
+    rm_model: OpenAssistant/reward-model-deberta-v3-large-v2
+    rm_load_in_4bit: false
+    rm_max_length: 512
+    # Calibrated 2026-05-16 for the Qwen2.5-7B generator under correct
+    # left padding (300 taxonomy samples, 80% target pass rate).
+    threshold_tau: -1.4156
+    calibration:
+      n_samples: 300
+      pass_rate_target: 0.80
+  novelty:
+    embedding_model: sentence-transformers/all-mpnet-base-v2
+    distance: cosine
+  generation:
+    max_new_tokens: 128
+    temperature: 1.0
+    top_p: 1.0
+  budget:
+    max_usd: 10
+
+# ---- stage 2: supervised training ----
+train:
+  upstream_dir: data/creativity_rl/conditioned_v1/data
+  output_dir: data/creativity_rl/conditioned_v1/sft
+  seed: 17
+  policy:
+    base_model: meta-llama/Llama-3.2-1B-Instruct
+    lora:
+      rank: 16
+      alpha: 32
+      dropout: 0.05
+      target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+  optim:
+    learning_rate: 1.0e-5
+    total_steps: 800
+    per_device_train_batch_size: 1
+    gradient_accumulation_steps: 8
+    max_seq_length: 1024
+    save_every_steps: 400
+  logging:
+    wandb:
+      enabled: true
+      project: comb-creat-eval
+      group: creativity_rl
+      run_name: conditioned_v1_sft
+      tags: [conditioned, sft, lora, qwen-1.5b]
+    log_every_steps: 10
+
+# ---- stage 2 (RL arm): online GRPO on the same (x, S) contexts ----
+# Reads the same build output as the supervised arm so the only variable
+# is the objective. Reward = distance of the sampled response to S,
+# gated by appropriateness. S is fixed per prompt (from the build), so
+# the reward is a fixed function of (x, S, y): no archive, no drift.
+train_rl:
+  upstream_dir: data/creativity_rl/conditioned_v1/data
+  output_dir: data/creativity_rl/conditioned_v1/grpo
+  seed: 17
+  policy:
+    base_model: meta-llama/Llama-3.2-1B-Instruct
+    lora:
+      rank: 16
+      alpha: 32
+      dropout: 0.05
+      target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+  appropriateness:
+    rm_model: OpenAssistant/reward-model-deberta-v3-large-v2
+    rm_load_in_4bit: false
+    rm_max_length: 512
+    # RL reward gate on the TRAINED model's (Llama-3.2-1B) on-policy
+    # outputs. Uses the Llama-3.2-1B direct-answer calibration (-2.6875,
+    # 2026-05-16); an approximation for conditioned generations, but
+    # correct for the trained model and the same RM. Not the build
+    # generator's tau (that is Qwen-7B and lives under build).
+    threshold_tau: -2.6875
+  novelty:
+    embedding_model: sentence-transformers/all-mpnet-base-v2
+  reward:
+    type: mcns_hard          # mcns_hard | mcns_soft
+    soft_temperature: null
+  rl:
+    algorithm: grpo
+    group_size_K: 6
+    kl_coefficient_beta: 0.02   # looser than full_run_v1 (0.05) per the KL diagnosis
+    learning_rate: 1.0e-5
+    total_steps: 600
+    per_device_train_batch_size: 1
+    gradient_accumulation_steps: 6
+    generation:
+      max_new_tokens: 128
+      temperature: 1.0
+      top_p: 1.0
+    save_every_steps: 300
+  logging:
+    wandb:
+      enabled: true
+      project: comb-creat-eval
+      group: creativity_rl
+      run_name: conditioned_v1_grpo
+      tags: [conditioned, grpo, lora, qwen-1.5b]
+    log_every_steps: 5
+  budget:
+    max_usd: 10

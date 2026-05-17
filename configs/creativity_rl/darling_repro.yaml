@@ -1,0 +1,56 @@
+# Faithful DARLING reproduction (arXiv 2509.02534), creative-writing
+# setup, mirroring facebookresearch/darling verl/wildchat_scripts/darling.sh.
+# reward.type switches between the DARLING reward and the GRPO
+# quality-only baseline so both arms share every other setting.
+
+output_dir: data/creativity_rl/darling_repro
+
+seed: 17
+
+policy:
+  base_model: meta-llama/Llama-3.1-8B-Instruct
+  lora:                      # 8B online RL on one GPU needs LoRA
+    rank: 32
+    alpha: 64
+    dropout: 0.0
+    target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+
+data:
+  source: wildchat
+  n_prompts: 2000            # darling.sh uses ~10k; smaller first pass
+  max_prompt_tokens: 512
+
+reward:
+  type: darling              # darling | quality_only
+  quality_rm: Nexusflow/Athene-RM-8B
+  quality_rm_load_in_4bit: true   # 4-bit so 8B policy + 8B RM + classifier fit
+  quality_rm_max_length: 1024
+  sim_classifier_device: cuda
+
+rl:
+  algorithm: grpo
+  group_size_K: 8                 # darling.sh N=8
+  kl_coefficient_beta: 0.001      # darling.sh kl_loss_coef=0.001 (low_var_kl)
+  scale_rewards: false            # darling.sh norm_adv_by_std_in_grpo=False
+  learning_rate: 1.0e-6           # darling.sh actor lr
+  entropy_coeff: 0.0
+  total_steps: 600
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 8
+  generation:
+    max_new_tokens: 1024          # darling.sh max_response_length=1024
+    temperature: 1.0
+    top_p: 1.0
+  save_every_steps: 200
+
+logging:
+  wandb:
+    enabled: true
+    project: comb-creat-eval
+    group: creativity_rl
+    run_name: darling_repro
+    tags: [darling, grpo, lora, llama-3.1-8b]
+  log_every_steps: 5
+
+budget:
+  max_usd: 60                     # 8B online RL on an 80GB-class GPU
