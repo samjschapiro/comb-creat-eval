@@ -1,0 +1,59 @@
+# DARLING-style CONFIRMATION run for a single 40GB GPU. Purpose: prove
+# the training loop is correct (reward moves, diversity/quality telemetry
+# sane, checkpoint saves) -- NOT a faithful reproduction. Reduced vs
+# darling_repro.yaml: max_new_tokens 512 (was 1024), K=8 (faithful),
+# 600 prompts, 80 steps. Faithful 1024/K=8/10k-x8 runs on the multi-GPU
+# 80GB box. Reward formulation and RL hyperparameters are unchanged.
+
+output_dir: data/creativity_rl/darling_confirm
+
+seed: 17
+
+policy:
+  base_model: meta-llama/Llama-3.1-8B-Instruct
+  lora:
+    rank: 32
+    alpha: 64
+    dropout: 0.0
+    target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+
+data:
+  source: wildchat
+  n_prompts: 600
+  max_prompt_tokens: 512
+
+reward:
+  type: darling
+  quality_rm: Nexusflow/Athene-RM-8B
+  quality_rm_load_in_4bit: true
+  quality_rm_max_length: 1024
+  sim_classifier_device: cpu
+
+rl:
+  algorithm: grpo
+  group_size_K: 8                 # DARLING N=8; must divide effective batch (8)
+  kl_coefficient_beta: 0.001
+  scale_rewards: false
+  learning_rate: 1.0e-6
+  entropy_coeff: 0.0
+  total_steps: 80
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 8
+  gradient_checkpointing: true
+  generation:
+    max_new_tokens: 512
+    temperature: 1.0
+    top_p: 1.0
+  save_every_steps: 40
+
+logging:
+  wandb:
+    enabled: true
+    project: comb-creat-eval
+    group: creativity_rl
+    run_name: darling_confirm
+    tags: [darling, grpo, lora, llama-3.1-8b, confirm-40gb]
+  log_every_steps: 2
+
+budget:
+  max_usd: 30

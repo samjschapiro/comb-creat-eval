@@ -17,6 +17,50 @@ from dataclasses import dataclass, field
 import numpy as np
 import torch
 
+# Athene-RM-8B ships a custom architecture (CustomAutoModelForSequenceClassification)
+# but no remote modeling code, so transformers would silently fall back to a
+# generic 2-label LlamaForSequenceClassification head (wrong reward). We
+# reproduce Nexusflow's class verbatim: LlamaModel backbone + a scalar v_head,
+# reward read at the last CLS token (id 128003) appended after the chat
+# template. Built lazily so non-Athene scorers don't import LlamaModel.
+_ATHENE_CLASS = None
+
+
+def _athene_class():
+    global _ATHENE_CLASS
+    if _ATHENE_CLASS is not None:
+        return _ATHENE_CLASS
+    from torch import nn
+    from transformers import LlamaModel, LlamaPreTrainedModel
+
+    class AtheneForSequenceClassification(LlamaPreTrainedModel):
+        def __init__(self, config):
+            super().__init__(config)
+            self.model = LlamaModel(config)
+            self.v_head = nn.Linear(config.hidden_size, 1, bias=False)
+            self.CLS_ID = 128003
+            self.post_init()
+
+        def forward(self, input_ids=None, attention_mask=None, position_ids=None):
+            # last_hidden_state == hidden_states[-1] numerically, but does
+            # not retain all 33 layers' activations (large for the 64
+            # long-sequence RM pass). Faithful, just memory-frugal.
+            out = self.model(
+                input_ids,
+                attention_mask=attention_mask,
+                position_ids=position_ids,
+            )
+            rewards = self.v_head(out.last_hidden_state).squeeze(-1)
+            scores = []
+            for i in range(int(input_ids.shape[0])):
+                c_inds = (input_ids[i] == self.CLS_ID).nonzero()
+                c_ind = c_inds[-1].item()
+                scores.append(rewards[i, c_ind])
+            return {"scores": torch.stack(scores)}
+
+    _ATHENE_CLASS = AtheneForSequenceClassification
+    return _ATHENE_CLASS
+
 
 @dataclass
 class AppropriatenessScorer:
@@ -27,9 +71,11 @@ class AppropriatenessScorer:
     _tokenizer: object = field(default=None, init=False, repr=False)
     _model: object = field(default=None, init=False, repr=False)
     _use_chat_template: bool = field(default=False, init=False, repr=False)
+    _is_athene: bool = field(default=False, init=False, repr=False)
 
     def __post_init__(self) -> None:
         from transformers import (
+            AutoConfig,
             AutoModelForSequenceClassification,
             AutoTokenizer,
             BitsAndBytesConfig,
@@ -38,6 +84,11 @@ class AppropriatenessScorer:
         self._tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         if self._tokenizer.pad_token is None:
             self._tokenizer.pad_token = self._tokenizer.eos_token
+
+        arch = getattr(
+            AutoConfig.from_pretrained(self.model_name), "architectures", None
+        ) or []
+        self._is_athene = "CustomAutoModelForSequenceClassification" in arch
 
         load_kwargs: dict = {"torch_dtype": torch.bfloat16}
         if self.load_in_4bit:
@@ -49,11 +100,28 @@ class AppropriatenessScorer:
         else:
             load_kwargs["device_map"] = self.device
 
+        if self._is_athene:
+            # Custom scalar-reward head; standard Auto* would load a wrong
+            # generic 2-label head. Read at the CLS token in score().
+            self._model = _athene_class().from_pretrained(
+                self.model_name, **load_kwargs
+            ).eval()
+            if not self.load_in_4bit:
+                self._model = self._model.to(self.device)
+            self._use_chat_template = True
+            return
+
         self._model = AutoModelForSequenceClassification.from_pretrained(
             self.model_name, **load_kwargs
         ).eval()
         if not self.load_in_4bit:
             self._model = self._model.to(self.device)
+        # Decoder-based sequence-classification RMs (Llama/Mistral) need
+        # config.pad_token_id to locate the last non-pad token per row;
+        # without it, batched (>1) scoring raises "Cannot handle batch
+        # sizes > 1 if no padding token is defined."
+        if self._model.config.pad_token_id is None:
+            self._model.config.pad_token_id = self._tokenizer.pad_token_id
 
         self._use_chat_template = getattr(self._tokenizer, "chat_template", None) is not None
 
@@ -64,6 +132,40 @@ class AppropriatenessScorer:
                 f"FATAL: shape mismatch: {len(prompts)} prompts vs "
                 f"{len(completions)} completions"
             )
+
+        if self._is_athene:
+            # Verbatim Nexusflow preprocess: chat-template the [user,
+            # assistant] turn, append the CLS token as a string, tokenize
+            # (max_length 4096 as in their pipeline; our inputs are well
+            # under it so the appended CLS is never truncated). The custom
+            # forward returns {"scores": (bs,)} read at the last CLS token.
+            texts = [
+                self._tokenizer.apply_chat_template(
+                    [
+                        {"role": "user", "content": p},
+                        {"role": "assistant", "content": c},
+                    ],
+                    tokenize=False,
+                )
+                + self._tokenizer.cls_token
+                for p, c in zip(prompts, completions)
+            ]
+            enc = self._tokenizer(
+                texts,
+                return_tensors="pt",
+                padding=True,
+                truncation=True,
+                max_length=4096,
+            )
+            dev = self._model.device
+            out = self._model(
+                input_ids=enc["input_ids"].to(dev),
+                attention_mask=enc["attention_mask"].to(dev),
+            )
+            scores = out["scores"].float().cpu().numpy()
+            if scores.ndim == 0:
+                scores = scores.reshape(1)
+            return scores
 
         if self._use_chat_template:
             texts = [

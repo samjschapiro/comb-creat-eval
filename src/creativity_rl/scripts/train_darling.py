@@ -134,6 +134,11 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False) -> None
         bf16=True,
         seed=cfg["seed"],
         remove_unused_columns=False,
+        # Memory accommodation for a 40GB GPU. Pure compute/memory
+        # trade-offs: identical gradients, no change to N, lr, KL,
+        # reward, or data, so the DARLING methodology is unchanged.
+        gradient_checkpointing=cfg["rl"].get("gradient_checkpointing", False),
+        gradient_checkpointing_kwargs={"use_reentrant": False},
     )
 
     trainer = GRPOTrainer(
