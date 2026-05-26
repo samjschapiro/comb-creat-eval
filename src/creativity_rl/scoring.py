@@ -54,7 +54,10 @@ def _athene_class():
             scores = []
             for i in range(int(input_ids.shape[0])):
                 c_inds = (input_ids[i] == self.CLS_ID).nonzero()
-                c_ind = c_inds[-1].item()
+                # CLS is appended explicitly in score(), so it is always
+                # present; guard anyway so one pathological row can't kill
+                # a long run (fall back to the last token).
+                c_ind = c_inds[-1].item() if c_inds.numel() else -1
                 scores.append(rewards[i, c_ind])
             return {"scores": torch.stack(scores)}
 
@@ -134,28 +137,31 @@ class AppropriatenessScorer:
             )
 
         if self._is_athene:
-            # Verbatim Nexusflow preprocess: chat-template the [user,
-            # assistant] turn, append the CLS token as a string, tokenize
-            # (max_length 4096 as in their pipeline; our inputs are well
-            # under it so the appended CLS is never truncated). The custom
-            # forward returns {"scores": (bs,)} read at the last CLS token.
-            texts = [
-                self._tokenizer.apply_chat_template(
+            # Nexusflow preprocess: chat-template the [user, assistant]
+            # turn, then the model reads its reward at the CLS token.
+            # Appending CLS as a *string* before truncation drops it for
+            # long sequences (CLS is right-truncated -> empty c_inds).
+            # Instead tokenize without CLS, right-truncate to max_len-1,
+            # then append the CLS token id so it is ALWAYS the last token
+            # regardless of length. max_len 4096 matches their pipeline.
+            cls_id = self._tokenizer.cls_token_id
+            max_len = 4096
+            seqs = []
+            for p, c in zip(prompts, completions):
+                text = self._tokenizer.apply_chat_template(
                     [
                         {"role": "user", "content": p},
                         {"role": "assistant", "content": c},
                     ],
                     tokenize=False,
                 )
-                + self._tokenizer.cls_token
-                for p, c in zip(prompts, completions)
-            ]
-            enc = self._tokenizer(
-                texts,
-                return_tensors="pt",
-                padding=True,
-                truncation=True,
-                max_length=4096,
+                ids = self._tokenizer(
+                    text, add_special_tokens=False, truncation=True,
+                    max_length=max_len - 1,
+                )["input_ids"]
+                seqs.append(ids + [cls_id])
+            enc = self._tokenizer.pad(
+                {"input_ids": seqs}, padding=True, return_tensors="pt"
             )
             dev = self._model.device
             out = self._model(

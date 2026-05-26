@@ -78,7 +78,14 @@ class SimilarityClassifier:
 
 
 def _partition_distinctness(responses: list[str], clf: SimilarityClassifier) -> np.ndarray:
-    """Union-find partition; per-response distinctness = (n - part_size)/n."""
+    """Union-find partition diversity, verbatim DARLING `partition()`
+    (verl/utils/reward_score/partition_reward_vllm_serve_modernbert.py):
+    for a response in a cluster of size s out of n,
+        reward = (n - s) / (n - 1)
+    then floor every reward at 0.1 (their `max(r, 0.1)` -- diversity is
+    never 0, so a homogeneous group still passes quality through at 0.1
+    instead of zeroing the multiplicative reward and the gradient).
+    """
     n = len(responses)
     parent = list(range(n))
 
@@ -102,9 +109,13 @@ def _partition_distinctness(responses: list[str], clf: SimilarityClassifier) -> 
     for i in range(n):
         r = find(i)
         sizes[r] = sizes.get(r, 0) + 1
-    return np.array(
-        [(n - sizes[find(i)]) / n for i in range(n)], dtype=np.float32
-    )
+
+    def _div(i: int) -> float:
+        s = sizes[find(i)]
+        r = (n - s) / (n - 1) if n > 1 else 0.0
+        return max(r, 0.1)  # DARLING floor: diversity is never 0
+
+    return np.array([_div(i) for i in range(n)], dtype=np.float32)
 
 
 @dataclass

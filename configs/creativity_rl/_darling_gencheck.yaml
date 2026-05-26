@@ -1,0 +1,58 @@
+# Short capture run: verify TRL GRPO actually samples K=8 DIVERSE
+# rollouts per prompt in-training (log_completions -> wandb table +
+# stdout). Same model/reward path as darling_h100.yaml, just 6 steps.
+
+output_dir: data/creativity_rl/darling_gencheck
+
+seed: 17
+
+policy:
+  base_model: meta-llama/Llama-3.1-8B-Instruct
+  lora:
+    rank: 32
+    alpha: 64
+    dropout: 0.0
+    target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+
+data:
+  source: wildchat
+  n_prompts: 64
+  max_prompt_tokens: 512
+
+reward:
+  type: darling
+  quality_rm: Nexusflow/Athene-RM-8B
+  quality_rm_load_in_4bit: false
+  quality_rm_max_length: 1024
+  sim_classifier_device: cuda
+
+rl:
+  algorithm: grpo
+  group_size_K: 8
+  kl_coefficient_beta: 0.001
+  scale_rewards: false
+  learning_rate: 1.0e-6
+  entropy_coeff: 0.0
+  total_steps: 6
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 8
+  gradient_checkpointing: true
+  generation:
+    max_new_tokens: 1024
+    temperature: 1.0
+    top_p: 1.0
+  save_every_steps: 100000
+
+logging:
+  wandb:
+    enabled: true
+    project: comb-creat-eval
+    group: creativity_rl
+    run_name: darling_gencheck
+    tags: [darling, gencheck]
+  log_every_steps: 1
+  log_completions: true
+  num_completions_to_print: 8
+
+budget:
+  max_usd: 20

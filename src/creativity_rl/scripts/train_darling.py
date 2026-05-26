@@ -139,6 +139,10 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False) -> None
         # reward, or data, so the DARLING methodology is unchanged.
         gradient_checkpointing=cfg["rl"].get("gradient_checkpointing", False),
         gradient_checkpointing_kwargs={"use_reentrant": False},
+        # Optional: log the actual K rollouts per prompt (wandb table +
+        # stdout) so we can verify in-training generations are diverse.
+        log_completions=cfg["logging"].get("log_completions", False),
+        num_completions_to_print=cfg["logging"].get("num_completions_to_print", 0),
     )
 
     trainer = GRPOTrainer(

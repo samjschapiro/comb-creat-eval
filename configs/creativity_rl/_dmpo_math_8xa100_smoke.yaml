@@ -1,0 +1,56 @@
+# Smoke test for 8xA100 DMPO pipeline: 3 optimizer steps, tiny prompt
+# pool, otherwise identical to dmpo_math_8xa100.yaml. Validates that
+# FSDP + full FT + DMPOTrainer + openr1_math dataset all work end to
+# end before committing to the 250-step run.
+
+output_dir: data/creativity_rl/dmpo_math_8xa100_smoke
+method: dmpo
+seed: 17
+
+policy:
+  base_model: Qwen/Qwen2.5-Math-7B-Instruct
+  lora:
+    rank: 32
+    alpha: 64
+    dropout: 0.0
+    target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+
+data:
+  source: openr1_math
+  n_prompts: 64
+
+reward:
+  format_weight: 0.1
+  correct_weight: 1.0
+
+rl:
+  algorithm: grpo
+  group_size_K: 8
+  kl_coefficient_beta: 0.0
+  scale_rewards: true
+  learning_rate: 1.0e-6
+  entropy_coeff: 0.0
+  total_steps: 3
+  per_device_train_batch_size: 4
+  gradient_accumulation_steps: 2
+  gradient_checkpointing: true
+  lr_scheduler_type: cosine
+  generation:
+    max_new_tokens: 512                # shorter for smoke
+    temperature: 1.0
+    top_p: 1.0
+  save_every_steps: 1000               # don't checkpoint on smoke
+
+dmpo:
+  lambda: 2.0
+  alpha: 0.0666666667
+
+logging:
+  wandb:
+    enabled: false                     # no wandb noise on smoke
+  log_every_steps: 1
+  log_completions: true
+  num_completions_to_print: 4
+
+budget:
+  max_usd: 20

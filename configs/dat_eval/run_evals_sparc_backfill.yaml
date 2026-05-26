@@ -1,0 +1,60 @@
+# DAT/CDAT/PACE backfill for SPARC overlap. Targets 18 non-flagship SPARC
+# models not yet present in the existing all_scores.json. Output goes to a
+# fresh dir so it doesn't clobber run_v1; merge happens at correlation-join
+# time (read both score files in the SPARC re-join script).
+output_dir: "data/dat_eval/sparc_backfill_v1"
+
+# No cap: the runner's PRICING table doesn't have entries for these
+# future-dated SPARC models and treats them as $inf, which abuts any cap.
+# User has approved a scope budget of ~$20 for the full backfill (DAT+CDAT+
+# PACE+DRAT+RAT), of which this run is the bulk.
+budget_usd: 0
+
+concurrency: 20
+
+reasoning:
+  effort: "low"
+  exclude: true
+
+dat_temperatures: [1.0, 1.5, 2.0]
+cdat_temperatures: [1.0, 1.5, 2.0]
+pace_temperatures: [0.0]
+
+dat_top_p: 1.0
+dat_top_k: 0
+cdat_top_p: 1.0
+cdat_top_k: 0
+
+dat_max_tokens: 256
+cdat_max_tokens: 256
+pace_stage1_max_tokens: 400
+pace_stage2_max_tokens: 1200
+reasoning_max_tokens_multiplier: 4
+
+dat_trials: 40
+
+evals:
+  - dat
+  - cdat
+  - pace
+
+# 18 non-flagship SPARC corpus models lacking DAT/CDAT/PACE coverage.
+models:
+  - google/gemma-3-12b-it
+  - google/gemma-3-4b-it
+  - google/gemma-4-26b-a4b-it
+  - google/gemma-4-31b-it
+  - z-ai/glm-4.5v
+  - z-ai/glm-4.6
+  - ibm-granite/granite-4.0-h-micro
+  - nousresearch/hermes-3-llama-3.1-405b
+  - nousresearch/hermes-4-70b
+  - tencent/hunyuan-a13b-instruct
+  - meta-llama/llama-3-8b-instruct
+  - minimax/minimax-01
+  - mistralai/mixtral-8x22b-instruct
+  - nvidia/nemotron-3-nano-30b-a3b
+  - nvidia/nemotron-nano-9b-v2
+  - amazon/nova-2-lite-v1
+  - amazon/nova-micro-v1
+  - qwen/qwen3.5-flash-02-23

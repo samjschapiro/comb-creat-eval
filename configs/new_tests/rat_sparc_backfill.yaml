@@ -1,0 +1,42 @@
+# RAT backfill for SPARC overlap. Zero-shot only (no best-of-K) on 18
+# non-flagship SPARC models. Treats reasoning-tuned variants as reasoning
+# models so they get a 4x max-tokens multiplier.
+output_dir: "data/new_tests/rat/sparc_backfill_v1"
+
+models:
+  - google/gemma-3-12b-it
+  - google/gemma-3-4b-it
+  - google/gemma-4-26b-a4b-it
+  - google/gemma-4-31b-it
+  - z-ai/glm-4.5v
+  - z-ai/glm-4.6
+  - ibm-granite/granite-4.0-h-micro
+  - nousresearch/hermes-3-llama-3.1-405b
+  - nousresearch/hermes-4-70b
+  - tencent/hunyuan-a13b-instruct
+  - meta-llama/llama-3-8b-instruct
+  - minimax/minimax-01
+  - mistralai/mixtral-8x22b-instruct
+  - nvidia/nemotron-3-nano-30b-a3b
+  - nvidia/nemotron-nano-9b-v2
+  - amazon/nova-2-lite-v1
+  - amazon/nova-micro-v1
+  - qwen/qwen3.5-flash-02-23
+
+reasoning_models:
+  - nousresearch/hermes-4-70b
+  - nvidia/nemotron-3-nano-30b-a3b
+  - nvidia/nemotron-nano-9b-v2
+
+reasoning:
+  effort: "low"
+  exclude: true
+
+reasoning_max_tokens_multiplier: 4
+
+temperature: 0.0
+max_tokens: 32
+seed: 42
+
+concurrency: 10
+max_retries: 4

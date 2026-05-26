@@ -1,0 +1,67 @@
+# DARLING-style run for a single H100-80GB. Closes #3 (Athene-RM-8B in
+# full bf16, not 4-bit) and runs the real darling.sh response length
+# (1024) and N=8 sustainably. Still NOT a faithful reproduction on one
+# GPU: LoRA (not full FT; #2), deberta substitute classifier (#1),
+# TRL not verl (#6). Effective batch = pdtbs*accum = 8 prompts/step;
+# darling.sh uses 64 (#4) -- raising gradient_accumulation_steps to 64
+# matches it but makes each step ~8x slower on a single GPU w/ HF generate.
+
+output_dir: data/creativity_rl/darling_h100
+
+seed: 17
+
+policy:
+  base_model: meta-llama/Llama-3.1-8B-Instruct
+  lora:                      # single GPU: full FT of 8B GRPO infeasible
+    rank: 32
+    alpha: 64
+    dropout: 0.0
+    target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+
+data:
+  source: wildchat
+  n_prompts: 2000            # darling.sh ~10k; first pass
+  max_prompt_tokens: 512
+
+reward:
+  type: darling
+  quality_rm: Nexusflow/Athene-RM-8B
+  quality_rm_load_in_4bit: false  # 80GB: full bf16 RM (fixes #3)
+  quality_rm_max_length: 1024
+  sim_classifier_device: cuda     # 80GB has room; identical scores, faster
+
+rl:
+  algorithm: grpo
+  group_size_K: 8                 # darling.sh N=8
+  kl_coefficient_beta: 0.001      # darling.sh kl_loss_coef (low_var_kl)
+  scale_rewards: false            # darling.sh norm_adv_by_std_in_grpo=False
+  learning_rate: 1.0e-6           # darling.sh actor lr
+  entropy_coeff: 0.0
+  total_steps: 120                # ~3-4min/step at 8 prompts/step -> ~7h;
+                                  # enough smoothed points to read the trend
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 16  # 2 prompts/step (K=8): 2x smoother than
+                                   # batch-1, ~62GB (safe margin on 80GB at
+                                   # 1024 tok). accum 32 pegs 80.8/81.6GB
+                                   # (OOMs on long batches); 64 OOMs;
+                                   # 512 = true DARLING batch (multi-GPU only)
+  gradient_checkpointing: true    # darling.sh enables it too (faithful)
+  generation:
+    max_new_tokens: 1024          # darling.sh max_response_length=1024
+    temperature: 1.0
+    top_p: 1.0
+  save_every_steps: 40
+
+logging:
+  wandb:
+    enabled: true
+    project: comb-creat-eval
+    group: creativity_rl
+    run_name: darling_h100
+    tags: [darling, grpo, lora, llama-3.1-8b, h100-80gb]
+  log_every_steps: 2
+  log_completions: true
+  num_completions_to_print: 8
+
+budget:
+  max_usd: 80

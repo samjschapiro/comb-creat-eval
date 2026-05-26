@@ -1,0 +1,60 @@
+# GRPO baseline arm for the 8xA100 DMPO replication. Identical to
+# dmpo_math_8xa100.yaml except method/run_name; the dmpo block is
+# kept (harmless when method=grpo) so the two configs differ only on
+# the bit that actually matters.
+
+output_dir: data/creativity_rl/dmpo_math_8xa100_grpo
+method: grpo
+seed: 17
+
+policy:
+  base_model: Qwen/Qwen2.5-Math-7B-Instruct
+  lora:
+    rank: 32
+    alpha: 64
+    dropout: 0.0
+    target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+
+data:
+  source: openr1_math
+  n_prompts: 4000
+
+reward:
+  format_weight: 0.1
+  correct_weight: 1.0
+
+rl:
+  algorithm: grpo
+  group_size_K: 8
+  kl_coefficient_beta: 0.0
+  scale_rewards: true
+  learning_rate: 1.0e-6
+  entropy_coeff: 0.0
+  total_steps: 250
+  per_device_train_batch_size: 4
+  gradient_accumulation_steps: 2
+  gradient_checkpointing: true
+  lr_scheduler_type: cosine
+  generation:
+    max_new_tokens: 1024
+    temperature: 1.0
+    top_p: 1.0
+  save_every_steps: 100
+
+dmpo:
+  lambda: 2.0
+  alpha: 0.0666666667
+
+logging:
+  wandb:
+    enabled: true
+    project: comb-creat-eval
+    group: dmpo_repro
+    run_name: dmpo_math_8xa100_grpo
+    tags: [grpo, math, openr1, qwen2.5-math-7b, full-ft, 8xa100, fsdp, baseline]
+  log_every_steps: 2
+  log_completions: true
+  num_completions_to_print: 8
+
+budget:
+  max_usd: 120
