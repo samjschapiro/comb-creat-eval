@@ -1,0 +1,17 @@
+# Fixed-rubric LLM-as-judge applied to the public-domain gold set (plot_twist Sec.3).
+# Ensemble of independent judges; each dimension aggregated across judges by the median.
+# Headline per-story number is geomean(surprise, coherence) (computed by the runner).
+judge_models:
+  - "anthropic/claude-sonnet-4"
+  - "openai/gpt-4o"
+  - "google/gemini-2.5-flash"
+
+temperature: 0.0
+max_tokens: 400
+concurrency: 16
+
+# Inputs: fetched gold-set story texts + manifest (for titles).
+texts_dir: "data/plot_twist/human_twists/texts"
+manifest: "configs/plot_twist/pd_manifest.json"
+
+output_dir: "data/plot_twist/rubric_gold"

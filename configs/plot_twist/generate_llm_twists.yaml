@@ -1,0 +1,34 @@
+# Generate N open-ended plot-twist stories per model (paper Sec.3 / H5).
+# Pool spans weak -> strong so model strength + sampling variance give the quality
+# spread needed to test whether the rubric judge discriminates (the all-masterpiece
+# human gold set cannot probe this).
+
+n_samples: 10              # samples per (model x temperature)
+temperatures: [0.9, 1.0, 1.2]
+max_tokens: 4500            # fit ~3k words (~1.4 tokens/word) + margin
+concurrency: 16
+
+# Story length matched to the human gold set so length is not a confound (H5).
+# Human gold: median 2,469 words, IQR 1,873-4,561; this band brackets the median.
+target_words: [2000, 3000]
+
+# Generators: weak -> frontier, DISJOINT from the judge ensemble
+# (judge_models_excluded) to avoid a model grading its own output.
+generator_models:
+  - "meta-llama/llama-3.2-3b-instruct"      # very weak (low-quality floor)
+  - "meta-llama/llama-3.1-8b-instruct"      # weak
+  - "google/gemma-3-12b-it"                 # weak-mid
+  - "openai/gpt-4o-mini"                     # mid
+  - "anthropic/claude-haiku-4.5"             # mid
+  - "openai/gpt-4.1"                         # strong
+  - "google/gemini-2.5-pro"                  # strong
+  - "anthropic/claude-opus-4.5"              # frontier
+
+# The judge ensemble (from rubric_gold.yaml); listed only so the runner enforces
+# generator/judge disjointness. Keep in sync with the rubric config.
+judge_models_excluded:
+  - "anthropic/claude-sonnet-4"
+  - "openai/gpt-4o"
+  - "google/gemini-2.5-flash"
+
+output_dir: "data/plot_twist/llm_twists"

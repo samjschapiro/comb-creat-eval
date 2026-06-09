@@ -85,6 +85,69 @@ anchor count $k \in \{2,3,4\}$ and vocabulary corpus
 in `04_drat.tex`. Utility-gate aggregator ablation
 ($\max$ / $\min$ / $\mathrm{avg}$) in `06_appendix.tex`.
 
+### kg_creat (active, COLM 2026 LM4Sci workshop)
+
+Re-purposes the **comb_eval / Comb-Creat** task setup (constrained labeled-
+graph pathfinding with inclusion/exclusion constraints and novelty×utility
+scoring) into a **test-time creativity eval on a real knowledge graph**
+(Wikidata), administered to frontier models without retraining — the
+new_tests survey's "Gap A". The empirical goal: show its per-model scores
+**correlate with LiveIdeaBench**, ideally better than CREATE
+([Wadhwa et al. 2026, arXiv 2603.09970](https://arxiv.org/abs/2603.09970)),
+under the dat_eval validity/specificity framework. DRAT (new_tests) and
+DAT/CDAT/PACE (dat_eval) are scored on the same pool as comparators.
+
+**Methodological novelty vs CREATE** (which already does Wikidata multi-hop
+paths at test time): (1) a **typology of methodological constraints**
+(inclusion/exclusion/categorical/waypoint/ordering — CREATE has none → tunable
+difficulty, 2-D count×type, recovering Comb-Creat's novelty–utility trade-off)
+and (2) **constraint-load-weighted utility**, with constraints enforced exactly
+on the verified path. Verification shares CREATE's open-KG + LLM-judge factuality
+(reverted from exact held-subgraph checking 2026-06-02 as too restrictive), and
+novelty uses the validated DAT semantic-distance measure — so neither is a
+differentiator. The moat is constraints + utility + LIB validation; the LIB
+correlation is the empirical demonstration.
+
+**Status (2026-06-01)**: track scaffolded (Phase 0). Design spec, roadmap, and
+the CREATE comparison table written in `docs/tracks/kg_creat/`. Reuses
+`comb_eval` scoring primitives, `dat_eval` validity/specificity pipeline, and
+the `benchmarks.json` LIB pool (~31 models). No eval code yet; next is the
+Wikidata subgraph backend. Target: COLM 2026 LM4Sci, 8pp non-archival,
+deadline June 23 2026.
+
+### plot_twist (active, ARR Aug 2026 cycle → EACL 2027)
+
+A **methods paper** eliciting *transformational* creativity — the unrepresented
+third Boden mode (exploratory = dat_eval/new_tests; combinatorial =
+comb_eval/kg_creat). Method: **conceptual-space axiom modification (CSAM)** —
+the model externalizes a story's conceptual-space DAG `G` (rich axioms + rules +
+artifacts), narrates up to a cut `t`, performs a controlled axiom flip `G→G'`,
+and continues for `t'>t`. A plot twist *is* the Thm-4 axiom-modification
+operation from the lab's own
+[Transformational Creativity graphical theory (Schapiro/Black/Varshney, ICCC
+2025, arXiv 2504.18687)](https://arxiv.org/abs/2504.18687), applied to the
+*reader's* world-model. Structural metrics fall out: surprise `= T_mod(a*)`
+(downstream reinterpretation), inevitability `= preservation(a')` (prior
+artifacts stay valid) — used as the *analysis instrument* explaining why CSAM
+works, not a standalone eval.
+
+**Empirical claim**: CSAM beats *compute/token-matched* baselines (free-form
+plan-then-twist, thinking mode, self-refine, temperature) at producing
+"surprising-yet-inevitable" twists in **blinded human evaluation**, and
+`T_mod(a*)` predicts human-rated surprise. Seed prompts = WritingPrompts; a
+synthetic controlled leg gives ground-truth `T_mod`.
+
+**One paper — PT²CB** (Plot Twist for Transformational Creativity Benchmark),
+benchmark + method in one arc: (§3) the benchmark scores a twist by a
+fixed-rubric LLM judge whose surprise/inevitability dimensions come from the SBV
+theory, with a judge-free structural score `T_mod × preservation` (+ CREATE-style
+diversity) as a check; (§4) frontier models score low and thinking/scale doesn't
+help; (§5) CSAM closes the gap, with a short human study validating the win.
+**Target: ARR August 2026 cycle (deadline Aug 3 2026; commits to EACL 2027).**
+Overleaf paper in `papers/pt2cb-iclr-2027/` (folder name predates the venue
+switch; ACL/ARR template). **Status (2026-06-08)**: Phase 0 — paper skeleton +
+Figure 1 (G→G' on Cortázar's *La noche boca arriba*) drafted; no code yet.
+
 ### comb_eval (background / exploratory)
 
 Earlier track exploring combinatorial-creativity-style evaluation.

@@ -1,0 +1,11 @@
+# Transformational-creativity (tc) bar chart per source.
+# tc(T) = Div(T) * mean_i[ S(T_i) * Coh(T_i) ]; Div from twist (`reveal`) embeddings.
+annotations_json: "data/plot_twist/annotations/annotations.json"
+embed_field: "reveal"
+embed_model: "sentence-transformers/all-mpnet-base-v2"
+
+# Human ceiling uses only STRONG (genuine reinterpretation) twists; LLM = all.
+human_strong_only: true
+manifest: "configs/plot_twist/pd_manifest.json"
+
+output_dir: "data/plot_twist/tc"

@@ -31,13 +31,15 @@ src/
     ├── rat.py                  # zero-shot RAT scoring (30 classic items)
     ├── hivemind.py             # Hivemind divergence wrapper
     ├── noveltybench.py         # NoveltyBench utility wrapper
-    └── scripts/
-        ├── run_drat_smoke.py        # DRAT smoke runner used for pilots/ablations
-        ├── run_eqbench_cw.py        # EQ-Bench CW wrapper
-        ├── run_hivemind.py          # Hivemind wrapper runner
-        ├── run_liveideabench.py     # LiveIdeaBench wrapper runner
-        ├── run_noveltybench.py      # NoveltyBench wrapper runner
-        └── run_rat.py               # RAT wrapper runner
+│       ├── run_drat_smoke.py        # DRAT smoke runner used for pilots/ablations
+│       ├── run_eqbench_cw.py        # EQ-Bench CW wrapper
+│       ├── run_hivemind.py          # Hivemind wrapper runner
+│       ├── run_liveideabench.py     # LiveIdeaBench wrapper runner
+│       ├── run_noveltybench.py      # NoveltyBench wrapper runner
+│       └── run_rat.py               # RAT wrapper runner
+└── kg_creat/                   # active track (test-time Comb-Creat on a real KG)
+    │                           # scaffolded 2026-06-01; eval engine TBD (Phase 1)
+    └── scripts/                # graph.py (Wikidata loader) + scoring port to come
 
 configs/
 ├── comb_eval/
@@ -89,11 +91,15 @@ docs/
 ├── memos/                       # tacit-knowledge notes
 ├── reports/<date>_<name>/       # written-up findings + figures
 └── tracks/
-    └── new_tests/               # active track docs
-        ├── progress.md          # working state of the track
-        ├── drat_design.md       # DRAT design notes
-        ├── proposals.md         # candidate-test proposals
-        └── survey.md            # related-work survey
+    ├── new_tests/               # active track docs
+    │   ├── progress.md          # working state of the track
+    │   ├── drat_design.md       # DRAT design notes
+    │   ├── proposals.md         # candidate-test proposals
+    │   └── survey.md            # related-work survey
+    └── kg_creat/                # active track docs (real-KG Comb-Creat)
+        ├── progress.md          # goal, status, phased roadmap
+        ├── design.md            # task/scoring spec + reuse map + risks
+        └── novelty_vs_create.md # methodological novelty table vs CREATE
 
 papers/                          # gitignored in outer repo (Overleaf-synced sub-repos)
 ├── iccc-2026/                   # main paper (validity / specificity framework + DRAT)

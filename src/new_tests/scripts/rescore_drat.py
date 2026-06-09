@@ -149,11 +149,19 @@ def main():
     glove_path = "resources/glove.840B.300d.txt"
     fasttext_path = "resources/crawl-300d-2M.vec"
 
-    # Load raw responses
-    with open("data/new_tests/drat/pilot_v1/raw_results.json") as f:
-        raw = json.load(f)
-    with open("data/new_tests/drat/pilot_v2/raw_results.json") as f:
-        raw += json.load(f)
+    # Load raw responses (pilot v1/v2 + SPARC backfill so multi_embed_scores
+    # covers the full corpus we have on disk).
+    raw = []
+    for p in [
+        "data/new_tests/drat/pilot_v1/raw_results.json",
+        "data/new_tests/drat/pilot_v2/raw_results.json",
+        "data/new_tests/drat/sparc_backfill_v1/raw_results.json",
+    ]:
+        if Path(p).exists():
+            with open(p) as f:
+                raw += json.load(f)
+        else:
+            print(f"  skipping missing source: {p}")
     print(f"Total responses: {len(raw)}")
 
     # Load CDAT cue pool for tau calibration

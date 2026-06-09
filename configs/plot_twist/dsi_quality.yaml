@@ -1,0 +1,10 @@
+# H4: DSI vs surprise*coherence per story (human + LLM).
+llm_generations: "data/plot_twist/llm_twists/generations.json"
+llm_scores_csv: "data/plot_twist/llm_twists/downstream/rubric/scores.csv"
+human_texts_dir: "data/plot_twist/human_twists/texts"
+human_scores_csv: "data/plot_twist/rubric_gold/scores.csv"
+manifest: "configs/plot_twist/pd_manifest.json"
+output_dir: "data/plot_twist/dsi_quality"
+
+# DSI computed as the mean over consecutive 600-word chunks (whole story).
+dsi_chunk_words: 600

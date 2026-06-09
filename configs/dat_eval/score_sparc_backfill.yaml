@@ -1,0 +1,18 @@
+# Score the SPARC backfill DAT/CDAT/PACE responses under the same
+# embeddings as the main run. Output is a sibling of the upstream dir
+# so the join script can read both score files.
+upstream_dir: "data/dat_eval/sparc_backfill_v1"
+output_dir: "data/dat_eval/sparc_backfill_v1/downstream/scores_v1"
+
+evals:
+  - dat
+  - cdat
+  - pace
+
+glove_path: "resources/glove.840B.300d.txt"
+fasttext_path: "resources/crawl-300d-2M.vec"
+sbert_model: "all-mpnet-base-v2"
+
+benchmark_file: "configs/comb_eval/benchmarks.json"
+
+n_bootstrap: 500

@@ -209,3 +209,99 @@ or any channel showing a meaningful LiveIdeaBench gain.
 matrix of deltas vs the matched SFT baseline.
 
 **Result.** *(unfilled, awaiting test.)*
+
+---
+
+## H4 — Embedding semantic-distance metrics are blind to transformational creativity
+
+**Track.** plot_twist
+**Status.** open
+**Logged.** 2026-06-08
+
+**Statement.** Divergent Semantic Integration (DSI,
+[Johnson et al. 2022](https://doi.org/10.3758/s13428-022-01902-8)) — and the
+embedding semantic-distance family more broadly (DAT/CDAT) — does **not** predict
+(i) the *presence* or (ii) the *quality* of a plot twist, even though it still
+predicts general creative-writing quality on the same stories. Embedding distance
+captures *exploratory* creativity but is blind to *transformational* creativity.
+
+**Motivation.**
+- DSI scores a narrative by mean pairwise contextual-embedding (BERT) distance
+  among its words; it is validated to predict human creativity ratings of short
+  narratives. It is the narrative-level cousin of DAT/CDAT, which dat_eval showed
+  are construct-bound to exploratory/divergent creativity and null for scientific
+  ideation. This hypothesis extends that line to transformational creativity. [[H2]]
+- A plot twist is transformational: a good twist *re-contextualizes existing
+  elements* (high preservation = staying inside the established semantic space), so
+  it adds little semantic spread. A metric that measures semantic spread should
+  therefore be null — or even slightly negative — w.r.t. twist quality.
+- This is the measurement-side claim motivating T2C's structural metric and rubric:
+  existing automated creativity metrics cannot see transformational creativity.
+
+**Prediction.** On the T2C contrast triples (twist / predictable / random) and the
+human-rated twist set:
+- (a) **Presence:** DSI does not separate twist-present from predictable stories —
+  classification AUC ∈ [0.45, 0.58] (≈ chance).
+- (b) **Quality:** DSI does not correlate with twist quality (rubric or human) —
+  |Pearson r| < 0.15, n.s.
+- (c) **Dissociation control:** on the *same* stories DSI *does* predict general
+  creative-writing quality (r ≳ 0.30, replicating its validated use) — so the null
+  is twist-specific, not DSI being broken.
+- (d) **Positive contrast:** the structural `T_mod × preservation` (and the rubric)
+  *do* predict twist presence (AUC ≥ 0.75) and quality (r ≥ 0.40) on the same data
+  → a double dissociation (embedding ↔ exploratory, structure ↔ transformational).
+
+**Falsification.** DSI predicts twist presence (AUC ≥ 0.65) or twist quality
+(|r| ≥ 0.30, p < .01) on the held-out set; or the structural metric fails to beat
+DSI on the same data.
+
+**Tests.** *(pending)* Experiment 1 in
+[tracks/plot_twist/experiments.md](tracks/plot_twist/experiments.md). Reuse the
+dat_eval correlation pipeline; DSI computed over T2C stories.
+
+**Result.** *(unfilled, awaiting test.)*
+
+---
+
+## H5 — Human plot twists beat LLM plot twists (and the gap is in coherence)
+
+**Track.** plot_twist
+**Status.** open
+**Logged.** 2026-06-08
+
+**Statement.** Under the fixed-rubric LLM judge, human-written plot twists score
+higher than frontier-LLM-written twists on the twist-specific dimensions (surprise,
+coherence); the gap is **concentrated in coherence/preservation**, survives a
+prose-quality control, and holds in a matched-prompt head-to-head (not only on
+famous stories).
+
+**Motivation.**
+- LLM stories are documented as low plot-diversity and as foreshadowing twists
+  poorly ([Echoes, 2501.00273](https://arxiv.org/abs/2501.00273); [Human-Level
+  Narratives, 2407.13248](https://arxiv.org/abs/2407.13248)). Foreshadowing *is*
+  preservation/coherence — the term models should struggle with most (they can
+  be surprising, but cannot make the surprise *retroactively fit*).
+- This is the human-anchored version of the §4 frontier gap: it sets a ceiling and
+  localizes the deficit, motivating CSAM (built to raise preservation).
+
+**Prediction.**
+- Famous human twists > frontier-LLM twists on the overall rubric (Δ ≥ 0.5 on the
+  rubric scale) and on surprise **and** coherence separately.
+- The gap is **larger on coherence than on surprise**.
+- **Prose-quality control:** with a prose-quality dimension covaried out, the
+  twist-dimension gap remains significant — i.e. it is not just "humans write better
+  prose."
+- **Matched-prompt head-to-head** (humans + LLMs write twists to the same
+  WritingPrompts prompts): humans still > LLMs, by a smaller margin than the famous
+  comparison.
+
+**Falsification.** Frontier LLMs match or exceed human twists on the twist
+dimensions in the matched-prompt comparison (Δ within ±0.2, n.s.), or the famous-set
+gap disappears once prose quality is controlled.
+
+**Tests.** *(pending)* Experiment 2 in
+[tracks/plot_twist/experiments.md](tracks/plot_twist/experiments.md). Human-twist
+corpus (famous public-domain + WritingPrompts twist-tagged) vs LLM-generated twists,
+scored by the fixed-rubric judge blind to authorship.
+
+**Result.** *(unfilled, awaiting test.)*

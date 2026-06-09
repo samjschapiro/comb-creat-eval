@@ -1,0 +1,5 @@
+# Graded Response Model (GRM) judge diagnostics (AGC IRT framework).
+scores_files:
+  human_gold: "data/plot_twist/rubric_gold/rubric_scores.json"
+  llm_twists: "data/plot_twist/llm_twists/downstream/rubric/rubric_scores.json"
+output_dir: "data/plot_twist/grm_irt"

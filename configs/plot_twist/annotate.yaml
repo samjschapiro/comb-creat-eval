@@ -1,0 +1,17 @@
+# Annotate every story (LLM + human gold) with setup / reveal / score-rationale.
+# Cheap annotator; durable + resumable (per-story cache).
+annotator_model: "openai/gpt-4o-mini"
+temperature: 0.0
+max_tokens: 400
+concurrency: 16
+
+# LLM-generated set + its rubric scores
+llm_generations: "data/plot_twist/llm_twists/generations.json"
+llm_scores_csv: "data/plot_twist/llm_twists/downstream/rubric/scores.csv"
+
+# Human gold set + its rubric scores
+human_texts_dir: "data/plot_twist/human_twists/texts"
+human_scores_csv: "data/plot_twist/rubric_gold/scores.csv"
+manifest: "configs/plot_twist/pd_manifest.json"   # for human story titles in the log
+
+output_dir: "data/plot_twist/annotations"
