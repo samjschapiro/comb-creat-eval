@@ -66,8 +66,10 @@ async def _generate_one(
     cfg: GenerateConfig,
     stories_dir: Path,
 ) -> dict:
-    rec_id = f"{model_id_to_key(model)}__t{int(round(temperature * 10)):02d}__s{sample_idx:02d}"
-    path = stories_dir / f"{rec_id}.json"
+    mkey = model_id_to_key(model)
+    rec_id = f"{mkey}__t{int(round(temperature * 10)):02d}__s{sample_idx:02d}"
+    path = stories_dir / mkey / f"{rec_id}.json"  # one subfolder per model
+    path.parent.mkdir(parents=True, exist_ok=True)
 
     # Resume: if a good story is already on disk, return it WITHOUT re-calling the
     # API (so a re-run never re-spends on stories we already have).

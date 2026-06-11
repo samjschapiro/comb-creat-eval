@@ -30,9 +30,15 @@ async def call_llm_async(
     temperature: float = 0.0,
     max_tokens: int = 512,
     seed: int | None = None,
+    reasoning: dict | None = None,
 ) -> str:
     """Single chat completion. Caller supplies the client so many concurrent
-    calls share one connection pool."""
+    calls share one connection pool.
+
+    `reasoning` (optional) is forwarded verbatim to OpenRouter's unified reasoning
+    API, e.g. {"effort": "high"} or {"enabled": true} to think, {"enabled": false}
+    or {"max_tokens": 0} to disable thinking. Used for the thinking-vs-non-thinking
+    ablation; None leaves the model at its provider default."""
     kwargs = dict(
         model=model,
         messages=messages,
@@ -41,6 +47,8 @@ async def call_llm_async(
     )
     if seed is not None:
         kwargs["seed"] = seed
+    if reasoning is not None:
+        kwargs["extra_body"] = {"reasoning": reasoning}
     response = await async_client.chat.completions.create(**kwargs)
     return response.choices[0].message.content
 

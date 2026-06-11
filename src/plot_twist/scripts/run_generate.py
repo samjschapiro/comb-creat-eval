@@ -70,7 +70,8 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False) -> None
         for m in models:
             for t in temperatures:
                 for i in range(n_samples):
-                    p = stories_dir / f"{model_id_to_key(m)}__t{int(round(t * 10)):02d}__s{i:02d}.json"
+                    mk = model_id_to_key(m)
+                    p = stories_dir / mk / f"{mk}__t{int(round(t * 10)):02d}__s{i:02d}.json"
                     if p.exists() and json.loads(p.read_text()).get("story"):
                         already += 1
     print(

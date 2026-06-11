@@ -96,10 +96,21 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False) -> None
             "mean_SxCoh": float(sc), "tc": div * float(sc),
         })
 
-    rows.sort(key=lambda d: -d["tc"])
-    print(f"{'source':<34}{'n':>4}{'Div':>8}{'mean(S*Coh)':>13}{'tc':>9}")
+    # Equal-weighted overall score: z-score each facet across sources (mean 0, SD 1),
+    # then average with equal weight (surprise, coherence, diversity each 1/3). This is
+    # the same equal-weight-of-standardized-indicators construction as AGC-Bench mean_z.
+    EQ_FACETS = ["mean_surprise", "mean_coherence", "div"]
+    _zs = {}
+    for k in EQ_FACETS:
+        v = np.array([d[k] for d in rows], dtype=float)
+        _zs[k] = (float(v.mean()), float(v.std()) or 1.0)
     for d in rows:
-        print(f"{d['source']:<34}{d['n']:>4}{d['div']:>8.3f}{d['mean_SxCoh']:>13.2f}{d['tc']:>9.3f}")
+        d["overall_eq"] = float(np.mean([(d[k] - _zs[k][0]) / _zs[k][1] for k in EQ_FACETS]))
+
+    rows.sort(key=lambda d: -d["overall_eq"])
+    print(f"{'source':<34}{'n':>4}{'Div':>8}{'mean(S*Coh)':>13}{'tc':>9}{'overall_eq':>11}")
+    for d in rows:
+        print(f"{d['source']:<34}{d['n']:>4}{d['div']:>8.3f}{d['mean_SxCoh']:>13.2f}{d['tc']:>9.3f}{d['overall_eq']:>11.3f}")
     (out / "tc.json").write_text(json.dumps(rows, indent=2))
 
     # --- bar chart (camera-ready) ---
@@ -108,27 +119,69 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False) -> None
 
     # Batlow palette (Crameri), matching the paper's Figure 1 role colours.
     BATLOW_BLUE = "#103D5F"    # LLM
-    BATLOW_ORANGE = "#EE9D6B"  # human gold (highlight role)
-    labels = [short(d["source"]) for d in rows]
-    vals = [d["tc"] for d in rows]
-    colors = [BATLOW_ORANGE if d["source"] == "human" else BATLOW_BLUE for d in rows]
-
-    fig, ax = plt.subplots(figsize=(14, 8))
-    bars = ax.bar(range(len(rows)), vals, color=colors, width=0.72)
-    ax.set_xticks(range(len(rows)))
-    ax.set_xticklabels(labels, rotation=35, ha="right", fontsize=18)
-    ax.tick_params(axis="y", labelsize=18)
-    ax.set_ylabel("Transformational creativity  tc", fontsize=24, labelpad=12)
-    ax.margins(y=0.12)
-    for b, v in zip(bars, vals):
-        ax.text(b.get_x() + b.get_width() / 2, v, f"{v:.2f}", ha="center", va="bottom", fontsize=15)
-    # legend distinguishing human vs LLM
+    BATLOW_ORANGE = "#EE9D6B"  # human (highlight role)
     from matplotlib.patches import Patch
-    ax.legend(handles=[Patch(color=BATLOW_ORANGE, label="Expert humans"), Patch(color=BATLOW_BLUE, label="LLM")],
-              fontsize=18, frameon=True, loc="upper right")
-    fig.tight_layout()
+
+    # Colour LLM bars by model provider; humans keep the batlow-orange highlight.
+    PROVIDERS = sorted({d["source"].split("/")[0] for d in rows if d["source"] != "human"})
+    from cmcrameri import cm as _cmc  # batlowS = the CATEGORICAL batlow (distinct hues)
+
+    def _adj(c):  # darken any too-light batlowS tint (e.g. the pale pink) so bars stay visible
+        r, g, b = c[0], c[1], c[2]
+        lum = 0.299 * r + 0.587 * g + 0.114 * b
+        if lum > 0.66:
+            s = 0.55 / lum
+            r, g, b = r * s, g * s, b * s
+        return (r, g, b, 1.0)
+
+    PROV_COLOR = {p: _adj(_cmc.batlowS(i)) for i, p in enumerate(PROVIDERS)}
+    HUMAN_COLOR = "#000000"  # Expert humans = black, to stand out from every provider
+    BAR_EDGE = dict(edgecolor="#666666", linewidth=0.5)
+    PROV_NAME = {"anthropic": "Anthropic", "openai": "OpenAI", "google": "Google",
+                 "meta-llama": "Meta", "deepseek": "DeepSeek", "qwen": "Qwen",
+                 "mistralai": "Mistral", "amazon": "Amazon", "nvidia": "NVIDIA",
+                 "ibm-granite": "IBM", "z-ai": "Z-AI", "moonshotai": "Moonshot"}
+
+    def bar_color(src):
+        return HUMAN_COLOR if src == "human" else PROV_COLOR[src.split("/")[0]]
+
+    def provider_legend_handles():
+        return [Patch(color=HUMAN_COLOR, label="Expert humans")] + \
+               [Patch(color=PROV_COLOR[p], label=PROV_NAME.get(p, p)) for p in PROVIDERS]
+
+    # Horizontal leaderboard (sorted by tc; scales to many models). Human bar highlighted.
+    n = len(rows)
+    srt = sorted(rows, key=lambda d: -d["overall_eq"])
+    labels = [short(d["source"]) for d in srt]
+    vals = [d["overall_eq"] for d in srt]
+    colors = [bar_color(d["source"]) for d in srt]
+
+    fig, ax = plt.subplots(figsize=(11, max(7, 0.36 * n)))
+    y = list(range(n))
+    ax.barh(y, vals, color=colors, height=0.78, **BAR_EDGE)
+    ax.set_yticks(y)
+    ax.set_yticklabels(labels, fontsize=13)
+    ax.invert_yaxis()
+    for lbl in ax.get_yticklabels():
+        if lbl.get_text() == "Expert humans":
+            lbl.set_fontweight("bold")
+            lbl.set_color("#000000")
+    vmin, vmax = min(vals), max(vals)
+    span = vmax - vmin
+    ax.set_xlim(min(0, vmin) - span * 0.12, vmax + span * 0.12)
+    ax.axvline(0, color="#999999", lw=0.9, zorder=0)
+    for yi, v in zip(y, vals):
+        if v >= 0:
+            ax.text(v + span * 0.015, yi, f"{v:+.2f}", va="center", ha="left", fontsize=11)
+        else:
+            ax.text(v - span * 0.015, yi, f"{v:+.2f}", va="center", ha="right", fontsize=11)
+    ax.set_xlabel("Overall score (mean z-score)", fontsize=18, labelpad=10)
+    ax.tick_params(axis="x", labelsize=13)
+    fig.legend(handles=provider_legend_handles(), loc="lower center", ncol=6, fontsize=12,
+               frameon=True, bbox_to_anchor=(0.5, -0.02))
+    fig.tight_layout(rect=(0, 0.04, 1, 1))
     p = out / "tc_by_model.png"
-    fig.savefig(p, dpi=220, bbox_inches="tight")
+    fig.savefig(p, dpi=200, bbox_inches="tight")
     plt.close(fig)
 
     # --- temperature vs tc line plot (one line per model; human = dotted reference) ---
@@ -169,9 +222,9 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False) -> None
         ys = [tc_mt.get((src, t)) for t in temps]
         ax.plot(temps, ys, marker="o", ms=10, lw=2.6, color=c, label=short(src))
     if human_tc is not None:
-        ax.axhline(human_tc, ls=":", lw=3.2, color=BATLOW_ORANGE)
+        ax.axhline(human_tc, ls=":", lw=3.2, color="#000000")
         ax.text(temps[-1], human_tc, f"Expert humans ({human_tc:.2f})  ",
-                va="bottom", ha="right", fontsize=17, color="#B5651D")
+                va="bottom", ha="right", fontsize=17, color="#000000")
     ax.set_xticks(temps)
     ax.set_xlabel("Sampling temperature", fontsize=24, labelpad=10)
     ax.set_ylabel("Transformational creativity  tc", fontsize=24, labelpad=12)
@@ -186,66 +239,69 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False) -> None
         json.dumps({f"{s}|{t}": v for (s, t), v in tc_mt.items()}, indent=2)
     )
 
-    # --- composite figure: (a) overall score | (b,c,d) component breakdown ---
-    order = sorted(rows, key=lambda d: -d["tc"])
-    nb = len(order)
+    # --- composite: (a) Overall (top 20, LHS, vertical) | (b,c,d) facet top-10 stacked (RHS) ---
+    colr = bar_color  # colour by provider; humans = batlow orange
 
-    def colr(src):
-        return BATLOW_ORANGE if src == "human" else BATLOW_BLUE
+    def bold_human(getters):
+        for lbl in getters:
+            if lbl.get_text() == "Expert humans":
+                lbl.set_fontweight("bold")
+                lbl.set_color("#000000")
 
-    fig = plt.figure(figsize=(20, 14))
-    gs = fig.add_gridspec(3, 2, width_ratios=[1.18, 1.0], hspace=0.85, wspace=0.58)
+    TOP_A, TOP_R = 20, 10
+    topA = sorted(rows, key=lambda d: -d["overall_eq"])[:TOP_A]
+
+    fig = plt.figure(figsize=(25, 12.5))
+    gs = fig.add_gridspec(3, 2, width_ratios=[1.3, 1.0], hspace=0.38, wspace=0.42)
     axA = fig.add_subplot(gs[:, 0])
     axB = fig.add_subplot(gs[0, 1])
     axC = fig.add_subplot(gs[1, 1])
     axD = fig.add_subplot(gs[2, 1])
 
-    # (a) vertical tc bars (sorted by tc)
-    labelsA = [short(d["source"]) for d in order]
-    barsA = axA.bar(range(nb), [d["tc"] for d in order], color=[colr(d["source"]) for d in order], width=0.72)
-    axA.set_xticks(range(nb))
-    axA.set_xticklabels(labelsA, rotation=40, ha="right", fontsize=16)
-    for lbl in axA.get_xticklabels():
-        if lbl.get_text() == "Expert humans":
-            lbl.set_fontweight("bold")
+    # (a) vertical tc bars, top 20
+    barsA = axA.bar(range(len(topA)), [d["overall_eq"] for d in topA],
+                    color=[colr(d["source"]) for d in topA], width=0.74, **BAR_EDGE)
+    axA.set_xticks(range(len(topA)))
+    axA.set_xticklabels([short(d["source"]) for d in topA], rotation=45, ha="right", fontsize=16)
+    bold_human(axA.get_xticklabels())
     axA.tick_params(axis="y", labelsize=17)
-    axA.set_ylabel("Transformational creativity (tc)", fontsize=23, labelpad=12)
-    axA.set_title("(a) Overall score", fontsize=27, pad=14, fontweight="bold")
+    axA.set_ylabel("Overall score (mean z-score)", fontsize=23, labelpad=10)
+    axA.set_title("(a) Overall score", fontsize=28, pad=12, fontweight="bold")
     axA.margins(y=0.15)
-    for b, d in zip(barsA, order):
-        axA.text(b.get_x() + b.get_width() / 2, d["tc"] + 0.12, f"{d['tc']:.1f}",
-                 ha="center", va="bottom", fontsize=14)
-    from matplotlib.patches import Patch
-    axA.legend(handles=[Patch(color=BATLOW_ORANGE, label="Expert humans"), Patch(color=BATLOW_BLUE, label="LLM")],
-               fontsize=17, loc="upper right", framealpha=0.95)
+    axA.axhline(0, color="#999999", lw=0.9, zorder=0)
+    _vspan = max(d["overall_eq"] for d in topA) - min(d["overall_eq"] for d in topA)
+    for b, d in zip(barsA, topA):
+        v = d["overall_eq"]
+        axA.text(b.get_x() + b.get_width() / 2, v + (_vspan * 0.02 if v >= 0 else -_vspan * 0.02),
+                 f"{v:+.2f}", ha="center", va="bottom" if v >= 0 else "top", fontsize=12)
 
-    # (b,c,d) horizontal bars, each sorted by its OWN value (decreasing).
-    # x-limit gives headroom so value labels never clip; labels offset off the bar tip.
+    # (b,c,d) horizontal top-10 by each facet
     def hbar(ax, key, title, letter, fmt="{:.2f}"):
-        srt = sorted(order, key=lambda d: -d[key])
-        labels = [short(d["source"]) for d in srt]
+        srt = sorted(rows, key=lambda d: -d[key])[:TOP_R]
         vals = [d[key] for d in srt]
         cols = [colr(d["source"]) for d in srt]
-        y = list(range(nb))
-        ax.barh(y, vals, color=cols, height=0.42)  # thin bars -> large gaps
+        y = list(range(len(srt)))
+        ax.barh(y, vals, color=cols, height=0.72, **BAR_EDGE)
         ax.set_yticks(y)
-        ax.set_yticklabels(labels, fontsize=19)
-        for lbl in ax.get_yticklabels():
-            if lbl.get_text() == "Expert humans":
-                lbl.set_fontweight("bold")
-        ax.set_ylim(nb - 0.5, -0.5)  # invert + tight so the wide gaps fill the panel
-        ax.tick_params(axis="x", labelsize=18)
-        ax.set_title(f"({letter}) {title}", fontsize=23, pad=10, fontweight="bold")
+        ax.set_yticklabels([short(d["source"]) for d in srt], fontsize=16)
+        bold_human(ax.get_yticklabels())
+        ax.invert_yaxis()
+        ax.tick_params(axis="x", labelsize=15)
+        ax.set_title(f"({letter}) {title}", fontsize=22, fontweight="bold", pad=6)
         vmax = max(vals)
-        ax.set_xlim(0, vmax * 1.26)
+        ax.set_xlim(0, vmax * 1.18)
         for yi, v in zip(y, vals):
-            ax.text(v + vmax * 0.015, yi, fmt.format(v), va="center", ha="left",
-                    fontsize=15, clip_on=False)
+            ax.text(v + vmax * 0.012, yi, fmt.format(v), va="center", ha="left", fontsize=13)
 
     hbar(axB, "mean_surprise", "Surprise", "b")
     hbar(axC, "mean_coherence", "Coherence", "c")
     hbar(axD, "div", "Diversity", "d", fmt="{:.3f}")
 
+    fig.tight_layout()
+    # Legend placed BELOW the whole figure (negative figure-y) so it can never
+    # collide with panel (a)'s rotated x-ticks; bbox_inches="tight" captures it.
+    fig.legend(handles=provider_legend_handles(), loc="upper center", ncol=6, fontsize=18,
+               frameon=True, bbox_to_anchor=(0.5, -0.07))
     p_comp = out / "tc_breakdown.png"
     fig.savefig(p_comp, dpi=200, bbox_inches="tight")
     plt.close(fig)
