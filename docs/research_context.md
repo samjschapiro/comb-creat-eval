@@ -145,8 +145,12 @@ diversity) as a check; (§4) frontier models score low and thinking/scale doesn'
 help; (§5) CSAM closes the gap, with a short human study validating the win.
 **Target: ARR August 2026 cycle (deadline Aug 3 2026; commits to EACL 2027).**
 Overleaf paper in `papers/pt2cb-iclr-2027/` (folder name predates the venue
-switch; ACL/ARR template). **Status (2026-06-08)**: Phase 0 — paper skeleton +
-Figure 1 (G→G' on Cortázar's *La noche boca arriba*) drafted; no code yet.
+switch; ACL/ARR template). **Status (2026-06-11)**: benchmark (§3) + frontier
+eval (§4) built and run — ≈72 systems scored on the 4-facet equal-weight
+z-composite (surprise, coherence, diversity, **realism**), with **expert humans
+ranking #1 overall by never collapsing on a dimension**; headline scorecard
+figure in the paper. Pending: the thinking/scale probe, the CSAM method (§5), and
+the blinded human eval.
 
 ### comb_eval (background / exploratory)
 

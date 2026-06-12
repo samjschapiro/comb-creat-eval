@@ -1,0 +1,7 @@
+# Realism scoring (4th dimension): grounded real-world vs fantastical. Single cheap judge.
+llm_generations: "data/plot_twist/llm_twists/generations.json"
+human_texts_dir: "data/plot_twist/human_twists/texts"
+judge_models: ["anthropic/claude-sonnet-4"]
+concurrency: 16
+max_tokens: 120
+output_dir: "data/plot_twist/realism"

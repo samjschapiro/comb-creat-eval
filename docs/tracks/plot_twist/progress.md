@@ -70,11 +70,33 @@ The arc 1→2→3 is the narrative. (Unifying flourish: the surprise–coherence
 mirrors the combinatorial novelty–utility tradeoff,
 [Schapiro et al. 2025, 2509.21043](https://arxiv.org/abs/2509.21043).)
 
-## Status — 2026-06-07 (Phase 0 — track scaffolded)
+## Status — 2026-06-11 (Phases 1–3 substantially done — benchmark + frontier gap)
 
-Design spec only. [design.md](design.md) written: SBV→story-DAG mapping, the CSAM
-procedure, compute-matched baselines, ablation grid, datasets, human-eval protocol,
-risks, reuse map. No code yet.
+The **benchmark (§3) and frontier eval (§4) are built and run**; the methods leg (§5
+CSAM) and human eval (Phase 5) are still pending.
+
+Done:
+
+- **Pipeline** in `src/plot_twist/scripts/`: `fetch_pd_stories` (human gold), `run_generate`
+  (open-ended "write a story with a plot twist", 3 temps × 10 samples, length-matched,
+  durable per-story + per-model subfolders), `run_annotate` (setup/reveal/why), the
+  rubric judges (`run_rubric_*`, 3-judge ensemble, median agg, judges disjoint from
+  generators), `run_dsi`, `run_realism`, `classify_twists`, `analyze_collapse`,
+  `correlate_dsi`, `judge_reliability`/`grm_irt`/`bayes_grm_jrt`, and `make_tc_barplot`.
+- **Scoring dimensions (4, equal-weighted z-composite):** surprise, coherence (rubric
+  judges); diversity `Div` (mean pairwise reveal-embedding dissimilarity, all-mpnet);
+  **realism** (`run_realism`, grounded-vs-fantastical, anti-gaming). Overall = mean of the
+  four z-scored facets across the evaluated pool (AGC-style mean-z).
+- **Frontier eval:** ≈72 systems scored (frontier + AGC sweep), human gold = STRONG-only
+  ceiling. Headline result in `data/plot_twist/tc/` + the scorecard figure: **expert
+  humans rank #1 overall by never collapsing on a dimension**; strong models show
+  characteristic deficits (DeepSeek low realism; Claude Opus low diversity).
+- **Headline figure** `tc_scorecard.png` (Overall ranking + 2×2 per-dimension top-10) in
+  the paper (`papers/pt2cb-iclr-2027/`, Overleaf).
+
+Pending: the **thinking/scale probe** (§4 CREATE-style; `llm.py` has the `reasoning`
+param), refreshed validity/specificity correlations on the 4-facet overall, the **CSAM
+method** (§5, Phase 4) and **blinded human eval** (Phase 5).
 
 Locked decisions:
 - **One paper** (benchmark + method), **ARR Aug 2026 cycle → EACL 2027** (retargeted

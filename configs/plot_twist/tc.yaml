@@ -8,4 +8,7 @@ embed_model: "sentence-transformers/all-mpnet-base-v2"
 human_strong_only: true
 manifest: "configs/plot_twist/pd_manifest.json"
 
+# Realism = 4th equal-weighted dimension (grounded vs fantastical).
+realism_scores: "data/plot_twist/realism/realism_scores.json"
+
 output_dir: "data/plot_twist/tc"
