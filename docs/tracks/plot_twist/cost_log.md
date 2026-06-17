@@ -17,3 +17,11 @@ Ground-truth cumulative spend on the API key (OpenRouter `/key` usage), logged p
 | 2026-06-11 18:45 UTC | AGC full sweep annotation | $73.5170 | $1.3607 |
 | 2026-06-11 20:19 UTC | realism scoring (gemini-flash) | $75.5432 | $2.0262 |
 | 2026-06-11 20:33 UTC | realism re-score (sonnet-4, tightened anchors) | $96.0342 | $20.4910 |
+| 2026-06-12 18:06 UTC | PRE thinking smoke (baseline) | $101.7997 | $5.7655 |
+| 2026-06-12 18:14 UTC | thinking smoke (11 models x 2 levels, max_tokens=16000) | $102.9564 | $1.1567 |
+| 2026-06-12 18:19 UTC | PRE Exp1 thinking intervention (9 models x 3 levels x 8, 32k) | $102.9686 | $0.0122 |
+| 2026-06-12 18:26 UTC | Exp3 structural extraction (98 stories x 2 extractors) | $110.2814 | $7.3128 |
+| 2026-06-12 19:51 UTC | PRE Exp1 rubric scoring (202 stories x 3 judges) | $118.1325 | $7.8511 |
+| 2026-06-12 20:00 UTC | PRE Exp1 realism scoring (202 stories, sonnet-4) | $123.1396 | $5.0071 |
+| 2026-06-12 20:01 UTC | PRE Exp1 full analysis (annotate reveals) | $125.6067 | $2.4671 |
+| 2026-06-17 | realism 3-judge ensemble (add gpt-4o + gemini-flash to 2070 stories; claude reused from cache) | $142.48 | $16.76 |

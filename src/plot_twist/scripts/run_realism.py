@@ -96,16 +96,24 @@ async def _score(cfg, items, cache_dir):
     async def one(it):
         sid = it["id"]
         p = cache_dir / f"{sid}.json"
+        # Reuse any per-judge ratings already cached; only call judges still missing
+        # (so adding judges to an existing run never re-pays for cached ones).
+        cached = {}
         if p.exists():
-            d = json.loads(p.read_text())
-            if d.get("realism") is not None:
-                return d
-        res = await asyncio.gather(*(_judge_one(client, sem, m, it["story"], mt) for m in judges))
-        vals = [r for r in res if r is not None]
+            try:
+                cached = json.loads(p.read_text()).get("by_judge") or {}
+            except Exception:
+                cached = {}
+        todo = [m for m in judges if cached.get(m) is None]
+        if todo:
+            res = await asyncio.gather(*(_judge_one(client, sem, m, it["story"], mt) for m in todo))
+            cached = {**cached, **dict(zip(todo, res))}
+        vals = [cached[m] for m in judges if cached.get(m) is not None]
         rec = {"id": sid, "source": it["source"],
                "realism": float(statistics.median(vals)) if vals else None,
-               "by_judge": dict(zip(judges, res))}
-        p.write_text(json.dumps(rec))
+               "by_judge": cached}
+        if todo:
+            p.write_text(json.dumps(rec))
         return rec
 
     return list(await asyncio.gather(*(one(it) for it in items)))

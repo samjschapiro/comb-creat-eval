@@ -1,7 +1,10 @@
-# Realism scoring (4th dimension): grounded real-world vs fantastical. Single cheap judge.
+# Realism scoring (4th dimension): grounded real-world vs fantastical.
+# 3-judge ensemble (same as the surprise/coherence rubric) so realism gets a
+# median score AND an inter-judge reliability number. Claude ratings are already
+# cached; resuming only calls the two added judges.
 llm_generations: "data/plot_twist/llm_twists/generations.json"
 human_texts_dir: "data/plot_twist/human_twists/texts"
-judge_models: ["anthropic/claude-sonnet-4"]
+judge_models: ["anthropic/claude-sonnet-4", "openai/gpt-4o", "google/gemini-2.5-flash"]
 concurrency: 16
 max_tokens: 120
 output_dir: "data/plot_twist/realism"
