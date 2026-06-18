@@ -1,0 +1,25 @@
+# Exp 3: SBV structural metric (T_mod = #dependents of the flipped axiom; preservation)
+# vs DSI, on a stratified subset. Tests whether a SYMBOLIC graph metric predicts the
+# transformational-creativity dimensions where the NEURAL embedding metric (DSI, Exp 2)
+# is blind -- motivating "symbolic + neural both needed".
+annotations_json: "data/plot_twist/annotations/annotations.json"
+llm_stories_dir: "data/plot_twist/llm_twists/stories"
+human_texts_dir: "data/plot_twist/human_twists/texts"
+manifest: "configs/plot_twist/pd_manifest.json"
+dsi_json: "data/plot_twist/dsi_dimensions/dsi_dimensions.json"   # Exp-2 per-story DSI, for the head-to-head
+output_dir: "data/plot_twist/structural"
+
+# Extractor ensemble (2 models -> inter-extractor reliability). These are the judge-
+# ensemble models, already DISJOINT from the story generators (no self-analysis bias).
+extractor_models:
+  - "anthropic/claude-sonnet-4"
+  - "openai/gpt-4o"
+max_tokens: 1600
+concurrency: 12
+
+# Stratified subset: all human STRONG twists + an LLM sample spread across the overall-
+# quality range (so the structural metric is tested on weak AND strong twists).
+n_llm_subset: 200
+strata: 10
+seed: 0
+budget_usd: 25      # ground-truth OpenRouter /key cap; abort if exceeded before a batch

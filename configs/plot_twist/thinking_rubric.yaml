@@ -1,0 +1,15 @@
+# Exp 1 scoring: rubric-judge the thinking-intervention stories. meta_fields carry the
+# model + reasoning level + REALIZED reasoning tokens through to scores.csv so the
+# analysis can regress transformational creativity on the amount of thinking.
+stimuli_file: "data/plot_twist/thinking/generations.json"
+output_dir: "data/plot_twist/thinking/downstream/rubric"
+
+judge_models:
+  - "anthropic/claude-sonnet-4"
+  - "openai/gpt-4o"
+  - "google/gemini-2.5-flash"
+temperature: 0.0
+max_tokens: 400
+concurrency: 16
+
+meta_fields: ["model", "reasoning_level", "reasoning_tokens", "temperature"]

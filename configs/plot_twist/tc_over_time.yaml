@@ -1,0 +1,10 @@
+# Transformational creativity (TC composite, overall_eq) vs model release date.
+# Release date = OpenRouter /models `created` timestamp (ground truth, fetched + cached).
+tc_json: "data/plot_twist/tc/tc.json"
+output_dir: "data/plot_twist/tc/downstream/over_time"
+annotate_top: 8        # label this many highest-TC models on the plot
+# Always-label these specific models (ringed + leader line), regardless of frontier status.
+annotate_models:
+  - "anthropic/claude-opus-4.8"   # most recent release
+  - "openai/gpt-5.5"              # 2nd most recent release
+  - "anthropic/claude-sonnet-4.5" # current SOTA (highest TC)

@@ -1,0 +1,8 @@
+# Exp 2 capability-control leg: is DSI's prediction of twist dimensions SPECIFIC, or
+# just DSI tracking general model capability? Downstream of dsi_dimensions (no recompute).
+upstream_dir: "data/plot_twist/dsi_dimensions"
+dsi_json: "data/plot_twist/dsi_dimensions/dsi_dimensions.json"
+benchmarks_json: "configs/comb_eval/benchmarks.json"     # arena_overall + mmlu_pro capability stack
+output_dir: "data/plot_twist/dsi_dimensions/downstream/specificity"
+bootstrap_iters: 5000
+seed: 0

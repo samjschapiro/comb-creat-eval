@@ -1,0 +1,15 @@
+# Exp 1 analysis: impact of thinking on transformational creativity. Downstream of the
+# thinking generation + rubric scoring. Annotates reveals (for the diversity facet),
+# builds per-(model, reasoning level) cells, computes the TC composite, and the
+# WITHIN-MODEL causal effect of thinking (the contrast that removes model identity).
+generations_json: "data/plot_twist/thinking/generations.json"
+rubric_scores_csv: "data/plot_twist/thinking/downstream/rubric/scores.csv"
+realism_scores: "data/plot_twist/thinking/downstream/realism/realism_scores.json"   # 4th facet
+output_dir: "data/plot_twist/thinking/downstream/analysis"
+
+annotator_model: "openai/gpt-4o-mini"     # reveal extractor for the diversity facet (cheap)
+embed_model: "sentence-transformers/all-mpnet-base-v2"
+concurrency: 16
+
+# Order levels low->medium->high on the x-axis.
+level_order: ["low", "medium", "high"]

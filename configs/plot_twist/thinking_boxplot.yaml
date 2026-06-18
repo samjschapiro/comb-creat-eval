@@ -1,0 +1,5 @@
+# Vertical boxplot of the Overall TC composite by reasoning-effort level (Exp 1).
+# Reads the per-(model,level) cells produced by run_thinking_analysis.py.
+cells_json: "data/plot_twist/thinking/downstream/analysis/thinking_cells.json"
+output_dir: "data/plot_twist/thinking/downstream/analysis/boxplot"
+metric: "tc_within"        # the within-model Overall composite (z of surprise/coherence/diversity/realism)

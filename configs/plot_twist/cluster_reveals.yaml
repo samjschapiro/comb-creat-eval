@@ -1,0 +1,27 @@
+# Cluster the LLM/human twist reveals to map the content space + characterize clusters.
+classified_json: "data/plot_twist/twist_class/classified.json"
+realism_scores: "data/plot_twist/realism/realism_scores.json"
+manifest: "configs/plot_twist/pd_manifest.json"
+embed_model: "sentence-transformers/all-mpnet-base-v2"
+output_dir: "data/plot_twist/cluster"
+k: 10                 # number of clusters for the labeled analysis
+k_range: [2, 18]      # range for the elbow/silhouette K-selection diagnostic
+seed: 0
+hull_pct: 70          # keep the inner X% of points when drawing a cluster's hull (tighter = less overlap)
+# Diffuse/non-separable clusters: drawn as faint grey background (no hull, no label) so the
+# genuine, well-separated modes stand out. c0 = "Other" residual; c1 = diffuse manipulated-memory.
+diffuse_clusters: [0, 1]
+
+# Curated human-readable labels per cluster id (stable under seed=0). Used in legends.
+# Fall back to top keywords if a cluster id is absent.
+cluster_labels:
+  0: "Other"
+  1: "Manipulated memory"
+  2: "Maternal ghost-guilt"
+  3: "No genuine twist"
+  4: "Government experiment"
+  5: "Dead-spouse grief-denial"
+  6: "AI / synthetic being"
+  7: "Asylum: patient is the doctor"
+  8: "Orchestrated disappearance"
+  9: "Hidden parentage"

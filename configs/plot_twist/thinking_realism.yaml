@@ -1,0 +1,8 @@
+# Exp 1: realism (4th TC facet) for the thinking-intervention stories. Single cheap judge.
+# human_texts_dir points at a dir with no .txt (Exp 1 is LLM-only, within-model).
+llm_generations: "data/plot_twist/thinking/generations.json"
+human_texts_dir: "data/plot_twist/thinking"
+judge_models: ["anthropic/claude-sonnet-4"]
+concurrency: 16
+max_tokens: 120
+output_dir: "data/plot_twist/thinking/downstream/realism"

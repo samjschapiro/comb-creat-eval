@@ -1,0 +1,10 @@
+# Exp 2: does DSI (embedding-only divergent semantic integration) predict the
+# DIMENSIONS of transformational creativity? Full 74-source pool, per-dimension.
+annotations_json: "data/plot_twist/annotations/annotations.json"
+llm_stories_dir: "data/plot_twist/llm_twists/stories"
+human_texts_dir: "data/plot_twist/human_twists/texts"
+output_dir: "data/plot_twist/dsi_dimensions"
+
+dsi_chunk_words: 600        # length-robust DSI: mean over consecutive 600-word chunks
+bootstrap_iters: 5000       # bootstrap CIs on each correlation
+seed: 0

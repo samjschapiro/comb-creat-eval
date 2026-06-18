@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pdftotext '/Users/samuelschapiro/.claude/projects/-Users-samuelschapiro-Desktop-Experiments-comb-creat-eval/b092211d-df09-4684-b565-79981fc83d3b/tool-results/webfetch-1781629092960-h0cc66.pdf' wf.txt)"
+    ]
+  }
+}

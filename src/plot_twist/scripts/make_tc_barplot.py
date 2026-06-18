@@ -25,15 +25,17 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Inter font (downloaded to resources/fonts/inter) for figure styling.
-from matplotlib import font_manager as _fm
-_inter_dir = Path(__file__).resolve().parents[3] / "resources" / "fonts" / "inter" / "extras" / "ttf"
-for _ttf in sorted(_inter_dir.glob("Inter-*.ttf")):
-    try:
-        _fm.fontManager.addfont(str(_ttf))
-    except Exception:
-        pass
-plt.rcParams.update({"font.family": "Inter", "mathtext.fontset": "stixsans"})
+# Times serif styling, matching tc_over_time.py (the headline figure) for consistency.
+plt.rcParams.update({
+    "font.family": "serif",
+    "font.serif": ["Times New Roman", "Times", "DejaVu Serif"],
+    "mathtext.fontset": "custom",
+    "mathtext.rm": "Times New Roman",
+    "mathtext.it": "Times New Roman:italic",
+    "mathtext.bf": "Times New Roman:bold",
+    "pdf.fonttype": 42,
+    "ps.fonttype": 42,
+})
 
 from src.utils import init_directory, load_config, save_config
 from src.plot_twist.sets import twist_types, keep_story

@@ -17,7 +17,7 @@ import json
 from pathlib import Path
 
 from src.utils import init_directory, load_config, save_config
-from src.plot_twist.generate import GenerateConfig, generate_stories, model_id_to_key
+from src.plot_twist.generate import GenerateConfig, generate_stories, model_id_to_key, rec_id_for
 
 
 def main(config_path: str, overwrite: bool = False, debug: bool = False) -> None:
@@ -49,6 +49,8 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False) -> None
     models = cfg_dict["generator_models"]
     n_samples = cfg_dict["n_samples"]
     temperatures = cfg_dict.get("temperatures", [0.9, 1.0, 1.2])
+    # Exp 1 thinking intervention: optional list of {"name","reasoning"} levels.
+    reasoning_levels = cfg_dict.get("reasoning_levels")
     if debug:
         models = models[:2]
         n_samples = min(n_samples, 2)
@@ -61,22 +63,25 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False) -> None
         max_tokens=cfg_dict.get("max_tokens", 4500),
         concurrency=cfg_dict.get("concurrency", 16),
         target_words=tuple(cfg_dict.get("target_words", (2000, 3000))),
+        reasoning_levels=reasoning_levels,
     )
+    levels = cfg.levels()
 
-    total = len(models) * len(temperatures) * n_samples
+    total = len(models) * len(temperatures) * len(levels) * n_samples
     # Count how many stories are already on disk (resume: these cost no new API).
     already = 0
     if stories_dir.exists():
         for m in models:
             for t in temperatures:
-                for i in range(n_samples):
-                    mk = model_id_to_key(m)
-                    p = stories_dir / mk / f"{mk}__t{int(round(t * 10)):02d}__s{i:02d}.json"
-                    if p.exists() and json.loads(p.read_text()).get("story"):
-                        already += 1
+                for lvl in levels:
+                    for i in range(n_samples):
+                        p = stories_dir / model_id_to_key(m) / f"{rec_id_for(m, t, lvl['name'], i)}.json"
+                        if p.exists() and json.loads(p.read_text()).get("story"):
+                            already += 1
+    lvl_names = [l["name"] for l in levels]
     print(
         f"generating {total} stories = {len(models)} models x "
-        f"{len(temperatures)} temps {temperatures} x {n_samples} samples"
+        f"{len(temperatures)} temps {temperatures} x {len(levels)} levels {lvl_names} x {n_samples} samples"
     )
     print(f"target length: {cfg.target_words[0]}-{cfg.target_words[1]} words (human-gold median band)")
     print(f"resume: {already}/{total} already on disk (will not re-spend); {total - already} new")
@@ -100,6 +105,23 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False) -> None
         print(f"  {m:<40} {ok}/{len(rows)}{flag}")
         if ok == 0:
             dead.append((m, next((r["error"] for r in rows if r["error"]), "unknown")))
+    # Exp 1: per-(model, level) thinking coverage. Confirms the reasoning intervention
+    # actually took effect -- a level that returns 0 reasoning tokens did NOT think
+    # (provider ignored the spec), which would silently void the causal contrast.
+    # Printed BEFORE the dead-model raise so a smoke across many models always reports.
+    if reasoning_levels:
+        print("\nthinking coverage (ok stories | median reasoning_tokens) per (model, level):")
+        import statistics
+        for m in models:
+            for lvl in levels:
+                rows = [r for r in records
+                        if r["model"] == m and r.get("reasoning_level") == lvl["name"]]
+                ok = [r for r in rows if r["story"]]
+                rtoks = [r["reasoning_tokens"] for r in ok if r.get("reasoning_tokens")]
+                med = int(statistics.median(rtoks)) if rtoks else 0
+                flag = "  <-- NO reasoning tokens returned" if ok and not rtoks else ""
+                print(f"  {m:<38} {str(lvl['name']):<8} {len(ok):>2}/{len(rows):<2}  rtok~{med}{flag}")
+
     if dead:
         raise RuntimeError(
             "FATAL: generator(s) produced nothing (generations.json still saved for the rest): "
