@@ -1,0 +1,14 @@
+# Exp 2 scoring: rubric-judge the prompt-method stories. meta_fields carry model +
+# prompt method through to scores.csv so the analysis can group by (model, method).
+stimuli_file: "data/plot_twist/prompt_methods/generations.json"
+output_dir: "data/plot_twist/prompt_methods/downstream/rubric"
+
+judge_models:
+  - "anthropic/claude-sonnet-4"
+  - "openai/gpt-4o"
+  - "google/gemini-2.5-flash"
+temperature: 0.0
+max_tokens: 400
+concurrency: 16
+
+meta_fields: ["model", "prompt_method", "temperature"]

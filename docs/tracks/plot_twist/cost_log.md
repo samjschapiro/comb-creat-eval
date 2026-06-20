@@ -25,3 +25,8 @@ Ground-truth cumulative spend on the API key (OpenRouter `/key` usage), logged p
 | 2026-06-12 20:00 UTC | PRE Exp1 realism scoring (202 stories, sonnet-4) | $123.1396 | $5.0071 |
 | 2026-06-12 20:01 UTC | PRE Exp1 full analysis (annotate reveals) | $125.6067 | $2.4671 |
 | 2026-06-17 | realism 3-judge ensemble (add gpt-4o + gemini-flash to 2070 stories; claude reused from cache) | $142.48 | $16.76 |
+| 2026-06-20 (reconcile) | unlogged spend between 2026-06-17 and Exp2 (live /key reconciliation) | $145.1715 | $2.6915 |
+| 2026-06-20 | Exp2 prompt-methods smoke (2 models x 2 methods x 2) | $145.8984 | $0.7269 |
+| 2026-06-20 | Exp2 prompt-methods generation (5 models x 2 methods x 8 = 80 stories + summaries; baseline reused) | (incl. below) | — |
+| 2026-06-20 | Exp2 prompt-methods rubric (80 x 3) + realism (80) + analysis (annotate 120) | $151.8201 | $5.9217 |
+| 2026-06-20 | Exp2 expand 5->8 models (add sonnet-4.6, nemotron-3-super-120b, cogito-v2.1-671b; +retries; rescore new ~42) | $154.0916 | $2.2715 |
