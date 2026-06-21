@@ -103,37 +103,61 @@ def _lollipop(ax, rows, ys, cut, last_s, first_c, show_n=True):
                     va="center", ha="left", fontsize=7.5, color="0.5")
 
 
+def _shade(hexc, f):
+    """Lighten `hexc` toward white by fraction f (f=0 keeps it; f=1 -> white)."""
+    r, g, b = mpl.colors.to_rgb(hexc)
+    return (r + (1 - r) * f, g + (1 - g) * f, b + (1 - b) * f)
+
+
+def _level_of(r):
+    return (r.get("reasoning_level")
+            or ("high" if "rhigh" in r["id"] else "medium" if "rmedium" in r["id"] else "low"))
+
+
 def figure_by_effort(traces, order_rows):
-    """3-column forest plot (low/medium/high), shared y-order = `order_rows` (pooled-median
-    sort), so one can read across rows whether the divergent->convergent structure is invariant
-    to reasoning effort."""
+    """SINGLE-panel forest plot: low/medium/high overlaid per move, encoded by increasingly dark
+    shades of the move's phase colour (light=low -> dark=high) at small vertical offsets. The three
+    shades clustering at the same position shows the divergent->convergent structure is invariant
+    to reasoning effort. Shared y-order = `order_rows` (pooled-median sort)."""
     labels = [r["label"] for r in order_rows]
     sides = {r["label"]: r["side"] for r in order_rows}
     n = len(labels)
     ys = list(range(n, 0, -1))
-    # fixed reference handoff from the pooled ordering
     last_s = max((r["med"] for r in order_rows if r["side"] == "S"), default=0.33)
     first_c = min((r["med"] for r in order_rows if r["side"] == "C"), default=0.46)
     cut = (last_s + first_c) / 2
 
-    levels = [("low", "low"), ("medium", "medium"), ("high", "high")]
-    fig, axes = plt.subplots(1, 3, figsize=(9.6, 4.5), sharey=True)
-    for ax, (lv, title) in zip(axes, levels):
-        sub = [r for r in traces if (r.get("reasoning_level")
-               or ("high" if "rhigh" in r["id"] else "medium" if "rmedium" in r["id"] else "low")) == lv]
-        by = {r["label"]: r for r in compute_rows(sub)}
-        ordered = [by.get(lab) for lab in labels]  # keep canonical y-order; None if absent at this level
-        _lollipop(ax, ordered, ys, cut, last_s, first_c, show_n=True)
-        ax.set_ylim(0.4, n + 0.6); ax.set_xlim(0, 1)
-        ax.set_xticks([0, 0.5, 1.0]); ax.set_xlabel("position in trace")
-        ax.set_title(f"{title}  (n={len(sub)})", fontweight="bold")
-    axes[0].set_yticks(ys); axes[0].set_yticklabels(labels)
-    for tick, lab in zip(axes[0].get_yticklabels(), labels):
+    # (level, vertical offset within the move row, lighten fraction): low lightest -> high darkest
+    LV = [("low", 0.26, 0.60), ("medium", 0.0, 0.30), ("high", -0.26, 0.0)]
+
+    fig, ax = plt.subplots(figsize=(5.6, 4.6))
+    ax.axvspan(last_s, first_c, color="0.92", zorder=0)
+    ax.axvline(cut, ls="--", lw=0.9, color="0.55", zorder=1)
+    for lv, dy, f in LV:
+        by = {r["label"]: r for r in compute_rows([r for r in traces if _level_of(r) == lv])}
+        for y, lab in zip(ys, labels):
+            r = by.get(lab)
+            if r is None:
+                continue
+            c = _shade(COLOR[sides[lab]], f)
+            ax.plot([r["q1"], r["q3"]], [y + dy, y + dy], "-", color=c, lw=2.6, alpha=0.7,
+                    solid_capstyle="round", zorder=2)
+            ax.plot(r["med"], y + dy, "o", color=c, ms=4.6, zorder=3,
+                    markeredgecolor="white", markeredgewidth=0.4)
+    ax.set_yticks(ys); ax.set_yticklabels(labels)
+    for tick, lab in zip(ax.get_yticklabels(), labels):
         tick.set_color(COLOR[sides[lab]] if sides[lab] != "N" else "0.35")
-    axes[0].text(last_s - 0.02, n + 0.5, "fix the twist", ha="right", va="bottom",
-                 fontsize=9, style="italic", color=WARM)
-    axes[2].text(first_c + 0.02, n + 0.5, "retrofit the plot", ha="left", va="bottom",
-                 fontsize=9, style="italic", color=COOL)
+    ax.set_ylim(0.4, n + 0.6); ax.set_xlim(0, 1)
+    ax.set_xticks([0, 0.25, 0.5, 0.75, 1.0]); ax.set_xlabel("position in reasoning trace")
+    ax.text(last_s - 0.02, n + 0.55, "fix the twist", ha="right", va="bottom",
+            fontsize=9, style="italic", color=WARM)
+    ax.text(first_c + 0.02, n + 0.55, "retrofit the plot", ha="left", va="bottom",
+            fontsize=9, style="italic", color=COOL)
+    # effort-shade legend (neutral grey, light -> dark = low -> high)
+    handles = [Line2D([0], [0], marker="o", ls="", ms=6, color=_shade("#333333", f), label=lv)
+               for lv, dy, f in LV]
+    ax.legend(handles=handles, title="reasoning effort", loc="lower right", frameon=False,
+              fontsize=8.5, title_fontsize=8.5, handletextpad=0.3, labelspacing=0.3)
     fig.tight_layout()
     for ext in ("pdf", "png"):
         fig.savefig(OUT_DIR / f"move_positions_by_effort.{ext}")
