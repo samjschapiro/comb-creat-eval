@@ -30,3 +30,4 @@ Ground-truth cumulative spend on the API key (OpenRouter `/key` usage), logged p
 | 2026-06-20 | Exp2 prompt-methods generation (5 models x 2 methods x 8 = 80 stories + summaries; baseline reused) | (incl. below) | — |
 | 2026-06-20 | Exp2 prompt-methods rubric (80 x 3) + realism (80) + analysis (annotate 120) | $151.8201 | $5.9217 |
 | 2026-06-20 | Exp2 expand 5->8 models (add sonnet-4.6, nemotron-3-super-120b, cogito-v2.1-671b; +retries; rescore new ~42) | $154.0916 | $2.2715 |
+| 2026-06-20 | Exp2 expand 8->20 models (12 capability/provider-diverse; gen+rescore ~195 stories) for robust prompting-strategy stats | $163.4545 | $9.3629 |
