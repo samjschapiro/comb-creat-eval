@@ -39,7 +39,7 @@ mpl.rcParams.update({
     "mathtext.it": "Times New Roman:italic",
     "font.size": 10, "axes.labelsize": 12, "xtick.labelsize": 10, "ytick.labelsize": 10.5,
     "axes.linewidth": 0.8, "axes.spines.top": False, "axes.spines.right": False,
-    "savefig.dpi": 300, "savefig.bbox": "tight", "pdf.fonttype": 42, "ps.fonttype": 42,
+    "savefig.dpi": 600, "savefig.bbox": "tight", "pdf.fonttype": 42, "ps.fonttype": 42,
 })
 
 STORIES = "data/plot_twist/thinking/stories/*/*.json"
@@ -47,9 +47,9 @@ OUT_DIR = Path("data/plot_twist/thinking/downstream/move_positions")
 FIG_DIR = Path("papers/pt2cb-iclr-2027/figures")
 
 # Phase colours, matching tables/tab_moves.tex (moveSurprise / moveCoherence / moveFraming).
-WARM = "#C0392B"   # surprise / divergent
-COOL = "#2C7FB8"   # coherence / convergent
-GREY = "#595959"   # framing
+WARM = "#CB6A4F"   # surprise / divergent  (terracotta)
+COOL = "#2C7A86"   # coherence / convergent (teal)
+GREY = "#7D7468"   # framing               (warm grey)
 
 # (label, side, regex).  side -> colour: S=surprise, C=coherence, N=framing
 MOVES = [
@@ -149,14 +149,10 @@ def figure_by_effort(traces, order_rows):
         tick.set_color(COLOR[sides[lab]] if sides[lab] != "N" else "0.35")
     ax.set_ylim(0.4, n + 0.6); ax.set_xlim(0, 1)
     ax.set_xticks([0, 0.25, 0.5, 0.75, 1.0]); ax.set_xlabel("position in reasoning trace")
-    ax.text(last_s - 0.02, n + 0.55, "fix the twist", ha="right", va="bottom",
-            fontsize=9, style="italic", color=WARM)
-    ax.text(first_c + 0.02, n + 0.55, "retrofit the plot", ha="left", va="bottom",
-            fontsize=9, style="italic", color=COOL)
     # effort-shade legend (neutral grey, light -> dark = low -> high)
     handles = [Line2D([0], [0], marker="o", ls="", ms=6, color=_shade("#333333", f), label=lv)
                for lv, dy, f in LV]
-    ax.legend(handles=handles, title="reasoning effort", loc="lower right", frameon=False,
+    ax.legend(handles=handles, title="reasoning effort", loc="upper right", frameon=False,
               fontsize=8.5, title_fontsize=8.5, handletextpad=0.3, labelspacing=0.3)
     fig.tight_layout()
     for ext in ("pdf", "png"):
