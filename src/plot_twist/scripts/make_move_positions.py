@@ -157,8 +157,8 @@ def figure_by_effort(traces, order_rows):
     fig.tight_layout()
     for ext in ("pdf", "png"):
         fig.savefig(OUT_DIR / f"move_positions_by_effort.{ext}")
-    fig.savefig(FIG_DIR / "move_positions_by_effort.pdf")
-    print(f"saved: {FIG_DIR/'move_positions_by_effort.pdf'}")
+        fig.savefig(FIG_DIR / f"move_positions_by_effort.{ext}")
+    print(f"saved: {FIG_DIR/'move_positions_by_effort.pdf'} (+ .png)")
 
 
 def main() -> None:
