@@ -165,7 +165,7 @@ def figure_by_effort():
     # (level, vertical offset within the move row, lighten fraction): low lightest -> high darkest
     LV = [("low", 0.26, 0.60), ("medium", 0.0, 0.30), ("high", -0.26, 0.0)]
 
-    fig, ax = plt.subplots(figsize=(5.6, 4.6))
+    fig, ax = plt.subplots(figsize=(3.75, 4.6))
     ax.axvspan(last_s, first_c, color="0.92", zorder=0)
     ax.axvline(cut, ls="--", lw=0.9, color="0.55", zorder=1)
     for lv, dy, f in LV:
@@ -179,16 +179,9 @@ def figure_by_effort():
                     solid_capstyle="round", zorder=2)
             ax.plot(r["med"], y + dy, "o", color=c, ms=4.6, zorder=3,
                     markeredgecolor="white", markeredgewidth=0.4)
-    ax.set_yticks(ys); ax.set_yticklabels(labels)
-    for tick, lab in zip(ax.get_yticklabels(), labels):
-        tick.set_color(COLOR[sides[lab]] if sides[lab] != "N" else "0.35")
+    ax.set_yticks([])  # labels, x-title + effort legend are overlaid in the composed figure
     ax.set_ylim(0.4, n + 0.6); ax.set_xlim(0, 1)
-    ax.set_xticks([0, 0.25, 0.5, 0.75, 1.0]); ax.set_xlabel("position in reasoning trace")
-    # effort-shade legend (neutral grey, light -> dark = low -> high)
-    handles = [Line2D([0], [0], marker="o", ls="", ms=6, color=_shade("#333333", f), label=lv)
-               for lv, dy, f in LV]
-    ax.legend(handles=handles, title="reasoning effort", loc="upper right", frameon=False,
-              fontsize=8.5, title_fontsize=8.5, handletextpad=0.3, labelspacing=0.3)
+    ax.set_xticks([0, 0.25, 0.5, 0.75, 1.0])
     fig.tight_layout()
     for ext in ("pdf", "png"):
         fig.savefig(OUT_DIR / f"move_positions_by_effort.{ext}")
