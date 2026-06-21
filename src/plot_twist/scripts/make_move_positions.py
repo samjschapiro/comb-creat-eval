@@ -46,10 +46,10 @@ STORIES = "data/plot_twist/thinking/stories/*/*.json"
 OUT_DIR = Path("data/plot_twist/thinking/downstream/move_positions")
 FIG_DIR = Path("papers/pt2cb-iclr-2027/figures")
 
-# Batlow (Crameri) phase colours -- the paper's established role hexes (cf. main.tex / DAG fig).
-WARM = "#EE9D6B"   # batlow orange -- surprise / divergent
-COOL = "#103D5F"   # batlow blue   -- coherence / convergent
-GREY = "#426F52"   # batlow green  -- framing
+# Phase colours, matching tables/tab_moves.tex (moveSurprise / moveCoherence / moveFraming).
+WARM = "#C0392B"   # surprise / divergent
+COOL = "#2C7FB8"   # coherence / convergent
+GREY = "#595959"   # framing
 
 # (label, side, regex).  side -> colour: S=surprise, C=coherence, N=framing
 MOVES = [
