@@ -22,6 +22,7 @@ from __future__ import annotations
 import glob
 import json
 import re
+from collections import defaultdict
 from pathlib import Path
 
 import matplotlib
@@ -65,6 +66,37 @@ MOVES = [
     ("verify it coheres",        "C", r"(snap(s)? into place|holds together|all the (clues|pieces)|re-?read|in hindsight (it|the)|still (works|makes sense|holds)|goes back and)"),
 ]
 COLOR = {"S": WARM, "C": COOL, "N": GREY}
+SIDE = {lab: side for lab, side, _ in MOVES}
+SPANS_DIR = Path("data/plot_twist/thinking/downstream/move_spans")  # LLM span-extraction cache
+
+
+def _span_positions():
+    """From the LLM span cache: ({level: {label: [pos]}}, pooled {label: [pos]})."""
+    by_level, pooled = defaultdict(lambda: defaultdict(list)), defaultdict(list)
+    for f in glob.glob(str(SPANS_DIR / "*.json")):
+        if f.endswith("move_spans_stats.json"):
+            continue
+        o = json.load(open(f))
+        if not isinstance(o, dict):
+            continue
+        for lab, c in (o.get("steps") or {}).items():
+            if c.get("present") and c.get("pos") is not None:
+                by_level[o.get("level")][lab].append(c["pos"])
+                pooled[lab].append(c["pos"])
+    return by_level, pooled
+
+
+def _rows(posmap):
+    """label->[pos]  ->  rows [{label, side, med, q1, q3, ntr}] in MOVES order."""
+    rows = []
+    for lab in [l for l, _, _ in MOVES]:
+        ps = posmap.get(lab) or []
+        if not ps:
+            continue
+        a = np.array(ps)
+        rows.append({"label": lab, "side": SIDE[lab], "med": float(np.median(a)),
+                     "q1": float(np.percentile(a, 25)), "q3": float(np.percentile(a, 75)), "ntr": len(a)})
+    return rows
 
 
 def compute_rows(traces):
@@ -114,11 +146,14 @@ def _level_of(r):
             or ("high" if "rhigh" in r["id"] else "medium" if "rmedium" in r["id"] else "low"))
 
 
-def figure_by_effort(traces, order_rows):
-    """SINGLE-panel forest plot: low/medium/high overlaid per move, encoded by increasingly dark
-    shades of the move's phase colour (light=low -> dark=high) at small vertical offsets. The three
-    shades clustering at the same position shows the divergent->convergent structure is invariant
-    to reasoning effort. Shared y-order = `order_rows` (pooled-median sort)."""
+def figure_by_effort():
+    """SINGLE-panel forest plot from the LLM SPAN positions (move_spans cache): low/medium/high
+    overlaid per move, encoded by increasingly dark shades of the move's phase colour
+    (light=low -> dark=high) at small vertical offsets. The three shades clustering at the same
+    position shows the divergent->convergent structure is invariant to reasoning effort.
+    Shared y-order = pooled span-median sort."""
+    by_level, pooled = _span_positions()
+    order_rows = sorted(_rows(pooled), key=lambda d: d["med"])
     labels = [r["label"] for r in order_rows]
     sides = {r["label"]: r["side"] for r in order_rows}
     n = len(labels)
@@ -134,7 +169,7 @@ def figure_by_effort(traces, order_rows):
     ax.axvspan(last_s, first_c, color="0.92", zorder=0)
     ax.axvline(cut, ls="--", lw=0.9, color="0.55", zorder=1)
     for lv, dy, f in LV:
-        by = {r["label"]: r for r in compute_rows([r for r in traces if _level_of(r) == lv])}
+        by = {r["label"]: r for r in _rows(by_level.get(lv, {}))}
         for y, lab in zip(ys, labels):
             r = by.get(lab)
             if r is None:
@@ -219,8 +254,8 @@ def main() -> None:
     print(f"saved: {OUT_DIR/'move_positions.pdf'} and {FIG_DIR/'move_positions.pdf'}")
     print(f"rows (top->bottom): " + " | ".join(f"{r['label']}={r['med']:.2f}" for r in rows))
 
-    # 3-column version: the same forest plot split by reasoning effort (low/medium/high)
-    figure_by_effort(traces, rows)
+    # by-effort forest plot, now built from the LLM SPAN positions (move_spans cache)
+    figure_by_effort()
 
 
 if __name__ == "__main__":
