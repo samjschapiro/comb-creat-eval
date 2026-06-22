@@ -5,10 +5,9 @@ across the full pool so the pool average is the 0-ring. The expert-human profile
 overlaid faintly on every panel as a reference, so a model's failing facet shows up
 as a vertex pulled *inward* from the human silhouette.
 
-The 3x3 grid is organised by the three failure modes from Sec. 4 (one per row):
-  row 1  Under-diversification        humans (ref) | Claude-Sonnet-4.5 | GPT-5.4
-  row 2  Breaking the world model     DeepSeek-Chat-V3.1 | DeepSeek-V3.2 | Qwen3-Next
-  row 3  Incoherence                  Llama-4-Maverick | Mixtral-8x22B | Hermes-3-405B
+The 2x3 grid is organised by the two failure modes from Sec. 4 (one per row):
+  row 1  Under-diversification        humans (ref) | Claude-Opus-4.6 | Claude-Opus-4.5
+  row 2  Breaking the world model     Gemma-4-31B | DeepSeek-V3.2-Exp | Qwen3-Next-80B
 
 Colours match the scorecard (batlowS per provider; Other = grey; humans = black).
 
@@ -56,10 +55,6 @@ ROWS = [
      [("google/gemma-4-31b-it", "Gemma-4-31B"),
       ("deepseek/deepseek-v3.2-exp", "DeepSeek-V3.2-Exp"),
       ("qwen/qwen3-next-80b-a3b-instruct", "Qwen3-Next-80B")]),
-    ("Incoherent (low coherence & unrealistic)",
-     [("meta-llama/llama-4-maverick", "Llama-4-Maverick"),
-      ("mistralai/mixtral-8x22b-instruct", "Mixtral-8×22B"),
-      ("nousresearch/hermes-3-llama-3.1-405b", "Hermes-3-405B")]),
 ]
 
 HUMAN_COLOR = "#000000"
@@ -123,10 +118,10 @@ def main(tc_json: str, out_dir: str) -> None:
     def to_r(z):  # clamp into the drawable band
         return np.clip(z, RMIN, RMAX)
 
-    fig, axes = plt.subplots(3, 3, figsize=(17.5, 20.0),
+    fig, axes = plt.subplots(2, 3, figsize=(17.5, 13.6),
                              subplot_kw=dict(polar=True))
-    fig.subplots_adjust(left=0.06, right=0.95, top=0.83, bottom=0.05,
-                        hspace=0.92, wspace=1.40)
+    fig.subplots_adjust(left=0.06, right=0.95, top=0.78, bottom=0.06,
+                        hspace=1.15, wspace=1.40)
 
     for ri, (row_label, panels) in enumerate(ROWS):
         for ci, (src, disp) in enumerate(panels):
@@ -199,7 +194,7 @@ def main(tc_json: str, out_dir: str) -> None:
     _specs = []
     for ri, (row_label, _panels) in enumerate(ROWS):
         p = [axes[ri, c].get_position() for c in range(3)]
-        ytop = p[0].y1 + 0.095  # baseline; sits well above the two-line panel titles below
+        ytop = p[0].y1 + 0.135  # baseline; sits well above the two-line panel titles below
         if ri == 0:
             ta, pa = _parts("a", "Expert humans")
             _specs.append(((p[0].x0 + p[0].x1) / 2, ytop, ta, pa, p[1].x0 - p[0].x0))
