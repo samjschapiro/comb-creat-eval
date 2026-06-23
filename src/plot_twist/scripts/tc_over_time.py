@@ -121,18 +121,10 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False) -> None
     tc = json.loads(Path(cfg["tc_json"]).read_text())
     created = _fetch_created(out / "model_created.json")
 
-    # Per-model TC = mean PERCENTILE rank (over the pool) of the headline composite
-    # facets -- realism-GATED surprise/coherence + diversity (S/Coh count only when
-    # realism == 5). Same gate as the leaderboard composite (join.EQ_FACETS).
-    FACETS = ["mean_surprise_g", "mean_coherence_g", "div"]
-    pool = {k: np.array([d[k] for d in tc], dtype=float) for k in FACETS}
-
-    def pctrank(k, x):
-        v = pool[k]
-        return 100.0 * (np.sum(v < x) + 0.5 * np.sum(v == x)) / len(v)
-
-    def overall_pctl(d):
-        return float(np.mean([pctrank(k, d[k]) for k in FACETS]))
+    # Per-model TC = the realism-gated z-composite (overall_eq) straight from tc.json --
+    # the equal-weight mean of the z-scored gated facets (S/Coh count only when realism==5).
+    def overall_z(d):
+        return float(d["overall_eq"])
 
     # join models to (date, TC); humans have no release date -> kept only as the ceiling
     pts = []
@@ -144,9 +136,9 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False) -> None
         if not ts:
             continue
         pts.append({"model": s, "date": datetime.fromtimestamp(ts, timezone.utc),
-                    "tc": overall_pctl(d), "provider": s.split("/")[0]})
+                    "tc": overall_z(d), "provider": s.split("/")[0]})
     pts.sort(key=lambda p: p["date"])
-    human_tc = next((overall_pctl(d) for d in tc if d["source"] == "human"), None)
+    human_tc = next((overall_z(d) for d in tc if d["source"] == "human"), None)
     n_drop = sum(1 for d in tc if d["source"] != "human") - len(pts)
     print(f"{len(pts)} models with release dates ({n_drop} unmatched, dropped); "
           f"human ceiling overall_eq = {human_tc:.3f}")
@@ -209,7 +201,7 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False) -> None
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m"))
     ax.xaxis.set_major_locator(mdates.MonthLocator(interval=6))
     ax.set_xlabel("Model release date")
-    ax.set_ylabel("Transformational creativity")
+    ax.set_ylabel("Transformational creativity ($z$)")
 
     from matplotlib.patches import Patch
     # legend: every non-Other provider present (batlow colour) + the grey Other bucket,

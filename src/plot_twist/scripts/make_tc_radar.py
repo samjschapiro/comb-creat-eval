@@ -89,21 +89,18 @@ def main(tc_json: str, out_dir: str) -> None:
     by_src = {d["source"]: d for d in rows}
     pcol = provider_colors(rows)
 
-    # Per-facet PERCENTILE RANK across the full 72-model pool: radius = % of the pool
-    # scoring below this value on that facet. Rings are pool quartiles (25/50/75); the
-    # 50-ring is the pool median. Chosen for maximum visual separation of the systems.
+    # Per-facet Z-SCORE across the full 72-model pool: radius = (value - pool mean) / pool
+    # SD on that facet. The 0-ring is the pool mean; rings at +/-1, 2 SD. The spokes are the
+    # RAW facets (incl. realism) as the breakdown; Overall (titles) is the gated z-composite.
     pool = {key: np.array([d[key] for d in rows], dtype=float) for key, _ in FACETS}
-    # Overall pctl (panel titles) = percentile of the gated headline composite, matching
-    # the leaderboard; the spokes stay the RAW facets (incl. realism) as the breakdown.
-    pool["overall_eq"] = np.array([d["overall_eq"] for d in rows], dtype=float)
+    zp = {key: (float(pool[key].mean()), float(pool[key].std()) or 1.0) for key, _ in FACETS}
 
-    def pctrank(key, x):
-        v = pool[key]
-        return 100.0 * (np.sum(v < x) + 0.5 * np.sum(v == x)) / len(v)
+    def zscore(key, x):
+        return (x - zp[key][0]) / zp[key][1]
 
-    def zvec(src):  # name kept; now returns the per-facet percentile-rank vector
+    def zvec(src):  # per-facet z vector
         d = by_src[src]
-        return np.array([pctrank(key, d[key]) for key, _ in FACETS])
+        return np.array([zscore(key, d[key]) for key, _ in FACETS])
 
     human_z = zvec("human")
 
@@ -111,12 +108,10 @@ def main(tc_json: str, out_dir: str) -> None:
     n = len(FACETS)
     angles = np.linspace(0, 2 * np.pi, n, endpoint=False)
     ang_closed = np.concatenate([angles, angles[:1]])
-    # Radial range tracks the actual data (shown models span z in [-1.2, 1.9]); a
-    # tight range avoids a large empty core that would crush near-rim differences
-    # (e.g. the diversity gap between top models and the human reference).
-    # Percentile radius (0-100); small buffer so vertices avoid the dead centre / rim.
-    RMIN, RMAX = -4.0, 104.0
-    RTICKS = [25, 50, 75]
+    # z-score radius: the 0-ring is the pool mean. Buffer a little past +/-2 SD so vertices
+    # avoid the dead centre / rim; per-facet z is clamped into this band.
+    RMIN, RMAX = -2.8, 2.8
+    RTICKS = [-2, -1, 0, 1, 2]
 
     def to_r(z):  # clamp into the drawable band
         return np.clip(z, RMIN, RMAX)
@@ -151,8 +146,8 @@ def main(tc_json: str, out_dir: str) -> None:
                 lbl.set_bbox(dict(boxstyle="round,pad=0.06", fc="white", ec="none", alpha=0.85))
             ax.grid(color="#d9d9d9", lw=0.9)
             ax.spines["polar"].set_color("#cccccc")
-            # emphasise the pool-median ring (50th percentile)
-            ax.plot(np.linspace(0, 2 * np.pi, 200), [50] * 200,
+            # emphasise the pool-mean ring (z = 0)
+            ax.plot(np.linspace(0, 2 * np.pi, 200), [0] * 200,
                     color="#b0b0b0", lw=1.2, ls=(0, (4, 3)), zorder=1)
 
             # human reference overlay (skip on the human panel itself)
@@ -168,12 +163,12 @@ def main(tc_json: str, out_dir: str) -> None:
             ax.scatter(angles, to_r(zvec(src)), color=col, s=80, zorder=6,
                        edgecolors="white", linewidths=1.3)
 
-            ov = pctrank("overall_eq", by_src[src]["overall_eq"])  # gated-composite percentile
+            ov = float(by_src[src]["overall_eq"])  # gated z-composite
             wt = "bold" if src == "human" else "normal"
             # The human panel is named by its own header (a); blank first line keeps
             # its radar vertically aligned with the two-line model titles beside it.
             t1 = "" if src == "human" else disp
-            ax.set_title(f"{t1}\nOverall pctl $={ov:.0f}$", fontsize=31,
+            ax.set_title(f"{t1}\nOverall $z={ov:+.2f}$", fontsize=31,
                          fontweight=wt, pad=14)
 
     # Group headers above each row, each on ONE line. The bold "(x) Title" and the UNBOLD

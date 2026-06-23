@@ -1,9 +1,9 @@
 """Appendix companions to Figure 1 (tc_over_time), reusing its EXACT palette/styling.
 
 (1) facets_over_time.pdf  -- 1x4 panels: surprise, coherence, realism, diversity
-    (each facet's percentile vs model release date), same colours as Fig 1.
-(2) tc_per_org_over_time.pdf -- small-multiples: headline TC (mean of the realism-gated
-    composite-facet percentiles) vs release date, ONE panel per major org (the named
+    (each facet's z-score vs model release date), same colours as Fig 1.
+(2) tc_per_org_over_time.pdf -- small-multiples: headline TC (realism-gated
+    z-composite, overall_eq) vs release date, ONE panel per major org (the named
     providers in the Fig 1 legend) + an "Other" bucket; 4-column grid.
 
 No API: release dates are read from the cached model_created.json that tc_over_time.py
@@ -59,15 +59,15 @@ COMPOSITE_FACETS = ["mean_surprise_g", "mean_coherence_g", "div"]
 def load():
     tc = json.loads(TC_JSON.read_text())
     created = json.loads(DATES.read_text())
-    # Pool covers the displayed raw facets AND the gated composite facets (S/Coh count
-    # only when fully realistic). The headline composite `tc` is the mean of the GATED
-    # facet percentiles -- realism enters as the gate, not as an additive facet.
+    # Per-facet z-score across the pool (mean 0, SD 1). The facets_over_time panels show
+    # these z trajectories (and their cumulative means); the per-org headline `tc` is the
+    # gated z-composite (overall_eq) straight from tc.json.
     POOL_KEYS = [k for k, _ in FACETS] + COMPOSITE_FACETS
     pool = {k: np.array([d[k] for d in tc], dtype=float) for k in POOL_KEYS}
+    zp = {k: (float(pool[k].mean()), float(pool[k].std()) or 1.0) for k in POOL_KEYS}
 
-    def pctrank(k, x):
-        v = pool[k]
-        return 100.0 * (np.sum(v < x) + 0.5 * np.sum(v == x)) / len(v)
+    def zscore(k, x):
+        return (x - zp[k][0]) / zp[k][1]
 
     pts = []
     for d in tc:
@@ -76,14 +76,14 @@ def load():
         ts = created.get(d["source"])
         if not ts:
             continue
-        pc = {k: pctrank(k, d[k]) for k in POOL_KEYS}
+        pc = {k: zscore(k, d[k]) for k in POOL_KEYS}
         pts.append({"model": d["source"], "provider": d["source"].split("/")[0],
                     "date": datetime.fromtimestamp(ts, timezone.utc),
-                    "pc": pc, "tc": float(np.mean([pc[k] for k in COMPOSITE_FACETS]))})
+                    "pc": pc, "tc": float(d["overall_eq"])})
     pts.sort(key=lambda p: p["date"])
     human = next((d for d in tc if d["source"] == "human"), None)
-    hpc = {k: pctrank(k, human[k]) for k in POOL_KEYS} if human else None
-    htc = float(np.mean([hpc[k] for k in COMPOSITE_FACETS])) if hpc else None
+    hpc = {k: zscore(k, human[k]) for k in POOL_KEYS} if human else None
+    htc = float(human["overall_eq"]) if human else None
     providers = sorted({d["source"].split("/")[0] for d in tc if d["source"] != "human"})
     return pts, hpc, htc, provider_colors(providers)
 
@@ -96,19 +96,19 @@ def _date_axis(ax, interval=8):
 
 
 def facets_over_time(pts, hpc, prov_color):
-    # Row 1: the four individual facets. Row 2: the composite built up cumulatively
-    # (Surprise -> +Coherence -> +Diversity -> Overall), each panel the mean of its facet
-    # percentiles. UNGATED throughout -- raw surprise/coherence (no realism gate); realism
-    # appears as its own facet (row 1) and enters only the 4-facet Overall.
+    # Row 1: the four RAW facet z's (realism shown for context). Row 2: the GATED composite
+    # built up cumulatively to Overall -- gated surprise -> +gated coherence -> +diversity =
+    # Overall (= overall_eq, the headline in Fig 1). A star marks realism-gated facets
+    # (surprise/coherence count only for fully realistic stories).
     PANELS = [
         ("Surprise", ["mean_surprise"]),
         ("Coherence", ["mean_coherence"]),
         ("Realism", ["mean_realism"]),
         ("Diversity", ["div"]),
-        ("Surprise", ["mean_surprise"]),
-        ("Surprise +\nCoherence", ["mean_surprise", "mean_coherence"]),
-        ("Surprise +\nCoherence +\nDiversity", ["mean_surprise", "mean_coherence", "div"]),
-        ("Overall", ["mean_surprise", "mean_coherence", "mean_realism", "div"]),
+        ("Surprise$^\\star$", ["mean_surprise_g"]),
+        ("Surprise$^\\star$ +\nCoherence$^\\star$", ["mean_surprise_g", "mean_coherence_g"]),
+        ("Surprise$^\\star$ +\nCoherence$^\\star$ +\nDiversity", ["mean_surprise_g", "mean_coherence_g", "div"]),
+        ("Overall", ["mean_surprise_g", "mean_coherence_g", "div"]),
     ]
     # Large fonts for readability: smaller figure footprint (closer to 1:1 at \textwidth)
     # plus big point sizes so nothing is tiny on the page.
@@ -128,10 +128,10 @@ def facets_over_time(pts, hpc, prov_color):
             ax.plot(dates, np.maximum.accumulate(y), color="#000", lw=1.8, drawstyle="steps-post", zorder=4)
             if hpc is not None:
                 ax.axhline(float(np.mean([hpc[k] for k in keys])), color="#000", ls=":", lw=1.6, zorder=1)
-            ax.set_title(name); ax.set_ylim(-3, 103); ax.set_yticks([0, 25, 50, 75, 100])
+            ax.set_title(name); ax.set_ylim(-3, 3); ax.set_yticks([-2, -1, 0, 1, 2])
             _date_axis(ax, interval=12)
         for r in (0, 4):
-            axes[r].set_ylabel("Percentile")
+            axes[r].set_ylabel("$z$-score")
         present = {p["provider"] for p in pts}
         named = [pr for pr in PROV_NAME if pr not in OTHER_PROVIDERS and pr in present]
         handles = [Patch(color=prov_color[pr], label=PROV_NAME[pr]) for pr in named]
@@ -205,12 +205,12 @@ def tc_per_org_over_time(pts, htc, prov_color):
                         bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.85),
                         arrowprops=dict(arrowstyle="-", lw=0.7, color="0.45", shrinkA=0, shrinkB=3))
             ax.set_title(f"{name} ($n{{=}}{len(grp)}$)")
-            ax.set_ylim(-3, 103); ax.set_yticks([0, 25, 50, 75, 100])
+            ax.set_ylim(-2, 2.5); ax.set_yticks([-1, 0, 1, 2])
             ax.set_xlim(xmin - xpad, xmax + xpad); _date_axis(ax, interval=12)
         for ax in axes[len(groups):]:
             ax.set_visible(False)
         for r in range(nrow):
-            axes[r * ncol].set_ylabel("TC percentile")
+            axes[r * ncol].set_ylabel("TC ($z$)")
         fig.tight_layout()
         for d in (OUT / "tc_per_org_over_time.pdf", FIG / "tc_per_org_over_time.pdf", OUT / "tc_per_org_over_time.png"):
             fig.savefig(d)
@@ -219,7 +219,7 @@ def tc_per_org_over_time(pts, htc, prov_color):
 
 def main():
     pts, hpc, htc, prov_color = load()
-    print(f"{len(pts)} dated models; human TC pctl = {htc:.1f}")
+    print(f"{len(pts)} dated models; human TC z = {htc:+.2f}")
     facets_over_time(pts, hpc, prov_color)
     tc_per_org_over_time(pts, htc, prov_color)
     print(f"saved facets_over_time.pdf + tc_per_org_over_time.pdf -> {FIG}")
