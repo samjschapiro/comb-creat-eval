@@ -1,12 +1,12 @@
 """Combined 2-panel boxplot: (a) reasoning effort, (b) prompting strategy vs the Overall
 composite. Each model x condition cell is summarized by the realism-gated composite facets
-(gated surprise/coherence + reveal diversity), each expressed as its PERCENTILE RANK within
-the main analysis pool (tc.json) -- the SAME percentile scale as the over-time / radar /
-leaderboard figures; the cell composite is their equal-weight mean. Each dot is one
+(gated surprise/coherence + reveal diversity), z-scored on the main analysis pool (tc.json);
+the cell composite is their equal-weight mean. z (not percentile) keeps the top of the pool
+de-saturated -- humans sit visibly above the frontier cluster. Each dot is one
 (model x condition) cell.
 
 The human reference is the BEST-8 human stories (top 8 by per-story surprise+coherence+realism),
-projected onto the same percentile frame. This is apples-to-apples with the dots: an 8-story
+projected onto the same z-frame. This is apples-to-apples with the dots: an 8-story
 cell is the LLM's BEST config, so the human is shown at its best 8-story batch too.
 
 Equal-weight composite (NOT tc=Div*mean(S*Coh)); see docs memory "plot-twist-headline-metric".
@@ -66,18 +66,17 @@ def _embedder():
 
 
 def _zparams(cells, facets=FACETS_4):
-    """Pool arrays for each composite facet (the reference distribution for percentiles)."""
-    return {k: np.array([c.get(k, np.nan) for c in cells], dtype=float) for k in facets}
+    """Pooled (mean, std) per composite facet -- the z-frame for the cells."""
+    return {k: (np.nanmean([c.get(k, np.nan) for c in cells]),
+                np.nanstd([c.get(k, np.nan) for c in cells]) or 1.0)
+            for k in facets}
 
 
-def _overall(facets_dict, pool, facets=FACETS_4):
-    """Cell composite as the equal-weight mean of its facet PERCENTILE RANKS within the
-    pool -- matching the paper's TC = (1/3)[P(S*) + P(Coh*) + P(Div)] definition and the
-    percentile scale of the over-time / radar / leaderboard figures."""
-    def pct(k, x):
-        v = pool[k][~np.isnan(pool[k])]
-        return 100.0 * (np.sum(v < x) + 0.5 * np.sum(v == x)) / len(v)
-    return float(np.nanmean([pct(k, facets_dict[k]) for k in facets]))
+def _overall(facets_dict, zs, facets=FACETS_4):
+    """Cell composite = equal-weight mean of z-scored facets, given pooled z-params zs.
+    z (not percentile) so the top of the pool de-saturates: humans sit visibly above the
+    frontier cluster rather than piling up at the percentile ceiling."""
+    return float(np.nanmean([(facets_dict[k] - zs[k][0]) / zs[k][1] for k in facets]))
 
 
 def _score(a, k):
@@ -178,17 +177,17 @@ def panel(ax, levels, labels, by, xlabel, title, human):
         ax.scatter(jx, ys, s=22, color=BOX_COLS[i], edgecolor="#333", linewidth=0.4,
                    alpha=0.45, zorder=3)
     ax.set_xticks(range(len(levels))); ax.set_xticklabels(labels)
-    ax.set_xlabel(xlabel); ax.set_ylabel("Overall percentile")
-    ax.axhline(50, color="#bbb", lw=0.8, ls=":", zorder=0)  # pool median
+    ax.set_xlabel(xlabel); ax.set_ylabel("Overall ($z$)")
+    ax.axhline(0, color="#bbb", lw=0.8, ls=":", zorder=0)  # pool mean
     hl = ax.axhline(human, color=HUMAN_COL, lw=1.7, ls="--", zorder=4)
     ax.set_title(title, loc="left", fontweight="bold")
     return hl
 
 
 def main():
-    # Percentile frame = the MAIN analysis pool (tc.json) gated facets -> the SAME percentile
-    # scale as the over-time/radar/leaderboard figures. Human reference = best-8 human stories
-    # on this frame (apples-to-apples with the best-config cells); all cells projected onto it.
+    # z-frame = the MAIN analysis pool (tc.json) gated facets. Human reference = best-8 human
+    # stories on this frame (apples-to-apples with the best-config cells); all cells projected
+    # onto it. z keeps the top de-saturated (vs percentile, which piles the frontier at ~99).
     zs = _zparams(json.loads(MAIN_TC.read_text()))
     human = human_top8(zs)
     panels = [effort_cells(), strategy_cells()]
@@ -208,7 +207,7 @@ def main():
     for d in (OUT / "effort_temp_boxplots.pdf", FIG / "effort_temp_boxplots.pdf", OUT / "effort_temp_boxplots.png"):
         fig.savefig(d)
     plt.close(fig)
-    print(f"saved -> {FIG/'effort_temp_boxplots.pdf'}  (human best-8 percentile = {human:.1f})")
+    print(f"saved -> {FIG/'effort_temp_boxplots.pdf'}  (human best-8 z = {human:+.2f})")
 
 
 if __name__ == "__main__":
