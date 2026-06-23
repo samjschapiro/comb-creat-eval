@@ -163,8 +163,20 @@ def temp_cells():
     return rows, "temp", TEMPS, [f"{t}" for t in TEMPS]
 
 
-def panel(ax, levels, labels, by, xlabel, title, human):
-    data = [by[lv] for lv in levels]
+def _short(model):
+    """Compact model label for an annotation (e.g. 'Sonnet-4.5')."""
+    n = model.split("/")[-1]
+    for pre in ("claude-", "gpt-", "deepseek-"):
+        if n.startswith(pre):
+            n = n[len(pre):]
+    return n[:1].upper() + n[1:]
+
+
+def panel(ax, levels, labels, by, xlabel, title, human, annotate=None):
+    """`by[lv]` is a list of (model, z). `annotate` maps a level -> x-offset for the label
+    of its top (max-z) cell -- the one tying the human line -- shown with its model name."""
+    annotate = annotate or {}
+    data = [[z for _, z in by[lv]] for lv in levels]
     bp = ax.boxplot(data, positions=range(len(levels)), widths=0.55, patch_artist=True, vert=True,
                     medianprops=dict(color="black", lw=1.6), whiskerprops=dict(color="#444"),
                     capprops=dict(color="#444"), flierprops=dict(marker="", alpha=0))
@@ -172,10 +184,17 @@ def panel(ax, levels, labels, by, xlabel, title, human):
         patch.set_facecolor((*col[:3], 0.35)); patch.set_edgecolor("#333"); patch.set_linewidth(0.9)
     rng = np.random.default_rng(0)
     for i, lv in enumerate(levels):
-        ys = by[lv]
+        ys = [z for _, z in by[lv]]
         jx = i + (rng.random(len(ys)) - 0.5) * 0.18
         ax.scatter(jx, ys, s=22, color=BOX_COLS[i], edgecolor="#333", linewidth=0.4,
                    alpha=0.45, zorder=3)
+        if lv in annotate and ys:
+            k = int(np.argmax(ys))
+            xoff = annotate[lv]
+            ha = "left" if xoff > 0 else ("right" if xoff < 0 else "center")
+            ax.annotate(_short(by[lv][k][0]), xy=(jx[k], ys[k]), xytext=(i + xoff, ys[k] + 0.6),
+                        ha=ha, va="bottom", fontsize=10, fontstyle="italic", zorder=7,
+                        arrowprops=dict(arrowstyle="-", lw=0.7, color="#333", shrinkA=1, shrinkB=2))
     ax.set_xticks(range(len(levels))); ax.set_xticklabels(labels)
     ax.set_xlabel(xlabel); ax.set_ylabel("Overall ($z$)")
     ax.axhline(0, color="#bbb", lw=0.8, ls=":", zorder=0)  # pool mean
@@ -197,10 +216,14 @@ def main():
     # wrapfigure. Kept compact in height so it doesn't span more lines than the adjacent
     # text. Both panels keep the percentile y-axis (shared scale).
     fig, axes = plt.subplots(2, 1, figsize=(3.5, 4.5), sharey=True)
+    # Annotate the top (human-tying) cell in (a) low effort and (b) in-context regeneration.
+    # low is shifted right so its label clears the "(a)" panel title.
+    annotates = [{"low": 0.5}, {"incontext_regen": 0.0}]
     hl = None
-    for ax, (cells, keyf, levels, labels), xl, ti in zip(axes, panels, xlabels, titles):
-        by = {lv: [_overall(c, zs) for c in cells if c[keyf] == lv] for lv in levels}
-        hl = panel(ax, levels, labels, by, xl, ti, human)
+    for ax, (cells, keyf, levels, labels), xl, ti, ann in zip(axes, panels, xlabels, titles, annotates):
+        by = {lv: [(c["model"], _overall(c, zs)) for c in cells if c[keyf] == lv] for lv in levels}
+        hl = panel(ax, levels, labels, by, xl, ti, human, annotate=ann)
+    axes[0].set_ylim(top=3.1)  # headroom for the annotation labels (shared y-axis)
     axes[0].legend([hl], ["human"], loc="lower left", fontsize=10, frameon=False)
     fig.tight_layout()
     OUT.mkdir(parents=True, exist_ok=True)
