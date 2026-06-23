@@ -233,7 +233,7 @@ def main(tc_json: str, out_dir: str) -> None:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     for ext, dpi in (("png", 400), ("pdf", 400)):
-        p = out / f"tc_radar.{ext}"
+        p = out / f"fig4_radar.{ext}"  # named for its paper figure number (Figure 4)
         fig.savefig(p, dpi=dpi, bbox_inches="tight", pad_inches=0.12)
         print(f"saved: {p}")
     plt.close(fig)

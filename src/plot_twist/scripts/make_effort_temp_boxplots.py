@@ -227,10 +227,11 @@ def main():
     axes[0].legend([hl], ["human"], loc="lower left", fontsize=10, frameon=False)
     fig.tight_layout()
     OUT.mkdir(parents=True, exist_ok=True)
-    for d in (OUT / "effort_temp_boxplots.pdf", FIG / "effort_temp_boxplots.pdf", OUT / "effort_temp_boxplots.png"):
+    # Paper copy is named for its figure number (Figure 5); data-dir copies keep the descriptive name.
+    for d in (OUT / "effort_temp_boxplots.pdf", FIG / "fig5_effort_temp.pdf", OUT / "effort_temp_boxplots.png"):
         fig.savefig(d)
     plt.close(fig)
-    print(f"saved -> {FIG/'effort_temp_boxplots.pdf'}  (human best-8 z = {human:+.2f})")
+    print(f"saved -> {FIG/'fig5_effort_temp.pdf'}  (human best-8 z = {human:+.2f})")
 
 
 if __name__ == "__main__":
