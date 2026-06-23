@@ -194,9 +194,10 @@ def main():
     panels = [effort_cells(), strategy_cells()]
     titles = ["(a)", "(b)"]
     xlabels = ["Reasoning effort", "Prompting strategy"]
-    # Vertically stacked (2x1) so the figure is tall and narrow -> sits at half text width
-    # directly under the radar. Both panels keep the percentile y-axis (shared scale).
-    fig, axes = plt.subplots(2, 1, figsize=(3.5, 5.6), sharey=True)
+    # Vertically stacked (2x1) so the figure is narrow -> sits at ~0.4 text width as a
+    # wrapfigure. Kept compact in height so it doesn't span more lines than the adjacent
+    # text. Both panels keep the percentile y-axis (shared scale).
+    fig, axes = plt.subplots(2, 1, figsize=(3.5, 4.5), sharey=True)
     hl = None
     for ax, (cells, keyf, levels, labels), xl, ti in zip(axes, panels, xlabels, titles):
         by = {lv: [_overall(c, zs) for c in cells if c[keyf] == lv] for lv in levels}
