@@ -9,9 +9,16 @@ extractor in Exp 3) join each annotation back to its text:
   - human gold:   data/plot_twist/human_twists/texts/<id>.txt
 
 This module also factors out the headline TC composite (`overall_eq`) so every
-experiment scores models identically to make_tc_barplot.py: the equal-weight mean
-of z-scored facets (surprise, coherence, diversity), NOT the tc=Div*mean(S*Coh)
-product. See docs memory "plot-twist-headline-metric".
+experiment scores models identically to make_tc_barplot.py.
+
+HEADLINE METRIC (realism-gated, "V1 hard gate"): a story's surprise and coherence
+count toward the composite ONLY if the story is FULLY realistic (realism == 5). A
+twist that earns surprise via genuinely impossible (sci-fi/supernatural) elements
+is gaming the task, so we zero out its S/Coh contribution. The composite is then the
+equal-weight mean of z-scored {gated surprise, gated coherence, diversity} -- realism
+is NOT a separate facet (it is baked into the gate, so adding it would double-count).
+This replaces the older 4-facet eq-z{S, Coh, Div, Real}. See docs memory
+"plot-twist-headline-metric".
 """
 
 from __future__ import annotations
@@ -26,7 +33,10 @@ ANNOTATIONS_JSON = "data/plot_twist/annotations/annotations.json"
 LLM_STORIES_DIR = "data/plot_twist/llm_twists/stories"
 HUMAN_TEXTS_DIR = "data/plot_twist/human_twists/texts"
 
-EQ_FACETS = ("mean_surprise", "mean_coherence", "div")
+# Realism gate: S/Coh count only for stories scored at least this realistic (==5 = fully).
+REALISM_GATE = 5.0
+# The composite facets are the GATED surprise/coherence + diversity (no separate realism).
+EQ_FACETS = ("mean_surprise_g", "mean_coherence_g", "div")
 
 
 def load_annotations(path: str | Path = ANNOTATIONS_JSON) -> list[dict]:
@@ -74,6 +84,29 @@ def score_num(rec: dict, key: str) -> float | None:
         return None
 
 
+def gated_means(records: list[dict], realism: dict, gate: float = REALISM_GATE) -> dict:
+    """Per-group facet means: raw surprise/coherence/realism + realism-GATED surprise &
+    coherence (each story's S,Coh counted as 0 unless its realism >= `gate`).
+
+    Returns mean_surprise, mean_coherence, mean_realism (raw, for display) and
+    mean_surprise_g, mean_coherence_g (gated, the composite inputs). `realism` maps
+    story id -> realism score (1-5); a story missing a realism score is treated as
+    failing the gate (contributes 0 to the gated means)."""
+    S, C, R, Sg, Cg = [], [], [], [], []
+    for r in records:
+        s, c = score_num(r, "surprise"), score_num(r, "coherence")
+        if s is None or c is None:
+            continue
+        rv = realism.get(r["id"])
+        g = 1.0 if (rv is not None and rv >= gate) else 0.0
+        S.append(s); C.append(c); Sg.append(s * g); Cg.append(c * g)
+        if rv is not None:
+            R.append(float(rv))
+    m = lambda xs: float(np.mean(xs)) if xs else float("nan")
+    return {"mean_surprise": m(S), "mean_coherence": m(C), "mean_realism": m(R),
+            "mean_surprise_g": m(Sg), "mean_coherence_g": m(Cg)}
+
+
 def mean_pairwise_distance(emb: np.ndarray) -> float:
     """Diversity = 1 - mean off-diagonal cosine, over L2-normalized embedding rows.
     Matches make_tc_barplot._div so diversity is computed identically everywhere."""
@@ -87,9 +120,10 @@ def mean_pairwise_distance(emb: np.ndarray) -> float:
 def add_overall_eq(rows: list[dict], facets: tuple[str, ...] = EQ_FACETS) -> list[dict]:
     """Add `overall_eq` (equal-weight mean of z-scored facets) to each row in place.
 
-    Each row must already carry the raw facet values (default: mean_surprise,
-    mean_coherence, div). z-scoring is across the rows passed in, so callers decide
-    the reference set (e.g. all 74 sources, or the thinking-intervention cells)."""
+    Each row must already carry the facet values (default: the realism-GATED
+    mean_surprise_g, mean_coherence_g, and div). z-scoring is across the rows passed
+    in, so callers decide the reference set (e.g. all 72 sources, or the
+    thinking-intervention cells)."""
     zs = {}
     for k in facets:
         v = np.array([d[k] for d in rows], dtype=float)

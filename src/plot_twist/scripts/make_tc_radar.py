@@ -93,6 +93,9 @@ def main(tc_json: str, out_dir: str) -> None:
     # scoring below this value on that facet. Rings are pool quartiles (25/50/75); the
     # 50-ring is the pool median. Chosen for maximum visual separation of the systems.
     pool = {key: np.array([d[key] for d in rows], dtype=float) for key, _ in FACETS}
+    # Overall pctl (panel titles) = percentile of the gated headline composite, matching
+    # the leaderboard; the spokes stay the RAW facets (incl. realism) as the breakdown.
+    pool["overall_eq"] = np.array([d["overall_eq"] for d in rows], dtype=float)
 
     def pctrank(key, x):
         v = pool[key]
@@ -121,7 +124,7 @@ def main(tc_json: str, out_dir: str) -> None:
     fig, axes = plt.subplots(2, 3, figsize=(17.5, 13.6),
                              subplot_kw=dict(polar=True))
     fig.subplots_adjust(left=0.06, right=0.95, top=0.78, bottom=0.06,
-                        hspace=1.15, wspace=1.40)
+                        hspace=0.90, wspace=1.40)
 
     for ri, (row_label, panels) in enumerate(ROWS):
         for ci, (src, disp) in enumerate(panels):
@@ -165,7 +168,7 @@ def main(tc_json: str, out_dir: str) -> None:
             ax.scatter(angles, to_r(zvec(src)), color=col, s=80, zorder=6,
                        edgecolors="white", linewidths=1.3)
 
-            ov = float(np.mean(zvec(src)))  # Overall = mean of the four facet percentiles
+            ov = pctrank("overall_eq", by_src[src]["overall_eq"])  # gated-composite percentile
             wt = "bold" if src == "human" else "normal"
             # The human panel is named by its own header (a); blank first line keeps
             # its radar vertically aligned with the two-line model titles beside it.

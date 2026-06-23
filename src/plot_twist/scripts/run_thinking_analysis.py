@@ -37,13 +37,15 @@ import numpy as np
 
 from src.utils import init_directory, load_config, save_config
 from src.plot_twist.annotate import AnnotateConfig, annotate_stories
-from src.plot_twist.join import mean_pairwise_distance
+from src.plot_twist.join import mean_pairwise_distance, gated_means
 
 DIMS = ("surprise", "coherence", "overall")
-# The 4 equal-weighted TC facets (raw key -> display label), matching make_tc_barplot.
+# Display facets (raw key -> label) shown in the per-facet panels, matching make_tc_barplot.
 FACETS = [("mean_surprise", "Surprise"), ("mean_coherence", "Coherence"),
           ("div", "Diversity"), ("mean_realism", "Realism")]
 FACET_KEYS = [k for k, _ in FACETS]
+# Composite facets = realism-GATED surprise/coherence + diversity (the headline metric).
+COMPOSITE_FACETS = ["mean_surprise_g", "mean_coherence_g", "div"]
 
 
 def _load_scores(csv_path: Path) -> dict[str, dict]:
@@ -82,7 +84,9 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False) -> None
     items = [{"id": r["id"], "source": r["model"], "story": r["story"],
               "scores": scores.get(r["id"], {})} for r in gens]
     acfg = AnnotateConfig(model=cfg["annotator_model"], concurrency=cfg.get("concurrency", 16))
-    annos = asyncio.run(annotate_stories(acfg, items, cache_dir=out / "annotate_cache"))
+    # Cache lives OUTSIDE output_dir (which --overwrite wipes) so reveal annotations -- a
+    # paid step -- are never discarded on re-runs. See memory "never-waste-api-spend".
+    annos = asyncio.run(annotate_stories(acfg, items, cache_dir=out.parent / "annotate_cache"))
     reveal_by_id = {a["id"]: a.get("reveal") for a in annos}
 
     from sentence_transformers import SentenceTransformer
@@ -103,26 +107,27 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False) -> None
             vs = [v for v in vs if v is not None]
             return float(np.mean(vs)) if vs else float("nan")
         E = np.array([emb_by_id[r["id"]] for r in rs if r["id"] in emb_by_id])
-        rv = [realism[r["id"]] for r in rs if r["id"] in realism]
+        gm = gated_means([{"id": r["id"], "scores": scores.get(r["id"], {})} for r in rs], realism)
         rows.append({
             "model": mdl, "level": lvl, "n": len(rs),
             "mean_surprise": dim_mean("surprise"), "mean_coherence": dim_mean("coherence"),
             "mean_overall": dim_mean("overall"), "div": mean_pairwise_distance(E),
-            "mean_realism": float(np.mean(rv)) if rv else float("nan"),
+            "mean_realism": gm["mean_realism"],
+            "mean_surprise_g": gm["mean_surprise_g"], "mean_coherence_g": gm["mean_coherence_g"],
         })
 
-    # 3) 4-facet TC composite, z-scored WITHIN model (isolates the thinking effect)
+    # 3) realism-gated TC composite, z-scored WITHIN model (isolates the thinking effect)
     by_model: dict[str, list] = {}
     for d in rows:
         by_model.setdefault(d["model"], []).append(d)
     for mdl, drs in by_model.items():
-        for k in FACET_KEYS:
+        for k in COMPOSITE_FACETS:
             v = np.array([d[k] for d in drs], float)
             mu, sd = np.nanmean(v), (np.nanstd(v) or 1.0)
             for d in drs:
                 d[f"z_{k}"] = (d[k] - mu) / sd
         for d in drs:
-            d["tc_within"] = float(np.nanmean([d[f"z_{k}"] for k in FACET_KEYS]))
+            d["tc_within"] = float(np.nanmean([d[f"z_{k}"] for k in COMPOSITE_FACETS]))
     (out / "thinking_cells.json").write_text(json.dumps(rows, indent=2))
 
     # 4) Δ(high - low) per facet + composite, with sign test across models

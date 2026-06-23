@@ -1,12 +1,13 @@
-"""Combined 3-panel boxplot: (a) reasoning effort, (b) sampling temperature, (c) prompting
-strategy vs the Overall composite. Each model x condition cell is summarized by four facets
-(mean surprise/coherence/realism + reveal diversity) z-scored on the main analysis pool
-(tc.json) -- the SAME scale as every other figure in the paper; the cell composite is their
-equal-weight mean. Each dot is one (model x condition) cell.
+"""Combined 2-panel boxplot: (a) reasoning effort, (b) prompting strategy vs the Overall
+composite. Each model x condition cell is summarized by the realism-gated composite facets
+(gated surprise/coherence + reveal diversity), each expressed as its PERCENTILE RANK within
+the main analysis pool (tc.json) -- the SAME percentile scale as the over-time / radar /
+leaderboard figures; the cell composite is their equal-weight mean. Each dot is one
+(model x condition) cell.
 
 The human reference is the BEST-8 human stories (top 8 by per-story surprise+coherence+realism),
-projected onto the same z-frame. This is apples-to-apples with the dots: an 8-story cell is the
-LLM's BEST config, so the human is shown at its best 8-story batch too -- both are best-selections.
+projected onto the same percentile frame. This is apples-to-apples with the dots: an 8-story
+cell is the LLM's BEST config, so the human is shown at its best 8-story batch too.
 
 Equal-weight composite (NOT tc=Div*mean(S*Coh)); see docs memory "plot-twist-headline-metric".
 
@@ -28,7 +29,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from cmcrameri import cm as cmc
 
-from src.plot_twist.join import mean_pairwise_distance
+from src.plot_twist.join import mean_pairwise_distance, gated_means, REALISM_GATE
 
 mpl.rcParams.update({
     "font.family": "serif",
@@ -48,8 +49,10 @@ OUT = Path("data/plot_twist/tc/downstream/temp")
 FIG = Path("papers/pt2cb-iclr-2027/figures")
 EMBED_MODEL = "sentence-transformers/all-mpnet-base-v2"
 BOX_COLS = [cmc.batlow(x) for x in (0.12, 0.5, 0.86)]
-HUMAN_COL = "#B2182B"
-FACETS_4 = ["mean_surprise", "mean_coherence", "div", "mean_realism"]
+HUMAN_COL = "#000000"  # human reference line (black, matching the leaderboard's human bars)
+# Headline composite facets: realism-GATED surprise/coherence + diversity (S/Coh count
+# only when realism == 5). Same gate as make_tc_barplot / join.EQ_FACETS.
+FACETS_4 = ["mean_surprise_g", "mean_coherence_g", "div"]
 
 _ST = None
 
@@ -63,14 +66,18 @@ def _embedder():
 
 
 def _zparams(cells, facets=FACETS_4):
-    return {k: (np.nanmean([c.get(k, np.nan) for c in cells]),
-                np.nanstd([c.get(k, np.nan) for c in cells]) or 1.0)
-            for k in facets}
+    """Pool arrays for each composite facet (the reference distribution for percentiles)."""
+    return {k: np.array([c.get(k, np.nan) for c in cells], dtype=float) for k in facets}
 
 
-def _overall(facets_dict, zs, facets=FACETS_4):
-    """Equal-weight mean of z-scored facets for one cell, given pooled z-params zs."""
-    return float(np.nanmean([(facets_dict[k] - zs[k][0]) / zs[k][1] for k in facets]))
+def _overall(facets_dict, pool, facets=FACETS_4):
+    """Cell composite as the equal-weight mean of its facet PERCENTILE RANKS within the
+    pool -- matching the paper's TC = (1/3)[P(S*) + P(Coh*) + P(Div)] definition and the
+    percentile scale of the over-time / radar / leaderboard figures."""
+    def pct(k, x):
+        v = pool[k][~np.isnan(pool[k])]
+        return 100.0 * (np.sum(v < x) + 0.5 * np.sum(v == x)) / len(v)
+    return float(np.nanmean([pct(k, facets_dict[k]) for k in facets]))
 
 
 def _score(a, k):
@@ -96,9 +103,12 @@ def human_topN_facets(n=8):
     top = rows[:n]
     E = _embedder().encode([a.get("reveal") or "" for _, a, *_ in top],
                            normalize_embeddings=True, show_progress_bar=False)
+    g = lambda s, r: s if r >= REALISM_GATE else 0.0  # realism gate
     return {"mean_surprise": float(np.mean([x[2] for x in top])),
             "mean_coherence": float(np.mean([x[3] for x in top])),
             "mean_realism": float(np.mean([x[4] for x in top])),
+            "mean_surprise_g": float(np.mean([g(x[2], x[4]) for x in top])),
+            "mean_coherence_g": float(np.mean([g(x[3], x[4]) for x in top])),
             "div": mean_pairwise_distance(np.array(E))}
 
 
@@ -140,15 +150,12 @@ def temp_cells():
     rows = []
     for (model, t), rs in cellmap.items():
         sur = [_score(a, "surprise") for a in rs if _score(a, "surprise") is not None]
-        coh = [_score(a, "coherence") for a in rs if _score(a, "coherence") is not None]
         rea = [realism[a["id"]] for a in rs if a["id"] in realism]
         E = np.array([emb_by_id[a["id"]] for a in rs])
         if len(sur) < 2 or len(E) < 2:
             continue
-        rows.append({"model": model, "temp": t, "mean_surprise": float(np.mean(sur)),
-                     "mean_coherence": float(np.mean(coh)),
-                     "mean_realism": float(np.mean(rea)) if rea else np.nan,
-                     "div": mean_pairwise_distance(E)})
+        gm = gated_means(rs, realism)
+        rows.append({"model": model, "temp": t, **gm, "div": mean_pairwise_distance(E)})
     by_model = defaultdict(set)
     for r in rows:
         by_model[r["model"]].add(r["temp"])
@@ -171,36 +178,36 @@ def panel(ax, levels, labels, by, xlabel, title, human):
         ax.scatter(jx, ys, s=22, color=BOX_COLS[i], edgecolor="#333", linewidth=0.4,
                    alpha=0.45, zorder=3)
     ax.set_xticks(range(len(levels))); ax.set_xticklabels(labels)
-    ax.set_xlabel(xlabel); ax.set_ylabel("Overall ($z$)")
-    ax.axhline(0, color="#bbb", lw=0.8, ls=":", zorder=0)
+    ax.set_xlabel(xlabel); ax.set_ylabel("Overall percentile")
+    ax.axhline(50, color="#bbb", lw=0.8, ls=":", zorder=0)  # pool median
     hl = ax.axhline(human, color=HUMAN_COL, lw=1.7, ls="--", zorder=4)
     ax.set_title(title, loc="left", fontweight="bold")
     return hl
 
 
 def main():
-    # z-frame = the MAIN analysis pool (tc.json), 4 facets -> the SAME scale as every other
-    # figure. Human reference = best-8 human stories on this frame (apples-to-apples with the
-    # best-config cells); all panel cells projected onto the frame.
+    # Percentile frame = the MAIN analysis pool (tc.json) gated facets -> the SAME percentile
+    # scale as the over-time/radar/leaderboard figures. Human reference = best-8 human stories
+    # on this frame (apples-to-apples with the best-config cells); all cells projected onto it.
     zs = _zparams(json.loads(MAIN_TC.read_text()))
     human = human_top8(zs)
-    panels = [effort_cells(), temp_cells(), strategy_cells()]
-    titles = ["(a)", "(b)", "(c)"]
-    xlabels = ["Reasoning effort", "Sampling temperature", "Prompting strategy"]
-    fig, axes = plt.subplots(1, 3, figsize=(9.2, 3.5), sharey=True)
+    panels = [effort_cells(), strategy_cells()]
+    titles = ["(a)", "(b)"]
+    xlabels = ["Reasoning effort", "Prompting strategy"]
+    # Vertically stacked (2x1) so the figure is tall and narrow -> sits at half text width
+    # directly under the radar. Both panels keep the percentile y-axis (shared scale).
+    fig, axes = plt.subplots(2, 1, figsize=(3.5, 5.6), sharey=True)
     hl = None
     for ax, (cells, keyf, levels, labels), xl, ti in zip(axes, panels, xlabels, titles):
         by = {lv: [_overall(c, zs) for c in cells if c[keyf] == lv] for lv in levels}
         hl = panel(ax, levels, labels, by, xl, ti, human)
-    for ax in axes[1:]:
-        ax.set_ylabel("")
-    axes[0].legend([hl], ["human (best 8)"], loc="lower left", fontsize=10, frameon=False)
+    axes[0].legend([hl], ["human"], loc="lower left", fontsize=10, frameon=False)
     fig.tight_layout()
     OUT.mkdir(parents=True, exist_ok=True)
     for d in (OUT / "effort_temp_boxplots.pdf", FIG / "effort_temp_boxplots.pdf", OUT / "effort_temp_boxplots.png"):
         fig.savefig(d)
     plt.close(fig)
-    print(f"saved -> {FIG/'effort_temp_boxplots.pdf'}  (human best-8 z = {human:+.2f})")
+    print(f"saved -> {FIG/'effort_temp_boxplots.pdf'}  (human best-8 percentile = {human:.1f})")
 
 
 if __name__ == "__main__":

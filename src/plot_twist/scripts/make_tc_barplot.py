@@ -97,10 +97,11 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False) -> None
         print(f"dropped {len(small)} sources with <{min_stories} stories: "
               f"{[s.split('/')[-1] for s in small]}")
 
-    # optional realism scores (4th dimension), keyed by story id
-    realism = {}
-    if cfg.get("realism_scores") and Path(cfg["realism_scores"]).exists():
-        realism = json.loads(Path(cfg["realism_scores"]).read_text())
+    # realism scores (keyed by story id) -- REQUIRED: the headline composite gates
+    # surprise/coherence by realism (S,Coh count only when realism == 5).
+    if not (cfg.get("realism_scores") and Path(cfg["realism_scores"]).exists()):
+        raise ValueError("FATAL: 'realism_scores' required (the composite is realism-gated)")
+    realism = json.loads(Path(cfg["realism_scores"]).read_text())
 
     # embed all reveals once
     from sentence_transformers import SentenceTransformer
@@ -110,28 +111,27 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False) -> None
     embs = model.encode([r[field] for r in all_recs], normalize_embeddings=True, show_progress_bar=False)
     emb_by_id = {id(r): e for r, e in zip(all_recs, np.asarray(embs, dtype=np.float32))}
 
-    # per-source Div, facet means, tc
+    # per-source Div, facet means (raw + realism-gated), tc
+    from src.plot_twist.join import gated_means
+
     rows = []
     for src, rs in groups.items():
         E = np.array([emb_by_id[id(r)] for r in rs])
         div = _div(E)
         sc = np.mean([num(r, "surprise") * num(r, "coherence") for r in rs])
-        rv = [realism[r["id"]] for r in rs if r["id"] in realism]
+        gm = gated_means(rs, realism)
         rows.append({
             "source": src, "n": len(rs), "div": div,
-            "mean_surprise": float(np.mean([num(r, "surprise") for r in rs])),
-            "mean_coherence": float(np.mean([num(r, "coherence") for r in rs])),
-            "mean_realism": float(np.mean(rv)) if rv else float("nan"),
+            **gm,  # mean_surprise, mean_coherence, mean_realism (raw) + *_g (gated)
             "mean_SxCoh": float(sc), "tc": div * float(sc),
         })
 
-    # Equal-weighted overall score: z-score each facet across sources (mean 0, SD 1),
-    # then average with equal weight. Realism is the 4th equal-weighted dimension when
-    # available. Same equal-weight-of-standardized-indicators construction as AGC mean_z.
-    EQ_FACETS = ["mean_surprise", "mean_coherence", "div"]
-    if realism and all(not np.isnan(d["mean_realism"]) for d in rows):
-        EQ_FACETS.append("mean_realism")
-        print(f"including realism as a 4th equal-weighted facet")
+    # Headline composite (realism-gated, "V1"): equal-weight mean of z-scored
+    # {gated surprise, gated coherence, diversity}. Surprise/coherence are gated by
+    # realism per story (count only when realism == 5), so realism is NOT a separate
+    # facet here -- it is baked into the gate. z-score each facet across sources.
+    EQ_FACETS = ["mean_surprise_g", "mean_coherence_g", "div"]
+    print("headline composite = realism-gated eq-z{surprise·1[R=5], coherence·1[R=5], diversity}")
     _zs = {}
     for k in EQ_FACETS:
         v = np.array([d[k] for d in rows], dtype=float)
@@ -296,11 +296,13 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False) -> None
     TOP_A, TOP_R = 20, 10
     topA = sorted(rows, key=lambda d: -d["overall_eq"])[:TOP_A]
 
+    # Display panels show the RAW facets (incl. realism as its own panel) so readers can
+    # see "high surprise but low realism" -- even though the composite GATES surprise/
+    # coherence by realism rather than treating realism as a separate equal-weight facet.
     facet_specs = [("mean_surprise", "Surprise", "{:.2f}"),
                    ("mean_coherence", "Coherence", "{:.2f}"),
-                   ("div", "Diversity", "{:.3f}")]
-    if "mean_realism" in EQ_FACETS:
-        facet_specs.append(("mean_realism", "Realistic", "{:.2f}"))
+                   ("div", "Diversity", "{:.3f}"),
+                   ("mean_realism", "Realistic", "{:.2f}")]
     nrhs = len(facet_specs)
     fig = plt.figure(figsize=(25, max(12.5, 3.3 * nrhs)))
     gs = fig.add_gridspec(nrhs, 2, width_ratios=[1.3, 1.0], hspace=0.38, wspace=0.42)

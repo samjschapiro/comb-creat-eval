@@ -121,9 +121,10 @@ def main(config_path: str, overwrite: bool = False, debug: bool = False) -> None
     tc = json.loads(Path(cfg["tc_json"]).read_text())
     created = _fetch_created(out / "model_created.json")
 
-    # Per-model TC = mean PERCENTILE rank (over the pool) of the four facets -- the same
-    # percentile scale as the radar figure and the leaderboard table.
-    FACETS = ["mean_surprise", "mean_coherence", "div", "mean_realism"]
+    # Per-model TC = mean PERCENTILE rank (over the pool) of the headline composite
+    # facets -- realism-GATED surprise/coherence + diversity (S/Coh count only when
+    # realism == 5). Same gate as the leaderboard composite (join.EQ_FACETS).
+    FACETS = ["mean_surprise_g", "mean_coherence_g", "div"]
     pool = {k: np.array([d[k] for d in tc], dtype=float) for k in FACETS}
 
     def pctrank(k, x):
