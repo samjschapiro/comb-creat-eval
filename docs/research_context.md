@@ -115,21 +115,20 @@ the `benchmarks.json` LIB pool (~31 models). No eval code yet; next is the
 Wikidata subgraph backend. Target: COLM 2026 LM4Sci, 8pp non-archival,
 deadline June 23 2026.
 
-### plot_twist (active, ARR Aug 2026 cycle → EACL 2027)
+### plot_twist — TwistBench (SUBMITTED 2026-06-24, Sci-FM @ COLM 2026)
 
-A **methods paper** eliciting *transformational* creativity — the unrepresented
-third Boden mode (exploratory = dat_eval/new_tests; combinatorial =
-comb_eval/kg_creat). Method: **conceptual-space axiom modification (CSAM)** —
-the model externalizes a story's conceptual-space DAG `G` (rich axioms + rules +
-artifacts), narrates up to a cut `t`, performs a controlled axiom flip `G→G'`,
-and continues for `t'>t`. A plot twist *is* the Thm-4 axiom-modification
-operation from the lab's own
-[Transformational Creativity graphical theory (Schapiro/Black/Varshney, ICCC
-2025, arXiv 2504.18687)](https://arxiv.org/abs/2504.18687), applied to the
-*reader's* world-model. Structural metrics fall out: surprise `= T_mod(a*)`
-(downstream reinterpretation), inevitability `= preservation(a')` (prior
-artifacts stay valid) — used as the *analysis instrument* explaining why CSAM
-works, not a standalone eval.
+A **benchmark paper** for *transformational* creativity — the unrepresented third
+Boden mode (exploratory = dat_eval/new_tests; combinatorial = comb_eval/kg_creat).
+**TwistBench** (renamed from T²C-Bench) has 71 LLMs and 18 expert-human authors write
+plot-twist short stories, scored by a 3-judge LLM ensemble on surprise/coherence/realism
+plus reveal diversity. The **headline metric is a realism-gated equal-weight z-composite**:
+surprise/coherence count only when a story is fully realistic (the "fair-play" gate, not a
+4th facet). Result: **humans rank #1/72**; LLMs show two failure modes — *mode collapse*
+(low diversity) and *breaking the world model* (unrealistic twists) — and neither
+reasoning-effort scaling nor prompting closes the gap; reasoning traces are process-level
+homogeneous (twist-first). The earlier CSAM-*method* plan (axiom-modification elicitation,
+blinded human study) was **dropped**; the submitted paper is benchmark + analysis only. The
+superseded method framing remains below for history.
 
 **Empirical claim**: CSAM beats *compute/token-matched* baselines (free-form
 plan-then-twist, thinking mode, self-refine, temperature) at producing

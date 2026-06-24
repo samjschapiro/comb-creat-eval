@@ -6,7 +6,7 @@ and asks whether their correlations with external creativity
 benchmarks survive partialling out general capability; `new_tests`
 designs new tests on top of that infrastructure (headline:
 DRAT — a hybrid of RAT and DAT); `plot_twist` benchmarks
-*transformational* creativity via literary plot twists (PT²CB), scoring
+*transformational* creativity via literary plot twists (TwistBench), scoring
 twists on surprise, coherence, diversity, and realism, with the first
 human-vs-LLM comparison. Paper drafts live in `papers/iccc-2026/`
 (dat_eval/new_tests) and `papers/pt2cb-iclr-2027/` (plot_twist).
@@ -49,7 +49,7 @@ uv run python src/comb_eval/scripts/add_mmlu_pro_scores.py
 uv run python src/comb_eval/scripts/add_noveltybench_scores.py
 uv run python src/comb_eval/scripts/add_arc_agi_scores.py
 
-# 5. plot_twist (PT²CB): generate twists, score realism, build the scorecard figure
+# 5. plot_twist (TwistBench): generate twists, score realism, build the scorecard figure
 uv run python src/plot_twist/scripts/run_generate.py configs/plot_twist/generate_llm_twists.yaml
 uv run python src/plot_twist/scripts/run_realism.py configs/plot_twist/realism.yaml
 uv run python src/plot_twist/scripts/make_tc_barplot.py configs/plot_twist/tc.yaml

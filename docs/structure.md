@@ -40,7 +40,7 @@ src/
 ├── kg_creat/                   # active track (test-time Comb-Creat on a real KG)
 │   │                           # scaffolded 2026-06-01; eval engine TBD (Phase 1)
 │   └── scripts/                # graph.py (Wikidata loader) + scoring port to come
-└── plot_twist/                 # active track (PT²CB: transformational creativity via plot twists)
+└── plot_twist/                 # active track (TwistBench: transformational creativity via plot twists)
     ├── llm.py                  # OpenRouter wrapper (+ optional `reasoning` param)
     ├── generate.py             # durable per-story twist generation (multi-temp, resumable)
     ├── annotate.py             # setup/reveal/why annotation
@@ -75,7 +75,7 @@ configs/
 │   │                                 # full (k, vocab) grid; _ext = phase-5 extension pool
 │   ├── eqbench_cw.yaml, hivemind.yaml, liveideabench.yaml, noveltybench.yaml
 │   └── rat_pilot.yaml, rat_expansion.yaml, rat_expansion_rerun.yaml
-└── plot_twist/                 # PT²CB configs
+└── plot_twist/                 # TwistBench configs
     ├── generate_llm_twists.yaml     # generator + excluded-judge model lists
     ├── rubric{,_gold,_llm_twists}.yaml  # rubric judge configs
     ├── realism.yaml                 # realism judge (single cheap judge, durable)
@@ -102,7 +102,7 @@ data/
 ├── new_tests/                   # DRAT pilots + ablations + RAT runs
 │   ├── drat/{pilot_*, ablation_k*_{expert,conceptnet}{,_ext}}/raw_results.json
 │   └── rat/{pilot_v1, expansion_v1}/summary.json
-└── plot_twist/                   # PT²CB outputs
+└── plot_twist/                   # TwistBench outputs
     ├── human_twists/, llm_twists/   # gold + generated stories (per-model subfolders)
     ├── annotations/, rubric_gold/   # setup/reveal annotations; rubric scores
     ├── realism/realism_scores.json  # per-story realism (id → 1–5)
@@ -134,7 +134,7 @@ docs/
     │   ├── progress.md          # goal, status, phased roadmap
     │   ├── design.md            # task/scoring spec + reuse map + risks
     │   └── novelty_vs_create.md # methodological novelty table vs CREATE
-    └── plot_twist/              # active track docs (PT²CB benchmark + CSAM method)
+    └── plot_twist/              # active track docs (TwistBench benchmark)
         ├── progress.md          # goal, status, phased roadmap
         ├── design.md            # SBV→story-DAG mapping, CSAM spec, baselines
         ├── paper_outline.md, experiments.md, rubric_design.md
@@ -150,7 +150,7 @@ papers/                          # gitignored in outer repo (Overleaf-synced sub
 │   └── figures/
 ├── drat-icml-2026/              # standalone DRAT short paper (stub)
 │   └── main.tex
-└── pt2cb-iclr-2027/             # plot_twist paper (PT²CB; folder name predates ARR/EACL switch)
+└── pt2cb-iclr-2027/             # plot_twist paper (TwistBench; folder name predates ARR/EACL switch)
     ├── main.tex, sections/      # §3 benchmark, §4 results (scorecard), …
     └── figures/                 # tc_scorecard.png + fig_scorecard.tex
 

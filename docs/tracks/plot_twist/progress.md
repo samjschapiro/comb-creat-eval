@@ -1,5 +1,28 @@
 # plot_twist — progress
 
+## Current status (2026-06-24) — SUBMITTED
+
+**The paper shipped as a benchmark paper, "TwistBench", to the Scientific Understanding of
+Foundation Models (Sci-FM) workshop @ COLM 2026.** The original CSAM-*method* plan below was
+dropped; the paper is purely the **benchmark + analysis**:
+
+- **Task:** 71 LLMs (+ 18 expert-human stories) write plot-twist short stories.
+- **Metric (headline):** realism-**gated** equal-weight z-composite — surprise/coherence count only
+  for fully realistic stories (realism==5; the "fair-play" gate), plus reveal diversity. Realism is
+  the gate, not a 4th facet. Centralized in `src/plot_twist/join.py`. **Humans rank #1/72** (z≈+2.0).
+- **Findings:** LLMs underperform humans; two failure modes — **mode collapse** (frontier models lack
+  diversity; e.g. Opus-4.5 collapses to the dead-spouse cluster c9) and **breaking the world model**
+  (surprising+coherent but unrealistic twists; e.g. Gemini-2.5-Pro/DeepSeek "synthetic being"). Neither
+  reasoning-effort scaling nor prompting (be-creative, in-context-regen) lifts the human ceiling
+  (in-context-regen ties it for Sonnet-4.5 via diversity). Reasoning traces show process-level
+  homogeneity (twist-first, then retrofit the plot).
+- Paper repo: `papers/pt2cb-iclr-2027/` (Overleaf, branch master). Latest full-session writeup:
+  [logs/2026-06-24/1106_twistbench-realism-gate-and-submission.md](../../logs/2026-06-24/1106_twistbench-realism-gate-and-submission.md).
+
+The sections below document the earlier (superseded) method-paper framing and remain for history.
+
+---
+
 ## Goal
 
 A **methods paper**: an inference-time procedure — **conceptual-space axiom
