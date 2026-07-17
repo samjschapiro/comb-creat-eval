@@ -88,6 +88,56 @@ benchmark **T²C-Bench → TwistBench**.
 - Report the Sonnet-4.5 in-context case as a **tie**, not a win (honest framing; the gap is +0.006).
 - Headline display in **z** (not percentile) for the de-saturation of the frontier cluster.
 
+## Full task inventory (chronological, exhaustive)
+
+Roughly the order things happened across the session (compaction-spanning; the summary IS this
+session's work):
+
+1. **GLM-5.1 story pull/summary** — dumped and summarized the 7 GLM-5.1 medium-effort stories (the
+   n=7 cell that exceeded the old human line); found perfect 5/5 surprise+coherence (judge ceiling)
+   but 2/7 sci-fi (realism 1–2) dragging realism to ~4.0 → motivated the realism gate.
+2. **Realism-gate prototyping** (`explore_realism_gate.py`) — 6 variants (hard R=5, soft R/5,
+   threshold R≥4, gated product, ±realism-facet); user picked **V1 hard gate**.
+3. **Gate implementation** in `join.py` (`REALISM_GATE`, `gated_means`, `EQ_FACETS`).
+4. **Verification** (`verify_gate_ablations.py`) before regenerating — confirmed effort cells all
+   below human, one prompting tie (Sonnet-4.5 in-context); decided to report as a tie.
+5. **Regenerated** `tc.json` + all main figures; propagated gate to thinking/prompt analyses.
+6. **Annotate-cache relocation** to avoid `--overwrite` wiping paid reveal annotations.
+7. **`make_tc_leaderboard_table.py`** (new) → appendix raw-facet leaderboard.
+8. Effort/strategy boxplot: **drop temperature panel** → 2-panel; then several iterations —
+   percentile y-axis → back to **z**; **stack vertically**; **half-width wrapfigure**; `\intextsep`
+   plus an explicit `[N]` line count; **annotate** Sonnet-4.6 (low) / Sonnet-4.5 (in-context), font size 10,
+   shifted clear of the "(a)" title.
+9. **Ablation-verification pushback** — user asked to confirm interventions don't beat humans before
+   any regen; confirmed and reported.
+10. **Percentile→z flip** across the whole paper; then per-figure reconciliation (radar spokes z with
+    0-ring = pool mean; over-time gated z; `facets_over_time` gated build-up so Overall = headline).
+11. **Figure renaming** to `fig{N}_*` + wrappers + `\includegraphics`/`\input` + generators; unused
+    figures → `figures/archive/`. Discovered/logged the task-prompt-is-Fig-3 off-by-one.
+12. **Appendix reorg** — Full-leaderboard table moved to the top; commented out over-time companions
+    and creativity-taxonomy sections; captioned all prompt boxes (Figs 8–13); **extracted prompts to
+    `prompts/*.tex`** via `\input`.
+13. **`app:moves`** (step-coding prompt) and **`app:strategies`** (be-creative, summarizer,
+    in-context-regen prompts) appendix sections added.
+14. **§4 failure-mode prose** — concrete model examples folded in (Opus-4.5 c9 mode-collapse;
+    Gemini-2.5-Pro/DeepSeek-V3.2 world-breaking), cluster color-coding (c6 red `#C82828`, c9 maroon
+    `#8C5050`) matched to Fig. 4.
+15. **§4 ablation paragraphs** (prompting + reasoning-effort) written w/ appendix-figure refs and the
+    9-effort-model footnote.
+16. **§3 realism clarification** (Alexi comment: rule-rewriting is a *distinct* operation + gaming
+    shortcut) and metric-definition + backronym cleanups.
+17. **Benchmark rename T²C-Bench → TwistBench** everywhere (title/abstract/intro/§3/`\bench`), metric
+    `\text{TC}` untouched; resolved several live-merge conflicts (co-author proofreading in parallel).
+18. **Table 4 (reveal points) flush-left fix** (`\LTleft=0pt`; dropped `center` wrapper).
+19. **Limitations brainstorm** — general + reframed for the Sci-FM "evaluation science / reliability"
+    audience (construct validity of the LLM-judge metric, researcher DoF, human-comparison confounds,
+    reproducibility/CIs, top-of-leaderboard statistical fragility).
+20. **Copyediting help** — smoother phrasings for a couple of §3 sentences (advisory).
+21. **Paper SUBMITTED**; closing tasks + this log.
+
+Note: many paper edits were pushed to the Overleaf repo throughout via a tight fetch→merge(-X theirs)
+→push loop because a co-author was proofreading live; every push ended in-sync.
+
 ## Open / next
 
 - The off-by-one in image filenames vs. compiled figure numbers (task-prompt = Fig 3) is unresolved —
