@@ -85,35 +85,49 @@ anchor count $k \in \{2,3,4\}$ and vocabulary corpus
 in `04_drat.tex`. Utility-gate aggregator ablation
 ($\max$ / $\min$ / $\mathrm{avg}$) in `06_appendix.tex`.
 
-### kg_creat (active, COLM 2026 LM4Sci workshop)
+### kg_creat (active; venue TBD — reframed 2026-06-04)
 
 Re-purposes the **comb_eval / Comb-Creat** task setup (constrained labeled-
-graph pathfinding with inclusion/exclusion constraints and novelty×utility
-scoring) into a **test-time creativity eval on a real knowledge graph**
-(Wikidata), administered to frontier models without retraining — the
-new_tests survey's "Gap A". The empirical goal: show its per-model scores
-**correlate with LiveIdeaBench**, ideally better than CREATE
-([Wadhwa et al. 2026, arXiv 2603.09970](https://arxiv.org/abs/2603.09970)),
-under the dat_eval validity/specificity framework. DRAT (new_tests) and
-DAT/CDAT/PACE (dat_eval) are scored on the same pool as comparators.
+graph pathfinding with novelty×utility scoring) into a **test-time creativity
+task on a real knowledge graph** (Wikidata et al.), administered to frontier
+models without retraining — the new_tests survey's "Gap A". **Headline
+(reframed 2026-06-04, per Jonah Black):** a **taxonomy of constraints, each a
+minimal abstraction of a real-world rule creative generation must obey**, and
+the **per-constraint-type novelty–utility tradeoff** — which constraints LLMs
+satisfy while keeping novelty high vs which force a tradeoff — as a
+**mechanistic diagnostic of the ideation–execution gap** (prior work showed the
+*what*, not the *why*). Real entities, OpenRouter only, **no GPU cost**.
 
-**Methodological novelty vs CREATE** (which already does Wikidata multi-hop
-paths at test time): (1) a **typology of methodological constraints**
-(inclusion/exclusion/categorical/waypoint/ordering — CREATE has none → tunable
-difficulty, 2-D count×type, recovering Comb-Creat's novelty–utility trade-off)
-and (2) **constraint-load-weighted utility**, with constraints enforced exactly
-on the verified path. Verification shares CREATE's open-KG + LLM-judge factuality
-(reverted from exact held-subgraph checking 2026-06-02 as too restrictive), and
-novelty uses the validated DAT semantic-distance measure — so neither is a
-differentiator. The moat is constraints + utility + LIB validation; the LIB
-correlation is the empirical demonstration.
+**Metric spine:** per constraint type, **ideation** = novelty (DAT embedding
+remoteness) of the model's *emitted* path, vs **execution** = exact constraint
+satisfaction + judge factuality (failure channels broken out); the
+(novelty × satisfaction) 2×2 across types is the core result. **Matched
+endpoint-bundle sampling** (fix `(u,v,h)`, toggle only the constraint) makes the
+tradeoff causal in constraint *type*. **The LiveIdeaBench validity/specificity
+arm is DROPPED** (n≈20, underpowered); the contribution is the diagnostic, not a
+correlation.
 
-**Status (2026-06-01)**: track scaffolded (Phase 0). Design spec, roadmap, and
-the CREATE comparison table written in `docs/tracks/kg_creat/`. Reuses
-`comb_eval` scoring primitives, `dat_eval` validity/specificity pipeline, and
-the `benchmarks.json` LIB pool (~31 models). No eval code yet; next is the
-Wikidata subgraph backend. Target: COLM 2026 LM4Sci, 8pp non-archival,
-deadline June 23 2026.
+**Vs CREATE** ([Wadhwa et al. 2026, arXiv 2603.09970](https://arxiv.org/abs/2603.09970),
+which already does Wikidata multi-hop paths at test time): the moat is the
+**grounded constraint taxonomy + the per-constraint ideation–execution
+decomposition** (CREATE = the no-constraint baseline). Verification (open-KG +
+LLM judge) and novelty (validated DAT measure) are **shared ground, not
+differentiators**. Central risk: *grounding rigor* — each constraint's mapping
+to a real-world rule must be defensible/cited.
+
+**Status (2026-07-20)**: full pipeline built end-to-end — Wikidata builder
+(frequency-derived relation vocab, domain-tagged seeds), matched-bundle + random
+Regime-B samplers, CREATE-aligned open-vocab prompts, OpenRouter/local-MLX
+elicitation, gpt-oss-120b judge, local-MLX novelty embeddings, aggregator, plots.
+The **analogy tier** became the session's empirical focus: on **200 random entity
+pairs × 8 models** (Llama-3.1-8B → Sonnet-4.6), even the best models find a valid
+(strict structure-mapping) analogy between arbitrary entities only ~26% of the
+time, and anchor embedding distance is a *weak/structural, not distributional*,
+predictor of difficulty (report: `docs/reports/2026-07-20_kg_creat_analogy/`). A
+blind judge-reliability review harness (web UI) is ready but the human pass is
+pending. **The Regime-A constraint 2×2 — the paper's intended headline — is only
+piloted on weak local models and not yet scaled to frontier.** Detailed state in
+`docs/tracks/kg_creat/progress.md`.
 
 ### plot_twist — TwistBench (SUBMITTED 2026-06-24, Sci-FM @ COLM 2026)
 

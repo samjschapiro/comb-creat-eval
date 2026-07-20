@@ -83,6 +83,59 @@ The per-constraint ideation–execution decomposition is the *empirical demonstr
 the headline. Full comparison table: [novelty_vs_create.md](novelty_vs_create.md).
 Planned submission narrative/outline: [paper_outline.md](paper_outline.md).
 
+## Status — 2026-07-20 (full pipeline built end-to-end; first analogy result)
+
+The entire eval pipeline now runs end-to-end, and the **analogy tier (constraint family V)
+became the session's empirical focus** — a first real result exists. Report:
+[docs/reports/2026-07-20_kg_creat_analogy/](../../reports/2026-07-20_kg_creat_analogy/report.md).
+
+**Environment (Mac).** The repo's pinned `torch==2.6.0+cu124` is unusable on macOS/py3.14, so
+`uv sync` fails here. Round-1 is **torch-free**: the main `.venv` (3.14) runs graph/sample/
+elicit with `uv pip install`'d deps; a second **`.venv_mlx` (3.12)** runs MLX for local
+model serving, local embeddings, and the scorer. (Lambda/CUDA hosts unaffected.)
+
+**Built this session** (all in `src/kg_creat/`, orchestration in `scripts/`, configs in
+`configs/kg_creat/`, outputs to gitignored `data/kg_creat/`):
+- `wikidata.py` — REST-BFS builder over a **frequency-derived** relation vocabulary (top-N
+  most-used properties, minus a documented admin/attribute stoplist — *not* hand-picked);
+  **domain-tagged seeds** (each entity inherits its reaching seed's domain, so domain is a
+  study variable); cached typed `G_c` (domain build: 3,442 entities / 13 domains / 24 relations).
+- `sample.py` — matched-bundle sampler (Regime A: biting exclusion/inclusion/categorical/
+  ordering) + **random** Regime-B endpoint sampler (analogy/blending pairs drawn at random
+  from `G_c`, seeded — deliberately hard, no curation).
+- `prompts.py` — CREATE-aligned prompts (its scaffolding + our constraint block); **open
+  vocabulary** for the model (controlled-vocab was tried then reverted).
+- `run_elicit.py` (OpenRouter + local-MLX via `LLM_BASE_URL`, budget cap, per-model resume),
+  `judge.py` (CREATE's gpt-oss-120b factuality prompt + semantic analogy/blending + relation-
+  constraint judges), `embed.py` (local MLX MiniLM for novelty `R`), `aggregate.py`, `score.py`,
+  four plotters, and the blind judge-reliability review harness (`sample_review.py`,
+  `review_server.py` web UI with auto-logging, `score_review.py`).
+
+**Design decisions locked this session** (several reverse earlier assumptions):
+- **No exact hop count** — variable-length paths, matching CREATE (`h` used only for sampling).
+- **Open-vocabulary relations** for the model; the derived vocabulary is a graph/BFS reference only.
+- **Constraint checking is judge-based** under open vocab (the "exact/judge-free constraints"
+  claim is dropped; the contribution remains the typology + the ideation–execution decomposition).
+- **Analogy validity is strict structure-mapping**: exact relation-sequence match ∧ disjoint
+  structures ∧ node-distinct ∧ factual ∧ judged role-correspondence. (Getting this right took
+  several iterations — paraphrased relations, loop-backs, and shared entities each inflated the rate.)
+
+**First analogy result (n=200 random pairs × 8 models, gpt-oss-120b judge, ≈$5.7).**
+Even the best models (Sonnet-4.6 26.0%, Haiku-4.5 25.5%) find a valid analogy between two
+arbitrary entities only ~1-in-4 times; field spans 1–26% (Llama-3.1-8B → Sonnet). Complementary
+per-pair analysis: **anchor embedding distance is a weak predictor** (Pearson −0.14, Spearman ≈0)
+— analogical difficulty is *structural, not distributional*.
+
+**Regime-A (the constraint typology, still the paper's intended headline)** was only *piloted*
+(≈10 matched bundles, weak local Qwen-3B/7B): the `plot_novelty_utility` 2×2 shows exclusion
+"handled" vs inclusion/categorical/ordering pushing toward the gap, but capability failures
+(structural/factual) dominate at that model scale — **not yet scaled to frontier models**.
+
+**Next:** (1) run the blind judge-reliability review (harness ready) → the CREATE-comparable
+number; (2) scale Regime A to frontier models (the constraint 2×2 is the paper's core, and is
+under-explored vs analogy this session); (3) `score.py` analogy-success is computed in the
+plotters, not `score.py` itself — fold it in; (4) broader, less academia-heavy seeds.
+
 ## Status — 2026-06-04 (Phase 1 started: KG abstraction landed)
 
 The KG-agnostic core of the eval engine is in. `src/kg_creat/graph.py` defines

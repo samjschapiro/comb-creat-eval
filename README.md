@@ -8,8 +8,12 @@ designs new tests on top of that infrastructure (headline:
 DRAT — a hybrid of RAT and DAT); `plot_twist` benchmarks
 *transformational* creativity via literary plot twists (TwistBench), scoring
 twists on surprise, coherence, diversity, and realism, with the first
-human-vs-LLM comparison. Paper drafts live in `papers/iccc-2026/`
-(dat_eval/new_tests) and `papers/pt2cb-iclr-2027/` (plot_twist).
+human-vs-LLM comparison; `kg_creat` administers a real-knowledge-graph
+(Wikidata) combinatorial-creativity task to frontier models — a constraint
+taxonomy plus an analogy tier (can a model find a valid analogy between two
+*arbitrary* entities?). Paper drafts live in `papers/iccc-2026/`
+(dat_eval/new_tests), `papers/pt2cb-iclr-2027/` (plot_twist), and
+`papers/kg_creat-iclr/` (kg_creat).
 
 ## Setup
 
@@ -53,6 +57,14 @@ uv run python src/comb_eval/scripts/add_arc_agi_scores.py
 uv run python src/plot_twist/scripts/run_generate.py configs/plot_twist/generate_llm_twists.yaml
 uv run python src/plot_twist/scripts/run_realism.py configs/plot_twist/realism.yaml
 uv run python src/plot_twist/scripts/make_tc_barplot.py configs/plot_twist/tc.yaml
+
+# 6. kg_creat: build a Wikidata graph, sample prompts, elicit, judge, plot
+#    (on macOS, torch is unavailable — use a torch-free venv; see docs/tracks/kg_creat/progress.md)
+uv run python src/kg_creat/scripts/build_gc.py configs/kg_creat/build_gc.yaml --overwrite
+uv run python src/kg_creat/scripts/sample_bundles.py configs/kg_creat/sample_bundles.yaml --overwrite
+uv run python src/kg_creat/scripts/run_elicit.py configs/kg_creat/run_elicit.yaml
+uv run python src/kg_creat/scripts/score.py configs/kg_creat/score.yaml
+uv run python src/kg_creat/scripts/plot_analogy_suite.py data/kg_creat/scores_analogy_v2
 ```
 
 ## Safety

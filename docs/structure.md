@@ -37,9 +37,16 @@ src/
 │       ├── run_liveideabench.py     # LiveIdeaBench wrapper runner
 │       ├── run_noveltybench.py      # NoveltyBench wrapper runner
 │       └── run_rat.py               # RAT wrapper runner
-├── kg_creat/                   # active track (test-time Comb-Creat on a real KG)
-│   │                           # scaffolded 2026-06-01; eval engine TBD (Phase 1)
-│   └── scripts/                # graph.py (Wikidata loader) + scoring port to come
+├── kg_creat/                   # active track (test-time Comb-Creat on a real KG); pipeline built 2026-07-20
+│   ├── graph.py                # KG-agnostic KnowledgeGraph (typed path enumeration)
+│   ├── wikidata.py             # REST-BFS builder: freq-derived relation vocab, domain-tagged seeds
+│   ├── sample.py               # matched-bundle (Regime A) + random analogy/blend (Regime B) samplers
+│   ├── prompts.py              # CREATE-aligned, open-vocabulary prompt renderer
+│   ├── judge.py                # gpt-oss-120b factuality + semantic + relation-constraint judges
+│   ├── embed.py                # local MLX MiniLM embeddings (novelty R)
+│   ├── scoring.py, parse.py, aggregate.py
+│   ├── vendor/create/          # vendored CREATE scorer (author-cleared)
+│   └── scripts/                # build_gc, sample_bundles, run_elicit, score, plot_*, *_review (blind judge-reliability UI)
 └── plot_twist/                 # active track (TwistBench: transformational creativity via plot twists)
     ├── llm.py                  # OpenRouter wrapper (+ optional `reasoning` param)
     ├── generate.py             # durable per-story twist generation (multi-temp, resumable)
