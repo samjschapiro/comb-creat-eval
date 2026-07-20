@@ -1,9 +1,17 @@
-# Planned submission — kg_creat (COLM 2026 LM4Sci)
+# Planned submission — kg_creat
 
-Working title: **Constraints Make a Knowledge Graph a Creativity Test:
-A Constraint-Tunable, Test-Time Eval that Predicts Scientific Ideation**
+> **Reframed 2026-06-04 (Jonah Black).** Headline is no longer "predicts scientific
+> ideation (LIB correlation)" — that arm is **dropped**. The paper is now a **diagnostic**
+> of the **ideation–execution gap**, decomposed by a taxonomy of constraints (each a
+> minimal abstraction of a real-world rule). See [design.md](design.md) §Study framing for
+> the authoritative statement; this outline is being brought in line with it (§6, §9
+> rewritten; §2/§5 de-LIB'd). **Venue** (was COLM LM4Sci) is under reconsideration — the
+> framing is broader than scientific discovery.
 
-Target: COLM 2026 LM4Sci, 8pp main (non-archival), deadline **June 23 2026 AOE**.
+Working title (new): **Which Rules Can LLMs Break Creatively? A Constraint Taxonomy for
+the Ideation–Execution Gap.** *(alt: "Creative but Non-Compliant: Decomposing the
+Ideation–Execution Gap with Knowledge-Graph Constraints")*
+
 This doc is **task-first**: it pins down exactly what the test does, with a worked
 example carried through verification and scoring. Prose/section structure follows
 [writing_advice.md](../../writing_advice.md) later; the narrative is at the bottom.
@@ -40,8 +48,9 @@ the paths are.
   KGs **Hetionet** (built for typed multi-hop paths), then **PrimeKG**, optionally DRKG.
   **Hard rule: relation-rich only** — citation graphs (ACL/OpenAlex) and MeSH are out
   (too few relation types to constrain over).
-- **Cross-KG agreement is evidence**: a score that tracks LIB on Wikidata *and* Hetionet
-  *and* PrimeKG is a property of the constrained-pathfinding construct, not one graph.
+- **Cross-KG agreement is evidence**: the same per-constraint tradeoff signature on
+  Wikidata *and* Hetionet *and* PrimeKG makes it a property of the constraint *type*, not
+  one graph's idiosyncrasies.
 
 ## 3. Anatomy of a prompt
 
@@ -130,8 +139,10 @@ Per **valid** path `P` (`|I|`, `|X|` = sizes of the include/exclude sets):
   type-`t` constraints, `factual` = judge verdict. Constraint part **exact**, factuality
   **judged**. The multiplier: **the more constraints imposed, the more a satisfying path
   is worth.** (Inclusion/exclusion `(1+α_I|I|)(1+α_X|X|)` is the special case.)
-- **Per-model** `C = E_x[ A({R(P)·U(P;x)}; D) ]` — quality×diversity aggregate (greedy
-  `s_γ` like CREATE, or mean·`D`; pilot decision).
+- **Per-model (secondary)** `C = E_x[ A({R(P)·U(P;x)}; D) ]` — quality×diversity aggregate
+  (greedy `s_γ` like CREATE, or mean·`D`; pilot decision). **Demoted** under the pivot: the
+  headline is the per-constraint ideation–execution decomposition (§6), not this collapsed
+  score, and there is no external benchmark to correlate it against.
 - **Baselines/ablations** (show the redesign beats them): label-surprise `S(P)`;
   CREATE-style edge **specificity** `σ` (judge or construction-subgraph lookup);
   path **non-obviousness** (excess over geodesic).
@@ -145,27 +156,39 @@ regardless of its remoteness.
 **Judge usage, stated precisely (don't overclaim):** *factuality* is **judge-based**
 (CREATE-aligned) — not a differentiator. What stays deterministic: the **constraint
 apparatus** (exact on the verified path) and **novelty/diversity** (embeddings, no LLM
-judge). The differentiation from CREATE is constraints + utility + LIB validation, not
-judge-freeness.
+judge). The differentiation from CREATE is the **constraint taxonomy (grounded as
+real-world rules) + the per-constraint ideation–execution decomposition**, not
+judge-freeness and no longer an external-benchmark correlation.
 
-## 6. Difficulty lever & the trade-off we expect to recover
+## 6. The headline: per-constraint ideation–execution tradeoff
 
-Difficulty is **2-D: constraint count × constraint type.** Sweeping count (`|I|`, `|X|`,
-…) is the continuous knob; varying *type* (the constraint-type ablation, §8) asks which
-methodological pressure makes the task ideation-predictive. Hypothesis to pre-register:
-types map to **LIB facets** (waypoint/categorical "conceptual-bridge" → originality;
-ordering/budget → feasibility). Count sweep first:
+**This is the paper's core result** (authoritative statement: [design.md](design.md)
+§Study framing). For each constraint type `t`, over the matched endpoint bundles, we
+measure two axes:
 
-- Small `|I|`: many routes qualify → models find high-remoteness paths → high `R`, easy `U`.
-- Large `|I|`: the feasible route set collapses toward the few constrained paths →
-  remoteness must drop to stay valid. This is Comb-Creat's **novelty–utility trade-off**,
-  which we expect to **recover at frontier scale** (it was shown only for ≤100M *trained*
-  models). Report **solve-rate separately** so a novelty drop is not confounded with the
-  model simply failing (the capability/creativity decoupling `comb_eval` already enforces).
+- **Ideation** `R_emit(t)` — novelty (embedding remoteness) of the model's *emitted* path,
+  validity-agnostic: *did it reach for a creative connection?*
+- **Execution** `sat(t)` — fraction of emitted paths that pass all three validity checks,
+  with failure **channels** (structural / hallucinated-edge / constraint-violation).
 
-This sweep is also the cleanest **construct-validity** evidence: if the score were just
-"can the model do graph search," it would not trade novelty against constraints the way
-a creativity score should.
+Plotting constraint types in (`R_emit`, `sat`) space is the finding:
+
+| | high `sat(t)` | low `sat(t)` |
+|---|---|---|
+| **high `R_emit`** | handled creatively | **the ideation–execution gap for `t`** |
+| **low `R_emit`** | obeyed by playing safe | just hard (degrades both) |
+
+The **difficulty lever** (constraint count × type) still exists and is what generates the
+tradeoff — as constraint load grows the feasible route set collapses and `R` must drop to
+stay valid (Comb-Creat's **novelty–utility trade-off**, expected to recover at frontier
+scale, shown only for ≤100M *trained* models before). But the question is no longer "does
+the score predict LIB"; it is **which constraint types force the gap vs which force safe
+play**, read off the 2×2 and the within-bundle deltas. Reporting `sat` and its channels
+separately is the capability/creativity decoupling `comb_eval` already enforces.
+
+This is also the cleanest **construct-validity** evidence: if the task were just "can the
+model do graph search," constraints would not trade novelty against satisfaction the way
+they do here.
 
 ## 7. Why it is hard / creative, not trivial pathfinding
 
@@ -185,13 +208,17 @@ a creativity score should.
    per KG how many seeds, how many hops, which relation whitelist Σ, and how hard to
    restrict to parametrically-known entities. Trades coverage against tractability; gated
    per KG by the Phase-2 coverage rate.
-2. **Endpoint/constraint sampler** — how `(u,v)` and the typed constraints `K` are drawn;
-   must be **pre-registered** to avoid the DRAT anchor-bank degrees-of-freedom problem.
-   Per constraint: it should be *satisfiable* (∃ a valid path) and *bite* (remove the
-   majority/obvious routes), both checkable on `G_c` before the prompt is used.
-2b. **Headline constraint-type set** for the type ablation — recommended core:
+2. **Matched endpoint-bundle sampler** — the unit is a bundle (fixed `(u,v,h,k)`)
+   instantiated as {no-constraint baseline + one prompt per constraint type at matched
+   count}, so within-bundle deltas isolate the *type* effect (§design.md Task). Each
+   constraint must be *satisfiable* (∃ a valid path) and *bite* (remove the majority/obvious
+   routes), checkable on `G_c` first. Must be **pre-registered** (DRAT anchor-bank lesson).
+2b. **Headline constraint-type set** for the decomposition — recommended core:
    inclusion, exclusion, categorical, waypoint, ordering/metapath (budget/polarity as
    biomedical extras; counterfactual as the flagged stretch).
+2c-grounding. **The grounding table** (make-or-break, §design.md Risks) — one defensible
+   real-world creative-generation rule per constraint type, ideally with a citation. Draft
+   and pressure-test this *before* running, since it is the actual contribution.
 2c. **Factuality judge** — adopt CREATE's gpt-oss-120b as-is vs improve it; the
    reliability target; how categorical/polarity entity-type lookups are resolved.
 3. **Entity linking of model output** — names → QIDs/PIDs (for constraint checking and
@@ -204,27 +231,38 @@ a creativity score should.
 
 ## 9. Narrative & evidence (compressed — full prose later per writing_advice)
 
-**Two claims.** (1) Adding a **typology of constraints** to CREATE-style open-KG
-association yields a creativity test with an **explicit, tunable difficulty lever**
-(count × type) whose constraints are **exactly enforced** on the judge-verified path —
-structure unconstrained association cannot express. (2) Its per-model scores **predict
-LiveIdeaBench with specificity** after controlling for capability
-`g = (Arena-Overall, MMLU-Pro)`, where semantic-distance tests do not, and `[TBD]` vs
-CREATE. **Takeaway:** *constraints*, not a richer graph or a better judge, are the
-active ingredient.
+**Hook: the ideation–execution gap.** LLMs are widely observed to generate strong ideas
+but execute them worse — prior work documents the *what*, not the *why*. We give a
+mechanistic decomposition: constrain a creative generation task with a **taxonomy of
+constraints, each a minimal abstraction of a real-world rule creative work must obey**, and
+measure — per constraint type — **ideation** (did the model reach for a novel connection?)
+against **execution** (did it satisfy the rule and stay factual?).
+
+**Two claims.** (1) A **grounded constraint taxonomy** on a CREATE-style open-KG task
+turns "connect these entities" into a controllable probe of *rule-following under a
+creativity demand* — structure unconstrained association cannot express. (2) The
+per-constraint **ideation–execution decomposition reveals which rules LLMs break
+creatively vs which make them play safe**: some constraints hold satisfaction high only by
+collapsing novelty; others preserve novelty but are frequently violated (the gap). This
+*localizes* the ideation–execution gap to specific constraint types — the "why."
+**Takeaway:** the gap is not uniform; it is constraint-type-specific, and the taxonomy
+predicts where it appears.
 
 **Evidence each claim needs:**
-- Claim 1 — the constraint-count sweep produces a real difficulty lever (variance +
-  novelty–utility trade-off, §6); the **factuality-judge reliability analysis** (human
-  spot-check agreement; must quantify, ideally beat CREATE's 0.52 precision).
-- Claim 2 — validity `r(C, LIB)` and specificity `r(C, LIB|g)` with bootstrap CIs,
-  on the same ≈31-model pool as DAT/CDAT/PACE/DRAT (and CREATE if Phase 4 runs it).
-  Frame as effect-size + frontier comparison, **not** `p<.05` (n is small; dat_eval hit
-  this wall on LIB).
-- Supporting — the constraint-*type* ablation (which type predicts LIB / its facets).
+- Claim 1 — the constraint lever produces real variance (count × type sweep, §6); the
+  **factuality-judge reliability analysis** (human spot-check; quantify, ideally beat
+  CREATE's 0.52 precision), since the judge gates the execution axis.
+- Claim 2 — the **per-constraint 2×2** (`R_emit(t)`, `sat(t)` + failure channels) over
+  matched bundles, with within-bundle deltas and CIs; the pattern replicated **across KGs**
+  (§Cross-KG) and shown **across a capability range of models** (is the gap universal or
+  ranked?). CREATE = the no-constraint cell of every bundle (natural baseline).
+- Supporting — the **grounding table** (constraint type → real-world rule + citation); the
+  secondary per-model aggregate `C`.
 
-**Limitations to state up front:** **judge reliability** (factuality is LLM-judged,
-CREATE-aligned — we inherit its 0.52-precision risk); **narrower moat vs CREATE**
-(verification + novelty are shared ground; the contribution is constraints + utility +
-validation); small n; sampler degrees of freedom; LIB itself is a judge-based criterion;
-one graph family (Wikidata) with scientific-KG generality only an ablation.
+**Limitations to state up front:** **grounding rigor** (the taxonomy must be defensible,
+not arbitrary — the central risk); **judge reliability** (factuality is LLM-judged,
+CREATE-aligned; but note only the *factual* failure channel is judge-dependent —
+constraint violations are exact); **ideation proxied by embedding remoteness** (a remote
+path can still be nonsensical); sampler degrees of freedom; single graph family per arm
+with cross-KG generality as the robustness check. **No LIB / external-benchmark claim** —
+dropped by design; the contribution is the diagnostic, not a correlation.

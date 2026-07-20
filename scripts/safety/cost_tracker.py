@@ -39,6 +39,8 @@ PRICING = {
     "openai/gpt-5-nano":                (0.30, 1.20),
     "openai/gpt-4o":                    (2.50, 10.00),
     "openai/gpt-4o-mini":               (0.15, 0.60),
+    "openai/gpt-oss-120b":              (0.09, 0.45),  # CREATE factuality judge
+    "google/gemini-2.5-flash-lite":     (0.10, 0.40),
     "openai/gpt-4.1":                   (2.00, 8.00),
     "openai/gpt-4.1-mini":              (0.40, 1.60),
     "openai/gpt-4.1-nano":              (0.10, 0.40),

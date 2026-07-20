@@ -1,0 +1,35 @@
+# Build a DOMAIN-SPANNING Wikidata G_c. Domain is a key independent variable, so seeds are
+# chosen to deliberately cover distinct domains (one anchor per domain); every entity inherits
+# the domain of the seed whose neighborhood reached it. The relation vocabulary is still
+# frequency-derived, and the analogy/blend pairs are still randomly sampled from the graph.
+output_dir: data/kg_creat/gc_domains_v1
+name: gc_domains_v1
+radius: 2
+max_neighbors_per_relation: 40
+top_n_relations: 24
+vocab_sample_radius: 1
+vocab_survey_entities: 800
+
+seeds:                       # {well-known anchor: domain}
+  Albert Einstein: science
+  Charles Darwin: science
+  Leonardo da Vinci: art
+  Pablo Picasso: art
+  Ludwig van Beethoven: music
+  The Beatles: music
+  William Shakespeare: literature
+  Homer: literature
+  Alfred Hitchcock: film
+  Abraham Lincoln: politics
+  Napoleon: politics
+  Japan: geography
+  Amazon rainforest: geography
+  Lion: biology
+  Honey bee: biology
+  Internet: technology
+  Steam engine: technology
+  Muhammad Ali: sports
+  Association football: sports
+  Aristotle: philosophy
+  Coffee: food
+  Buddhism: religion

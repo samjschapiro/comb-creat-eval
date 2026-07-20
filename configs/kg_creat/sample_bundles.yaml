@@ -1,0 +1,21 @@
+# Sample the round-1 prompt set from the cached pilot G_c.
+upstream_dir: data/kg_creat/gc_domains_v1      # domain-spanning G_c (from build_gc.py)
+output_dir: data/kg_creat/prompts_domains_v1
+
+sampler:                # Regime A (matched bundles: baseline + biting A-D constraints)
+  h: 3
+  k: 5
+  min_routes: 6         # >= this many h-hop routes so constraints bite without breaking
+  min_degree: 4         # endpoints must be prominent (undirected degree)
+  max_bundles: 10
+  max_paths: 64         # cap on enumerated feasible routes (biting stats are relative to this)
+  require_constraints: 3  # keep a bundle only if >= 3 of the 4 A-D types bite-and-satisfy
+  max_per_source: 2     # <= 2 bundles per source entity, for endpoint diversity
+
+regime_b:               # analogy/blending endpoints = RANDOM entity pairs from G_c (seeded).
+  # No hand-curation: the task is to find a valid analogy/blend between arbitrary, non-obviously
+  # related entities -- that difficulty is the point. Curated canonical pairs would trivialize it.
+  n_analogy: 200
+  n_blend: 6
+  seed: 0
+  min_degree: 3         # endpoints are real (non-class) entities with some connectivity

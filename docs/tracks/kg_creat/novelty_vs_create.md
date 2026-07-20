@@ -1,18 +1,23 @@
 # kg_creat vs CREATE — methodological novelty
 
-The single most important thing to articulate for the LM4Sci resubmission: how a
-real-KG port of Comb-Creat differs from CREATE
+> **Updated 2026-06-04 pivot.** The LIB-validation leg of the moat is **dropped**; the
+> differentiator is now the **grounded constraint taxonomy + the per-constraint
+> ideation–execution decomposition** (see [design.md](design.md) §Study framing).
+
+How a real-KG, constrained port of Comb-Creat differs from CREATE
 ([Wadhwa et al. 2026, arXiv 2603.09970](https://arxiv.org/abs/2603.09970)), which
 *already* runs Wikidata multi-hop paths between two endpoints with quality×diversity
 scoring at test time.
 
-**Lead with the constraints** (locked): the **typology of methodological constraints**
-(inclusion/exclusion + categorical/waypoint/ordering/…), **constraint-weighted utility**,
-and **validation against LiveIdeaBench**. We share CREATE's open-KG + LLM-judge
+**Lead with the constraints** (locked): a **typology of constraints, each a minimal
+abstraction of a real-world rule creative generation must obey** (inclusion/exclusion +
+categorical/waypoint/ordering/…), **constraint-weighted utility**, and the **per-constraint
+ideation–execution decomposition** they enable. We share CREATE's open-KG + LLM-judge
 verification (reverted from exact checking 2026-06-02 — see below), so **verification is
 *not* a differentiator**, and novelty uses the *validated* DAT measure, so **novelty
-scoring is *not* a differentiator** either. The moat is constraints + utility + LIB
-validation. State this honestly.
+scoring is *not* a differentiator** either. The moat is **constraints (grounded as
+real-world rules) + the diagnostic tradeoff finding** — no longer an external-benchmark
+correlation. State this honestly.
 
 ## Side-by-side
 
@@ -24,28 +29,30 @@ validation. State this honestly.
 | Factuality check | **LLM-as-judge** (0.94 recall, 0.52 precision on bad relations) | **same** — LLM-as-judge (we adopt/improve CREATE's, + a reliability analysis) |
 | Prompt | two endpoints `(x, y)` sampled from a `(relation, category)` class | endpoints `(u, v)` **+ a set `K` of typed constraints + hop count `h`** |
 | **Constraints** | **none** | **a typology**: inclusion / exclusion / categorical / waypoint / ordering-metapath / budget / polarity — enforced exactly on the verified path |
-| **Difficulty tuning** | not tunable (fixed by sampled class) | **2-D: constraint count × type** (type ablation = which pressure predicts LIB / its facets) |
+| **Difficulty tuning** | not tunable (fixed by sampled class) | **2-D: constraint count × type** (type is the analysis axis: which pressure forces the ideation–execution gap) |
 | Novelty | judge-graded specificity buckets `σ ∈ {1..5}` | **semantic remoteness** `R(P)` = DAT mean pairwise embedding distance over path entities — *deliberately the validated DAT measure, not a novel formula* |
 | **Utility** | `f(u) = 1[factual] · min σ` | `(∏_t (1+α_t·n_t)) · 1[valid ∧ factual]` — **constraint-load weighted** |
 | Diversity / set scoring | greedy `s_γ` with cosine-annealed string distance | separate set-level term: mean pairwise distance over the `k` valid paths (embedding / Jaccard·edit) |
 | Trade-off recovered | — | **novelty–utility trade-off** (Comb-Creat's headline curve), as constraint load grows |
-| **External-criterion validation** | none (no correlation to an ideation benchmark) | **validity + specificity vs LiveIdeaBench** under the dat_eval frontier |
+| **Headline analysis** | per-model quality×diversity score | **per-constraint-type ideation–execution decomposition** (`R_emit`/`sat` 2×2) — the diagnostic of the ideation–execution gap; CREATE is the no-constraint cell |
+| External-criterion validation | none | none (LIB arm dropped 2026-06-04 — the contribution is the diagnostic, not a correlation) |
 
 ## The three sentences for the paper
 
 1. CREATE measures associative creativity as endpoint-to-endpoint multi-hop path
    generation scored by judge-graded specificity and cross-path diversity, with no
-   way to *control task difficulty* and no validation against an external creativity
-   criterion.
+   way to *control task difficulty* and no way to attribute failure to a rule.
 2. On the **same open-KG, judge-verified setup** as CREATE, we add a **typology of
-   methodological constraints** (inclusion/exclusion/categorical/waypoint/ordering) and
-   a **constraint-load-weighted utility**, which makes difficulty an explicit, 2-D
-   (count × type) lever and recovers the novelty–utility trade-off — structure CREATE's
-   unconstrained association task has no way to express. Novelty is the validated DAT
-   semantic-distance measure (not a new formula).
-3. We then validate the test where CREATE does not: its per-model scores **correlate
-   with LiveIdeaBench** under the validity/specificity framework — the first KG-based
-   creativity test shown to predict scientific ideation.
+   constraints — each a minimal abstraction of a real-world rule creative generation must
+   obey** (inclusion/exclusion/categorical/waypoint/ordering) with a
+   **constraint-load-weighted utility**, making difficulty an explicit, 2-D (count × type)
+   lever — structure CREATE's unconstrained task cannot express. Novelty is the validated
+   DAT semantic-distance measure (not a new formula).
+3. Using matched endpoint bundles (same endpoints, toggle only the constraint), we
+   decompose each model's behavior per constraint type into **ideation** (novelty of the
+   emitted path) vs **execution** (constraint satisfaction + factuality), giving a
+   **mechanistic account of the ideation–execution gap** — *which rules LLMs break
+   creatively vs which make them play safe* — that a single unconstrained score cannot see.
 
 ## Why we (like CREATE) use a judge, not exact checking
 
@@ -79,7 +86,11 @@ apparatus stays rigorous even though factuality is judged).
   verification is shared ground, not a differentiator.
 - Not a new **novelty measure** — we deliberately use the *validated* DAT semantic-
   distance measure (both we and CREATE score in embedding-distance space).
-- The contribution is concentrated in **(1) the constraint *typology* (inclusion /
-  exclusion / categorical / waypoint / ordering / …) as a 2-D difficulty + diagnostic
-  axis, (2) constraint-load-weighted utility (exactly enforced on the verified path),**
-  and (3) *validating* the test against LiveIdeaBench — not in verification or novelty.
+- Not an external-benchmark correlation — the LIB validity/specificity arm is **dropped**
+  (2026-06-04); we do not claim the score predicts an ideation benchmark.
+- The contribution is concentrated in **(1) the constraint *typology*, grounded as minimal
+  abstractions of real-world creative-generation rules (inclusion / exclusion / categorical
+  / waypoint / ordering / …) as a 2-D difficulty axis, (2) constraint-load-weighted utility
+  (exactly enforced on the verified path), and (3) the per-constraint ideation–execution
+  decomposition** as a mechanistic diagnostic of the ideation–execution gap — not in
+  verification or novelty scoring.

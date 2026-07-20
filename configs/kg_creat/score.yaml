@@ -1,0 +1,12 @@
+# Re-judge the local pilot's elicited paths with CREATE's judge (gpt-oss-120b via OpenRouter).
+# Run WITHOUT LLM_BASE_URL set so the judge routes to OpenRouter; embeddings stay local (MLX).
+upstream_dir: data/kg_creat/responses_analogy_v2
+output_dir: data/kg_creat/scores_analogy_v2
+
+judge:
+  enabled: true
+  model: openai/gpt-oss-120b     # CREATE's factuality judge; reliable, ~$0.20 for this pilot
+  concurrency: 16                # OpenRouter parallelizes well (unlike the serial local server)
+
+embedding:
+  model: mlx-community/all-MiniLM-L6-v2-4bit

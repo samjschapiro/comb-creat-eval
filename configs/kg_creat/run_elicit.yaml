@@ -1,0 +1,21 @@
+# Round-1 elicitation. For the free shakedown, point LLM_BASE_URL at the local MLX
+# server and use the served model id below (budget cap is bypassed in local mode).
+# For the paid pilot, unset LLM_BASE_URL and swap in OpenRouter model ids + a budget.
+upstream_dir: data/kg_creat/prompts_domains_v1
+output_dir: data/kg_creat/responses_analogy_v2   # fresh: tightened exact-relation analogy prompt
+modes: [analogy]         # analogy-only, n=200, model suite
+
+eval:
+  temperature: 0.7
+  max_tokens: 1200
+concurrency: 12
+budget_usd: 8.0          # OpenRouter cap (suite est ~$5.4 elicitation)
+models:                  # capability spread, cheap -> frontier
+  - meta-llama/llama-3.1-8b-instruct
+  - openai/gpt-4o-mini
+  - google/gemini-2.5-flash-lite
+  - meta-llama/llama-3.3-70b-instruct
+  - openai/gpt-4.1-mini
+  - google/gemini-2.5-flash
+  - anthropic/claude-haiku-4.5
+  - anthropic/claude-sonnet-4.6
