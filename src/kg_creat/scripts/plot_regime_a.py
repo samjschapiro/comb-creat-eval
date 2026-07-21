@@ -107,6 +107,76 @@ def fig_2x2(summ, models, colors, out):
     print(f"saved {out}")
 
 
+def fig_creativity(summ, models, colors, out):
+    """Creativity (the dependent variable) against constraint type (the independent variable).
+
+    Left: E[R·U] per cell, with each model's own unconstrained baseline as its reference line —
+    the quantity creativity research actually cares about, novelty and utility jointly.
+    Right: the same data decomposed into its two factors, with iso-creativity hyperbolas. A point's
+    creativity is its position relative to those curves, which makes visible whether a constraint
+    sits on the novelty-utility frontier or genuinely beats it.
+    """
+    fig, (axL, axR) = plt.subplots(1, 2, figsize=(14.5, 5.8),
+                                   gridspec_kw={"width_ratios": [1.15, 1]})
+    _style(axL)
+    _style(axR)
+
+    # Order the levels by the dependent variable, so the panel reads as the ranking of constraint
+    # types it is rather than as a shape imposed by the order the taxonomy happens to list them in.
+    def _pooled(cell):
+        v = [summ[m]["per_mode"].get(cell, {}).get("creativity") for m in models]
+        v = [x for x in v if x is not None]
+        return sum(v) / len(v) if v else -1
+    cells = ["baseline"] + sorted(MODES, key=_pooled, reverse=True)
+    xs = range(len(cells))
+    for m in models:
+        c, a = colors[m]
+        ys = [summ[m]["per_mode"].get(k, {}).get("creativity") for k in cells]
+        axL.plot(list(xs), ys, marker="o", ms=6, lw=1.6, color=c, alpha=a,
+                 label=PRETTY.get(m, m), zorder=4)
+        axL.axhline(ys[0], color=c, alpha=a * 0.28, lw=0.9, ls=":", zorder=2)
+    axL.set_xticks(list(xs))
+    axL.set_xticklabels(["Baseline\n(no constraint)"] + [MODE_LABEL[m].replace(" (", "\n(") for m in cells[1:]],
+                        fontsize=8.5, color=INK)
+    axL.set_ylabel("Creativity   E[R · U]", fontsize=10.5, color=MUTED)
+    axL.set_title("Creativity by constraint type\n(dotted = that model's own baseline)",
+                  fontsize=12, color=INK, pad=10)
+    axL.legend(frameon=False, fontsize=8, ncol=2)
+
+    # Iso-creativity contours: creativity = sat × R_valid, so equal-creativity sets are hyperbolas.
+    import numpy as np
+    sat = np.linspace(0.02, 0.85, 200)
+    for level in (0.05, 0.10, 0.15, 0.20, 0.25, 0.30):
+        r = level / sat
+        keep = (r >= 0.30) & (r <= 0.60)
+        if keep.any():
+            axR.plot(sat[keep], r[keep], color=GRID, lw=1.0, zorder=1)
+            i = int(np.argmax(keep))
+            axR.annotate(f"{level:.2f}", (sat[keep][0], r[keep][0]), fontsize=7.5,
+                         color=MUTED, va="bottom", ha="left", zorder=1)
+    markers = {"baseline": "*", "exclusion": "o", "inclusion": "s",
+               "inclusion_rare": "D", "ordering": "^", "categorical": "P"}
+    for m in models:
+        c, a = colors[m]
+        for cell in cells:
+            pm = summ[m]["per_mode"].get(cell, {})
+            x, y = pm.get("sat_rate"), pm.get("R_valid")
+            if x is None or y is None:
+                continue
+            axR.scatter([x], [y], s=130 if cell == "baseline" else 78, marker=markers[cell],
+                        color=c, alpha=a, edgecolors="white", linewidths=0.8, zorder=5)
+    axR.set_xlabel("Utility   (success rate)", fontsize=10.5, color=MUTED)
+    axR.set_ylabel("Novelty of the useful artifacts   (R_valid)", fontsize=10.5, color=MUTED)
+    axR.set_title("Creativity decomposed\n(grey curves = equal creativity)", fontsize=12, color=INK, pad=10)
+    axR.legend(handles=[Line2D([0], [0], marker=markers[c], color="w", markerfacecolor=MUTED,
+                               markersize=9, label=("Baseline" if c == "baseline" else MODE_LABEL[c]))
+                        for c in cells],
+               loc="upper right", frameon=False, fontsize=8.5)
+    fig.tight_layout()
+    fig.savefig(out, dpi=150, bbox_inches="tight", facecolor="white")
+    print(f"saved {out}")
+
+
 def fig_channels(summ, models, out):
     fig, axes = plt.subplots(1, len(MODES) + 1, figsize=(15, 4.2), sharey=True)
     for ax, mode in zip(axes, ["baseline"] + MODES):
@@ -143,6 +213,7 @@ def main(scores_dir):
     summ = json.loads((scores_dir / "scores_summary.json").read_text())
     models = [m for m in ORDER if m in summ] + [m for m in summ if m not in ORDER]
     colors = _colors(models)
+    fig_creativity(summ, models, colors, scores_dir / "fig_regimeA_creativity.png")
     fig_2x2(summ, models, colors, scores_dir / "fig_regimeA_2x2.png")
     fig_channels(summ, models, scores_dir / "fig_regimeA_channels.png")
 

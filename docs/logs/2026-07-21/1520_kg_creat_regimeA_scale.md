@@ -77,6 +77,29 @@ onto `regime_b.py`. Added `scoring.cosine_distance`.
 4. **Rarity isn't what makes inclusion hard.** Pooled, rare and common inclusion are nearly
    identical (−0.228 vs −0.234), and individual models move in opposite directions.
 
+## Reframe (late session): creativity as the dependent variable
+
+The user corrected the framing: creativity is novelty **and** utility, the constraints *are* the
+utility operationalization, and the study is creativity (DV) vs constraint type (IV) — not a
+tradeoff between two competing goods. `design.md` §Scoring already defines per-path creativity as
+`R(P)·U(P;x)`, so no new metric was invented; added `_creativity` (= `E[R·U]`) to `aggregate.py`,
+re-aggregated from existing path scores (no re-judging, no spend), and added a creativity figure.
+
+What the reframe changed:
+- **A near-miss avoided.** The novelty gains I had reported (ΔR_emit +0.02…+0.055) are real and
+  survive restriction to valid paths — but they are far too small to offset utility losses of
+  0.13–0.45. Reporting the ideation axis alone would have said constraints *increase* creativity.
+  They increase ideation; they decrease creativity.
+- **A new finding surfaced**: categorical is the only constraint that ever raises creativity above
+  baseline (2/8 models). Invisible under a utility-only or novelty-only reading.
+- **A difficulty control**: measuring how much each administered constraint rules out of models'
+  own default behaviour shows rare-inclusion (99.2 %) and ordering (98.6 %) are matched, yet
+  ordering yields 4.4× less creativity — so the ranking is not merely difficulty.
+- **A trap avoided**: the sampler's recorded `biting_fraction` describes the *old* G_c-derived
+  relation constraints, but Pass 2 replaced exclusion/inclusion/ordering with baseline-derived
+  class targets. Only the categorical figure describes an administered constraint; the
+  cross-type comparison had to be recomputed from the baseline corpus instead.
+
 ## Files created / modified
 
 Created: `src/kg_creat/regime_b.py`, `src/kg_creat/scripts/rejudge.py`,

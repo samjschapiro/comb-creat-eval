@@ -27,6 +27,28 @@ def _sat_rate(recs):
     return round(sum(vals) / len(vals), 4) if vals else None
 
 
+def _creativity(recs):
+    """Mean per-path creativity: ``E[R(P) · U(P)]`` over emitted paths (design.md §Scoring).
+
+    Creativity needs BOTH novelty and utility, and utility is judge-gated
+    (``U = (∏(1+α_t·n_t))·1[valid ∧ factual]``), so a path that violates its constraint
+    contributes zero however remote it is. Taking the expectation over *all* emitted paths —
+    rather than averaging novelty within the satisfying subset — is what keeps cells with very
+    different pass rates comparable: conditioning on success would score a cell that succeeds
+    5 % of the time on a small, heavily-selected survivor set.
+
+    Reported at ``α = 0`` (utility is the bare satisfaction indicator). Because every cell here
+    carries exactly one constraint of one type, a uniform α rescales all constrained cells
+    identically and cannot reorder them — the constraint-type ranking is α-free. Only a
+    per-type α could change it, and choosing those weights is exactly the researcher degree of
+    freedom the pre-registration exists to constrain.
+    """
+    vals = [(r["R"] if r["sat"] else 0.0) for r in recs
+            if r.get("sat") is not None and r.get("R") is not None
+            and not (isinstance(r["R"], float) and math.isnan(r["R"]))]
+    return round(sum(vals) / len(vals), 4) if vals else None
+
+
 def _by(recs, key):
     out = defaultdict(list)
     for r in recs:
@@ -42,31 +64,36 @@ def aggregate(recs: list[dict]) -> dict:
             "R_emit": _mean([r["R"] for r in rs]),
             "R_valid": _mean([r["R"] for r in rs if r.get("sat") is True]),
             "sat_rate": _sat_rate(rs),
+            "creativity": _creativity(rs),
             "wf_rate": _mean([1.0 if r["well_formed"] else 0.0 for r in rs]),
             "channels": dict(Counter(r.get("channel") for r in rs)),
         }
 
     # Within-bundle deltas vs baseline (Regime A only): the 2x2 coordinates.
     two_by_two = {}
-    dacc = defaultdict(lambda: {"dR": [], "dsat": []})
+    dacc = defaultdict(lambda: {"dR": [], "dsat": [], "dcreat": []})
     for _bundle, brs in _by([r for r in recs if r["regime"] == "A"], "bundle_id").items():
         by_mode = _by(brs, "mode")
         if "baseline" not in by_mode:
             continue
         base_R = _mean([r["R"] for r in by_mode["baseline"]])
         base_sat = _sat_rate(by_mode["baseline"])
+        base_creat = _creativity(by_mode["baseline"])
         for mode, mrs in by_mode.items():
             if mode == "baseline":
                 continue
-            mR, msat = _mean([r["R"] for r in mrs]), _sat_rate(mrs)
+            mR, msat, mcreat = _mean([r["R"] for r in mrs]), _sat_rate(mrs), _creativity(mrs)
             if base_R is not None and mR is not None:
                 dacc[mode]["dR"].append(mR - base_R)
             if base_sat is not None and msat is not None:
                 dacc[mode]["dsat"].append(msat - base_sat)
+            if base_creat is not None and mcreat is not None:
+                dacc[mode]["dcreat"].append(mcreat - base_creat)
     for mode, d in dacc.items():
         two_by_two[mode] = {
             "mean_dR_emit": _mean(d["dR"]),
             "mean_dsat": _mean(d["dsat"]),
+            "mean_dcreativity": _mean(d["dcreat"]),
             "n_bundles": max(len(d["dR"]), len(d["dsat"])),
         }
 

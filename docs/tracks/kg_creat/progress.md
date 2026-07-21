@@ -90,15 +90,30 @@ Planned submission narrative/outline: [paper_outline.md](paper_outline.md).
 7,159 judged paths. Report:
 [docs/reports/2026-07-21_kg_creat_regimeA/](../../reports/2026-07-21_kg_creat_regimeA/report.md).
 
+**Framing (per the user, 2026-07-21):** creativity = novelty **and** utility; the constraints
+*are* the utility operationalization. So the analysis is one dependent variable (creativity,
+`E[R·U]` per design.md §Scoring) across levels of one independent variable (constraint type),
+not a novelty-vs-satisfaction tradeoff between two goods. Reported at α = 0; since every cell
+carries exactly one constraint, a uniform α cannot reorder the constraint types.
+
 **Findings.**
-- Constraints are **not equally hard**: ordering Δsat **−0.448** vs categorical **−0.131**,
-  and ordering buys **no** novelty (+0.002) while categorical buys the most (+0.055).
+- **Creativity by constraint type** (pooled, baseline 0.209): categorical 0.176 (−16 %),
+  exclusion 0.155 (−26 %), inclusion-rare 0.127 (−40 %), inclusion 0.116 (−45 %),
+  ordering 0.029 (**−86 %**).
+- **Not explained by difficulty.** Against the models' own default behaviour, rare-inclusion
+  rules out 99.2 % of baseline paths and ordering 98.6 % — matched — yet ordering yields
+  **4.4× less creativity**. Constraint *type* carries information beyond restrictiveness; it is
+  the **conjunction** of two class requirements that is destructive.
+- **Constraints raise novelty but never enough.** ΔR_valid > 0 for all five cells, and ordering
+  has the *highest* realized novelty in the study (0.496 vs 0.420) — but utility falls 0.13–0.45
+  while novelty rises only 0.02–0.08. A novelty-only reading would wrongly report that
+  constraints increase creativity: they increase **ideation** and decrease **creativity**.
+- **Categorical is the only constraint that ever beats the baseline** — 2/8 models
+  (Sonnet 4.6 +0.072 → 0.328, the highest cell in the study; GPT-4.1-mini +0.042).
 - Constraints **don't degrade factuality** — the factual channel is a flat ~34–40 % tax in
   every cell *including baseline* (34.3 %). The entire cost lands in the constraint channel.
 - **Ordering fails as double-inclusion, not as sequencing**: only 11.5 % of its failures are
-  genuine order violations; the rest never get both required classes into the path at all.
-  Next run should add a "both classes, any order" cell to separate the two explanations.
-- Ordering is **< 0.10 for every model tested**, strongest included.
+  genuine order violations. Next run should add a "both classes, any order" cell.
 
 **Design changes made to get here** (recorded as amendments in
 [assessment.md §7b](assessment.md)): constraints are over **relation CLASSES** (k-means over
