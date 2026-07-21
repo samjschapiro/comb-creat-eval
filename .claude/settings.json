@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pdftotext '/Users/samuelschapiro/.claude/projects/-Users-samuelschapiro-Desktop-Experiments-comb-creat-eval/b092211d-df09-4684-b565-79981fc83d3b/tool-results/webfetch-1781629092960-h0cc66.pdf' wf.txt)"
+      "Bash(pdftotext '/Users/samuelschapiro/.claude/projects/-Users-samuelschapiro-Desktop-Experiments-comb-creat-eval/b092211d-df09-4684-b565-79981fc83d3b/tool-results/webfetch-1781629092960-h0cc66.pdf' wf.txt)",
+      "Bash(PYTHONPATH=. .venv/bin/python src/plot_twist/scripts/make_effort_temp_boxplots.py)",
+      "Bash(python3 -)",
+      "Bash(python -m py_compile src/plot_twist/scripts/make_move_positions.py)",
+      "Bash(PYTHONPATH=. .venv/bin/python src/plot_twist/scripts/make_move_positions.py)",
+      "Bash(pdflatex -interaction=nonstopmode -output-directory=/tmp /tmp/bgtest.tex)",
+      "Bash(echo \"exit: $?\")"
     ]
   }
 }

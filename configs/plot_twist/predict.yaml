@@ -1,0 +1,29 @@
+# Predict-the-twist pilot: can models infer a story's withheld reveal from its setup?
+# Each predictor sees only the `setup` and guesses the `reveal`; score = embedding
+# similarity of the guess to the true reveal (all-mpnet-base-v2).
+
+annotations_path: "data/plot_twist/annotations/annotations.json"
+generations_path: "data/plot_twist/llm_twists/generations.json"   # full story prose
+
+# Stage 1: locate where each story's twist begins so we can feed the real pre-twist prose.
+boundary_model: "openai/gpt-4o-mini"
+boundary_max_tokens: 60
+
+# Stage 2 predictors, deliberately spanning families (within/cross-family gradient later).
+predictor_models:
+  - "anthropic/claude-sonnet-4"
+  - "openai/gpt-4o"
+  - "google/gemini-2.5-flash"
+  - "meta-llama/llama-3.3-70b-instruct"
+
+n_stories: 150          # deterministic sample of the annotated stories
+seed: 0
+
+temperature: 0.0        # predictor's single best guess
+max_tokens: 200
+concurrency: 16
+max_calls: 800          # hard guard per stage: refuse to run more API calls than this
+
+embed_model: "sentence-transformers/all-mpnet-base-v2"
+
+output_dir: "data/plot_twist/predict/pilot_v1"
