@@ -115,18 +115,23 @@ LLM judge) and novelty (validated DAT measure) are **shared ground, not
 differentiators**. Central risk: *grounding rigor* — each constraint's mapping
 to a real-world rule must be defensible/cited.
 
-**Status (2026-07-20)**: full pipeline built end-to-end — Wikidata builder
-(frequency-derived relation vocab, domain-tagged seeds), matched-bundle + random
-Regime-B samplers, CREATE-aligned open-vocab prompts, OpenRouter/local-MLX
-elicitation, gpt-oss-120b judge, local-MLX novelty embeddings, aggregator, plots.
-The **analogy tier** became the session's empirical focus: on **200 random entity
-pairs × 8 models** (Llama-3.1-8B → Sonnet-4.6), even the best models find a valid
-(strict structure-mapping) analogy between arbitrary entities only ~26% of the
-time, and anchor embedding distance is a *weak/structural, not distributional*,
-predictor of difficulty (report: `docs/reports/2026-07-20_kg_creat_analogy/`). A
-blind judge-reliability review harness (web UI) is ready but the human pass is
-pending. **The Regime-A constraint 2×2 — the paper's intended headline — is only
-piloted on weak local models and not yet scaled to frontier.** Detailed state in
+**Status (2026-07-21)**: **the paper's intended headline result now has data.**
+Regime A ran at scale — 8 models (Llama-3.1-8B → Sonnet-4.6) × 30 *fixed* endpoint
+bundles × {baseline, exclusion, inclusion, inclusion-rare, ordering, categorical}
+= 7,159 judged paths (report: `docs/reports/2026-07-21_kg_creat_regimeA/`).
+Constraint types are **not equally hard** (ordering Δsat −0.45 and buys no
+novelty; categorical −0.13 and buys the most), constraints **do not degrade
+factuality** (a flat ~34–40% tax in every cell including baseline — the entire
+cost lands in the constraint channel), and **ordering fails as double-inclusion
+rather than as sequencing** (only 11.5% of its failures are real order
+violations). Constraints are defined over embedding-derived **relation classes**
+with **per-bundle baseline-derived targets**, so each bites by construction rather
+than by assumption. Blending was reframed to a **single stimulus** (one anchor,
+two parallel structures emanating outward) and smoke-tested; it has not been run
+at scale. The earlier analogy result stands (~26% best-model success on 200 random
+pairs; `docs/reports/2026-07-20_kg_creat_analogy/`). The blind judge-reliability
+human pass is **still owed**, and is now load-bearing since all five Regime-A
+cells are judged rather than exactly checked. Detailed state in
 `docs/tracks/kg_creat/progress.md`.
 
 ### plot_twist — TwistBench (SUBMITTED 2026-06-24, Sci-FM @ COLM 2026)

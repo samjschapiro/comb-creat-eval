@@ -246,6 +246,15 @@ def disjointness(paths: list[EmittedPath], mode: str = "node") -> bool:
 # --- within-path novelty R ---
 
 
+def cosine_distance(x, y) -> float:
+    """Cosine distance between two embedding vectors (0 = identical, 1 = orthogonal)."""
+    a, b = np.asarray(x, dtype=float), np.asarray(y, dtype=float)
+    na, nb = np.linalg.norm(a), np.linalg.norm(b)
+    if na == 0.0 or nb == 0.0:
+        return float("nan")
+    return 1.0 - float(a @ b / (na * nb))
+
+
 def novelty_R(
     path: EmittedPath,
     embed: Callable[[str], np.ndarray],

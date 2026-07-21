@@ -83,6 +83,55 @@ The per-constraint ideation–execution decomposition is the *empirical demonstr
 the headline. Full comparison table: [novelty_vs_create.md](novelty_vs_create.md).
 Planned submission narrative/outline: [paper_outline.md](paper_outline.md).
 
+## Status — 2026-07-21 (Regime A run at scale — the headline per-constraint result exists)
+
+**The core deliverable of the track now has data.** 8 models × 30 fixed endpoint bundles ×
+{baseline, exclusion, inclusion, inclusion_rare, ordering, categorical} = 1,440 prompts /
+7,159 judged paths. Report:
+[docs/reports/2026-07-21_kg_creat_regimeA/](../../reports/2026-07-21_kg_creat_regimeA/report.md).
+
+**Findings.**
+- Constraints are **not equally hard**: ordering Δsat **−0.448** vs categorical **−0.131**,
+  and ordering buys **no** novelty (+0.002) while categorical buys the most (+0.055).
+- Constraints **don't degrade factuality** — the factual channel is a flat ~34–40 % tax in
+  every cell *including baseline* (34.3 %). The entire cost lands in the constraint channel.
+- **Ordering fails as double-inclusion, not as sequencing**: only 11.5 % of its failures are
+  genuine order violations; the rest never get both required classes into the path at all.
+  Next run should add a "both classes, any order" cell to separate the two explanations.
+- Ordering is **< 0.10 for every model tested**, strongest included.
+
+**Design changes made to get here** (recorded as amendments in
+[assessment.md §7b](assessment.md)): constraints are over **relation CLASSES** (k-means over
+embeddings of the top-150 relations models actually emitted) rather than single labels, since
+an open vocabulary makes label-level constraints a wording lottery; targets are **derived per
+bundle from that bundle's own baseline behaviour**, so each constraint bites by construction;
+added an `inclusion_rare` cell; and **blending was reframed to a single stimulus** (one anchor,
+two structures emanating outward into different domains, sharing the anchor and nothing else).
+
+**Two measurement defects found and fixed** (both would have corrupted the headline):
+- `max_tokens=1200` truncated long answers, and truncated JSON parses to **zero** paths.
+  GPT-4o-mini lost 104/180 prompts — it would have read as a 60 % structural failure rate that
+  was really a token cap meeting a verbose model. Fixed with truncation salvage in `parse.py`
+  (keeps only paths whose array closed, so a half-emitted path isn't scored as "never reached
+  the target"). All models now ~5.0 paths/prompt.
+- The categorical judge ran at `max_tokens=400`; a reasoning judge spends a small budget
+  thinking and never emits JSON, silently turning satisfaction into `unjudged` (123 paths).
+  Raised to 800; added `scripts/rejudge.py` to repair a cell without re-scoring the corpus.
+  Unjudged fell **196 → 9** paths (0.13 %).
+- Also: one malformed provider response used to propagate out of `asyncio.gather` and kill an
+  entire model's scoring mid-run (~25 min of paid judging lost). Judge calls now retry and
+  degrade to one unjudged record instead of taking the run down.
+
+**New this session:** `src/kg_creat/relation_classes.py`, `src/kg_creat/regime_b.py` (shared
+structure-mapping predicates for analogy + blending, so scorer and figures use one definition),
+`scripts/make_pass2.py`, `scripts/rejudge.py`, `scripts/plot_regime_a.py`.
+
+**Still owed:** the human blind judge-reliability pass (owed since the analogy round, and now
+load-bearing since all five Regime-A cells are judged rather than exactly checked); running the
+reframed blending task at scale.
+
+Cost to date this round: ~$6.6 (elicitation $4.32, judging ~$2.2, re-judge $0.09).
+
 ## Status — 2026-07-20 (full pipeline built end-to-end; first analogy result)
 
 The entire eval pipeline now runs end-to-end, and the **analogy tier (constraint family V)

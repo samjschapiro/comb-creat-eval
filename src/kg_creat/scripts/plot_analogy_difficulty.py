@@ -19,7 +19,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from src.kg_creat.embed import get_embedder
-from src.kg_creat.scripts.plot_analogy import _node_distinct, _relations_match, _structures_disjoint
+from src.kg_creat import regime_b as RB
 
 INK, MUTED, GRID, DOT, TREND = "#1f2933", "#66727f", "#e3e8ee", "#2563EB", "#EA580C"
 
@@ -30,9 +30,9 @@ def _valid(paths):
         return False
     fact = [f for r in paths.values() for f in (r.get("factual") or [])]
     return (bool(p0.get("semantic_sat")) and fact and all(fact)
-            and all(_node_distinct(r["triples"]) for r in paths.values() if r.get("triples"))
-            and _relations_match(p0["triples"], p1["triples"])
-            and _structures_disjoint(p0["triples"], p1["triples"]))
+            and all(RB.node_distinct(r["triples"]) for r in paths.values() if r.get("triples"))
+            and RB.relations_match(p0["triples"], p1["triples"])
+            and RB.structures_disjoint(p0["triples"], p1["triples"]))
 
 
 def main(scores_dir):

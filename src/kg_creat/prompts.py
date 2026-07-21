@@ -23,6 +23,12 @@ _OUTPUT_BLOCK = """Output requirements (strict):
 Required format (follow this shape exactly):
 <answer>{"1": [["Entity A", "relation", "Entity B"], ["Entity B", "relation", "Entity C"]], "2": [["Entity A", "relation", "Entity D"], ["Entity D", "relation", "Entity C"]]}</answer>"""
 
+# Blending's branches diverge instead of reconverging, so the shared example (both paths ending at
+# 'Entity C') would demonstrate exactly the overlap the task forbids.
+_OUTPUT_BLOCK_DIVERGENT = _OUTPUT_BLOCK.replace(
+    '"2": [["Entity A", "relation", "Entity D"], ["Entity D", "relation", "Entity C"]]',
+    '"2": [["Entity A", "relation", "Entity D"], ["Entity D", "relation", "Entity E"]]')
+
 # CREATE's rules/dedup scaffolding (K.3), shared across modes.
 _ENTITY_RULES = """Rules and quality constraints:
 - Entities must be concrete, real-world entities only (people, organizations, works, places,
@@ -38,23 +44,35 @@ Deduplication:
   relationships), not trivial rephrasings."""
 
 
+def _ex(constraint: dict, key: str = "exemplars", n: int = 4) -> str:
+    return ", ".join(f'"{e}"' for e in (constraint.get(key) or [])[:n])
+
+
 def _constraint_clause(constraint: dict | None) -> str:
-    """The mode-specific hard constraint sentence for a Regime-A path."""
+    """The mode-specific hard constraint sentence.
+
+    Constraints are over relation *classes* (derived from what models actually emit), not single
+    labels: under an open vocabulary a specific label rarely appears verbatim, so we name the KIND
+    of connection and show data-derived exemplars.
+    """
     if constraint is None:
         return ""
     t = constraint["type"]
     if t == "exclusion":
-        return (f"CONSTRAINT: none of your paths may use the relationship "
-                f"'{constraint['relation_label']}'. Find routes that avoid it entirely.")
-    if t == "inclusion":
-        return (f"CONSTRAINT: every path must include at least one "
-                f"'{constraint['relation_label']}' relationship.")
+        return (f"CONSTRAINT: none of your paths may use any {constraint['class_name']}-type "
+                f"relationship — that is, relationships like {_ex(constraint)}, or any other "
+                f"relationship expressing that same kind of connection. Avoid that kind of link entirely.")
+    if t in ("inclusion", "inclusion_rare"):
+        return (f"CONSTRAINT: every path must include at least one {constraint['class_name']}-type "
+                f"relationship — that is, a relationship like {_ex(constraint)}, or another "
+                f"expressing that same kind of connection.")
+    if t == "ordering":
+        return (f"CONSTRAINT: in every path, a {constraint['before_name']}-type relationship "
+                f"(like {_ex(constraint, 'before_exemplars', 3)}) must appear BEFORE any "
+                f"{constraint['after_name']}-type relationship (like {_ex(constraint, 'after_exemplars', 3)}).")
     if t == "categorical":
         return (f"CONSTRAINT: every path must pass through at least one intermediate entity "
                 f"that is a kind of '{constraint['type_label']}'.")
-    if t == "ordering":
-        return (f"CONSTRAINT: in every path, a '{constraint['before_label']}' relationship "
-                f"must appear BEFORE any '{constraint['after_label']}' relationship.")
     raise ValueError(f"unknown Regime-A constraint type: {t}")
 
 
@@ -107,16 +125,29 @@ Do not repeat an entity within a path.
 
 
 def _blending_prompt(spec: dict) -> str:
-    u, v = spec["u_label"], spec["v_label"]
-    return f"""Task: You are given two concepts: '{u}' and '{v}'. Connect them with a SINGLE path that
-passes through a PIVOT entity invoked in two different senses -- one sense linking the pivot to
-'{u}'s domain and another sense linking it to '{v}'s domain -- so the two domains fuse at the pivot.
+    """Blending as single-stimulus analogy: one anchor, two parallel structures emanating outward.
 
-The path must read as one continuous chain of factual triples from '{u}' to '{v}' whose middle is
-the double-sensed pivot entity. Choose the pivot yourself. Use concrete, canonically-named
-entities and do not repeat an entity within the path.
+    Analogy pins both ends and asks for the mapping between them; blending pins one end and makes
+    the model choose *both* directions, so it must generate the two domains itself rather than
+    being handed them.
+    """
+    u = spec["u_label"]
+    return f"""Task: You are given ONE concept: '{u}'. Build a conceptual BLEND around it by extending
+'{u}' outward in TWO different directions that share the SAME relational structure.
 
-{_OUTPUT_BLOCK}"""
+Produce exactly TWO paths:
+- Path 1: factual triples starting at '{u}' and leading outward into one domain.
+- Path 2: factual triples starting at '{u}' and leading outward into a DIFFERENT domain.
+
+Both paths must begin at '{u}'.
+CRITICAL: the two paths must use the EXACT SAME relationship word at every position -- if Path 1's
+relations are [r1, r2, r3], Path 2's relations must be the identical words [r1, r2, r3], in the same
+order. Do NOT paraphrase or substitute synonyms. Only the ENTITIES after '{u}' differ.
+The two branches must share NO entity except '{u}' itself, and the further apart the two branches
+end up -- the more unrelated the two domains they reach -- the better the blend. Use concrete,
+canonically-named entities and do not repeat an entity within a path.
+
+{_OUTPUT_BLOCK_DIVERGENT}"""
 
 
 def build_prompt(spec: dict) -> str:

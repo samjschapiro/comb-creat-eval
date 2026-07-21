@@ -174,6 +174,41 @@ produces variance, the tradeoff appears, exact `sat` is interpretable, and both 
 reliabilities (factuality; V/VI semantic) are acceptable. **Estimate OpenRouter cost and
 confirm before any run** (incl. smoke tests) — see memory `estimate-openrouter-cost-first`.
 
+## 7b. Amendments (2026-07-21, after round 1)
+
+Recorded as deviations rather than folded into the text above, so the pre-registration stays
+readable as what was frozen *before* spending. Four things changed, each because running the
+pilot showed the frozen version measured the wrong thing.
+
+**A1 — constraints are over relation CLASSES, not single relation labels.** §3 assumed exact
+`sat` on a named relation `Y`. Under an open vocabulary a specific label almost never recurs
+verbatim, so a label-level constraint is satisfied or violated mostly by wording luck. Relations
+are instead clustered (k-means over embeddings of the top-150 relations models actually emitted
+in the baseline pass) into 8 classes, each LLM-named and shown to the model with data-derived
+exemplars. `sat` for I–IV therefore becomes **judged**, not exact — the judge-free property of
+Regime A is given up deliberately, since an exact check over a vocabulary nobody agrees on is
+precision without accuracy.
+
+**A2 — constraint targets are derived from each bundle's own baseline behaviour.** Choosing
+targets by hand (or globally) risks constraints that are trivial for some endpoint pairs and
+impossible for others. Per bundle: *exclusion* targets the class that bundle used **most** in
+the unconstrained pass, *inclusion* the least-used still-usable class, *ordering* the REVERSE
+of that bundle's most frequent class ordering. Each constraint therefore bites by construction,
+against that specific pair, rather than by assumption.
+
+**A3 — added an `inclusion_rare` cell.** Same mechanic as inclusion but targeting a niche,
+domain-specific class (share < 8%), separating "use a common relation you were avoiding" from
+"reach for a relation you rarely use at all".
+
+**A4 — blending reframed to a single stimulus.** §1/§3 defined VI as a pivot path `u → X → v`
+with `X` double-sensed. Blending is instead treated as *single-stimulus analogy*: give one
+anchor `u`, and the model must produce **two** structures emanating outward from it into
+different domains, sharing the anchor and nothing else, with an identical relation sequence.
+This makes VI a clean minimal pair with V (analogy pins both ends, blending pins one), and it
+moves the second domain from something we choose to something the model must generate — which
+is the creative act being measured. Novelty for VI is the distance between the two branch tips.
+Predicates live in `src/kg_creat/regime_b.py`, shared by the scorer and the figures.
+
 ## 8. Open items (not yet frozen)
 
 - Hop count(s) `h`, path count `k`, bundles-per-`(u,v)`, model set — budget-driven; size

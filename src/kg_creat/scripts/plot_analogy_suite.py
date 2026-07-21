@@ -21,7 +21,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from src.kg_creat.embed import get_embedder
-from src.kg_creat.scripts.plot_analogy import _node_distinct, _relations_match, _structures_disjoint
+from src.kg_creat import regime_b as RB
 
 INK, MUTED, GRID = "#1f2933", "#66727f", "#e3e8ee"
 BAR = "#93b4e6"          # recessive fill
@@ -55,9 +55,9 @@ def main(scores_dir):
             if not p0:
                 continue
             fact = [f for r in paths.values() for f in (r.get("factual") or [])]
-            struct = all(_node_distinct(r["triples"]) for r in paths.values() if r.get("triples"))
-            rel = p1 is not None and _relations_match(p0.get("triples"), p1.get("triples"))
-            disj = p1 is not None and _structures_disjoint(p0.get("triples"), p1.get("triples"))
+            struct = all(RB.node_distinct(r["triples"]) for r in paths.values() if r.get("triples"))
+            rel = p1 is not None and RB.relations_match(p0.get("triples"), p1.get("triples"))
+            disj = p1 is not None and RB.structures_disjoint(p0.get("triples"), p1.get("triples"))
             succ.append(bool(p0.get("semantic_sat")) and fact and all(fact) and struct and rel and disj)
             dist.append(cos(p0["u_label"], p0["v_label"]))
         n = len(succ)

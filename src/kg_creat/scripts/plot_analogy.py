@@ -24,6 +24,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from src.kg_creat.embed import get_embedder
+from src.kg_creat import regime_b as RB
+from src.kg_creat.scoring import cosine_distance
 
 MODEL_COLORS = ["#2563EB", "#EA580C", "#059669", "#7C3AED"]
 INK, MUTED, GRID = "#1f2933", "#66727f", "#e3e8ee"
@@ -34,35 +36,6 @@ def _short(m):
         if tag in m:
             return f"Qwen2.5-{tag}" if "Qwen2" in m else f"{m.split('_')[0]}-{tag}"
     return m
-
-
-def _node_distinct(triples):
-    """A structure must not revisit an entity (reject circular / self-referential 'analogies')."""
-    if not triples:
-        return False
-    ents = [triples[0][0]] + [t[2] for t in triples]
-    norm = [str(e).strip().lower() for e in ents]
-    return len(set(norm)) == len(norm)
-
-
-def _relations(triples):
-    return [str(t[1]).strip().lower() for t in triples]
-
-
-def _relations_match(path_a, path_b):
-    """Structure-mapping floor: both structures must use the SAME relation at each position."""
-    return bool(path_a) and _relations(path_a) == _relations(path_b)
-
-
-def _entities(triples):
-    return {str(triples[0][0]).strip().lower()} | {str(t[2]).strip().lower() for t in triples}
-
-
-def _structures_disjoint(path_a, path_b):
-    """The two analogy structures must share no entity (two distinct systems, not one)."""
-    if not path_a or not path_b:
-        return False
-    return not (_entities(path_a) & _entities(path_b))
 
 
 def analogy_points(scores_dir, embed):
@@ -87,15 +60,14 @@ def analogy_points(scores_dir, embed):
                 fact += (r.get("factual") or [])
             factual_ok = len(fact) > 0 and all(fact)
             # both structures must be node-distinct (no loop-backs)
-            structural_ok = all(_node_distinct(r["triples"]) for r in paths.values() if r.get("triples"))
+            structural_ok = all(RB.node_distinct(r["triples"]) for r in paths.values() if r.get("triples"))
             p1 = paths.get(1)
             # structure-mapping floor: same relation sequence AND disjoint entities across structures
-            relations_ok = p1 is not None and _relations_match(p0.get("triples"), p1.get("triples"))
-            disjoint_ok = p1 is not None and _structures_disjoint(p0.get("triples"), p1.get("triples"))
+            relations_ok = p1 is not None and RB.relations_match(p0.get("triples"), p1.get("triples"))
+            disjoint_ok = p1 is not None and RB.structures_disjoint(p0.get("triples"), p1.get("triples"))
             success = bool(p0.get("semantic_sat")) and factual_ok and structural_ok and relations_ok and disjoint_ok
             u, v = p0["u_label"], p0["v_label"]
-            x, y = embed(u), embed(v)
-            dist = 1 - float(x @ y / (np.linalg.norm(x) * np.linalg.norm(y)))
+            dist = cosine_distance(embed(u), embed(v))
             pts.append((dist, int(success), p0.get("cross_domain")))
         out[md.name] = pts
     return out

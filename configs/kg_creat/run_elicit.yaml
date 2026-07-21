@@ -1,9 +1,9 @@
 # Round-1 elicitation. For the free shakedown, point LLM_BASE_URL at the local MLX
 # server and use the served model id below (budget cap is bypassed in local mode).
 # For the paid pilot, unset LLM_BASE_URL and swap in OpenRouter model ids + a budget.
-upstream_dir: data/kg_creat/prompts_domains_v1
-output_dir: data/kg_creat/responses_analogy_v2   # fresh: tightened exact-relation analogy prompt
-modes: [analogy]         # analogy-only, n=200, model suite
+upstream_dir: data/kg_creat/prompts_regimeA_pass2
+output_dir: data/kg_creat/responses_regimeA_pass2
+modes: []             # PASS 2: all specs are constrained cells
 
 eval:
   temperature: 0.7

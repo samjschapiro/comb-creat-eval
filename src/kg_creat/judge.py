@@ -13,6 +13,7 @@ budget-tracked.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import re
 
@@ -54,14 +55,37 @@ corresponding positions play corresponding roles (a shared relational system), n
 relation words match. Judge holistically.
 Return valid JSON only, exactly: {{ "explanation": "string", "valid": true or false }}"""
 
-BLENDING_JUDGE_PROMPT = """You are evaluating whether a path is a valid conceptual BLEND connecting two concepts.
-Concept A: '{u}'   Concept B: '{v}'
-Path (ordered triples): {path}
-A valid blend passes through a PIVOT entity that is invoked in two different, colliding senses -- one
-sense linking it to A's domain and another to B's domain -- so the two domains genuinely fuse at the
-pivot (e.g. a word/name with two meanings, or an entity bridging two frames). Identify the pivot and
-judge whether it truly carries two distinct senses.
-Return valid JSON only, exactly: {{ "explanation": "string", "pivot": "string", "valid": true or false }}"""
+BLENDING_JUDGE_PROMPT = """You are evaluating whether two structures form a valid conceptual BLEND
+around a single anchor concept.
+Anchor: '{u}'
+Branch 1 (ordered triples): {path1}
+Branch 2 (ordered triples): {path2}
+Both branches start at the anchor and use the same relation sequence. A valid blend requires that the
+two branches travel into GENUINELY DIFFERENT domains or senses of the anchor -- the anchor must be
+doing different work in each branch -- and that entities at corresponding positions play corresponding
+roles across the branches. Two branches that restate the same aspect of the anchor, or that land in
+the same domain, are NOT a blend. Judge holistically.
+Return valid JSON only, exactly: {{ "explanation": "string", "domains": ["string", "string"], "valid": true or false }}"""
+
+
+async def _ask(client, model: str, prompt: str, max_tokens: int = 800, attempts: int = 3) -> str | None:
+    """One judge call, retried on transient provider failures, never raising.
+
+    A single malformed response body from the provider used to propagate out of ``asyncio.gather``
+    and abort an entire model's scoring mid-run (losing ~25 minutes of paid judging). A judge that
+    cannot answer must degrade to one unjudged record, not take the run down with it.
+    """
+    for i in range(attempts):
+        try:
+            return await call_llm_async(client, messages=[{"role": "user", "content": prompt}],
+                                        model=model, temperature=0.0, max_tokens=max_tokens)
+        except Exception as e:  # noqa: BLE001 - provider/transport errors are all retry-or-skip
+            if i == attempts - 1:
+                print(f"    judge call failed after {attempts} attempts ({type(e).__name__}); "
+                      f"marking unjudged")
+                return None
+            await asyncio.sleep(1.5 * (i + 1))
+    return None
 
 
 def format_path(triples: list) -> str:
@@ -101,8 +125,7 @@ def parse_factuality(response: str, n_triples: int) -> list[bool] | None:
 async def judge_factuality(client, model: str, triples: list) -> list[bool] | None:
     """Per-triple factuality for one path. None on judge failure (unparseable/mismatch)."""
     prompt = FACTUALITY_PROMPT.format(path=format_path(triples))
-    raw = await call_llm_async(client, messages=[{"role": "user", "content": prompt}],
-                               model=model, temperature=0.0, max_tokens=1200)
+    raw = await _ask(client, model, prompt, max_tokens=1200)
     if raw is None:
         return None
     return parse_factuality(raw, len(triples))
@@ -117,64 +140,126 @@ Return valid JSON only, exactly: {{ "explanation": "string", "satisfied": true o
 async def judge_categorical(client, model: str, type_label: str, triples: list) -> dict | None:
     """Judge whether an interior entity is of the required type (open-KG entities lack local types)."""
     prompt = CATEGORICAL_JUDGE_PROMPT.format(type_label=type_label, path=format_path(triples))
-    raw = await call_llm_async(client, messages=[{"role": "user", "content": prompt}],
-                               model=model, temperature=0.0, max_tokens=400)
+    # 800, as everywhere else: a reasoning judge spends most of a small budget thinking and the
+    # JSON never arrives, which silently turns satisfaction into an 'unjudged' hole in the cell.
+    raw = await _ask(client, model, prompt, max_tokens=800)
     return _extract_json(raw) if raw else None
 
 
+# Batched factuality: CREATE's K.2 criteria verbatim, only the I/O shape generalized to N paths.
+_K2_CRITERIA = FACTUALITY_PROMPT.split("Output instructions:")[0].replace(
+    "The path consists of an ordered list of triples.",
+    "You will be given SEVERAL paths, each an ordered list of triples.")
+
+FACTUALITY_BATCH_PROMPT = _K2_CRITERIA + """Output instructions:
+- Return valid JSON only.
+- Include exactly two keys: "explanation" and "paths".
+- "paths" is a list with one entry per input path, in the SAME order, each an object with
+  "path_id" (the given integer) and "judgments" (a list of "hallucinated" | "not hallucinated",
+  one per triple of THAT path, in the same order as that path's triples).
+- Judge every triple of every path independently, by the criteria above.
+- Do not include any text outside the JSON object. No markdown, no extra keys.
+The output must exactly match this schema:
+{{ "explanation": "string", "paths": [ {{ "path_id": 1, "judgments": ["hallucinated" | "not hallucinated", ...] }} ] }}
+Input:
+{paths_block}"""
+
+
+def parse_factuality_batch(response: str, triple_counts: list[int]) -> list[list[bool] | None]:
+    """Map a batched response to per-path verdict lists. None for any path that doesn't line up."""
+    out: list[list[bool] | None] = [None] * len(triple_counts)
+    obj = _extract_json(response)
+    if obj is None or not isinstance(obj.get("paths"), list):
+        return out
+    by_id = {}
+    for entry in obj["paths"]:
+        if isinstance(entry, dict) and "judgments" in entry:
+            try:
+                by_id[int(entry.get("path_id"))] = entry["judgments"]
+            except (TypeError, ValueError):
+                continue
+    for i, n in enumerate(triple_counts):
+        js = by_id.get(i + 1)
+        if isinstance(js, list) and len(js) == n:
+            out[i] = [str(j).strip().lower() == "not hallucinated" for j in js]
+    return out
+
+
+async def judge_factuality_batch(client, model: str, paths: list[list]) -> list[list[bool] | None]:
+    """Factuality for several paths in ONE call (same criteria as the per-path judge)."""
+    block = "\n".join(f"Path {i + 1}: {format_path(p)}" for i, p in enumerate(paths))
+    prompt = FACTUALITY_BATCH_PROMPT.format(paths_block=block)
+    raw = await _ask(client, model, prompt, max_tokens=3000)
+    if raw is None:
+        return [None] * len(paths)
+    return parse_factuality_batch(raw, [len(p) for p in paths])
+
+
+# Constraints are over relation CLASSES (data-derived), so the judge is given the class name plus
+# its exemplars and asked about *kind* membership -- the call an LLM judge is reliable at.
 RELATION_CONSTRAINT_PROMPTS = {
     "exclusion": (
-        "You are checking whether a multi-hop path AVOIDS a forbidden type of relationship.\n"
-        "Forbidden relationship type: '{label}' -- also forbid any relationship with the SAME MEANING "
-        "(synonyms/paraphrases; e.g. for 'instance of': 'is a', 'is a type of', 'is an example of').\n"
+        "You are checking whether a multi-hop path AVOIDS a forbidden KIND of relationship.\n"
+        "Forbidden relationship class: {name}\n"
+        "Relationships of this kind include: {exemplars} -- and any other relationship expressing "
+        "that same kind of connection.\n"
         "Path (ordered triples): {path}\n"
-        "Does the path FULLY AVOID the forbidden relationship type (no triple expresses it)?\n"
+        "Does the path FULLY AVOID relationships of this kind (no triple expresses one)?\n"
         'Return valid JSON only, exactly: {{ "explanation": "string", "satisfied": true or false }}  '
-        "(satisfied = the path avoids it)"
+        "(satisfied = the path avoids that kind entirely)"
     ),
     "inclusion": (
-        "You are checking whether a multi-hop path INCLUDES a required type of relationship.\n"
-        "Required relationship type: '{label}' -- a relationship with this meaning counts, including "
-        "synonyms/paraphrases.\n"
+        "You are checking whether a multi-hop path INCLUDES a required KIND of relationship.\n"
+        "Required relationship class: {name}\n"
+        "Relationships of this kind include: {exemplars} -- and any other relationship expressing "
+        "that same kind of connection.\n"
         "Path (ordered triples): {path}\n"
-        "Does AT LEAST ONE triple express the required relationship type?\n"
+        "Does AT LEAST ONE triple express a relationship of this kind?\n"
         'Return valid JSON only, exactly: {{ "explanation": "string", "satisfied": true or false }}'
     ),
     "ordering": (
-        "You are checking the ORDER of two relationship types in a multi-hop path.\n"
+        "You are checking the ORDER of two KINDS of relationship in a multi-hop path.\n"
+        "Class A = {before_name} (e.g. {before_exemplars}).\n"
+        "Class B = {after_name} (e.g. {after_exemplars}).\n"
         "Path (ordered triples): {path}\n"
-        "Requirement: a relationship meaning '{before}' must appear BEFORE any relationship meaning "
-        "'{after}'. Both types (or synonyms/paraphrases) must be present, with the '{before}'-type first.\n"
+        "Requirement: a relationship of class A must appear BEFORE any relationship of class B. "
+        "Both kinds must be present, with the class-A one occurring first.\n"
         'Return valid JSON only, exactly: {{ "explanation": "string", "satisfied": true or false }}'
     ),
 }
+RELATION_CONSTRAINT_PROMPTS["inclusion_rare"] = RELATION_CONSTRAINT_PROMPTS["inclusion"]
+
+
+def _fmt_ex(items, n=5):
+    return ", ".join(f'"{e}"' for e in (items or [])[:n])
 
 
 async def judge_relation_constraint(client, model: str, constraint: dict, triples: list) -> dict | None:
-    """Judge whether a free-form path satisfies a relation-level constraint (open-vocab, semantic)."""
+    """Judge whether a free-form path satisfies a relation-CLASS constraint (open-vocab, semantic)."""
     t = constraint["type"]
     tmpl = RELATION_CONSTRAINT_PROMPTS.get(t)
     if tmpl is None:
         raise ValueError(f"not a relation-level constraint: {t}")
     if t == "ordering":
         prompt = tmpl.format(path=format_path(triples),
-                             before=constraint["before_label"], after=constraint["after_label"])
+                             before_name=constraint["before_name"],
+                             before_exemplars=_fmt_ex(constraint.get("before_exemplars")),
+                             after_name=constraint["after_name"],
+                             after_exemplars=_fmt_ex(constraint.get("after_exemplars")))
     else:
-        prompt = tmpl.format(path=format_path(triples), label=constraint["relation_label"])
-    raw = await call_llm_async(client, messages=[{"role": "user", "content": prompt}],
-                               model=model, temperature=0.0, max_tokens=500)
+        prompt = tmpl.format(path=format_path(triples), name=constraint["class_name"],
+                             exemplars=_fmt_ex(constraint.get("exemplars")))
+    raw = await _ask(client, model, prompt, max_tokens=800)  # see judge_categorical on small budgets
     return _extract_json(raw) if raw else None
 
 
 async def judge_analogy(client, model: str, u: str, v: str, path1: list, path2: list) -> dict | None:
     prompt = ANALOGY_JUDGE_PROMPT.format(u=u, v=v, path1=format_path(path1), path2=format_path(path2))
-    raw = await call_llm_async(client, messages=[{"role": "user", "content": prompt}],
-                               model=model, temperature=0.0, max_tokens=800)
+    raw = await _ask(client, model, prompt, max_tokens=800)
     return _extract_json(raw) if raw else None
 
 
-async def judge_blending(client, model: str, u: str, v: str, path: list) -> dict | None:
-    prompt = BLENDING_JUDGE_PROMPT.format(u=u, v=v, path=format_path(path))
-    raw = await call_llm_async(client, messages=[{"role": "user", "content": prompt}],
-                               model=model, temperature=0.0, max_tokens=800)
+async def judge_blending(client, model: str, u: str, path1: list, path2: list) -> dict | None:
+    prompt = BLENDING_JUDGE_PROMPT.format(u=u, path1=format_path(path1), path2=format_path(path2))
+    raw = await _ask(client, model, prompt, max_tokens=800)
     return _extract_json(raw) if raw else None

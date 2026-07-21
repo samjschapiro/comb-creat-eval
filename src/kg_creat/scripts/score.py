@@ -27,6 +27,7 @@ from src.kg_creat import scoring  # noqa: E402
 from src.kg_creat.scoring import EmittedPath  # noqa: E402
 from src.kg_creat.embed import get_embedder  # noqa: E402
 from src.kg_creat import judge as J  # noqa: E402
+from src.kg_creat import regime_b as RB  # noqa: E402
 from src.kg_creat.aggregate import aggregate  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "scripts" / "safety"))
@@ -102,23 +103,36 @@ async def run_judges(recs: list[dict], responses_by_prompt: dict, model: str, co
             rec["semantic_sat"] = bool(out.get("valid")) if out else None
 
     async def blending(rec):
+        paths = responses_by_prompt[rec["prompt_id"]]["paths"]
+        if len(paths) < 2:
+            rec["semantic_sat"] = False
+            return
         async with sem:
-            out = await J.judge_blending(client, model, rec["u_label"], rec["v_label"], rec["triples"])
+            out = await J.judge_blending(client, model, rec["u_label"], paths[0], paths[1])
             rec["semantic_sat"] = bool(out.get("valid")) if out else None
+            rec["blend_domains"] = out.get("domains") if out else None
 
-    tasks = []
+    tasks, skipped = [], 0
     for rec in recs:
         if not rec["triples"]:
+            continue
+        # `sat` is first-failing-gate: a structurally malformed path fails on the 'structural'
+        # channel regardless of factuality/constraint, so judging it is wasted spend.
+        if not rec.get("well_formed"):
+            skipped += 1
             continue
         tasks.append(factual(rec))
         if rec["mode"] == "categorical":
             tasks.append(categorical(rec))
-        elif rec["mode"] in ("exclusion", "inclusion", "ordering"):
+        elif rec["mode"] in ("exclusion", "inclusion", "inclusion_rare", "ordering"):
             tasks.append(relation_con(rec))
         elif rec["mode"] == "analogy" and rec["path_idx"] == 0:  # judge the pair once
             tasks.append(analogy(rec))
-        elif rec["mode"] == "blending":
+        elif rec["mode"] == "blending" and rec["path_idx"] == 0:  # judge the branch pair once
             tasks.append(blending(rec))
+    if skipped:
+        print(f"    (skipping {skipped} structurally-failed paths — they fail on the "
+              f"'structural' channel regardless, so no judge call is needed)")
     await asyncio.gather(*tasks)
 
 
@@ -154,6 +168,48 @@ def finalize_sat(rec: dict):
             rec["sat"], rec["channel"] = None, "unjudged"
         else:
             rec["sat"], rec["channel"] = True, "ok"
+
+
+def finalize_regime_b(recs: list[dict], embed):
+    """Pair-level verdict for the semantic tier, written onto each prompt's first path record.
+
+    Analogy and blending are judged over a PAIR of structures, so per-path ``sat`` cannot express
+    them: the unit of success is the mapping, not the path. This lives here (rather than in the
+    plotters) so the figures and any downstream analysis inherit one definition of validity.
+
+    Novelty for blending is the distance between the two branch TIPS -- how far apart the domains
+    the model reached are -- which is the quantity the task actually asks it to maximise.
+    """
+    from collections import defaultdict
+    by_prompt = defaultdict(dict)
+    for r in recs:
+        if r["mode"] in ("analogy", "blending"):
+            by_prompt[r["prompt_id"]][r["path_idx"]] = r
+    for paths in by_prompt.values():
+        head = paths.get(0)
+        if head is None:
+            continue
+        p0, p1 = head.get("triples"), (paths.get(1) or {}).get("triples")
+        if head["mode"] == "analogy":
+            ok, reason = RB.analogy_structural_ok(p0, p1)
+        else:
+            ok, reason = RB.blend_structural_ok(p0, p1, head["u_label"])
+        fact = [f for r in paths.values() for f in (r.get("factual") or [])]
+        sem = head.get("semantic_sat")
+        head["pair_structural_ok"], head["pair_structural_reason"] = ok, reason
+        if not ok:
+            head["pair_sat"], head["pair_channel"] = False, "structural"
+        elif not fact or not all(fact):
+            head["pair_sat"], head["pair_channel"] = False, "factual"
+        elif sem is False:
+            head["pair_sat"], head["pair_channel"] = False, "semantic"
+        elif sem is None:
+            head["pair_sat"], head["pair_channel"] = None, "unjudged"
+        else:
+            head["pair_sat"], head["pair_channel"] = True, "ok"
+        if head["mode"] == "blending" and p0 and p1:
+            a, b = RB.branch_tips(p0, p1)
+            head["tip_distance"] = float(scoring.cosine_distance(embed(a), embed(b)))
 
 
 async def main(config_path, overwrite=False, debug=False):
@@ -209,6 +265,7 @@ async def main(config_path, overwrite=False, debug=False):
 
         for rec in recs:
             finalize_sat(rec)
+        finalize_regime_b(recs, embed)
 
         out_md = output_dir / md.name
         out_md.mkdir(parents=True, exist_ok=True)

@@ -204,7 +204,9 @@ def sample_matched_bundles(gc: KnowledgeGraph, h: int = 3, k: int = 5, min_route
 
 def sample_regime_b(gc: KnowledgeGraph, n_analogy: int, n_blend: int, seed: int = 0,
                     min_degree: int = 3, entity_domains: dict[str, str] | None = None) -> list[dict]:
-    """Randomly sample entity pairs from G_c for the analogy/blending tasks (seeded, reproducible).
+    """Randomly sample the semantic tier's stimuli from G_c (seeded, reproducible).
+
+    Analogy draws entity PAIRS; blending draws single ANCHORS (the model supplies both directions).
 
     The task is deliberately hard: can a model find a valid analogy (or blend) between two
     *arbitrary*, non-obviously-related entities? Hand-curating canonical pairs (atom/solar-system)
@@ -232,11 +234,13 @@ def sample_regime_b(gc: KnowledgeGraph, n_analogy: int, n_blend: int, seed: int 
     def spec(prefix, i, mode, u, v, constraint):
         du, dv = ed.get(u), ed.get(v)
         return {"bundle_id": f"{prefix}{i}", "regime": "B", "mode": mode, "u": u, "v": v,
-                "u_label": gc.label(u), "v_label": gc.label(v), "constraint": constraint,
+                "u_label": gc.label(u), "v_label": gc.label(v) if v else None, "constraint": constraint,
                 "domain_u": du, "domain_v": dv,
                 "cross_domain": (du != dv) if (du and dv) else None}
 
     specs = [spec("E", i, "analogy", u, v, None) for i, (u, v) in enumerate(rand_pairs(n_analogy))]
-    specs += [spec("F", i, "blending", u, v, {"type": "blending"})
-              for i, (u, v) in enumerate(rand_pairs(n_blend))]
+    # Blending is single-stimulus: one anchor, and the model must find BOTH directions itself.
+    # Its second domain is therefore an outcome to be measured, not a design variable we set.
+    anchors = rng.sample(pool, min(n_blend, len(pool)))
+    specs += [spec("F", i, "blending", u, None, {"type": "blending"}) for i, u in enumerate(anchors)]
     return specs
