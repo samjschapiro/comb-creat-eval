@@ -261,6 +261,19 @@ helped), so whatever makes inclusion hard is apparently not the target class's c
   born 2001. For those bundles the "same endpoints" premise does not strictly hold. It affects
   baseline and constrained cells alike, so it adds noise rather than directional bias, but an
   endpoint pool screened for label ambiguity would remove it.
+- **Exemplar noise in the derived classes.** The model is shown four exemplars per class, taken
+  from the cluster's members, and some members do not fit their cluster's LLM-assigned name:
+  `"country"` appears as an *international relations* exemplar, `"established"` as *location or
+  origin*, `"focuses on"` as *affiliation*, `"signed"` as *membership*. This weakens the construct
+  labels — "international relations" names the cluster loosely. It does **not** make the task
+  unfair, because the judge is given the same class name and exemplar list the model saw, so a
+  model is graded against the definition it received. But a cell's difficulty partly reflects how
+  coherent its cluster happened to be, which the current design cannot separate from the
+  constraint type itself.
+- **Grammar defect in the shipped ordering prompt.** The administered ordering clause read
+  "a affiliation-type relationship" for vowel-initial class names (fixed after the run). All 8
+  models saw the same text, so it cannot bias between-model comparisons, but it is a small
+  fluency confound on the ordering cell specifically.
 - **Judge-dependence.** With class-level constraints, utility for all five cells is judged rather
   than exactly checked. A human blind reliability pass on the judge is built but **still owed** —
   every number here rests on `gpt-oss-120b` agreement that has not been human-audited for the

@@ -48,6 +48,11 @@ def _ex(constraint: dict, key: str = "exemplars", n: int = 4) -> str:
     return ", ".join(f'"{e}"' for e in (constraint.get(key) or [])[:n])
 
 
+def _a(word: str) -> str:
+    """Article for a class name. Names are LLM-generated, so 'a affiliation-type' otherwise ships."""
+    return "an" if word[:1].lower() in "aeiou" else "a"
+
+
 def _constraint_clause(constraint: dict | None) -> str:
     """The mode-specific hard constraint sentence.
 
@@ -67,8 +72,8 @@ def _constraint_clause(constraint: dict | None) -> str:
                 f"relationship — that is, a relationship like {_ex(constraint)}, or another "
                 f"expressing that same kind of connection.")
     if t == "ordering":
-        return (f"CONSTRAINT: in every path, a {constraint['before_name']}-type relationship "
-                f"(like {_ex(constraint, 'before_exemplars', 3)}) must appear BEFORE any "
+        return (f"CONSTRAINT: in every path, {_a(constraint['before_name'])} {constraint['before_name']}-type "
+                f"relationship (like {_ex(constraint, 'before_exemplars', 3)}) must appear BEFORE any "
                 f"{constraint['after_name']}-type relationship (like {_ex(constraint, 'after_exemplars', 3)}).")
     if t == "categorical":
         return (f"CONSTRAINT: every path must pass through at least one intermediate entity "
