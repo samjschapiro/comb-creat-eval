@@ -26,6 +26,7 @@ ablation, not a pre-commit — persist the full triples and both are recoverable
 from __future__ import annotations
 
 import itertools
+import re
 from dataclasses import dataclass
 from typing import Callable
 
@@ -37,16 +38,31 @@ def _norm(s: str) -> str:
     return str(s).strip().lower()
 
 
-def _entity_matches(name: str, emitted: str, aliases: dict[str, list[str]] | None = None) -> bool:
-    """Whether an emitted entity string refers to `name` (normalized substring + aliases).
+def _strip_qualifier(s: str) -> str:
+    """Drop a trailing parenthetical disambiguator: 'Michael Jordan (basketball)' -> the name."""
+    return re.sub(r"\s*\([^)]*\)\s*$", "", s).strip()
 
-    CREATE-style leniency: a match holds if a candidate label is a substring of the emitted
-    string or vice versa (handles qualifiers like "Michael Jordan (basketball)").
+
+def _entity_matches(name: str, emitted: str, aliases: dict[str, list[str]] | None = None) -> bool:
+    """Whether an emitted entity string refers to `name` (qualifier-tolerant equality + aliases).
+
+    Deliberately NOT bidirectional substring matching. That was the original CREATE-style
+    leniency, and on compound entity names it silently accepts a different entity: a path ending
+    at 'Australia Group export controls' or 'United Nations Office for Outer Space Affairs' was
+    scored as having reached 'Australia Group' / 'United Nations'. Across this corpus 6.4 % of
+    well-formed paths had inexact endpoints, and ~81 % of those were genuinely the wrong entity
+    rather than a qualifier variant -- inflating well-formedness unevenly across cells.
+
+    We keep the case the leniency actually existed for (a trailing parenthetical disambiguator)
+    and require equality otherwise. This errs toward false negatives on legitimate short forms
+    ('Leopoldina' for 'German Academy of Sciences Leopoldina'), which an alias table fixes
+    properly; silently crediting the wrong entity is the worse error for a benchmark.
     """
     aliases = aliases or {}
     cands = {_norm(name)} | {_norm(a) for a in aliases.get(name, [])}
+    cands |= {_strip_qualifier(c) for c in list(cands)}
     e = _norm(emitted)
-    return any(c in e or e in c for c in cands if c)
+    return any(c and (c == e or c == _strip_qualifier(e)) for c in cands)
 
 
 # --- emitted-path object ---
