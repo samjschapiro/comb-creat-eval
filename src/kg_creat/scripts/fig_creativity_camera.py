@@ -65,7 +65,7 @@ def main(scores_dir, outdir):
     ax.set_ylim(len(MODES) - 0.4, -0.6)
     ax.set_xlim(-0.29, 0.10)
     ax.set_xticks([-0.25, -0.20, -0.15, -0.10, -0.05, 0.0, 0.05])
-    ax.set_xlabel("Paired \u0394 creativity vs. unconstrained baseline")
+    ax.set_xlabel("\u0394 creativity")
 
     outdir = Path(outdir)
     outdir.mkdir(parents=True, exist_ok=True)
