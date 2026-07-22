@@ -55,10 +55,14 @@ def main(scores_dir, outdir):
     ax.tick_params(colors=MUTED, length=2, pad=1.5)
     ax.axvline(0, color=INK, lw=0.6, zorder=4)
 
-    for i, m in enumerate(MODES):
-        v = vals[m]
-        ax.scatter(v, np.full(len(v), i), s=9, color=DOT, linewidths=0, zorder=5)
-        ax.plot([v.mean()], [i], marker="D", ms=3.4, color=INK, mec="white", mew=0.5, zorder=6)
+    ax.boxplot([vals[m] for m in MODES], positions=range(len(MODES)), orientation="horizontal",
+               widths=0.55, patch_artist=True, zorder=5,
+               boxprops=dict(facecolor="#e8ebef", edgecolor=INK, linewidth=0.5),
+               medianprops=dict(color=INK, linewidth=0.9),
+               whiskerprops=dict(color=INK, linewidth=0.5),
+               capprops=dict(color=INK, linewidth=0.5),
+               flierprops=dict(marker="o", markersize=1.8, markerfacecolor=DOT,
+                               markeredgecolor="none"))
 
     ax.set_yticks(range(len(MODES)))
     ax.set_yticklabels([LABEL[m] for m in MODES], color=INK)
