@@ -413,16 +413,25 @@ async def _generate_for_prompt(
     sem: asyncio.Semaphore,
 ) -> list[str]:
     async def _one() -> str:
-        async with sem:
-            r = await async_client.chat.completions.create(
-                model=test_model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=cfg.temperature,
-                top_p=cfg.top_p,
-                max_tokens=cfg.max_tokens,
-                n=1,
-            )
-        return r.choices[0].message.content or ""
+        # OpenRouter intermittently returns an error-shaped 200 with
+        # choices=None for some providers/prompts. Retry a few times, then
+        # fall back to "" (an empty generation scores as low-novelty, which
+        # is faithful) rather than crashing the whole run.
+        for attempt in range(4):
+            async with sem:
+                r = await async_client.chat.completions.create(
+                    model=test_model,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=cfg.temperature,
+                    top_p=cfg.top_p,
+                    max_tokens=cfg.max_tokens,
+                    n=1,
+                )
+            if r.choices and r.choices[0].message.content:
+                return r.choices[0].message.content
+            await asyncio.sleep(1.0 + attempt)
+        print(f"[noveltybench] empty/error response after retries for prompt: {prompt[:60]!r}")
+        return ""
 
     return list(await asyncio.gather(*(_one() for _ in range(cfg.k))))
 

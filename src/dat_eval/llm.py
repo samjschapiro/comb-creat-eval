@@ -156,6 +156,10 @@ async def call_llm_async(
             response = await async_client.chat.completions.create(**kwargs)
         else:
             raise
+    # Some providers return an error-shaped 200 with choices=None; treat as
+    # empty rather than crashing on the subscript.
+    if not response.choices:
+        return None
     return response.choices[0].message.content
 
 

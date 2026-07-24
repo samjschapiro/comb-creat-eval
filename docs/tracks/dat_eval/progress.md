@@ -344,3 +344,30 @@ live 1991).
 
 **Pool count standardised** to 54 throughout (largest validity n,
 on Arena CW).
+
+**Rebuttal (NeurIPS submission 13188) — benchmark n-expansion.** The
+reviewers' top concern is small n (F63x "major weakness"; 6Cbj on
+NoveltyBench n≈8–10). Attempted to raise NoveltyBench n by generating
+scores ourselves — this is **invalid**: every column in
+`benchmarks.json` is *transcribed* from an external paper/leaderboard
+(NoveltyBench = paper Table 1 with Skywork-Reward quality; Hivemind =
+paper Table 6 bins; Mazur/EQ-Bench/ARC/MMLU = leaderboards). A self-run
+pipeline with a different judge/embedder/prompts lands on a different
+scale (e.g. our gpt-4o-mini judge gives gpt-4o-mini utility 5.25 vs the
+paper's 3.11). Even the *authors'* Skywork pipeline on a Lambda A100 did
+not reproduce (llama-3.1-8b: 2.12 vs 3.76) — traced to `<|eot_id|>`
+special-token pollution in the repo's transformers-mode generation;
+strip-and-rescore was cut short (VM killed). **Valid + cheap path
+forward:** fill *our* side (DAT/CDAT/PACE + Arena/MMLU) for models the
+external source already scored — NoveltyBench 10→17 via Arena+MMLU
+lookups on 7 models we already test-scored, →20 with 3 more test runs;
+Hivemind via the ~28 unmapped open Table-6 models. Full account in
+`docs/logs/2026-07-23/2117_noveltybench_expansion_and_transcription_finding.md`.
+
+**Validated recompute tool.**
+`scripts/new_tests/recompute_noveltybench_corr.py` reproduces the
+paper's NoveltyBench Overall validity/specificity column exactly from
+cached test scores + `benchmarks.json`, and confirms the CDAT +0.60
+NoveltyBench specificity is **n.s. (p≈0.21) at n=8–10** — the number to
+lead the rebuttal's power discussion with. (DRAT/RAT are out of scope
+for this submission per the author — a different paper.)

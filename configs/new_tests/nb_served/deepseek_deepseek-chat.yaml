@@ -1,0 +1,15 @@
+test_model: "deepseek/deepseek-chat"
+subset: "NB-Curated"
+max_prompts: null
+k: 10
+temperature: 1.0
+top_p: 1.0
+max_tokens: 512
+patience: 0.8
+distinctness_method: "deberta"
+distinctness_threshold: 0.5
+distinctness_device: "mps"
+quality_judge_model: "openai/gpt-4o-mini"
+generation_concurrency: 12
+judge_concurrency: 12
+output_dir: "data/new_tests/noveltybench/deepseek_deepseek-chat_served"

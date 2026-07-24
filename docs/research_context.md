@@ -184,7 +184,12 @@ Currently dormant; reused only for the Arena-score fetcher and
   benchmark store, augmented in place by `add_eqbench_scores.py`,
   `add_hivemind_scores.py`, `add_mazur_scores.py`,
   `add_mmlu_pro_scores.py`, `add_noveltybench_scores.py`, and
-  `add_arc_agi_scores.py`.
+  `add_arc_agi_scores.py`. **All of these values are transcribed from
+  external papers/leaderboards**, so a benchmark's n cannot be raised
+  by re-running the benchmark ourselves with a different pipeline (the
+  scale won't match — verified for NoveltyBench, 2026-07-23). To raise
+  n, fill *our* side instead: run DAT/CDAT/PACE and pull Arena/MMLU for
+  models the external source already scored.
 - Long-running scripts respect `budget_usd` in their config and abort
   before exceeding the cap.
 - Safety scripts in `scripts/safety/` (`status.sh`, `kill_all.sh`,
