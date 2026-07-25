@@ -94,11 +94,17 @@ both classes co-occur, 89 % are in the reverse (natural) order; (3) it is someti
 11.5 % are true order inversions. Dropped from figures, reports, and future generation
 (`make_pass2.py` no longer emits the cell; raw scored data kept on disk for the record).
 
-**Reported constraint set: categorical, exclusion, inclusion (common), inclusion (rare).** Creativity
-`E[R·U]` falls under all four — categorical −16 % (n.s.), exclusion −27 % (**), rare-inclusion
-−40 % (**), common-inclusion −46 % (**) — and successful paths under a constraint are *more* novel
-than baseline successes, so the loss is utility, not novelty. Categorical is the only cell that can
-raise creativity (2/8 models). Primary writeup:
+**Headline finding — a constraint is a novelty lever and an adherence tax at once.** Creativity
+factorises as `E[R·U] = R_valid × adherence`, and a constraint moves the two factors in opposite
+directions: it *raises* the novelty of successful paths (+9–11 %, except common-inclusion +1 %) and
+*lowers* the adherence rate (−27 to −50 %). The novelty gain is causal, not survivorship — it shows
+up in `R_emit` over **all** emitted paths (+0.019 to +0.053, no success filtering) and within fixed
+endpoints (paired ΔR_valid +0.028 to +0.072, 56–76 % of bundles). Net creativity falls because the
+adherence tax dominates: categorical −16 % (n.s.), exclusion −27 % (**), rare-inclusion −37 % (**),
+common-inclusion −48 % (**). The novelty lever is specifically "go somewhere you usually wouldn't" —
+the one constraint requiring a *common* relation buys no novelty and is the worst cell; categorical,
+which redirects the waypoint without restricting the vocabulary, buys the most and is the only cell
+that can net positive (2/8 models). Headline figure `fig_creativity_mechanism.pdf`. Primary writeup:
 [`docs/reports/2026-07-22_kg_creat_creativity/`](../../reports/2026-07-22_kg_creat_creativity/report.md);
 the 2026-07-21 report is superseded (ordering rationale preserved there). Camera-ready creativity
 figure (Nature MI spec) at `papers/kg_creat-iclr/media/fig_creativity_by_constraint.pdf`.

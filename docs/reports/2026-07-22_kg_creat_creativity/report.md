@@ -1,26 +1,31 @@
-# Constraints and creativity: what each constraint type does to a model's paths
+# Constraints are a novelty lever that models can't cash in
 
 **2026-07-22 · kg_creat track · Regime A · 8 models × 30 fixed endpoint bundles**
 
 Creativity is novelty *and* utility — a remote artifact that is also fit for the requirement. In
 this benchmark the constraints *are* the utility requirement: to be useful, a path from `u` to `v`
 must be factual, well-formed, and satisfy a semantic/structural constraint. So the study has one
-dependent variable, creativity `E[R·U]`, and one independent variable, constraint type. This report
-walks the result almost entirely through concrete paths the models actually produced.
+dependent variable, creativity `E[R·U]`, and one independent variable, constraint type.
+
+**The headline.** A constraint does two opposite things at once. It **raises novelty** — the paths a
+model produces under a constraint are measurably more remote — and it **lowers adherence** — the
+model satisfies the requirement far less often. The novelty gain is real and causal (it shows up
+even before any success filtering), but small; the adherence loss is large. Net creativity is their
+product, so it falls. The exception proves the rule: the one constraint whose novelty push is large
+and whose adherence cost is small — *categorical* — is the only one that comes near break-even, and
+for two models actually clears it.
 
 The constraint set is **four types**: categorical, exclusion, and inclusion in two variants (common
-and rare relation class). A fifth type — ordering — was piloted and **dropped**; as we derived it,
-it was confounded by construction and did not measure sequencing (Appendix A).
-
-Every cell is administered on the **same 30 endpoint pairs**, so within a pair only the constraint
-changes and every comparison below is a model differenced against itself.
+and rare relation class). A fifth — ordering — was piloted and **dropped** as confounded by
+construction (Appendix A). Every cell is administered on the **same 30 endpoint pairs**, so within a
+pair only the constraint changes and every comparison is a model differenced against itself.
 
 ---
 
 ## 1. One endpoint pair, five cells
 
-Here is Claude Sonnet 4.6 on the single pair **Japan → United Nations**, one path per cell. This is
-the whole experiment in miniature — the endpoints never move; only the demand does.
+Claude Sonnet 4.6 on the single pair **Japan → United Nations**, one path per cell — the whole
+experiment in miniature. The endpoints never move; only the demand does.
 
 | cell | constraint | path | verdict |
 |---|---|---|---|
@@ -30,41 +35,74 @@ the whole experiment in miniature — the endpoints never move; only the demand 
 | inclusion (rare) | use an *international-relations* relation | japan —[hosts headquarters of]→ UN University —[chartered by]→ UN | ✓ |
 | inclusion (common) | use a *location-or-origin* relation | japan —[joined]→ UN —[headquartered in]→ New York City | ✗ structural |
 
-The inclusion failure is already instructive: the model bolts the required relation on at the end
+The inclusion failure previews the whole result: the model bolts the required relation on at the end
 (`… —[headquartered in]→ New York City`) and in doing so **runs off the target**, never reaching the
-UN. It foreshadows the aggregate finding — models satisfy a required class by appending it, often at
-the cost of the path itself.
+UN. It reached for the constraint and dropped the path.
 
 ---
 
-## 2. Creativity falls under every constraint, by different amounts
+## 2. The two mechanisms: a novelty gain and an adherence loss
 
-![creativity by constraint type](figures/fig_creativity_by_constraint.png)
+Creativity factorises: `E[R·U]` over emitted paths equals `R_valid × adherence` — the mean novelty
+of the *successful* paths times the fraction that succeed. So a constraint acts through two
+multiplicative factors, and we can measure how it moves each (mean over models of the per-model
+change vs its own baseline):
+
+![the two mechanisms](figures/fig_creativity_mechanism.png)
+
+| constraint | novelty of successes | adherence rate | net creativity |
+|---|---|---|---|
+| categorical | **+11 %** | −27 % | −16 % |
+| exclusion | +9 % | −33 % | −27 % |
+| inclusion (rare) | +11 % | −43 % | −37 % |
+| inclusion (common) | **+1 %** | −50 % | −48 % |
+
+Every constraint pushes novelty up and adherence down; the adherence factor dominates, so net
+creativity (their per-model product — not the sum of the two columns, since percentage changes don't
+add) falls. But the factors are not fixed — categorical raises novelty most (+11 %) and costs
+adherence least (−27 %), which is exactly why its net is smallest.
+
+**The novelty gain is causal, not survivorship.** A skeptic's first objection: `R_valid` is novelty
+*conditional on success*, so maybe constraints don't make paths novel — they just select the novel
+ones that happen to satisfy. Two controls rule this out:
+
+- **Novelty rises in `R_emit`, over *all* emitted paths including failures** (+0.019 to +0.053).
+  A pure selection effect could not move a mean that already contains the failures. The constraint
+  changes what the model *reaches for*.
+- **It survives holding endpoints fixed.** Comparing a model's *successful constrained* paths to its
+  *successful baseline* paths on the **same bundle**, the constrained success is more novel by +0.028
+  to +0.072 (in 56–76 % of bundles). Not a between-endpoint artifact.
+
+**Where the novelty gain comes from.** Look at the one constraint that *doesn't* raise novelty:
+inclusion of a **common** class (+1 %). The others all push models toward *less-traveled* relations —
+a rare class, a forbidden default, a redirected waypoint — and each buys ~+9–11 % novelty. Requiring
+a *common* relation pushes nowhere, so it buys nothing and is the worst cell for creativity. The
+novelty lever is specifically "go somewhere you usually wouldn't."
+
+---
+
+## 3. The net effect: creativity falls under every constraint
+
+![net creativity by constraint type](figures/fig_creativity_by_constraint.png)
 
 Each box is the 8 per-model paired effects (constrained − unconstrained, same endpoints); stars are
 a one-sample t-test on those 8 values, Holm-corrected.
 
-| cell | creativity `E[R·U]` | vs baseline | utility `U` | novelty of useful paths `R_valid` | sig. |
-|---|---|---|---|---|---|
-| baseline | 0.201 | — | 0.484 | 0.420 | |
-| categorical | 0.168 | −16 % | 0.360 | 0.465 | n.s. |
-| exclusion | 0.147 | −27 % | 0.326 | 0.458 | ** |
-| inclusion (rare) | 0.121 | −40 % | 0.266 | 0.463 | ** |
-| inclusion (common) | 0.109 | −46 % | 0.254 | 0.424 | ** |
+| cell | creativity `E[R·U]` | paired Δ vs baseline | sig. |
+|---|---|---|---|
+| baseline | 0.201 | — | |
+| categorical | 0.168 | −16 % | n.s. |
+| exclusion | 0.147 | −27 % | ** |
+| inclusion (rare) | 0.121 | −37 % | ** |
+| inclusion (common) | 0.109 | −48 % | ** |
 
-Every constraint lowers creativity, and the three relation-class constraints do so significantly and
-consistently across models. Categorical, at the other end, is the only cell whose effect the 8 models
-do not agree on — mean negative but not distinguishable from zero, because two models actually *gain*
-(§6).
-
-Notice what the `R_valid` column says: the paths that *do* succeed under a constraint are on average
-*more* novel than baseline successes (0.42 → 0.45–0.46). Constraints push models off their default,
-low-remoteness routes. The cost is not that successful paths get boring — it is that far fewer paths
-succeed. Creativity falls because utility falls, not because novelty does.
+The three relation-class constraints lower creativity significantly and consistently. Categorical is
+the only cell whose effect the 8 models do not agree on — mean negative but not distinguishable from
+zero, because two models actually gain (§6).
 
 ---
 
-## 3. Two ways a model fails a constraint
+## 4. Why adherence drops: two failure modes
 
 Restricting to **constraint-channel** failures (factual, well-formed paths that just miss the
 requirement), two behaviours recur across every constraint type.
@@ -118,19 +156,19 @@ reintroduced the forbidden class.
 
 ---
 
-## 4. Constraints do not make models hallucinate — they defeat compliance
+## 5. Constraints do not make models hallucinate — they defeat compliance
 
 If constraints pushed models past the edge of their knowledge, we'd see the **factual** failure
 channel swell under constraint. It does not: factual failures sit at a flat ~32–37 % in every cell,
 *including the unconstrained baseline* (32.3 %). Hallucination is a roughly constant background tax,
 not a constraint effect. The entire *added* cost of a constraint lands in the **constraint** channel
-(7.9 % categorical → 15.5 % rare-inclusion), and those constraint-channel failures are typically
-paths that are factually fine.
+(7.9 % categorical → 15.5 % rare-inclusion) — the adherence loss of §2 — and those failures are
+typically paths that are factually fine.
 
 ![failure channels](figures/fig_regimeA_channels.png)
 
-That baseline factuality floor is real and worth seeing — these are *unconstrained* paths the judge
-rejected as hallucinated:
+That baseline factuality floor is real — these are *unconstrained* paths the judge rejected as
+hallucinated:
 
 **Haiku 4.5, baseline:**
 ```
@@ -138,26 +176,21 @@ united states —[is home to]→ princeton university —[employed]→ albert ei
    ✗ flagged: 'princeton university —employed→ albert einstein'
    (Einstein was at the Institute for Advanced Study in Princeton, not employed by the university)
 ```
-```
-united states —[produced]→ the beatles —[originated from]→ liverpool —[located in]→ united kingdom
-   ✗ flagged: 'united states —produced→ the beatles'
-```
 **Llama 3.1 8B, baseline:**
 ```
 united states —[founded]→ princeton university —[alumnus]→ albert einstein
    ✗ flagged both hops: the US did not found Princeton; Einstein was not an alumnus
 ```
 
-None of these is a constraint failure — they are ordinary factual errors that occur at the same rate
-whether or not a constraint is present.
+These are ordinary factual errors that occur at the same rate whether or not a constraint is present.
 
 ---
 
-## 5. Categorical is the one constraint that can *raise* creativity
+## 6. Categorical is the constraint that can *raise* creativity
 
-Categorical is the only cell where naming the constraint sometimes produces a *more* creative path
-than the model's own unconstrained answer — and the effect is real enough to flip 2 of 8 models
-(Sonnet 4.6, GPT-4.1-mini) above their baseline. Being told to route through a *type* of entity
+§2 predicts it: categorical has the biggest novelty push and the smallest adherence cost, so it is
+the one cell where the two mechanisms can net positive. And they do — for 2 of 8 models (Sonnet 4.6,
+GPT-4.1-mini) creativity rises above baseline. Being told to route through a *type* of entity
 redirects the search without restricting the relations used to build the path.
 
 **Sonnet 4.6 · US → UK · *pass through a kind of 'human'***
@@ -166,7 +199,7 @@ baseline (R 0.38):    us —[founded by]→ george washington —[fought against
 categorical (R 0.58): us —[birthplace of]→ sylvia plath —[married]→ ted hughes —[poet laureate of]→ uk
 ```
 The type requirement pulled the model off the obvious founding-war route and onto a literary one —
-Plath (American) married Hughes (UK poet laureate). More novel *and* satisfying: creativity up.
+Plath (American) married Hughes (UK poet laureate). More novel *and* satisfying.
 
 **Sonnet 4.6 · US → Albert Einstein · *through a kind of 'social state'***
 ```
@@ -176,63 +209,54 @@ categorical:  us —[recognized state]→ israel —[offered presidency to]→ a
 The unusual fact that Israel offered Einstein its presidency surfaces *because* the type constraint
 forced an intermediate the default path had no reason to visit.
 
-**GPT-4.1-mini · Japan → UN · *through an international organization***
-```
-baseline (R 0.27):    japan —[hosted]→ un university —[operates under]→ un
-categorical (R 0.48): japan —[member of]→ OECD —[observer at]→ un general assembly —[main organ of]→ un
-```
-
-Contrast this with what the *relation-class* constraints do (§3): those restrict the vocabulary the
-model builds with, and models respond by minimally editing or abandoning good paths. Categorical
-constrains the *waypoint* and leaves the machinery free — which is why it is the one constraint that
-occasionally helps rather than hurts.
+Contrast the *relation-class* constraints (§4): those restrict the vocabulary the model builds with,
+and models respond by minimally editing or abandoning good paths. Categorical constrains the
+*waypoint* and leaves the machinery free — a larger novelty push at a smaller adherence cost, which
+is the §2 decomposition in a single example.
 
 ---
 
-## 6. Caveats, with examples
+## 7. Caveats, with examples
 
-**Judge borderline cases concentrate in the categorical cell** — which is exactly why the owed human
+**Judge borderline cases concentrate in the categorical cell** — which is why the owed human
 reliability pass matters most there:
 ```
 Sonnet 4.6 · Brazil → Hitchcock · through a 'superpower'
    brazil —[diplomatic relations with]→ france —[awarded légion d'honneur to]→ alfred hitchcock
    → Is France a "superpower"? The verdict decides the cell.
-Gemini 2.5 Flash · Germany → UN · through an 'international organization'
-   germany —[host country for]→ un campus bonn —[site of]→ un volunteers —[program of]→ un
-   → 'UN Volunteers' is a UN programme; rejecting it is defensible but not obvious.
 ```
 
 **Exemplar noise.** Constraints show four data-derived exemplars, and some do not fit their cluster's
-name: the *international-relations* class was presented with `"country"` as an exemplar,
-*location-or-origin* with `"established"`, *membership* with `"signed"`. This is grading-consistent
-(the judge sees the same class name and exemplars the model saw), but a cell's difficulty partly
-reflects how coherent its cluster happened to be.
+name (`"country"` shown for *international relations*, `"established"` for *location-or-origin*). This
+is grading-consistent (the judge sees the same class name and exemplars the model saw), but a cell's
+difficulty partly reflects how coherent its cluster happened to be.
 
-**Ambiguous endpoints weaken the pairing for ~3 of 30 bundles.** Because we strip disambiguating
-parentheticals, different *senses* of a label can both count as the endpoint. In bundle A11 models
-resolved "Brazil" as both the country and the 1985 Gilliam film across cells. For those bundles "same
-endpoints" does not strictly hold; it adds noise, not directional bias.
+**Ambiguous endpoints weaken the pairing for ~3 of 30 bundles.** Qualifier-stripping lets different
+*senses* of a label both count as the endpoint; in bundle A11 models resolved "Brazil" as both the
+country and the 1985 film across cells. It adds noise, not directional bias.
 
 **A scorer bug the examples caught.** An earlier `_entity_matches` used bidirectional substring
 matching, so a path ending at `australia group export controls` counted as reaching `Australia
-Group`. 6.4 % of well-formed paths had inexact endpoints, ~81 % genuinely the wrong entity. Fixed to
-require equality up to a trailing parenthetical; re-deriving offline moved 313 paths (4.4 %) and
-changed no conclusion. All numbers here are the strict re-derivation.
+Group`. Fixed to require equality up to a trailing parenthetical; re-deriving offline moved 313 paths
+(4.4 %) and changed no conclusion. All numbers here are the strict re-derivation.
 
 ---
 
 ## Summary
 
-- **Creativity falls under every constraint**, from −16 % (categorical, n.s.) to −46 % (common
-  inclusion, `**`), across 8 models.
-- **The cost is compliance, not knowledge.** Factuality is a flat ~32–37 % background tax; the added
-  cost of a constraint is entirely in the constraint channel.
-- **Successful paths under a constraint are *more* novel, not less** (`R_valid` 0.42 → 0.46).
-  Creativity falls because utility falls.
-- **Models fail constraints two ways**: minimal surface edits that don't move the underlying relation,
-  and clean rebuilds that reintroduce (or never reach) the target class.
-- **Categorical can raise creativity** (2/8 models) because it constrains the waypoint, not the
-  relation vocabulary — the Sylvia-Plath route is more novel *and* valid than the model's default.
+- **A constraint is a novelty lever and an adherence tax at once.** It raises the novelty of the
+  paths a model produces (+9–11 %, causal — visible in `R_emit` over all paths and within fixed
+  endpoints) and cuts how often the model satisfies it (−27 to −50 %).
+- **Net creativity falls because the adherence tax dominates the novelty gain** — from −16 %
+  (categorical, n.s.) to −48 % (common inclusion, `**`).
+- **The novelty gain comes from being pushed off the beaten path.** The one constraint that requires
+  a *common* relation raises novelty +1 %; the ones that require a rare/forbidden/redirected relation
+  raise it ~+10 %.
+- **The adherence tax is a compliance failure, not a knowledge failure.** Factuality is a flat
+  ~32–37 % background tax; models fail constraints by minimally editing or rebuilding paths that
+  never encode the demand.
+- **Categorical can net positive** (2/8 models) because its novelty push is large and its adherence
+  cost small — the waypoint is constrained, the relation vocabulary is not.
 
 Cost of the run: ~$6.6. Owed: human judge-reliability pass (load-bearing for the categorical cell),
 and running the reframed single-stimulus blending task at scale.
@@ -241,31 +265,20 @@ and running the reframed single-stimulus blending task at scale.
 
 ## Appendix A — why ordering was dropped
 
-Ordering (a relation of class A must appear *before* one of class B) looked, in a first pass, like the
-single most damaging constraint: an 86 % creativity collapse. On inspection that number is a
-construction artifact, not a measure of sequencing ability, and we removed the constraint rather than
-report a confounded result. Three problems, all downstream of how the target was derived — as the
-**reverse** of each bundle's most-common class ordering:
+Ordering (a relation of class A must appear *before* one of class B) looked, in a first pass, like
+the most damaging constraint — an 86 % creativity collapse. That number is a construction artifact,
+not a measure of sequencing, so we removed the constraint. Three problems, all from deriving the
+target as the **reverse** of each bundle's most-common class ordering:
 
 1. **It is a conjunction, not an ordering.** Only ~12 % of unconstrained paths contain *both* target
-   relation classes at all. "Both classes, in any order" already caps success near 12 % before
-   ordering is even considered — so most of the difficulty is double-inclusion, not sequence.
-
-2. **The demanded direction fights the factual structure.** Of the baseline paths where both classes
-   *do* co-occur, **89 % are in the reverse (natural) order and only 11 % in the order we demanded.**
-   By setting the target to the reverse of the natural ordering, we asked for the direction the
-   entities' real relationships mostly do not support.
-
-3. **Sometimes outright infeasible.** For **8 of 30** bundles, *zero* of the 8 models ever produced a
-   satisfying path, and the demanded order appears in ~0 % of free baseline paths there. On fixed
-   real-world `(u, v)`, the anti-natural order may simply not exist in the graph.
+   classes at all; "both classes, any order" already caps success near 12 %.
+2. **The demanded direction fights the factual structure.** Of baseline paths where both classes
+   co-occur, **89 % are in the reverse (natural) order and only 11 % in the order we demanded.**
+3. **Sometimes infeasible.** For **8 of 30** bundles, *zero* of the 8 models ever produced a
+   satisfying path; the anti-natural order may simply not exist in the graph for those endpoints.
 
 Decomposing the 495 ordering failures confirms it: only **11.5 %** are genuine order inversions; 88 %
-never get both classes into the path. Models *do* respond to the instruction — they produce the
-demanded order in 5.6 % of constrained paths vs 1.4 % of free baseline paths, ~4× more — but against a
-target stacked against them by construction.
-
-A clean ordering constraint is recoverable (derive the target as the *natural* order, and add a
-"both classes, any order" control to separate conjunction cost from sequence cost), but that is a
-future re-derivation. As administered here, ordering does not measure what its name implies, so it is
-excluded from the constraint set above.
+never get both classes into the path. Models *do* respond (5.6 % demanded-order under constraint vs
+1.4 % free), but against a target stacked against them. A clean ordering constraint is recoverable
+(natural-order target + a "both classes, any order" control), but that is a future re-derivation; as
+administered here it does not measure sequencing and is excluded.
