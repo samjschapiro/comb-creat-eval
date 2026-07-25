@@ -5,7 +5,8 @@ picks per-bundle constraint targets *against each bundle's own default behaviour
 prompt set whose endpoints are IDENTICAL to Pass 1 — only the constraint changes, so within-bundle
 deltas are causal in constraint type.
 
-Cells: exclusion · inclusion (common class) · inclusion_rare (niche class) · ordering · categorical.
+Cells: exclusion · inclusion (common class) · inclusion_rare (niche class) · categorical.
+(Ordering was piloted and dropped — see assessment.md §7c.)
 
     .venv_mlx/bin/python src/kg_creat/scripts/make_pass2.py
 """
@@ -41,7 +42,7 @@ async def main(pass1_dir, bundles_dir, out_dir, k=8, top_n=150, min_share=0.08,
         return {**{k: b[k] for k in ("bundle_id", "regime", "u", "v", "u_label", "v_label", "h", "k")},
                 "prompt_id": f"{b['bundle_id']}.{mode}", "mode": mode, "constraint": constraint}
 
-    out, skipped = [], 0
+    out = []
     for bid, t in targets.items():
         b = base.get(bid)
         if b is None:
@@ -59,13 +60,11 @@ async def main(pass1_dir, bundles_dir, out_dir, k=8, top_n=150, min_share=0.08,
             c = by_id[rare]
             out.append(spec(b, "inclusion_rare", {"type": "inclusion_rare", "class_id": c["id"],
                                                   "class_name": c["name"], "exemplars": c["members"][:6]}))
-        if order is not None:
-            a, bb = by_id[order[0]], by_id[order[1]]
-            out.append(spec(b, "ordering", {"type": "ordering",
-                                            "before_name": a["name"], "before_exemplars": a["members"][:4],
-                                            "after_name": bb["name"], "after_exemplars": bb["members"][:4]}))
-        else:
-            skipped += 1
+        # Ordering is intentionally NOT emitted. As derived (target = reverse of the natural class
+        # order) it measured an anti-natural double-inclusion, not sequencing, and was dropped from
+        # the constraint set (assessment.md §7c). derive_targets still returns `order`; a future
+        # re-derivation would use the NATURAL order plus a "both classes, any order" control.
+        _ = order
         # categorical stays G_c-derived (entity typing isn't recoverable from baseline text)
         cat = next((s for s in json.loads((Path(bundles_dir) / "prompts.json").read_text())
                     if s["bundle_id"] == bid and s["mode"] == "categorical"), None)
@@ -79,8 +78,7 @@ async def main(pass1_dir, bundles_dir, out_dir, k=8, top_n=150, min_share=0.08,
         json.dumps({"classes": classes, "targets": targets}, indent=2))
     from collections import Counter
     print(f"Wrote {len(out)} Pass-2 specs over {len(targets)} bundles -> {output_dir/'prompts.json'}")
-    print(f"  cells: {dict(Counter(s['mode'] for s in out))}"
-          + (f"  ({skipped} bundles had no orderable class pair)" if skipped else ""))
+    print(f"  cells: {dict(Counter(s['mode'] for s in out))}")
 
 
 if __name__ == "__main__":

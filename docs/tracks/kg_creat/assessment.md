@@ -209,6 +209,26 @@ moves the second domain from something we choose to something the model must gen
 is the creative act being measured. Novelty for VI is the distance between the two branch tips.
 Predicates live in `src/kg_creat/regime_b.py`, shared by the scorer and the figures.
 
+## 7c. Amendment (2026-07-22): ordering dropped from the constraint set
+
+**Ordering (II) is removed.** As derived — target = the *reverse* of each bundle's most-common
+class ordering — it did not measure sequencing. Three confounds, all from that derivation:
+
+1. It is a **conjunction**: only ~12 % of unconstrained paths contain both target classes at all,
+   so "both classes, any order" already caps success near 12 % before order matters.
+2. The demanded direction **fights the factual structure**: of baseline paths where both classes
+   co-occur, 89 % are in the reverse (natural) order and only 11 % in the demanded order.
+3. It is sometimes **infeasible**: for 8/30 bundles no model ever satisfied it, and the demanded
+   order appears in ~0 % of free baseline paths there.
+
+Decomposing the 495 ordering failures: only 11.5 % are true order inversions; 88 % never get both
+classes in. The reported constraint set is therefore **four types** — categorical, exclusion,
+inclusion (common), inclusion (rare). Ordering is recoverable in a future re-derivation (natural-
+order target + a "both classes, any order" control to separate conjunction cost from sequence
+cost) but is not part of the current results. Full analysis:
+[`docs/reports/2026-07-22_kg_creat_creativity/`](../../reports/2026-07-22_kg_creat_creativity/report.md)
+Appendix A.
+
 ## 8. Open items (not yet frozen)
 
 - Hop count(s) `h`, path count `k`, bundles-per-`(u,v)`, model set — budget-driven; size

@@ -1,5 +1,13 @@
 # kg_creat — constraint taxonomy & failure-mode grounding
 
+> **Ordering dropped (2026-07-22).** *Ordering* appears throughout this doc as a Regime-A
+> constraint, but the round-1 results showed that as derived (target = reverse of the natural
+> class order) it measured an anti-natural double-inclusion, not sequencing, and it has been
+> removed from the reported constraint set. The mentions below are retained as taxonomy history;
+> see [assessment.md](assessment.md) §7c and
+> [`reports/2026-07-22_kg_creat_creativity/`](../../reports/2026-07-22_kg_creat_creativity/report.md)
+> Appendix A. It was flagged here (§6) as one of the "two loose fits" — that instinct was right.
+
 The constraint set is the study's contribution, so this doc is its single reference:
 the **cognitively-grounded taxonomy**, the **failure-mode grounding** (each constraint
 abstracts a documented LLM ideation failure), the plain-English cores, how each is

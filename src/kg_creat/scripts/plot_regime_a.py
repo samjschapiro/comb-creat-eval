@@ -23,7 +23,7 @@ from matplotlib.lines import Line2D
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
-MODES = ["exclusion", "inclusion", "inclusion_rare", "ordering", "categorical"]
+MODES = ["exclusion", "inclusion", "inclusion_rare", "categorical"]
 MODE_LABEL = {"exclusion": "Exclusion", "inclusion": "Inclusion (common class)",
               "inclusion_rare": "Inclusion (rare class)", "ordering": "Ordering",
               "categorical": "Categorical"}

@@ -1,5 +1,14 @@
 # How does creativity depend on constraint type?
 
+> **Superseded (2026-07-22).** This report treated **ordering** as a headline constraint (its
+> −86 % creativity drop is Result 1 here). That number was later found to be a construction
+> artifact — ordering as derived was an anti-natural double-inclusion, not a sequencing test — and
+> **ordering has been dropped from the constraint set.** The current, four-constraint writeup is
+> [`docs/reports/2026-07-22_kg_creat_creativity/report.md`](../2026-07-22_kg_creat_creativity/report.md);
+> the ordering confound analysis that motivated dropping it is that report's Appendix A. Everything
+> below about the other four constraints still holds; read the ordering results here only as the
+> record of why it was cut.
+
 **2026-07-21 · kg_creat track · Regime A, 8 models × 6 cells × 30 endpoint bundles**
 
 **The question.** Creativity requires **novelty** *and* **utility**. Our constraints are the

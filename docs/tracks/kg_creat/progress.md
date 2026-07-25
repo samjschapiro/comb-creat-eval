@@ -83,6 +83,26 @@ The per-constraint ideation–execution decomposition is the *empirical demonstr
 the headline. Full comparison table: [novelty_vs_create.md](novelty_vs_create.md).
 Planned submission narrative/outline: [paper_outline.md](paper_outline.md).
 
+## Status — 2026-07-22 (ordering dropped; constraint set is now four types)
+
+**Ordering removed from the constraint set.** Round-1 flagged it as the most damaging constraint
+(−86 % creativity), but that number is a construction artifact of deriving the target as the
+*reverse* of the natural class order: (1) it is really a conjunction — only ~12 % of unconstrained
+paths contain both target classes; (2) the demanded direction is anti-natural — of paths where
+both classes co-occur, 89 % are in the reverse (natural) order; (3) it is sometimes infeasible —
+8/30 bundles had zero satisfying paths across all 8 models. Decomposing its 495 failures, only
+11.5 % are true order inversions. Dropped from figures, reports, and future generation
+(`make_pass2.py` no longer emits the cell; raw scored data kept on disk for the record).
+
+**Reported constraint set: categorical, exclusion, inclusion (common), inclusion (rare).** Creativity
+`E[R·U]` falls under all four — categorical −16 % (n.s.), exclusion −27 % (**), rare-inclusion
+−40 % (**), common-inclusion −46 % (**) — and successful paths under a constraint are *more* novel
+than baseline successes, so the loss is utility, not novelty. Categorical is the only cell that can
+raise creativity (2/8 models). Primary writeup:
+[`docs/reports/2026-07-22_kg_creat_creativity/`](../../reports/2026-07-22_kg_creat_creativity/report.md);
+the 2026-07-21 report is superseded (ordering rationale preserved there). Camera-ready creativity
+figure (Nature MI spec) at `papers/kg_creat-iclr/media/fig_creativity_by_constraint.pdf`.
+
 ## Status — 2026-07-21 (Regime A run at scale — the headline per-constraint result exists)
 
 **The core deliverable of the track now has data.** 8 models × 30 fixed endpoint bundles ×
