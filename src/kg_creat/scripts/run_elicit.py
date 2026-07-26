@@ -52,12 +52,15 @@ def estimate_model_cost(model_id: str, n_prompts: int) -> float:
     return (n_prompts * EST_INPUT_TOKENS * in_price + n_prompts * EST_OUTPUT_TOKENS * out_price) / 1_000_000
 
 
-async def _run_one(async_client, sem, model_id, spec, max_tokens, temperature, reasoning):
+async def _run_one(async_client, sem, model_id, spec, max_tokens, temperature, sample_idx, reasoning):
     prompt_text = build_prompt(spec)
     messages = [{"role": "user", "content": prompt_text}]
     base = {k: spec.get(k) for k in ("prompt_id", "bundle_id", "regime", "mode",
                                      "u", "v", "u_label", "v_label", "h", "k", "constraint",
                                      "domain_u", "domain_v", "cross_domain")}
+    # temperature + sample_idx identify this draw; diversity is measured per (prompt_id, temperature)
+    # over the M independent samples, so both must travel with the response.
+    base = {**base, "temperature": temperature, "sample_idx": sample_idx}
     async with sem:
         try:
             raw = await call_llm_async(async_client, messages=messages, model=model_id,
@@ -74,7 +77,8 @@ async def _run_one(async_client, sem, model_id, spec, max_tokens, temperature, r
                     "parse_success": False, "api_error": f"{type(e).__name__}: {e}"}
 
 
-async def run_model(async_client, sem, model_id, specs, max_tokens, temperature, reasoning, output_dir):
+async def run_model(async_client, sem, model_id, specs, max_tokens, temperatures, n_samples,
+                    reasoning, output_dir):
     model_dir = output_dir / model_id_to_key(model_id)
     model_dir.mkdir(parents=True, exist_ok=True)
     responses_path = model_dir / "responses.json"
@@ -82,18 +86,21 @@ async def run_model(async_client, sem, model_id, specs, max_tokens, temperature,
         print(f"  {model_id}: responses.json exists, skipping")
         return json.loads(responses_path.read_text())
 
-    print(f"  {model_id}: {len(specs)} prompts, max_tokens={max_tokens}, firing ...")
+    draws = [(s, t, i) for s in specs for t in temperatures for i in range(n_samples)]
+    print(f"  {model_id}: {len(specs)} prompts x {len(temperatures)} temps x {n_samples} samples "
+          f"= {len(draws)} draws, max_tokens={max_tokens}, firing ...")
     t0 = time.time()
     results = await asyncio.gather(*[
-        _run_one(async_client, sem, model_id, s, max_tokens, temperature, reasoning) for s in specs
+        _run_one(async_client, sem, model_id, s, max_tokens, t, i, reasoning) for s, t, i in draws
     ])
     responses_path.write_text(json.dumps(results, indent=2))
     n_ok = sum(1 for r in results if r["parse_success"])
     n_api = sum(1 for r in results if r["api_error"])
     (model_dir / "summary.json").write_text(json.dumps({
-        "model_id": model_id, "n_prompts": len(specs), "n_parsed": n_ok,
+        "model_id": model_id, "n_prompts": len(specs), "temperatures": temperatures,
+        "n_samples": n_samples, "n_draws": len(draws), "n_parsed": n_ok,
         "n_api_fail": n_api, "elapsed_seconds": round(time.time() - t0, 1)}, indent=2))
-    print(f"    done in {time.time()-t0:.1f}s — parsed={n_ok} api_fail={n_api}")
+    print(f"    done in {time.time()-t0:.1f}s — parsed={n_ok}/{len(draws)} api_fail={n_api}")
     return results
 
 
@@ -124,14 +131,18 @@ async def main(config_path, overwrite=False, debug=False):
     print(f"Loaded {len(specs)} prompt specs (open-vocabulary relations)")
 
     eval_cfg = config.get("eval", {})
-    temperature = eval_cfg.get("temperature", 0.7)
+    # temperatures: a list for the decoding sweep; n_samples (M): resamples per (prompt, temp) for
+    # set-level diversity. Back-compat: a scalar `temperature` / absent `n_samples` => single draw.
+    temperatures = eval_cfg.get("temperatures") or [eval_cfg.get("temperature", 0.7)]
+    n_samples = eval_cfg.get("n_samples", 1)
     max_tokens = eval_cfg.get("max_tokens", 1500)
     concurrency = config.get("concurrency", 8)
     reasoning = config.get("reasoning", {"effort": "low", "exclude": True})
     budget_usd = config.get("budget_usd", 0.0)
     models = config["models"]
+    draws_per_prompt = len(temperatures) * n_samples
     print(f"local_mode={_local_mode()}  models={models}  concurrency={concurrency}  "
-          f"budget=${budget_usd:.2f}  temp={temperature}")
+          f"budget=${budget_usd:.2f}  temps={temperatures}  M={n_samples}  ({draws_per_prompt}x/prompt)")
 
     async_client = get_async_client()
     sem = asyncio.Semaphore(concurrency)
@@ -140,7 +151,7 @@ async def main(config_path, overwrite=False, debug=False):
     for model_id in models:
         done = (output_dir / model_id_to_key(model_id) / "responses.json").exists()
         if not done:
-            est = estimate_model_cost(model_id, len(specs))
+            est = estimate_model_cost(model_id, len(specs) * draws_per_prompt)
             reasoning_here = reasoning if model_id in REASONING_MODELS else None
             mt = max_tokens * 4 if model_id in REASONING_MODELS else max_tokens
             if budget_usd > 0 and cumulative + est > budget_usd:
@@ -152,7 +163,8 @@ async def main(config_path, overwrite=False, debug=False):
         else:
             reasoning_here, mt = None, max_tokens
             print(f"\n{model_id}  (already done)")
-        results = await run_model(async_client, sem, model_id, specs, mt, temperature, reasoning_here, output_dir)
+        results = await run_model(async_client, sem, model_id, specs, mt, temperatures, n_samples,
+                                  reasoning_here, output_dir)
         summaries.append({"model_id": model_id, "n": len(results)})
 
     (output_dir / "run_summary.json").write_text(json.dumps(summaries, indent=2))

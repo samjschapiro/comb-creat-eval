@@ -1,35 +1,68 @@
 # Build a DOMAIN-SPANNING Wikidata G_c. Domain is a key independent variable, so seeds are
-# chosen to deliberately cover distinct domains (one anchor per domain); every entity inherits
-# the domain of the seed whose neighborhood reached it. The relation vocabulary is still
-# frequency-derived, and the analogy/blend pairs are still randomly sampled from the graph.
-output_dir: data/kg_creat/gc_domains_v1
-name: gc_domains_v1
+# chosen to deliberately cover distinct domains; every entity inherits the domain of the seed
+# whose neighborhood reached it. The relation vocabulary is frequency-derived, and the
+# analogy/blend/endpoint pairs are randomly sampled from the graph.
+#
+# v2 (2026-07-26): grown from 22 -> 51 seeds across 15 domains (~3-4 anchors/domain) to widen the
+# prominent-entity pool for a CREATE-parity (~931-query) benchmark without heavy entity reuse.
+# radius stays 2 (radius 3 explodes and pulls obscure tails); max_neighbors 40 -> 50 to densify.
+output_dir: data/kg_creat/gc_domains_v2
+name: gc_domains_v2
 radius: 2
-max_neighbors_per_relation: 40
-top_n_relations: 24
+max_neighbors_per_relation: 50
+top_n_relations: 28
 vocab_sample_radius: 1
-vocab_survey_entities: 800
+vocab_survey_entities: 1200
 
 seeds:                       # {well-known anchor: domain}
   Albert Einstein: science
   Charles Darwin: science
+  Marie Curie: science
+  Isaac Newton: science
   Leonardo da Vinci: art
   Pablo Picasso: art
+  Vincent van Gogh: art
+  Frida Kahlo: art
   Ludwig van Beethoven: music
   The Beatles: music
+  Wolfgang Amadeus Mozart: music
+  Bob Dylan: music
   William Shakespeare: literature
   Homer: literature
+  Jane Austen: literature
+  Leo Tolstoy: literature
   Alfred Hitchcock: film
+  Akira Kurosawa: film
+  Steven Spielberg: film
   Abraham Lincoln: politics
   Napoleon: politics
+  Nelson Mandela: politics
+  Winston Churchill: politics
   Japan: geography
   Amazon rainforest: geography
+  Egypt: geography
+  Mount Everest: geography
   Lion: biology
   Honey bee: biology
+  Blue whale: biology
+  Oak: biology
   Internet: technology
   Steam engine: technology
+  Printing press: technology
   Muhammad Ali: sports
   Association football: sports
+  Olympic Games: sports
   Aristotle: philosophy
+  Immanuel Kant: philosophy
+  Confucius: philosophy
   Coffee: food
+  Wine: food
+  Rice: food
   Buddhism: religion
+  Christianity: religion
+  Islam: religion
+  Euclid: mathematics
+  Carl Friedrich Gauss: mathematics
+  Hippocrates: medicine
+  Louis Pasteur: medicine
+  Adam Smith: economics
