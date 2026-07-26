@@ -130,27 +130,36 @@ Do not repeat an entity within a path.
 
 
 def _blending_prompt(spec: dict) -> str:
-    """Blending as single-stimulus analogy: one anchor, two parallel structures emanating outward.
+    """Blending as antanaclasis: the anchor is fixed; the model must find a VALID POLYSEMY of it.
 
-    Analogy pins both ends and asks for the mapping between them; blending pins one end and makes
-    the model choose *both* directions, so it must generate the two domains itself rather than
-    being handed them.
+    A true blend hinges on one word carrying two genuinely different senses (the C6 'Boxer' figure:
+    Boxer-the-athlete vs Boxer-the-dog). So the task is not "two facts about the anchor" but "two
+    *meanings* of the anchor", each developed under a shared relational frame. Finding a second sense
+    for an arbitrary given concept is the hard, creative act -- and for many anchors it is not
+    possible, which is why baseline success is a measurement, not a precondition.
     """
     u = spec["u_label"]
-    return f"""Task: You are given ONE concept: '{u}'. Build a conceptual BLEND around it by extending
-'{u}' outward in TWO different directions that share the SAME relational structure.
+    return f"""Task: You are given ONE concept: '{u}'. Your challenge is to find a VALID POLYSEMY for it
+-- a second, genuinely different meaning that the word '{u}' can be read as -- and build a conceptual
+BLEND that holds both meanings at once.
+
+A polysemy reads the SAME word in two unrelated senses. For example, the word "Boxer":
+  Path 1:  ["Boxer", "is a", "Athlete"], ["Athlete", "chases", "Records"]
+  Path 2:  ["Boxer", "is a", "Dog"],     ["Dog", "chases", "Squirrels"]
+"Boxer" means a person in one reading and a dog breed in the other. Both paths share the SAME frame
+("is a ... chases ...") but land in completely different domains. That double meaning is the blend.
 
 Produce exactly TWO paths:
-- Path 1: factual triples starting at '{u}' and leading outward into one domain.
-- Path 2: factual triples starting at '{u}' and leading outward into a DIFFERENT domain.
+- Both paths start at '{u}'.
+- Path 1 develops '{u}' under one meaning; Path 2 develops '{u}' under a DIFFERENT meaning of the SAME word.
+- The two readings must be genuinely distinct SENSES of the word -- NOT two facts about the same thing.
+- The second meaning must be the SAME spelled word read differently -- not a homophone or near-pun
+  (e.g. "Beatles" -> "beetles" does NOT count; it must be the identical word).
+- Use the EXACT SAME relationship word at every position in both paths; only the entities differ.
+- The two paths share no entity except '{u}'; the more unrelated the two meanings, the better the blend.
 
-Both paths must begin at '{u}'.
-CRITICAL: the two paths must use the EXACT SAME relationship word at every position -- if Path 1's
-relations are [r1, r2, r3], Path 2's relations must be the identical words [r1, r2, r3], in the same
-order. Do NOT paraphrase or substitute synonyms. Only the ENTITIES after '{u}' differ.
-The two branches must share NO entity except '{u}' itself, and the further apart the two branches
-end up -- the more unrelated the two domains they reach -- the better the blend. Use concrete,
-canonically-named entities and do not repeat an entity within a path.
+Use concrete, factual, canonically-named entities and do not repeat an entity within a path.
+If '{u}' genuinely has no valid second meaning, return an empty JSON object.
 
 {_OUTPUT_BLOCK_DIVERGENT}"""
 

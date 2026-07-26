@@ -200,6 +200,51 @@ def sample_matched_bundles(gc: KnowledgeGraph, h: int = 3, k: int = 5, min_route
     return selected
 
 
+def sample_random_bundles(gc: KnowledgeGraph, n_bundles: int = 40, k: int = 5, seed: int = 0,
+                          min_degree: int = 3, max_per_source: int = 3,
+                          entity_domains: dict[str, str] | None = None) -> list[dict]:
+    """Sample Regime-A endpoints as RANDOM pairs of arbitrary entities -- like the analogy task.
+
+    Deliberately drops the matched-bundle machinery (route-existence and constraint-biting
+    verification). Verifying a path exists between ``u`` and ``v`` selects for the unsurprising
+    pairs and defeats the point of combinatorial creativity, which is to connect things that are
+    *not* obviously connected; and biting no longer needs a graph guarantee because Pass-2 targets
+    are derived from each model's own baseline behaviour on the pair. So we draw random pairs from
+    the graph's real (non-class) entities and let baseline success be a *measured* quantity, not an
+    engineered precondition -- the same posture as ``sample_regime_b``.
+
+    The only floor kept is a light per-node one (``min_degree``, class nodes excluded) so each
+    endpoint is a real, linkable entity the model and judge can engage with -- identical to the
+    analogy sampler. It is not a constraint on the *pair*.
+    """
+    rng = random.Random(seed)
+    ed = entity_domains or {}
+    pool = _prominent_nodes(gc, min_degree)
+    if len(pool) < 2:
+        raise ValueError("FATAL: not enough prominent nodes in G_c for random Regime-A sampling")
+
+    seen, per_source, bundles = set(), Counter(), []
+    max_unique = len(pool) * (len(pool) - 1) // 2
+    while len(bundles) < min(n_bundles, max_unique):
+        u, v = rng.sample(pool, 2)
+        key = frozenset((u, v))
+        if key in seen or per_source[u] >= max_per_source:
+            continue
+        seen.add(key)
+        per_source[u] += 1
+        du, dv = ed.get(u), ed.get(v)
+        bundles.append({
+            "bundle_id": f"A{len(bundles)}", "regime": "A", "u": u, "v": v,
+            "u_label": gc.label(u), "v_label": gc.label(v), "h": None, "k": k,
+            "domain_u": du, "domain_v": dv, "cross_domain": (du != dv) if (du and dv) else None,
+            # Only the baseline cell; constrained cells are added by make_pass2 from baseline behaviour.
+            "cells": {"baseline": {"constraint": None}},
+        })
+    print(f"[sample] {len(bundles)} random Regime-A endpoint pairs from a pool of {len(pool)} "
+          f"entities (min_degree={min_degree}, <= {max_per_source} per source)")
+    return bundles
+
+
 # ------------------------------------------------------------------------- Regime B
 
 def sample_regime_b(gc: KnowledgeGraph, n_analogy: int, n_blend: int, seed: int = 0,

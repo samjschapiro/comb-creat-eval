@@ -55,17 +55,23 @@ corresponding positions play corresponding roles (a shared relational system), n
 relation words match. Judge holistically.
 Return valid JSON only, exactly: {{ "explanation": "string", "valid": true or false }}"""
 
-BLENDING_JUDGE_PROMPT = """You are evaluating whether two structures form a valid conceptual BLEND
-around a single anchor concept.
-Anchor: '{u}'
-Branch 1 (ordered triples): {path1}
-Branch 2 (ordered triples): {path2}
-Both branches start at the anchor and use the same relation sequence. A valid blend requires that the
-two branches travel into GENUINELY DIFFERENT domains or senses of the anchor -- the anchor must be
-doing different work in each branch -- and that entities at corresponding positions play corresponding
-roles across the branches. Two branches that restate the same aspect of the anchor, or that land in
-the same domain, are NOT a blend. Judge holistically.
-Return valid JSON only, exactly: {{ "explanation": "string", "domains": ["string", "string"], "valid": true or false }}"""
+BLENDING_JUDGE_PROMPT = """You are judging whether two structures form a valid conceptual BLEND built
+on a POLYSEMY of a single word.
+Word: '{u}'
+Reading 1 (ordered triples): {path1}
+Reading 2 (ordered triples): {path2}
+A valid blend requires that the two readings interpret the word '{u}' in two GENUINELY DIFFERENT
+SENSES -- the same surface word meaning two distinct things (e.g. "Boxer" as a person vs. "Boxer" as
+a dog breed; "Mercury" as the planet vs. the chemical element vs. the Roman god). It is NOT valid if
+the two readings merely state two facts about the SAME sense of '{u}' (e.g. two different things one
+band did, or two places one country borders). Judge three things:
+1. Polysemy (the crux): do the two branches genuinely invoke two DISTINCT MEANINGS of the SAME
+   spelled word, not one meaning developed twice? A homophone or near-pun with different spelling
+   ("Beatles" vs "beetles") does NOT count -- it must be the identical word.
+2. Shared frame: do both branches use the same relation sequence?
+3. Factuality: within each sense, are the triples factually correct?
+Only a path that passes all three is valid. Return valid JSON only, exactly:
+{{ "explanation": "string", "sense_1": "string", "sense_2": "string", "valid": true or false }}"""
 
 
 async def _ask(client, model: str, prompt: str, max_tokens: int = 800, attempts: int = 3) -> str | None:

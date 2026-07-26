@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 from src.utils import init_directory, load_config, save_config  # noqa: E402
 from src.kg_creat.graph import KnowledgeGraph  # noqa: E402
-from src.kg_creat.sample import sample_matched_bundles, sample_regime_b  # noqa: E402
+from src.kg_creat.sample import sample_matched_bundles, sample_random_bundles, sample_regime_b  # noqa: E402
 
 
 def _flatten_regime_a(bundles: list[dict]) -> list[dict]:
@@ -32,6 +32,9 @@ def _flatten_regime_a(bundles: list[dict]) -> list[dict]:
                 "bundle_id": b["bundle_id"], "regime": "A", "mode": mode,
                 "u": b["u"], "v": b["v"], "u_label": b["u_label"], "v_label": b["v_label"],
                 "h": b["h"], "k": b["k"], "constraint": cell["constraint"],
+                # domain is a study variable; carried through for random-pair endpoints
+                "domain_u": b.get("domain_u"), "domain_v": b.get("domain_v"),
+                "cross_domain": b.get("cross_domain"),
             })
     return specs
 
@@ -58,19 +61,30 @@ def main(config_path, overwrite=False, debug=False):
 
     s = config.get("sampler", {})
     if debug:
-        s = {**s, "max_bundles": 2}
-        print("DEBUG: max_bundles=2")
-    bundles = sample_matched_bundles(
-        gc,
-        h=s.get("h", 3), k=s.get("k", 5),
-        min_routes=s.get("min_routes", 6), min_degree=s.get("min_degree", 4),
-        max_bundles=s.get("max_bundles", 10), max_paths=s.get("max_paths", 64),
-        require_constraints=s.get("require_constraints", 3),
-        max_per_source=s.get("max_per_source", 2),
-    )
-
+        s = {**s, "max_bundles": 2, "n_bundles": 2}
+        print("DEBUG: 2 bundles")
     ed_path = upstream_dir / "entity_domains.json"
     entity_domains = json.loads(ed_path.read_text()) if ed_path.exists() else {}
+
+    # 'random' (default): arbitrary entity pairs, like the analogy task -- no path/biting
+    # verification (that selects for unsurprising pairs and defeats combinatorial creativity;
+    # biting is handled post hoc by make_pass2's baseline-derived targets). 'matched' is the
+    # legacy connectivity-filtered sampler.
+    strategy = s.get("strategy", "random")
+    if strategy == "random":
+        bundles = sample_random_bundles(
+            gc, n_bundles=s.get("n_bundles", 40), k=s.get("k", 5), seed=s.get("seed", 0),
+            min_degree=s.get("min_degree", 3), max_per_source=s.get("max_per_source", 3),
+            entity_domains=entity_domains)
+    elif strategy == "matched":
+        bundles = sample_matched_bundles(
+            gc, h=s.get("h", 3), k=s.get("k", 5),
+            min_routes=s.get("min_routes", 6), min_degree=s.get("min_degree", 4),
+            max_bundles=s.get("max_bundles", 10), max_paths=s.get("max_paths", 64),
+            require_constraints=s.get("require_constraints", 3),
+            max_per_source=s.get("max_per_source", 2))
+    else:
+        raise ValueError(f"FATAL: unknown sampler.strategy {strategy!r} (use 'random' or 'matched')")
     rb = config.get("regime_b", {})
     regime_b = sample_regime_b(gc, n_analogy=rb.get("n_analogy", 8), n_blend=rb.get("n_blend", 6),
                                seed=rb.get("seed", 0), min_degree=rb.get("min_degree", 3),
