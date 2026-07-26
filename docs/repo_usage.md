@@ -327,6 +327,22 @@ docs/reports/
 - Include relevant figures and tables
 - Should stand on their own — a collaborator can read one without digging through code or data
 
+**Every report must carry its sample.** A finding is not interpretable without the frame it was
+measured on, so each report states — up front and per finding — the dataset size, the sampling
+procedure, and an explicit scope statement about what the finding does and does not generalize to.
+Concretely:
+- A **Data & sampling** block near the top: n items, n conditions, total observations, the model/data
+  sample and whether it is random vs convenience, and the *replication unit* used for any significance
+  test.
+- The **sampling frame's biases**, especially where a selection filter narrows the realized sample
+  (e.g. connectivity filters that concentrate endpoints on hub entities). State what the frame is
+  *not* evidence about.
+- A **per-finding n**: attach the number of observations (and the unit) to each headline statistic,
+  computed the same way the statistic is.
+- Prefer an **auto-generated datasheet** (a script that emits these numbers from the data) over
+  hand-typed figures, so the prose can never drift from the data. See
+  `src/kg_creat/scripts/datasheet.py` for the pattern.
+
 **Research output hierarchy:** experiments produce raw results in `data/` → interesting results become findings in track notes → established findings get compiled into reports → reports mature into paper sections.
 
 ### Papers (`papers/`)

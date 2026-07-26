@@ -20,6 +20,19 @@ and rare relation class). A fifth — ordering — was piloted and **dropped** a
 construction (Appendix A). Every cell is administered on the **same 30 endpoint pairs**, so within a
 pair only the constraint changes and every comparison is a model differenced against itself.
 
+> **Data & sampling** — full auto-generated [datasheet](datasheet.md).
+> - **8 models** (Anthropic / OpenAI / Google / Meta; cheap→frontier) — a convenience sample, not
+>   random or exhaustive. The 8 models are the replication unit for significance.
+> - **30 endpoint bundles × 5 cells × 5 paths/prompt = 5,968 scored paths** (excludes dropped
+>   ordering); judge `gpt-oss-120b`.
+> - **Narrow endpoint frame — the main scope limit.** The 30 bundles use only **21 distinct
+>   entities**; the UN appears in 11 of 30 pairs, the Australia Group in 8. Although the graph's
+>   seeds spanned 13 domains, the sampler's connectivity + biting filters (`degree ≥ 4`,
+>   `≥ 6 routes`, `≥ 3 constraints bite`) select hub entities, collapsing the realized pool onto
+>   **prominent geopolitical entities** (countries + international organizations). Everything below
+>   is established *for paths among well-connected real-world entities of this kind* — not for
+>   sparse or domain-specific subgraphs, and not for a random draw of models.
+
 ---
 
 ## 1. One endpoint pair, five cells
@@ -66,12 +79,14 @@ adherence least (−27 %), which is exactly why its net is smallest.
 *conditional on success*, so maybe constraints don't make paths novel — they just select the novel
 ones that happen to satisfy. Two controls rule this out:
 
-- **Novelty rises in `R_emit`, over *all* emitted paths including failures** (+0.019 to +0.053).
-  A pure selection effect could not move a mean that already contains the failures. The constraint
-  changes what the model *reaches for*.
+- **Novelty rises in `R_emit`, over *all* emitted paths including failures** (+0.019 to +0.053;
+  n ≈ 1,180 emitted paths per constraint across the 8 models, vs 1,163 baseline). A pure selection
+  effect could not move a mean that already contains the failures. The constraint changes what the
+  model *reaches for*.
 - **It survives holding endpoints fixed.** Comparing a model's *successful constrained* paths to its
   *successful baseline* paths on the **same bundle**, the constrained success is more novel by +0.028
-  to +0.072 (in 56–76 % of bundles). Not a between-endpoint artifact.
+  to +0.072 (in 56–76 % of the n = 139–156 paired model×bundle cells per constraint). Not a
+  between-endpoint artifact.
 
 **Where the novelty gain comes from.** Look at the one constraint that *doesn't* raise novelty:
 inclusion of a **common** class (+1 %). The others all push models toward *less-traveled* relations —
@@ -85,8 +100,10 @@ novelty lever is specifically "go somewhere you usually wouldn't."
 
 ![net creativity by constraint type](figures/fig_creativity_by_constraint.png)
 
-Each box is the 8 per-model paired effects (constrained − unconstrained, same endpoints); stars are
-a one-sample t-test on those 8 values, Holm-corrected.
+Each box is the **8 per-model paired effects** (constrained − unconstrained, same endpoints); stars
+are a one-sample t-test on those 8 values, Holm-corrected. The model is the replication unit
+(n = 8), so significance speaks to consistency *across these 8 models*, not across endpoints or a
+model population — the 30 bundles enter only as the within-model averaging set.
 
 | cell | creativity `E[R·U]` | paired Δ vs baseline | sig. |
 |---|---|---|---|
