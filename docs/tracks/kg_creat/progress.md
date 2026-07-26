@@ -83,6 +83,35 @@ The per-constraint ideation–execution decomposition is the *empirical demonstr
 the headline. Full comparison table: [novelty_vs_create.md](novelty_vs_create.md).
 Planned submission narrative/outline: [paper_outline.md](paper_outline.md).
 
+## Status — 2026-07-26 (benchmark redesign: arbitrary endpoints, antanaclasis, diversity, CREATE-parity)
+
+Major methodology pivot toward the paper's real benchmark. Full session record:
+[docs/logs/2026-07-26/1625_kg_creat_diversity_pivot.md](../../logs/2026-07-26/1625_kg_creat_diversity_pivot.md).
+
+- **Arbitrary-entity endpoints.** Dropped the connectivity/biting sampler filters (they selected
+  hub entities and defeat combinatorial creativity; biting is already handled post-hoc by
+  baseline-derived targets). `sample_random_bundles`, `sampler.strategy=random`. Verified on an
+  obscure-pair probe that models attempt real paths and the judge adjudicates the tail well.
+- **Blending = true antanaclasis.** Fixed anchor; the task is to find a *valid polysemy* (same word,
+  two senses — the C6 'Boxer' figure). Prompt + judge reworked; smoke-tested (Turkey passes; judge
+  rejects forced/fabricated senses).
+- **Set-level diversity + systematic decoding.** M=10 resamples per prompt × temperature sweep
+  {0.7, 0.9, 1.0}; `diversity.py` computes D over all + valid items. Diversity is free (embeddings);
+  only utility judging scales with M.
+- **CREATE-parity size.** ~931 instances (120 bundles×5 + 165 analogy + 166 blending). Grew G_c
+  (`gc_domains_v2`, 51 seeds/16 domains): prominent pool 424 → **1,066**. Domain balance uneven
+  (politics/geography heavy).
+- **Explicit "be creative" in every task** (Regime A previously asked only for strong+diverse, not
+  novelty). Domains tagged as reference metadata, never shown to the model.
+- **Infra hardened:** M/temperature knobs in `run_elicit`; crash-proof path parsing (a set-valued
+  triple once killed a run at json.dumps).
+- **Budget reality:** this OpenRouter key has ~$217 left (not the account's $1.3k). Measured output
+  ~250 tok, so runs are cheaper than the conservative estimate; the cheap pilot is ~$15.
+
+**Running now:** Stage-1 diversity pilot (3 cheap models × 451 instances × 3 temps × M=10).
+**Next:** report temp×diversity surface + per-task rates + categorical derivability → derive targets
+→ Stage 2 constrained cells → judge slice. Owed: human judge-reliability pass.
+
 ## Status — 2026-07-22 (ordering dropped; constraint set is now four types)
 
 **Ordering removed from the constraint set.** Round-1 flagged it as the most damaging constraint
