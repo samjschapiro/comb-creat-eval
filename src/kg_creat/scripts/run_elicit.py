@@ -93,7 +93,9 @@ async def run_model(async_client, sem, model_id, specs, max_tokens, temperatures
     results = await asyncio.gather(*[
         _run_one(async_client, sem, model_id, s, max_tokens, t, i, reasoning) for s, t, i in draws
     ])
-    responses_path.write_text(json.dumps(results, indent=2))
+    # default=str so a single unexpected non-serializable value can never discard a whole model's
+    # completed draws (a set once slipped through and crashed the write after all draws were spent).
+    responses_path.write_text(json.dumps(results, indent=2, default=str))
     n_ok = sum(1 for r in results if r["parse_success"])
     n_api = sum(1 for r in results if r["api_error"])
     (model_dir / "summary.json").write_text(json.dumps({

@@ -59,7 +59,11 @@ def parse_paths(raw_response: str | list | None) -> list[EmittedPath]:
         return []
     out: list[EmittedPath] = []
     for path in parsed:
-        triples = [tuple(t) for t in path if t is not None and len(t) == 3]
+        # Coerce every element to str: CREATE's parser can occasionally emit a non-string (e.g. a
+        # set) for a malformed triple, which is both wrong to score and unserializable (it crashed
+        # a whole run on json.dumps). str() keeps it serializable; a garbage triple then just fails
+        # scoring naturally rather than taking the run down.
+        triples = [tuple(str(x) for x in t) for t in path if t is not None and len(t) == 3]
         if triples:
             out.append(EmittedPath(triples=triples))
     return out
