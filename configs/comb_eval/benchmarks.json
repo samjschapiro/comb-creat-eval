@@ -176,7 +176,9 @@
     "eq_bench_cw": 1255.6,
     "eq_bench_cw_rubric": 15.33,
     "mazur_cw_v2": 7.99,
-    "mmlu_pro": 0.675
+    "mmlu_pro": 0.675,
+    "noveltybench_utility": 2.2636,
+    "noveltybench_utility_source": "self-run skywork bf16 union-1100 (2026-07-24)"
   },
   "google_gemini-2-0-flash-001": {
     "arena_overall": 1360,
@@ -303,7 +305,9 @@
     "arena_cw": 1290,
     "eq_bench_cw": 898.7,
     "eq_bench_cw_rubric": 9.12,
-    "mmlu_pro": 0.743
+    "mmlu_pro": 0.743,
+    "noveltybench_utility": 3.1402,
+    "noveltybench_utility_source": "self-run skywork bf16 union-1100 (2026-07-24)"
   },
   "openai_gpt-4-1-nano": {
     "arena_overall": 1321,
@@ -383,7 +387,9 @@
     "liveideabench_flexibility": 6.29,
     "liveideabench_feasibility": 5.99,
     "liveideabench_fluency": 6.17,
-    "liveideabench_clarity": 7.72
+    "liveideabench_clarity": 7.72,
+    "noveltybench_utility": 3.0899,
+    "noveltybench_utility_source": "self-run skywork bf16 union-1100 (2026-07-24)"
   },
   "nvidia_llama-3-1-nemotron-70b-instruct": {
     "arena_overall": 1298,
@@ -409,7 +415,9 @@
     "liveideabench_flexibility": 6.38,
     "liveideabench_feasibility": 5.49,
     "liveideabench_fluency": 6.71,
-    "liveideabench_clarity": 7.34
+    "liveideabench_clarity": 7.34,
+    "noveltybench_utility": 3.7184,
+    "noveltybench_utility_source": "self-run skywork bf16 union-1100 (2026-07-24)"
   },
   "google_gemma-2-27b-it": {
     "arena_overall": 1288,
@@ -471,7 +479,9 @@
     "liveideabench_flexibility": 6.42,
     "liveideabench_feasibility": 5.8,
     "liveideabench_fluency": 6.58,
-    "liveideabench_clarity": 7.57
+    "liveideabench_clarity": 7.57,
+    "noveltybench_utility": 3.59,
+    "noveltybench_utility_source": "self-run skywork bf16 union-1100 (2026-07-24)"
   },
   "openai_gpt-3-5-turbo": {
     "arena_overall": 1223,
@@ -504,7 +514,9 @@
     "liveideabench_flexibility": 6.89,
     "liveideabench_feasibility": 6.3,
     "liveideabench_fluency": 8.98,
-    "liveideabench": 7.2375
+    "liveideabench": 7.2375,
+    "noveltybench_utility": 3.9991,
+    "noveltybench_utility_source": "self-run skywork bf16 union-1100 (2026-07-24)"
   },
   "meta-llama_llama-3-2-3b-instruct": {
     "arena_overall": 1166,
@@ -536,7 +548,9 @@
     "liveideabench_flexibility": 6.12,
     "liveideabench_feasibility": 5.66,
     "liveideabench_fluency": 7.07,
-    "liveideabench_clarity": 6.61
+    "liveideabench_clarity": 6.61,
+    "noveltybench_utility": 3.2872,
+    "noveltybench_utility_source": "self-run skywork bf16 union-1100 (2026-07-24)"
   },
   "qwen_qwen3-14b": {
     "hivemind_intra_sim": 0.87,
