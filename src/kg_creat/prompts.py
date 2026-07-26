@@ -92,20 +92,17 @@ connection paths. A connection path is a sequence of factual triples (head, rela
 tail) forming a continuous chain: consecutive triples share an entity, the first triple's
 head is '{u}', and the last triple's tail is '{v}'.
 
-Paths may be direct or indirect and may include one or more intermediate entities; prefer
-paths that pass through intermediate entities rather than a single direct link. Produce {k}
-distinct paths. Within each individual path, prefer STRONG connections (highly exclusive,
-specific relationships). Across the full set of paths, maintain DIVERSITY: include both
-popular/well-known connections and less well-known "trivia" connections, and avoid
-over-concentrating on the most obvious domain (e.g., for a scientist, do not use only their
-main field).
+BE CREATIVE: your goal is not merely to connect '{u}' and '{v}', but to connect them in the most
+NOVEL, SURPRISING, and non-obvious ways you can imagine. Favour remote, unexpected intermediate
+entities and imaginative routes over the first obvious link -- reach across distant domains. Every
+triple must still be factually true.
+
+Produce {k} DISTINCT paths that are as different from one another as possible (different intermediate
+entities and relationships, spanning different domains; do not over-concentrate on the most obvious
+domain). Prefer paths through intermediate entities rather than a single direct link, and prefer
+specific, distinctive relationships over broad generic ones (e.g., 'attended', 'lives in').
 {clause_block}
 {_ENTITY_RULES}
-
-Relationship quality guidance:
-- Prefer strong, specific, distinctive relationships (e.g., parent/child, founder-of, spouse,
-  authored, member-of a small group) over broad shared attributes (e.g., 'attended', 'lives in').
-- Prioritize strong links early in each chain when possible.
 
 {_OUTPUT_BLOCK}"""
 
@@ -115,6 +112,9 @@ def _analogy_prompt(spec: dict) -> str:
     return f"""Task: You are given two concepts: '{u}' and '{v}'. Find a deep analogy between them --
 a shared relational structure in which '{u}' plays a role in its domain analogous to the role
 '{v}' plays in its domain.
+
+BE CREATIVE: the more SURPRISING and non-obvious the analogy -- the more distant and unexpected the
+two domains -- the better, as long as the structural mapping is genuine and every triple is factual.
 
 Produce exactly TWO paths:
 - Path 1: factual triples describing '{u}' within its own domain.
@@ -148,6 +148,9 @@ A polysemy reads the SAME word in two unrelated senses. For example, the word "B
   Path 2:  ["Boxer", "is a", "Dog"],     ["Dog", "chases", "Squirrels"]
 "Boxer" means a person in one reading and a dog breed in the other. Both paths share the SAME frame
 ("is a ... chases ...") but land in completely different domains. That double meaning is the blend.
+
+BE CREATIVE: the more SURPRISING and non-obvious the second meaning -- the more distant the two senses
+-- the better the blend, as long as it is a genuine sense of the word and every triple is factual.
 
 Produce exactly TWO paths:
 - Both paths start at '{u}'.

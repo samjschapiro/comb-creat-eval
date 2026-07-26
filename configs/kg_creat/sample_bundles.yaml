@@ -1,20 +1,20 @@
 # Sample the round-1 Regime-A prompt set from the cached G_c.
-upstream_dir: data/kg_creat/gc_domains_v1      # domain-spanning G_c (from build_gc.py)
-output_dir: data/kg_creat/prompts_regimeA_rand_v1
+upstream_dir: data/kg_creat/gc_domains_v2      # domain-spanning G_c (from build_gc.py)
+output_dir: data/kg_creat/prompts_rand_v2
 
 sampler:                # Regime A: RANDOM arbitrary entity pairs (like the analogy task).
   # No path-existence or constraint-biting verification: verifying a path exists between u and v
   # selects for unsurprising pairs and defeats combinatorial creativity, and biting is handled
   # post hoc by make_pass2's baseline-derived targets. Baseline success is a MEASURED quantity.
   strategy: random      # 'random' = arbitrary pairs; 'matched' = legacy connectivity-filtered
-  n_bundles: 40
+  n_bundles: 120        # ~931-instance benchmark: 120 bundles x 5 cells = 600 Regime-A
   seed: 0
   k: 5                  # paths requested per prompt
   min_degree: 3         # light per-node floor only (real/linkable entity), NOT a pair filter
   max_per_source: 3     # <= this many pairs share a source entity, for endpoint diversity
 
 regime_b:               # analogy + blending on the SAME arbitrary-entity pool (fully random)
-  n_analogy: 40         # analogy: shared relational structure between two arbitrary entities
-  n_blend: 40           # blending: antanaclasis -- find a valid polysemy of one arbitrary anchor
+  n_analogy: 165        # analogy: shared relational structure between two arbitrary entities
+  n_blend: 166          # blending: antanaclasis -- find a valid polysemy of one arbitrary anchor
   seed: 1               # != Regime-A seed so B draws are not identical to the A pairs
   min_degree: 3

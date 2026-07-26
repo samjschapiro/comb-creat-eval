@@ -27,7 +27,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "scripts" / 
 from cost_tracker import PRICING  # noqa: E402
 
 EST_INPUT_TOKENS = 750    # rendered prompt (CREATE-scaffolded, ~2x longer)
-EST_OUTPUT_TOKENS = 900   # k paths x ~3 triples in JSON
+EST_OUTPUT_TOKENS = 400   # measured: baseline ~400, analogy ~224, blending ~162 tok
 
 REASONING_MODELS = {
     "openai/o3", "openai/o3-mini", "openai/o4-mini",

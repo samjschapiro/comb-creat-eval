@@ -1,0 +1,16 @@
+# Diversity pilot, Stage 1: baseline + analogy + blending on the v2 arbitrary-entity pool,
+# 3 cheap models, M=10 resamples x temperature sweep {0.7,0.9,1.0}. Diversity is free (embeddings);
+# utility judged on a slice later. Measured real cost ~$6 (outputs are ~250 tok, far under the cap).
+upstream_dir: data/kg_creat/prompts_rand_v2
+output_dir: data/kg_creat/responses_rand_v2_stage1
+modes: []
+eval:
+  temperatures: [0.7, 0.9, 1.0]
+  n_samples: 10
+  max_tokens: 1600
+concurrency: 16
+budget_usd: 15.0
+models:
+  - meta-llama/llama-3.1-8b-instruct
+  - google/gemini-2.5-flash-lite
+  - meta-llama/llama-3.3-70b-instruct
