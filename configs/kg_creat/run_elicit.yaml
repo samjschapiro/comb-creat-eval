@@ -1,13 +1,13 @@
 # Round-1 elicitation. For the free shakedown, point LLM_BASE_URL at the local MLX
 # server and use the served model id below (budget cap is bypassed in local mode).
 # For the paid pilot, unset LLM_BASE_URL and swap in OpenRouter model ids + a budget.
-upstream_dir: data/kg_creat/prompts_regimeA_pass2
-output_dir: data/kg_creat/responses_regimeA_pass2
-modes: []             # PASS 2: all specs are constrained cells
+upstream_dir: data/kg_creat/prompts_regimeA_rand_v1
+output_dir: data/kg_creat/responses_rand_stage1
+modes: []             # STAGE 1: baseline + analogy + blending (all modes in the set)
 
 eval:
   temperature: 0.7
-  max_tokens: 1200
+  max_tokens: 1600   # raised from 1200: 5-path baselines were truncating
 concurrency: 12
 budget_usd: 8.0          # OpenRouter cap (suite est ~$5.4 elicitation)
 models:                  # capability spread, cheap -> frontier

@@ -150,3 +150,51 @@ Modified: `sample.py` (random sampler), `prompts.py` (antanaclasis blend + creat
   Stage-1 baseline.
 - Frontier suite membership + whether to keep Opus-5 given the key limit.
 - Whether to add biology/tech/food seeds to close the domain-balance gap in G_c.
+
+---
+
+## Continuation — 2026-07-27
+
+**Paper: forms-of-creativity table.** Added Table `tab:forms` to `content/05_benchmark.tex` mapping
+the three tasks to their cognitive-science traditions (remote association / Mednick; analogy &
+metaphor / Gentner + Lakoff; blending / Fauconnier-Turner + Koestler) with one short example each
+(*Einstein→violin→Mozart*; *atom : solar system*; *Boxer: athlete/dog*) and a concise caption.
+Added Gentner 1983 + Lakoff 1980 to the bib. **Committed + pushed to Overleaf** (paper is its own
+git repo). Also discussed (and scoped OUT) conceptual combination as a 4th form — it's the one
+literature gap, but scoring a generative hybrid needs a softer, judge-heavy utility target
+(ground the parts, judge the synthesis + emergence); noted for related-work, not built.
+
+**Stage-1 pilot results (3 cheap models, baseline + analogy + blending, M=10 × 3 temps).**
+All three models ~96–98% parse, 1–5 API fails; ~$6.
+- **Diversity rises monotonically with temperature** (the sanity check) — e.g. Llama-8B baseline
+  D_all 0.54→0.59 across T 0.7→1.0.
+- **Diversity captures model + task structure:** weaker models are *more* diverse (Llama-8B highest,
+  Llama-70B lowest/flattest — the strong model is consistent); tasks ladder baseline > analogy >
+  blending.
+- **Structural rates:** baseline well-formed 77–96% (arbitrary endpoints not floored); analogy valid
+  3/19/81% and antanaclasis blending 1/3/58% (Llama-8B / Flash-Lite / Llama-70B) — the tasks
+  discriminate models sharply, blending hardest.
+- **Finding it sets up:** a **diversity↔validity trade-off across models** (Llama-70B most valid,
+  least diverse; Llama-8B the reverse), plus the monotone temperature effect.
+
+**Stage-2 built (not yet run).** `make_pass2` extended to derive **categorical on arbitrary
+endpoints** — type the interior entities models actually used (via G_c), drop over-generic types
+(human/country/sovereign-state, which don't bite), pick the most-contrastive specific type. Yields
+biting targets for all 120 bundles across 25 specific types (island country, music genre, academy of
+sciences...). Generated 480 Stage-2 specs (120 bundles × 4 cells). **Fired and immediately killed on
+user request** — nothing spent.
+
+**Constraint-taxonomy correction (DEFERRED).** User clarified the constraint set is a clean **2×2:
+inclusion/exclusion × relation/entity** (categorical is just *inclusion of entity*; no separate
+"categorical" type). Current Stage-2 cells cover 3 of 4 quadrants — **exclusion of entity is
+missing**, and `inclusion_rare` is a redundant second inclusion-of-relation, not a distinct type.
+Fix (deferred): drop `inclusion_rare`, rename categorical → inclusion-of-entity, add
+exclusion-of-entity (same contrastive-type machinery as an *avoid* constraint + new prompt clause +
+judge branch). Open confirmations: entity constraints by TYPE (symmetric with relation-by-class) vs
+specific entity; whether to keep `inclusion_rare` as an appendix ablation.
+
+**Budget:** this OpenRouter key has ~$217 left (checked). Stage-1 ~$6; Stage-2 ~$8 when run.
+
+**Next session:** (1) resolve the 2×2 taxonomy + rebuild Stage-2 spec generation; (2) run Stage 2;
+(3) **the immediate ask: analyze the Stage-1 analogy/blending results in depth.** Raw outputs saved
+at `data/kg_creat/responses_rand_v2_stage1/` (local-disk only, not backed up).

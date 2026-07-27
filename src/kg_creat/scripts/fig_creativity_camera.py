@@ -1,7 +1,8 @@
 """Camera-ready figure: creativity cost by constraint type. Nature Machine Intelligence spec.
 
-Built to the Nature branded-journals artwork guide: 88 mm single-column width, Arial (sans-serif)
-throughout with all text between 5 and 7 pt, RGB, and vector PDF for line art. The PDF is the
+Built to the Nature branded-journals artwork guide: 88 mm single-column width, with all text
+between 5 and 7 pt, RGB, and vector PDF for line art. Set in Nimbus Roman to match the paper's
+body font (ICLR's times package resolves to NimbusRomNo9L). The PDF is the
 submission artefact; the PNG is only for on-screen review (Nature does not accept bitmap formats
 for vector artwork).
 
@@ -36,8 +37,11 @@ INK, MUTED, DOT = "#1f2933", "#5b6672", "#98a2b0"
 
 def main(scores_dir, outdir):
     mpl.rcParams.update({
-        "font.family": "sans-serif",
-        "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
+        # Nimbus Roman is the URW clone of Adobe Times that the LaTeX times package resolves to, so
+        # the figure text is the same face as the body text of the paper.
+        "font.family": "serif",
+        "font.serif": ["Nimbus Roman", "Times New Roman", "DejaVu Serif"],
+        "mathtext.fontset": "stix",
         # Nature: maximum text size 7 pt, minimum 5 pt.
         "font.size": 6, "axes.labelsize": 7, "xtick.labelsize": 6, "ytick.labelsize": 6.5,
         "axes.linewidth": 0.5, "xtick.major.width": 0.5, "ytick.major.width": 0.0,

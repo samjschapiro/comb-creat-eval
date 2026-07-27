@@ -6,7 +6,8 @@ its own baseline. Every constraint raises the novelty of successful paths a litt
 the adherence rate a lot (red); net creativity is their per-model product and is shown in the net
 figure. The two are drawn as separate measured changes, not summed — percentage changes do not add.
 
-Built to the Nature branded-journals artwork guide: 88 mm single-column, Arial, 5-7 pt, vector PDF.
+Built to the Nature branded-journals artwork guide: 88 mm single-column, 5-7 pt, vector PDF. Set in
+Nimbus Roman to match the paper's body font (ICLR's times package resolves to NimbusRomNo9L).
 
     .venv_mlx/bin/python src/kg_creat/scripts/fig_creativity_mechanism.py data/kg_creat/scores_regimeA_all
 """
@@ -37,8 +38,11 @@ NOV, ADH = "#2F7D4F", "#B3402F"     # novelty gain (green), adherence loss (red)
 
 def main(scores_dir, outdir):
     mpl.rcParams.update({
-        "font.family": "sans-serif",
-        "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
+        # Nimbus Roman is the URW clone of Adobe Times that the LaTeX times package resolves to, so the
+        # figure text is the same face as the body text of the paper.
+        "font.family": "serif",
+        "font.serif": ["Nimbus Roman", "Times New Roman", "DejaVu Serif"],
+        "mathtext.fontset": "stix",
         "font.size": 6, "axes.labelsize": 7, "xtick.labelsize": 6, "ytick.labelsize": 6.5,
         "legend.fontsize": 6, "axes.linewidth": 0.5, "xtick.major.width": 0.5, "ytick.major.width": 0.0,
         "pdf.fonttype": 42, "ps.fonttype": 42,
@@ -69,7 +73,8 @@ def main(scores_dir, outdir):
         ax.barh(i + h / 1.65, adh[m], height=h, color=ADH, zorder=3)         # adherence loss, leftward
         ax.text(nov[m] + 1.2, i - h / 1.65, f"+{nov[m]:.0f}%", va="center", ha="left",
                 fontsize=5.5, color=NOV)
-        ax.text(adh[m] - 1.2, i + h / 1.65, f"{adh[m]:.0f}%", va="center", ha="right",
+        # U+2212, to match the minus sign in the x-tick labels.
+        ax.text(adh[m] - 1.2, i + h / 1.65, f"−{abs(adh[m]):.0f}%", va="center", ha="right",
                 fontsize=5.5, color=ADH)
 
     ax.set_yticks(range(len(MODES)))

@@ -45,10 +45,11 @@ src/
 │   ├── judge.py                # gpt-oss-120b factuality + semantic + relation-constraint judges (retrying)
 │   ├── relation_classes.py     # embedding-derived relation CLASSES + per-bundle baseline-derived targets
 │   ├── regime_b.py             # shared structure-mapping predicates (analogy + single-anchor blending)
+│   ├── diversity.py            # set-level diversity D over M-resamples (per temperature; all + valid)
 │   ├── embed.py                # local MLX MiniLM embeddings (novelty R)
 │   ├── scoring.py, parse.py (truncation salvage), aggregate.py
 │   ├── vendor/create/          # vendored CREATE scorer (author-cleared)
-│   └── scripts/                # build_gc, sample_bundles, run_elicit, make_pass2, score, rejudge, plot_*, *_review (blind judge-reliability UI)
+│   └── scripts/                # build_gc, sample_bundles, run_elicit (M-sampling+temp sweep), make_pass2 (baseline-derived targets), score, rejudge, compute_diversity, datasheet, show_failures, plot_*/fig_* (Nature-spec), *_review
 └── plot_twist/                 # active track (TwistBench: transformational creativity via plot twists)
     ├── llm.py                  # OpenRouter wrapper (+ optional `reasoning` param)
     ├── generate.py             # durable per-story twist generation (multi-temp, resumable)

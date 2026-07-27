@@ -108,9 +108,25 @@ Major methodology pivot toward the paper's real benchmark. Full session record:
 - **Budget reality:** this OpenRouter key has ~$217 left (not the account's $1.3k). Measured output
   ~250 tok, so runs are cheaper than the conservative estimate; the cheap pilot is ~$15.
 
-**Running now:** Stage-1 diversity pilot (3 cheap models × 451 instances × 3 temps × M=10).
-**Next:** report temp×diversity surface + per-task rates + categorical derivability → derive targets
-→ Stage 2 constrained cells → judge slice. Owed: human judge-reliability pass.
+**Stage-1 pilot done** (3 cheap models × 451 baseline/analogy/blending instances × 3 temps × M=10,
+~$6): diversity rises monotonically with temperature; weaker models are *more* diverse (Llama-8B
+high, Llama-70B low); tasks ladder baseline > analogy > blending; structural rates discriminate
+models sharply (analogy 3/19/81%, antanaclasis blending 1/3/58%). Sets up a **diversity↔validity
+trade-off across models**. Raw outputs: `data/kg_creat/responses_rand_v2_stage1/`.
+
+**Stage-2 built, not run.** `make_pass2` extended to derive categorical on arbitrary endpoints
+(type baseline interior entities via G_c, drop generic types, most-contrastive → biting). 480 specs
+generated, fired + killed on user request.
+
+**Constraint-taxonomy correction (DEFERRED).** The set should be a clean **2×2: inclusion/exclusion ×
+relation/entity** (categorical = *inclusion of entity*). Current Stage-2 covers 3/4 quadrants —
+**exclusion of entity is missing**; `inclusion_rare` is a redundant inclusion-of-relation. Fix
+deferred: drop `inclusion_rare`, rename categorical → inclusion-of-entity, add exclusion-of-entity.
+
+**Next:** analyze Stage-1 analogy/blending results (immediate); then resolve the 2×2 + rebuild/run
+Stage 2. Owed: human judge-reliability pass. This OpenRouter key has ~$217 left.
+
+Full session detail: [docs/logs/2026-07-26/1625_kg_creat_diversity_pivot.md](../../logs/2026-07-26/1625_kg_creat_diversity_pivot.md).
 
 ## Status — 2026-07-22 (ordering dropped; constraint set is now four types)
 
