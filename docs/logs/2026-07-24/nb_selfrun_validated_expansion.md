@@ -58,3 +58,24 @@ provision, bf16 config), `nb_score_all.sh` (partition+score+union). Scores archi
 Expand further with the mid-tier non-frontier models (llama-4-maverick, qwen3-235b,
 deepseek-chat×2, claude-3-haiku; ~$19 OpenRouter → n≈22). Reasoning models (qwq, deepseek-r1)
 excluded — inline `<think>` traces corrupt diversity/quality scoring.
+
+## Update 2026-07-27: expanded to n=23
+
+Added 6 more self-run models (5 via OpenRouter ~$25: llama-4-maverick, qwen3-235b,
+deepseek-chat, deepseek-chat-v3-0324, claude-3-haiku; + mistral-7b-v0.1 GPU-generated in
+transformers mode since it has no OpenRouter endpoint). Union utilities: qwen3-235b 3.89,
+mistral-7b-v01 3.28, llama-4-maverick 3.24, deepseek-v3-0324 3.20, deepseek-chat 3.12,
+claude-3-haiku 2.94. nemotron-70b dropped (no OR endpoint; 70B transformers-gen impractical).
+
+NoveltyBench trajectory (validity/specificity):
+| test | n=10 | n=17 | n=23 |
+|---|---|---|---|
+| DAT | -0.21/-0.20 | -0.31/-0.28 | -0.07/-0.04 |
+| CDAT | +0.63/+0.60 (n=8) | +0.41/+0.22 | +0.34/+0.20 (n=19) |
+| CDAT-N | +0.56/+0.45 | +0.25/+0.04 | +0.27/+0.08 |
+| CDAT-A | -0.63/-0.40 | -0.35/-0.02 | -0.30/-0.03 |
+| PACE | -0.20/-0.00 | -0.33/-0.07 | -0.15/+0.11 |
+
+Stable, well-powered result: CDAT's +0.60 specificity was a small-sample artifact (settles to
++0.20 n.s. at n=19); at n=23 **no test significantly predicts NoveltyBench utility** on either
+axis. Robust answer to 6Cbj at 2.3x the original sample.
