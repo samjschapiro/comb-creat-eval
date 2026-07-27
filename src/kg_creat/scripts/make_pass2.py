@@ -19,12 +19,68 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
+from collections import Counter, defaultdict  # noqa: E402
+
 from src.utils import init_directory  # noqa: E402
 from src.kg_creat.embed import get_embedder  # noqa: E402
+from src.kg_creat.graph import KnowledgeGraph  # noqa: E402
 from src.kg_creat.relation_classes import collect, derive_classes, derive_targets, name_classes  # noqa: E402
 
 
-async def main(pass1_dir, bundles_dir, out_dir, k=8, top_n=150, min_share=0.08,
+# Over-generic types make the categorical constraint trivially satisfiable ("pass through a human /
+# country") -- almost every path already does. Excluding them forces a SPECIFIC, biting type target
+# (island country, music genre, academy of sciences, ...).
+_GENERIC_TYPES = {
+    "human", "person", "country", "sovereign state", "state", "nation", "republic",
+    "city", "big city", "human settlement", "member state of the united nations",
+    "country bordering the mediterranean sea",
+}
+
+
+def derive_categorical(pass1_dir, gc):
+    """Per-bundle categorical target from the interior entities models actually used in baseline.
+
+    On arbitrary endpoints there are no pre-enumerated routes, so (unlike the old matched-bundle
+    version) we type the interior entities the models themselves produced, via G_c's types, drop
+    over-generic types (`_GENERIC_TYPES`), and pick the MOST CONTRASTIVE remaining type -- one
+    present in ~half the typed interiors -- so the constraint bites by construction (some baseline
+    paths already pass through it, some do not). Free: G_c-local typing only, no Wikidata calls.
+    """
+    lab2node = {gc.label(n).strip().lower(): n for n in gc.nodes()}
+    interior = defaultdict(list)
+    for md in Path(pass1_dir).iterdir():
+        p = md / "responses.json"
+        if not p.exists():
+            continue
+        for r in json.loads(p.read_text()):
+            if r.get("mode") != "baseline":
+                continue
+            for path in r["paths"]:
+                if len(path) < 2:
+                    continue
+                for tr in path[:-1]:            # interior = every tail except the final target
+                    interior[r["bundle_id"]].append(str(tr[2]).strip().lower())
+
+    out = {}
+    for bid, ents in interior.items():
+        tcount, seen = Counter(), 0
+        for e in set(ents):
+            node = lab2node.get(e)
+            if not node:
+                continue
+            ts = [t for t in gc.types(node) if gc.type_label(t).strip().lower() not in _GENERIC_TYPES]
+            if ts:
+                seen += 1
+            tcount.update(ts)
+        cands = [(t, c) for t, c in tcount.items() if 0 < c < seen] if seen >= 2 else []
+        if not cands:
+            continue
+        t, _ = min(cands, key=lambda tc: abs(tc[1] - seen / 2))   # most contrastive => most biting
+        out[bid] = {"type": "categorical", "entity_type": t, "type_label": gc.type_label(t)}
+    return out
+
+
+async def main(pass1_dir, bundles_dir, out_dir, gc_dir, k=8, top_n=150, min_share=0.08,
                name_model="openai/gpt-oss-120b", overwrite=False):
     from src.dat_eval.llm import get_async_client
 
@@ -34,6 +90,8 @@ async def main(pass1_dir, bundles_dir, out_dir, k=8, top_n=150, min_share=0.08,
     classes = await name_classes(classes, get_async_client(), name_model)
     targets = derive_targets(per_bundle, seqs, classes, min_share=min_share)
     by_id = {c["id"]: c for c in classes}
+    gc = KnowledgeGraph.load(Path(gc_dir) / "gc.json")
+    categorical = derive_categorical(pass1_dir, gc)
 
     base = {s["bundle_id"]: s for s in json.loads((Path(bundles_dir) / "prompts.json").read_text())
             if s["mode"] == "baseline"}
@@ -65,18 +123,16 @@ async def main(pass1_dir, bundles_dir, out_dir, k=8, top_n=150, min_share=0.08,
         # the constraint set (assessment.md §7c). derive_targets still returns `order`; a future
         # re-derivation would use the NATURAL order plus a "both classes, any order" control.
         _ = order
-        # categorical stays G_c-derived (entity typing isn't recoverable from baseline text)
-        cat = next((s for s in json.loads((Path(bundles_dir) / "prompts.json").read_text())
-                    if s["bundle_id"] == bid and s["mode"] == "categorical"), None)
-        if cat and cat.get("constraint"):
-            out.append(spec(b, "categorical", cat["constraint"]))
+        # categorical: baseline-derived type target (interior entities models actually used, typed
+        # via G_c and picked to bite) -- works on arbitrary endpoints, unlike the old route-based one.
+        if bid in categorical:
+            out.append(spec(b, "categorical", categorical[bid]))
 
     output_dir = init_directory(out_dir, overwrite=True) if overwrite else Path(out_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "prompts.json").write_text(json.dumps(out, indent=2))
     (output_dir / "classes_targets.json").write_text(
-        json.dumps({"classes": classes, "targets": targets}, indent=2))
-    from collections import Counter
+        json.dumps({"classes": classes, "targets": targets, "categorical": categorical}, indent=2))
     print(f"Wrote {len(out)} Pass-2 specs over {len(targets)} bundles -> {output_dir/'prompts.json'}")
     print(f"  cells: {dict(Counter(s['mode'] for s in out))}")
 
@@ -85,7 +141,8 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--pass1", default="data/kg_creat/responses_regimeA_pass1")
     p.add_argument("--bundles", default="data/kg_creat/prompts_regimeA_v1")
+    p.add_argument("--gc", default="data/kg_creat/gc_domains_v2")
     p.add_argument("--out", default="data/kg_creat/prompts_regimeA_pass2")
     p.add_argument("--overwrite", action="store_true")
     a = p.parse_args()
-    asyncio.run(main(a.pass1, a.bundles, a.out, overwrite=a.overwrite))
+    asyncio.run(main(a.pass1, a.bundles, a.out, a.gc, overwrite=a.overwrite))
