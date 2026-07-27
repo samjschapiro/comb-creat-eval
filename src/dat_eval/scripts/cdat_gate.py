@@ -153,19 +153,28 @@ def random_baseline(cues: list[str], emb, n_samples: int = 100, seed: int = 42,
 
 
 def benjamini_hochberg(pvals: list[float]) -> list[float]:
-    """Return BH-adjusted p-values for a list of p-values."""
+    """Return BH-adjusted p-values for a list of p-values.
+
+    NaN-robust: NaN inputs (e.g. a degenerate Welch t-test) are excluded from
+    the correction and returned as NaN, rather than being sorted to the end and
+    poisoning every adjusted p-value via the monotonicity accumulate. The FDR
+    is computed over the valid (non-NaN) p-values only.
+    """
     p = np.asarray(pvals, dtype=float)
-    n = len(p)
-    order = np.argsort(p)
-    ranks = np.argsort(order) + 1  # 1-based rank of each p-value
-    adj = p * n / ranks
-    # Enforce monotonicity from the largest p down
-    sorted_p = p[order]
-    sorted_adj = sorted_p * n / np.arange(1, n + 1)
+    out = np.full(len(p), np.nan)
+    valid = ~np.isnan(p)
+    pv = p[valid]
+    m = len(pv)
+    if m == 0:
+        return [float(x) for x in out]
+    order = np.argsort(pv)
+    sorted_p = pv[order]
+    sorted_adj = sorted_p * m / np.arange(1, m + 1)
     sorted_adj_mono = np.minimum.accumulate(sorted_adj[::-1])[::-1]
-    out = np.empty(n)
-    out[order] = sorted_adj_mono
-    return [float(x) for x in np.minimum(out, 1.0)]
+    adj = np.empty(m)
+    adj[order] = np.minimum(sorted_adj_mono, 1.0)
+    out[valid] = adj
+    return [float(x) for x in out]
 
 
 # ---------------------------------------------------------------------------
