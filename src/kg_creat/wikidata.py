@@ -106,6 +106,35 @@ def resolve_qid(label: str) -> str:
     return hits[0]["id"]
 
 
+_entity_label_cache: dict[str, bool] = {}
+
+
+def is_entity_label(label: str) -> bool:
+    """True iff `label` is (exactly) the label of a real Wikidata item.
+
+    For the anagram scorer's proper-noun fallback: an anagram that spells a real entity name the
+    dictionary lexicon lacks (e.g. a brand or place) still counts as meaningful. wbsearchentities
+    does prefix/fuzzy matching, so we require an EXACT (case-insensitive) label/match hit -- else
+    'levi' would spuriously match 'Levi Strauss'. Cached in-memory; network failure => False so the
+    scorer stays robust and offline-safe when the fallback isn't wanted.
+    """
+    key = label.strip().lower()
+    if not key:
+        return False
+    if key in _entity_label_cache:
+        return _entity_label_cache[key]
+    try:
+        data = _api_get({"action": "wbsearchentities", "search": label, "language": "en",
+                         "format": "json", "limit": 5, "type": "item"})
+    except Exception:  # noqa: BLE001 -- offline/API failure: not-an-entity, don't crash scoring
+        return False
+    exact = any((h.get("label") or "").strip().lower() == key
+                or (h.get("match", {}).get("text") or "").strip().lower() == key
+                for h in data.get("search", []))
+    _entity_label_cache[key] = exact
+    return exact
+
+
 def _api_get(params: dict, retries: int = 6) -> dict:
     """GET the Wikidata API and return parsed JSON, paced and 429-aware.
 

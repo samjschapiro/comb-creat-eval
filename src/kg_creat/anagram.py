@@ -41,21 +41,25 @@ def is_valid_anagram(source: str, candidate: str) -> bool:
     return source.lower().replace(" ", "") != candidate.lower().replace(" ", "")
 
 
-def is_meaningful(candidate: str) -> bool:
-    """True iff every token of `candidate` is a real English word (a single word => that word).
+def is_meaningful(candidate: str, entity_check=None) -> bool:
+    """True iff `candidate` is a real word/phrase, or (optionally) a real named entity.
 
-    Tokenizes on whitespace, strips non-alphabetic characters (commas etc.), and requires each
-    surviving token to be a known word in the spell-checker lexicon.
+    Every whitespace token must be a known lexicon word (a single word => that word). As a fallback
+    for proper-noun anagrams the lexicon lacks (a brand, place, or name), the WHOLE candidate may
+    instead be a real entity: pass ``entity_check=wikidata.is_entity_label`` (opt-in; makes a cached,
+    paced network call). Default ``None`` keeps the scorer fully offline/free.
     """
     toks = [re.sub(r"[^a-z]", "", t.lower()) for t in candidate.split()]
     toks = [t for t in toks if t]
-    return bool(toks) and all(_SPELL.known([t]) for t in toks)
+    if toks and all(_SPELL.known([t]) for t in toks):
+        return True
+    return bool(entity_check) and bool(entity_check(candidate.strip()))
 
 
-def score_candidate(source: str, candidate: str, embed=None) -> dict:
+def score_candidate(source: str, candidate: str, embed=None, entity_check=None) -> dict:
     """Full judge-free score for one candidate: validity, meaningfulness, and (optional) novelty."""
     valid = is_valid_anagram(source, candidate)
-    meaningful = is_meaningful(candidate) if valid else False
+    meaningful = is_meaningful(candidate, entity_check=entity_check) if valid else False
     out = {"candidate": candidate, "valid_anagram": valid, "meaningful": meaningful,
            "utility": valid and meaningful}
     if embed is not None and valid:
