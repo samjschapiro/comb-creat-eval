@@ -78,7 +78,14 @@ a:hover { text-decoration: underline; }
   color: var(--ink-soft); font-weight: 400; margin: 0 auto 32px; max-width: 720px;
 }
 
-.authors { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 30px; margin-bottom: 14px; }
+/* Equal-width columns, not a flex row: with flex, each author is sized by their name, so
+   "Samuel Schapiro" and "Heng Ji" push their avatars to unequal centres even though the
+   gaps between blocks are identical. Equal columns make the circles evenly spaced. */
+.authors {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  justify-items: center; gap: 18px 0;
+  max-width: 760px; margin: 0 auto 14px;
+}
 .author { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 1.02rem; color: var(--accent); }
 .author-name { white-space: nowrap; }
 .author sup { color: var(--ink-faint); }
