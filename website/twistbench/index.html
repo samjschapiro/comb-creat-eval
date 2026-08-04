@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TwistBench: Benchmarking Transformational Creativity in LLMs via Literary Plot Twists</title>
+<meta name="description" content="TwistBench benchmarks transformational creativity in LLMs through literary plot twists. 71 LLMs and 18 expert human authors, scored on surprise, coherence, realism, and diversity.">
+<meta property="og:title" content="TwistBench">
+<meta property="og:description" content="Benchmarking transformational creativity in LLMs via literary plot twists.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌀</text></svg>">
+<link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a class="nav-brand" href="#top">🌀 TwistBench</a>
+    <div class="nav-links">
+      <a href="#overview">Overview</a>
+      <a href="#benchmark">Benchmark</a>
+      <a href="#leaderboard">Leaderboard</a>
+      <a href="#stories">Stories</a>
+      <a href="#findings">Findings</a>
+      <a href="#bibtex">BibTeX</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="container">
+    <h1 class="title">TwistBench</h1>
+    <p class="subtitle">Benchmarking Transformational Creativity in LLMs via Literary Plot Twists</p>
+
+    <div class="authors">
+      <span class="author">Samuel Schapiro<sup>1</sup></span>
+      <span class="author">Alexi Gladstone<sup>1</sup></span>
+      <span class="author">Heng Ji<sup>1</sup></span>
+      <span class="author">Roger E. Beaty<sup>2</sup></span>
+    </div>
+    <div class="affiliations">
+      <span><sup>1</sup>Siebel School of Computing and Data Science, University of Illinois Urbana-Champaign</span>
+      <span><sup>2</sup>Department of Psychology, Pennsylvania State University</span>
+    </div>
+
+    <div class="buttons">
+      <a class="btn btn-accent" href="#stories"><span>📖</span> Read the stories</a>
+      <a class="btn" href="#leaderboard"><span>🏆</span> Leaderboard</a>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat"><b>71</b><span>LLMs</span></div>
+      <div class="stat"><b>18</b><span>expert human authors</span></div>
+      <div class="stat"><b>2,070</b><span>scored stories</span></div>
+      <div class="stat"><b>4</b><span>scoring dimensions</span></div>
+    </div>
+  </div>
+</header>
+
+<section class="section" id="overview">
+  <div class="container narrow">
+    <h2>Overview</h2>
+    <p>
+      Benchmarks and tests of creativity for large language models are now abundant: LLMs realize
+      aspects of <em>combinatorial</em> and <em>exploratory</em> creativity, and they exceed human
+      performance on several psychometric tests. But these evaluations leave out the mode cognitive
+      science treats as the deepest — <strong>transformational creativity</strong>, the ability to
+      radically modify an existing conceptual space, such as a scientific paradigm, a musical genre,
+      or the plot of a short story.
+    </p>
+    <p>
+      <strong>TwistBench</strong> closes that gap. A literary plot twist <em>is</em> a
+      transformation of a conceptual space: a late reveal that forces the reader to rebuild the model
+      of the story they had been holding. We collect plot-twist stories written by famous human
+      authors and compare them against stories written by <strong>71 LLMs</strong>, scoring every
+      story on <em>surprise</em>, <em>coherence</em>, <em>realism</em>, and reveal
+      <em>diversity</em>.
+    </p>
+    <figure>
+      <img src="static/figures/types_of_creativity.png" alt="Boden's three types of creativity: combinatorial, exploratory, and transformational.">
+      <figcaption><b>Figure 1.</b> The three Boden modes of creativity. Existing LLM creativity
+      benchmarks cover the combinatorial and exploratory modes; transformational creativity —
+      modifying the conceptual space itself — is the unrepresented third.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="section alt" id="benchmark">
+  <div class="container mid">
+    <h2>The Benchmark</h2>
+    <p class="lead">
+      Writing a story supplies a conceptual space; the plot twist is a single discrete artifact
+      that restructures it. TwistBench asks whether LLMs can write a <em>diverse</em> set of
+      stories with <em>surprising</em>, <em>coherent</em>, and <em>realistic</em> plot twists.
+    </p>
+
+    <h3>Task and inference</h3>
+    <p>
+      71 LLMs from 19 providers, from small open-weight models (Llama-3.2-3B) to frontier systems
+      (Claude Opus 4.8, GPT-5.5). Each is sampled at three temperatures (0.9, 1.0, 1.2) with ten
+      samples each — up to 30 stories per model, averaged across temperatures — and constrained to
+      2,000–3,000 words. That range surrounds the ~2,500-word median of the human stories, which
+      keeps story length from acting as a confound.
+    </p>
+
+    <div class="promptbox">
+      <h4>Task prompt</h4>
+      <p>Write a complete short story (roughly 2,000–3,000 words). The story must contain a plot
+      twist: a late reveal that makes the reader re-interpret earlier events in a new light, yet is
+      consistent with everything that came before. In hindsight it should feel prepared, not
+      arbitrary. Choose your own subject and characters. Do not announce or explain the twist.
+      Write only the story, no title or commentary.</p>
+    </div>
+
+    <h3>Scoring dimensions</h3>
+    <p>
+      Creative products are conventionally evaluated on surprise, novelty, and utility; for literary
+      surprise specifically the standard dimensions are surprise, coherence, consistency, and
+      divergence. Given a story <i>T</i>, three dimensions are assessed on Likert scales:
+    </p>
+
+    <div class="cards">
+      <div class="card">
+        <h3>Surprise <span class="sym">Surp(<i>T</i>) ∈ {1,…,5}</span></h3>
+        <p>How drastically must one reinterpret earlier story elements after the plot twist?</p>
+      </div>
+      <div class="card">
+        <h3>Coherence <span class="sym">Coh(<i>T</i>) ∈ {1,…,5}</span></h3>
+        <p>After the plot twist, do earlier story elements still hold together? Is the story still
+        logically consistent?</p>
+      </div>
+      <div class="card">
+        <h3>Realism <span class="sym">Real(<i>T</i>) ∈ {1,…,5}</span></h3>
+        <p>Does the plot twist involve impossible elements (real ghosts, magic, time travel,
+        sentient AI, aliens) that violate the notion of literary “fair play”?</p>
+      </div>
+    </div>
+
+    <p class="fine">
+      Each dimension is scored by a three-judge ensemble — Claude Sonnet 4, GPT-4o, and Gemini 2.5
+      Flash — aggregated per dimension by the median against a fixed rubric. The judges are disjoint
+      from the 71 evaluated models, which mitigates self-preference bias in LLM-as-a-judge. Over all
+      <i>n</i> = 2,035 stories, judge reliability ICC(2,<i>k</i>) is good-to-excellent on every
+      dimension: realism 0.91, surprise 0.88, coherence 0.79.
+    </p>
+
+    <h3>Diversity</h3>
+    <p>
+      Diversity is a crucial aspect of creativity, and LLMs have a documented tendency to homogenize
+      on open-ended tasks. For a set of <i>n</i> stories 𝒯 = {<i>T</i><sub>1</sub>, …,
+      <i>T<sub>n</sub></i>} and a map <i>f</i> : <i>T</i> → <i>W</i> from a story to a concise
+      summary of its twist, diversity is the average embedding dissimilarity among those twists:
+    </p>
+    <div class="eq">
+      <span>Div(𝒯)</span><span class="gap-s">:=</span>
+      <span class="frac"><span class="num">1</span><span class="den"><i>n</i>(<i>n</i>−1)</span></span>
+      <span class="sum">∑<span class="lim"><i>i</i> ≠ <i>j</i></span></span>
+      <span><i>d</i><sub>cos</sub>( φ(<i>f</i>(<i>T<sub>i</sub></i>)), φ(<i>f</i>(<i>T<sub>j</sub></i>)) )</span>
+    </div>
+    <p class="fine">
+      <i>f</i> is <code>gpt-4o-mini</code> prompted to summarize each story's twist in one sentence;
+      φ is the text embedding model <code>all-mpnet-base-v2</code>.
+    </p>
+
+    <div class="callout">
+      <h3>Realism as a constraint, not a dimension</h3>
+      <p>
+        A twist can be made "surprising" trivially by revealing that none of it was real — that
+        discards the conceptual space rather than restructuring it. Consistent with tests that
+        reward novelty only when it is sufficiently appropriate, realism is therefore treated as a
+        <strong>constraint</strong>: a story's surprise and coherence count only when the story is
+        fully realistic, Real(<i>T</i>) = 5.
+      </p>
+      <div class="eq">
+        <span><i>S</i><sup>★</sup>(<i>T<sub>i</sub></i>)</span><span class="gap-s">:=</span>
+        <span><i>S</i>(<i>T<sub>i</sub></i>) · 𝟙[Real(<i>T<sub>i</sub></i>) = 5],</span>
+        <span class="gap"></span>
+        <span>Coh<sup>★</sup>(<i>T<sub>i</sub></i>)</span><span class="gap-s">:=</span>
+        <span>Coh(<i>T<sub>i</sub></i>) · 𝟙[Real(<i>T<sub>i</sub></i>) = 5]</span>
+      </div>
+      <p>
+        The <strong>transformational creativity</strong> score for a model <i>m</i> is then the
+        average <i>z</i>-score of its gated mean surprise, gated mean coherence, and diversity:
+      </p>
+      <div class="eq">
+        <span>TC(𝒯)</span><span class="gap-s">:=</span>
+        <span class="frac"><span class="num">1</span><span class="den">3</span></span>
+        <span>[&#8202;<i>z</i>(<span class="ovl"><i>S</i></span><sup>★</sup><sub><i>m</i></sub>) +
+        <i>z</i>(<span class="ovl"><i>C</i></span><sup>★</sup><sub><i>m</i></sub>) +
+        <i>z</i>(Div<sub><i>m</i></sub>)&#8202;]</span>
+      </div>
+      <p class="fine">
+        The <i>z</i>-scores in the table below are taken over the pool of all 72 evaluated sources
+        (the 71 models plus the human gold set), so Overall reads as a within-pool standard score:
+        0 is the pool average, +1 is one standard deviation above it.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="leaderboard">
+  <div class="container">
+    <h2>Leaderboard</h2>
+    <p class="lead">
+      72 sources — 71 LLMs plus the expert-human gold set. Click a column header to sort; the
+      human row is highlighted throughout. <b>Expert humans rank #1</b>, and they get there by
+      never collapsing on any single dimension.
+    </p>
+
+    <div class="table-controls">
+      <input id="lb-search" type="search" placeholder="Filter by model or organization…" autocomplete="off">
+      <label class="toggle"><input type="checkbox" id="lb-gated" checked> Show gated facets</label>
+      <span class="count" id="lb-count"></span>
+    </div>
+
+    <div class="table-wrap">
+      <table id="lb-table">
+        <thead>
+          <tr>
+            <th data-sort="rank" class="num">#</th>
+            <th data-sort="source">Source</th>
+            <th data-sort="overall" class="num">Overall&nbsp;(z)</th>
+            <th data-sort="surprise_gated" class="num gated">Surprise<sub>g</sub></th>
+            <th data-sort="coherence_gated" class="num gated">Coherence<sub>g</sub></th>
+            <th data-sort="surprise" class="num raw">Surprise</th>
+            <th data-sort="coherence" class="num raw">Coherence</th>
+            <th data-sort="realism" class="num">Realism</th>
+            <th data-sort="diversity" class="num">Diversity</th>
+            <th data-sort="n" class="num">n</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+  </div>
+</section>
+
+<section class="section alt" id="stories">
+  <div class="container">
+    <h2>Story Explorer</h2>
+    <p class="lead">
+      Every story in the benchmark, in full. Pick a source on the left, then a story to read it
+      alongside the judges' scores and the extracted setup/reveal. LLM stories are labelled with
+      the sampling temperature they were drawn at; human stories are public-domain works.
+    </p>
+
+    <div class="explorer">
+      <aside class="explorer-sources">
+        <input id="src-search" type="search" placeholder="Find a source…" autocomplete="off">
+        <ul id="src-list"></ul>
+      </aside>
+
+      <div class="explorer-list">
+        <div class="explorer-list-head">
+          <h3 id="src-title">Select a source</h3>
+          <div class="filters">
+            <label class="toggle"><input type="checkbox" id="only-gated"> Realistic only</label>
+            <select id="sort-stories">
+              <option value="id">Sort: order</option>
+              <option value="surprise">Sort: surprise</option>
+              <option value="coherence">Sort: coherence</option>
+              <option value="words">Sort: length</option>
+            </select>
+          </div>
+        </div>
+        <ul id="story-list"></ul>
+      </div>
+
+      <article class="explorer-reader" id="reader">
+        <div class="reader-empty">
+          <p>📖</p>
+          <p>Choose a source, then a story.</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="findings">
+  <div class="container narrow">
+    <h2>Findings</h2>
+
+    <h3>1. Frontier LLMs still underperform expert humans</h3>
+    <p>
+      Across the full pool, the expert-human gold set ranks first on the realism-gated composite.
+      The gap is not driven by one weak facet in the models: strong LLMs match or beat humans on
+      individual dimensions and lose on the combination. Elaborate prompting can close it for
+      selected models — in-context regeneration lifts Sonnet-4.5 to a tie — but neither
+      reasoning-effort scaling nor temperature raises the ceiling in general.
+    </p>
+    <figure>
+      <img src="static/figures/radar.png" alt="Per-model radar plots across the scoring dimensions.">
+      <figcaption><b>Figure 2.</b> Facet profiles. Humans are the only source without a collapsed
+      axis; each strong model has a characteristic deficit.</figcaption>
+    </figure>
+
+    <h3>2. Two failure modes: mode collapse and breaking the world model</h3>
+    <p>
+      <strong>Mode collapse.</strong> Frontier models generate high-quality twists that are largely
+      the <em>same</em> twist. Clustering the reveals shows dense single-cluster occupancy for the
+      strongest models — Claude Opus-4.5 repeatedly lands on one grief-denial reveal.
+    </p>
+    <p>
+      <strong>Breaking the world model.</strong> Other models earn surprise and coherence with
+      twists that measurably depart from physical reality — time travel, ghosts, "it was a synthetic
+      being all along." These are surprising and internally consistent, and they violate literary
+      fair play, which is exactly what the realism gate is for.
+    </p>
+    <figure>
+      <img src="static/figures/clusters.png" alt="Clustered reveal embeddings showing per-model concentration.">
+      <figcaption><b>Figure 3.</b> Reveal clusters. Concentration in a single cluster is mode
+      collapse made quantitative.</figcaption>
+    </figure>
+
+    <h3>3. Reasoning traces are process-level homogeneous</h3>
+    <p>
+      Reading the reasoning traces of thinking models shows the creative <em>process</em> is nearly
+      identical across systems: models pick the twist <strong>first</strong>, then retrofit a plot
+      that supports it. Nobody discovers the twist by writing forward into the story. Homogeneity of
+      process is a plausible mechanism for homogeneity of output.
+    </p>
+    <figure>
+      <img src="static/figures/creative_process.png" alt="Analysis of reasoning moves and their positions in model reasoning traces.">
+      <figcaption><b>Figure 4.</b> Reasoning moves and where they appear in the trace. The
+      twist-first ordering holds across models and reasoning-effort settings.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="section alt" id="bibtex">
+  <div class="container narrow">
+    <h2>BibTeX</h2>
+    <pre><code>@inproceedings{schapiro2026twistbench,
+  title     = {{TwistBench}: Benchmarking Transformational Creativity in {LLM}s via Literary Plot Twists},
+  author    = {Schapiro, Samuel and Gladstone, Alexi and Ji, Heng and Beaty, Roger E.},
+  booktitle = {Workshop on the Scientific Understanding of Foundation Models (Sci-FM) at COLM},
+  year      = {2026}
+}</code></pre>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container narrow">
+    <p>
+      Human gold stories are public-domain works sourced from Project Gutenberg. LLM stories were
+      generated through OpenRouter and are released with the benchmark.
+    </p>
+    <p class="fine">
+      Page design follows the <a href="https://nerfies.github.io/">Nerfies</a> academic project
+      template convention. Licensed CC BY-SA 4.0.
+    </p>
+  </div>
+</footer>
+
+<script src="static/js/orgs.js"></script>
+<script src="static/js/app.js"></script>
+</body>
+</html>

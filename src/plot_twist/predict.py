@@ -62,6 +62,27 @@ def split_at_twist(story: str, locator: str, min_pre_words: int = 20) -> str:
     return pre
 
 
+def locate_anchor(text: str, anchor: str, pos: float = 1.0) -> str | None:
+    """Return `anchor` exactly as it appears in `text`, or None if it cannot be found.
+
+    Matching is whitespace-tolerant (gold texts are hard-wrapped) and backs off to fewer
+    leading words, since a quoted anchor may normalise punctuation the story spells
+    differently (straight vs curly quotes). Where a short anchor matches several times,
+    the occurrence nearest `pos` — a fraction of the way through the text — wins; twists
+    are late, so the default of 1.0 prefers the last match. The returned string is a
+    literal substring of `text`, so a caller can highlight it.
+    """
+    words = anchor.split()
+    for n in range(len(words), 1, -1):
+        pattern = r"\s+".join(re.escape(w) for w in words[:n])
+        loose = pattern.replace("'", "['’]").replace('"', '["“”]')
+        hits = list(re.finditer(loose, text))
+        if hits:
+            best = min(hits, key=lambda m: abs(m.start() / len(text) - pos))
+            return text[best.start():best.end()]
+    return None
+
+
 # --- Stage 2: predict the withheld twist from the pre-twist prose ---
 
 PREDICT_SYSTEM = (

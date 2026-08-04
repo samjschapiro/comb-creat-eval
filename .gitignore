@@ -73,3 +73,7 @@ wandb/
 runs/
 checkpoints/
 *.egg-info/
+
+# TwistBench site: generated payload (rebuildable via build_website_data.py); it is
+# published on the gh-pages branch, not tracked on main.
+website/twistbench/data/

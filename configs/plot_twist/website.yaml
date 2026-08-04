@@ -1,0 +1,23 @@
+# Build the static JSON payload for the TwistBench project website.
+#
+# The site (website/twistbench/) is hand-written HTML/CSS/JS; this config drives the
+# script that turns the run outputs into the JSON the page fetches: the leaderboard
+# table, a light story index, and one full-prose shard per model (lazy-loaded).
+
+tc_path: "data/plot_twist/tc/tc.json"                          # 72-row headline leaderboard
+annotations_path: "data/plot_twist/annotations/annotations.json"  # per-story scores + setup/reveal
+realism_path: "data/plot_twist/realism/realism_scores.json"       # story id -> realism 1-5
+llm_stories_dir: "data/plot_twist/llm_twists/stories"
+human_texts_dir: "data/plot_twist/human_twists/texts"
+pd_manifest_path: "configs/plot_twist/pd_manifest.json"           # human gold: title + author
+
+realism_gate: 5.0   # must match src/plot_twist/join.REALISM_GATE
+
+output_dir: "website/twistbench/data"
+
+# Hand-annotated plot-twist sentence per human gold story (paper appendix table).
+reveal_points_path: "papers/pt2cb-iclr-2027/tables/tab_reveal_points.tex"
+
+# Model-located twist sentence per LLM story (from run_twist_points.py). Optional:
+# absent means LLM stories simply carry no in-text marker.
+twist_points_path: "data/plot_twist/twist_points/twist_points.json"

@@ -1,0 +1,22 @@
+# Locate the plot twist inside each LLM-generated story, so the project page can mark the
+# sentence that forces the re-reading.
+#
+# The 18 human gold stories are NOT included: their twist sentences were annotated by hand
+# and live in the paper's appendix table (papers/.../tables/tab_reveal_points.tex), which
+# build_website_data.py reads directly. Only the LLM stories need a model pass.
+#
+# A cheap model returns the verbatim opening of the twist sentence; the runner then matches
+# that string back into the story. A model that paraphrases instead of quoting simply fails
+# to match and the story gets NO marker — never a guessed one.
+
+annotations_path: "data/plot_twist/annotations/annotations.json"
+
+model: "openai/gpt-4o-mini"    # same model + prompt as the predict pilot (70% located there)
+max_tokens: 60                 # just the verbatim locator
+temperature: 0.0
+concurrency: 16
+
+max_calls: 2200                # hard guard: refuse to run more API calls than this
+                               # (2,052 LLM stories + headroom; the run aborts if exceeded)
+
+output_dir: "data/plot_twist/twist_points"
