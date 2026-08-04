@@ -20,7 +20,7 @@
       <a href="#benchmark">Benchmark</a>
       <a href="#leaderboard">Leaderboard</a>
       <a href="#stories">Stories</a>
-      <a href="#findings">Findings</a>
+      <a href="#findings">Results</a>
       <a href="#bibtex">BibTeX</a>
     </div>
   </div>
@@ -76,12 +76,6 @@
       <a class="btn" href="#leaderboard"><span>🏆</span> Leaderboard</a>
     </div>
 
-    <div class="stat-row">
-      <div class="stat"><b>71</b><span>LLMs</span></div>
-      <div class="stat"><b>18</b><span>expert human authors</span></div>
-      <div class="stat"><b>2,070</b><span>scored stories</span></div>
-      <div class="stat"><b>4</b><span>scoring dimensions</span></div>
-    </div>
   </div>
 </header>
 
@@ -89,26 +83,50 @@
   <div class="container narrow">
     <h2>Overview</h2>
     <p>
-      Benchmarks and tests of creativity for large language models are now abundant: LLMs realize
-      aspects of <em>combinatorial</em> and <em>exploratory</em> creativity, and they exceed human
-      performance on several psychometric tests. But these evaluations leave out the mode cognitive
-      science treats as the deepest — <strong>transformational creativity</strong>, the ability to
-      radically modify an existing conceptual space, such as a scientific paradigm, a musical genre,
-      or the plot of a short story.
+      Creativity has long been heralded as the pinnacle of human intelligence. It is no surprise,
+      then, that considerable effort has gone towards assessing the creativity of large language
+      models in recent years. A growing body of work shows that LLMs can realize forms of
+      creativity, such as combinatorial creativity or divergent thinking, at or exceeding human
+      levels, but may fail to surpass humans at more complex types of creativity, especially in
+      scientific domains.
     </p>
     <p>
-      <strong>TwistBench</strong> closes that gap. A literary plot twist <em>is</em> a
-      transformation of a conceptual space: a late reveal that forces the reader to rebuild the model
-      of the story they had been holding. We collect plot-twist stories written by famous human
-      authors and compare them against stories written by <strong>71 LLMs</strong>, scoring every
-      story on <em>surprise</em>, <em>coherence</em>, <em>realism</em>, and reveal
-      <em>diversity</em>.
+      Indeed, different forms of creativity vary widely in the complexity required to realize them.
+      In the cognitive science literature, a popular categorization of creative processes is
+      Boden's distinction between combinatorial, exploratory, and transformational creativity.
+      <em>Combinatorial creativity</em> involves making unfamiliar combinations of familiar ideas,
+      such as combining ingredients to form a new recipe. <em>Exploratory creativity</em>, meanwhile,
+      presupposes an existing set of rules and constraints, called a conceptual space, that one can
+      follow to discover or create something new, such as inventing a new chess opening.
+    </p>
+    <p>
+      Lastly, <em>transformational creativity</em> is the most radical but complex type of
+      creativity, one that involves deliberate restructuring of a conceptual space. A clear example
+      of this is the invention of non-Euclidean geometry, in which a single assumption (the parallel
+      postulate) was modified to elicit a radically transformed space. Although transformational
+      creativity has historically underpinned major scientific, technological, and artistic
+      breakthroughs, it has been overlooked by the LLM benchmarking landscape due to the challenge
+      of reducing such a complex ability into a self-contained and measurable task.
+    </p>
+    <p>
+      Resolving this gap in the benchmarking landscape, we establish the first large-scale benchmark
+      of <strong>T</strong>ransformational <strong>C</strong>reativity for LLMs, challenging models
+      to generate a <em>diverse</em> set of <em>surprising</em>, <em>coherent</em>, and
+      <em>realistic</em> literary plot twists (<strong>TwistBench</strong>). Literary plot twists
+      require modifying or restructuring conceptual elements established by the story, satisfying
+      the definition of transformational creativity as modifying an existing conceptual space. In
+      particular, writing a story itself supplies the conceptual space, and then the plot twist is a
+      single, unambiguous event that restructures the conceptual space. We administer TwistBench to
+      a large set of 71 LLMs and find that <strong>humans rank first overall above all 71 LLMs
+      tested</strong>, though for one model, elaborate prompting strategies such as in-context
+      regeneration raise its performance to match human scores.
     </p>
     <figure>
       <img src="static/figures/types_of_creativity.png" alt="Boden's three types of creativity: combinatorial, exploratory, and transformational.">
-      <figcaption><b>Figure 1.</b> The three Boden modes of creativity. Existing LLM creativity
-      benchmarks cover the combinatorial and exploratory modes; transformational creativity —
-      modifying the conceptual space itself — is the unrepresented third.</figcaption>
+      <figcaption><b>Figure 1. Boden's three types of creativity:</b> <em>combinatorial</em> (novel
+      combinations of familiar ideas), <em>exploratory</em> (novel artifacts within a fixed
+      conceptual space), and <em>transformational</em> (restructuring the space itself). We benchmark
+      the last via literary plot twists.</figcaption>
     </figure>
   </div>
 </section>
@@ -117,18 +135,19 @@
   <div class="container mid">
     <h2>The Benchmark</h2>
     <p class="lead">
-      Writing a story supplies a conceptual space; the plot twist is a single discrete artifact
-      that restructures it. TwistBench asks whether LLMs can write a <em>diverse</em> set of
-      stories with <em>surprising</em>, <em>coherent</em>, and <em>realistic</em> plot twists.
+      Our benchmark assesses the ability for LLMs to write a <em>diverse</em> set of stories with
+      <em>surprising</em>, <em>coherent</em>, and <em>realistic</em> plot twists.
     </p>
 
-    <h3>Task and inference</h3>
+    <h3>Models and inference</h3>
     <p>
-      71 LLMs from 19 providers, from small open-weight models (Llama-3.2-3B) to frontier systems
-      (Claude Opus 4.8, GPT-5.5). Each is sampled at three temperatures (0.9, 1.0, 1.2) with ten
-      samples each — up to 30 stories per model, averaged across temperatures — and constrained to
-      2,000–3,000 words. That range surrounds the ~2,500-word median of the human stories, which
-      keeps story length from acting as a confound.
+      We evaluate a large set of 71 LLMs from 19 providers, ranging from small open-weight models
+      (e.g. Llama-3.2-3B) to the latest frontier systems (e.g. Claude Opus 4.8, GPT-5.5). Each model
+      is asked to write a complete short story containing a plot twist. We sample each model at
+      three temperatures (0.9, 1.0, 1.2) with ten samples each (up to 30 stories per model, averaged
+      across temperatures during overall scoring) and constrain the length to 2,000–3,000 words —
+      a range that surrounds the ~2,500-word median of the human stories, mitigating story length
+      as a confounding variable.
     </p>
 
     <div class="promptbox">
@@ -140,11 +159,12 @@
       Write only the story, no title or commentary.</p>
     </div>
 
-    <h3>Scoring dimensions</h3>
+    <h3>Metrics</h3>
     <p>
-      Creative products are conventionally evaluated on surprise, novelty, and utility; for literary
-      surprise specifically the standard dimensions are surprise, coherence, consistency, and
-      divergence. Given a story <i>T</i>, three dimensions are assessed on Likert scales:
+      Creative products are typically evaluated according to their surprise, novelty, and utility.
+      In the context of literary surprise, specifically, it is standard to invoke scoring dimensions
+      surprise, coherence, consistency, and divergence, which we broadly adopt as inspiration here.
+      Given a story <i>T</i>, we assess the following dimensions via Likert scales:
     </p>
 
     <div class="cards">
@@ -165,19 +185,23 @@
     </div>
 
     <p class="fine">
-      Each dimension is scored by a three-judge ensemble — Claude Sonnet 4, GPT-4o, and Gemini 2.5
-      Flash — aggregated per dimension by the median against a fixed rubric. The judges are disjoint
-      from the 71 evaluated models, which mitigates self-preference bias in LLM-as-a-judge. Over all
-      <i>n</i> = 2,035 stories, judge reliability ICC(2,<i>k</i>) is good-to-excellent on every
-      dimension: realism 0.91, surprise 0.88, coherence 0.79.
+      To score each dimension in practice, we use a three-judge ensemble (Claude Sonnet 4, GPT-4o,
+      and Gemini 2.5 Flash) aggregated per dimension by the median and using a fixed rubric.
+      Moreover, to mitigate self-preference bias in LLM-as-a-judge, the three judges are separate
+      from the 71 LLMs evaluated as part of the benchmark results. The reliability of the three
+      judges over all <i>n</i> = 2,035 stories, as given by the intra-class correlation coefficient
+      ICC(2,<i>k</i>), is good-to-excellent on every dimension: realism at 0.91, surprise at 0.88,
+      and coherence at 0.79.
     </p>
 
     <h3>Diversity</h3>
     <p>
-      Diversity is a crucial aspect of creativity, and LLMs have a documented tendency to homogenize
-      on open-ended tasks. For a set of <i>n</i> stories 𝒯 = {<i>T</i><sub>1</sub>, …,
-      <i>T<sub>n</sub></i>} and a map <i>f</i> : <i>T</i> → <i>W</i> from a story to a concise
-      summary of its twist, diversity is the average embedding dissimilarity among those twists:
+      Since diversity is a crucial aspect of creativity, and given that LLMs have a documented
+      tendency to homogenize on open-ended tasks, we also measure diversity over the set of a
+      model's plot twists. Given a set of <i>n</i> stories 𝒯 = {<i>T</i><sub>1</sub>,
+      <i>T</i><sub>2</sub>, …, <i>T<sub>n</sub></i>} and a function that maps a story to a concise
+      summary of its twist <i>f</i> : <i>T</i> → <i>W</i>, we compute the average embedding
+      dissimilarity among these twists:
     </p>
     <div class="eq">
       <span>Div(𝒯)</span><span class="gap-s">:=</span>
@@ -191,13 +215,17 @@
     </p>
 
     <div class="callout">
-      <h3>Realism as a constraint, not a dimension</h3>
+      <h3>Overall score: realism as a constraint</h3>
       <p>
-        A twist can be made "surprising" trivially by revealing that none of it was real — that
-        discards the conceptual space rather than restructuring it. Consistent with tests that
-        reward novelty only when it is sufficiently appropriate, realism is therefore treated as a
-        <strong>constraint</strong>: a story's surprise and coherence count only when the story is
-        fully realistic, Real(<i>T</i>) = 5.
+        Consistent with prior tests and benchmarks of LLM creativity that reward novelty only when
+        it is sufficiently appropriate, we treat realism as a <strong>constraint</strong>, rather
+        than its own separate dimension, such that a story's surprise and coherence only count when
+        the story is fully realistic (i.e. Real(<i>T</i>) = 5). The surprise comes from
+        <em>recontextualizing</em> the world the reader was already given, not from importing new
+        rules into it — the notion of literary "fair play." Resolving a story by declaring the ward
+        a dream or a simulation is also surprising, but it does not restructure that space: it
+        discards it for a new one with different rules, and admits a trivial shortcut, since
+        <em>any</em> story can be made "surprising" by revealing that none of it was real.
       </p>
       <div class="eq">
         <span><i>S</i><sup>★</sup>(<i>T<sub>i</sub></i>)</span><span class="gap-s">:=</span>
@@ -207,8 +235,9 @@
         <span>Coh(<i>T<sub>i</sub></i>) · 𝟙[Real(<i>T<sub>i</sub></i>) = 5]</span>
       </div>
       <p>
-        The <strong>transformational creativity</strong> score for a model <i>m</i> is then the
-        average <i>z</i>-score of its gated mean surprise, gated mean coherence, and diversity:
+        Then, given a set of <i>n</i> stories 𝒯 generated by a model (or human) <i>m</i>, we define
+        the <strong>transformational creativity</strong> score as the average <i>z</i>-score of each
+        dimension over the pool of all models:
       </p>
       <div class="eq">
         <span>TC(𝒯)</span><span class="gap-s">:=</span>
@@ -230,9 +259,10 @@
   <div class="container">
     <h2>Leaderboard</h2>
     <p class="lead">
-      72 sources — 71 LLMs plus the expert-human gold set. Click a column header to sort; the
-      human row is highlighted throughout. <b>Expert humans rank #1</b>, and they get there by
-      never collapsing on any single dimension.
+      Human writers achieve the highest transformational creativity scores at <i>z</i> = +2.00
+      overall. Notably, this is not due to winning on any individual dimension, but instead through
+      a balanced profile overall. Click a column header to sort; the human row is highlighted
+      throughout, and clicking any row opens that source in the story explorer.
     </p>
 
     <div class="table-controls">
@@ -307,51 +337,99 @@
 
 <section class="section" id="findings">
   <div class="container narrow">
-    <h2>Findings</h2>
+    <h2>Results</h2>
 
-    <h3>1. Frontier LLMs still underperform expert humans</h3>
+    <h3>Expert humans outperform LLMs in transformational creativity</h3>
     <p>
-      Across the full pool, the expert-human gold set ranks first on the realism-gated composite.
-      The gap is not driven by one weak facet in the models: strong LLMs match or beat humans on
-      individual dimensions and lose on the combination. Elaborate prompting can close it for
-      selected models — in-context regeneration lifts Sonnet-4.5 to a tie — but neither
-      reasoning-effort scaling nor temperature raises the ceiling in general.
+      Human writers achieve the highest transformational creativity scores at <i>z</i> = +2.00
+      overall, with <em>surprise</em>: +0.78 (rank 14/71), <em>coherence</em>: +1.25 (rank 3/71),
+      <em>diversity</em>: +1.15 (rank 9/71), and <em>realism</em>: +1.64 (rank 5/71). Notably, this
+      is not due to winning on any individual dimension, but instead through a balanced profile
+      overall. A small set of frontier models score just below humans in overall scores, with
+      Claude-Sonnet-4.5 at <i>z</i> = +1.9 overall, Claude-Sonnet-4.6 at <i>z</i> = 1.8, and
+      Claude-Opus-4.6 at <i>z</i> = +1.7, but performance quickly drops starting at rank 5/71. We
+      observe two consistent failure modes among models that illustrate why LLMs underperform expert
+      humans.
     </p>
     <figure>
       <img src="static/figures/radar.png" alt="Per-model radar plots across the scoring dimensions.">
-      <figcaption><b>Figure 2.</b> Facet profiles. Humans are the only source without a collapsed
-      axis; each strong model has a characteristic deficit.</figcaption>
+      <figcaption><b>Figure 2.</b> Per-model profiles across the scoring dimensions.</figcaption>
     </figure>
 
-    <h3>2. Two failure modes: mode collapse and breaking the world model</h3>
+    <h3>Failure Mode #1: Mode Collapse</h3>
     <p>
-      <strong>Mode collapse.</strong> Frontier models generate high-quality twists that are largely
-      the <em>same</em> twist. Clustering the reveals shows dense single-cluster occupancy for the
-      strongest models — Claude Opus-4.5 repeatedly lands on one grief-denial reveal.
-    </p>
-    <p>
-      <strong>Breaking the world model.</strong> Other models earn surprise and coherence with
-      twists that measurably depart from physical reality — time travel, ghosts, "it was a synthetic
-      being all along." These are surprising and internally consistent, and they violate literary
-      fair play, which is exactly what the realism gate is for.
+      Although the Claude Sonnet family scores just under expert human writers, Claude-Opus-4.5 and
+      Opus-4.6 suffer from a lack of diversity. Although these models generate plot twists that are
+      as surprising, realistic, and coherent as human writers, they fail to generate a diverse set
+      of high quality stories, consistent with broader findings that many post-training techniques
+      tend to reduce output diversity. Concretely, <strong>10 of Claude Opus 4.5's 30 stories
+      collapse onto a single reveal cluster, (c9) dead-spouse grief-denial</strong>: a loved one is
+      secretly long dead and the protagonist carries on in denial. Each story is surprising,
+      coherent, and realistic, but the set of such stories is not diverse.
     </p>
     <figure>
       <img src="static/figures/clusters.png" alt="Clustered reveal embeddings showing per-model concentration.">
-      <figcaption><b>Figure 3.</b> Reveal clusters. Concentration in a single cluster is mode
-      collapse made quantitative.</figcaption>
+      <figcaption><b>Figure 3.</b> The full set of recurring patterns among LLM-generated plot
+      twists that can be neatly clustered, including especially unrealistic twists involving
+      (c6) AI and synthetic beings that score low on realism.</figcaption>
     </figure>
 
-    <h3>3. Reasoning traces are process-level homogeneous</h3>
+    <h3>Failure Mode #2: Breaking the World Model</h3>
     <p>
-      Reading the reasoning traces of thinking models shows the creative <em>process</em> is nearly
-      identical across systems: models pick the twist <strong>first</strong>, then retrofit a plot
-      that supports it. Nobody discovers the twist by writing forward into the story. Homogeneity of
-      process is a plausible mechanism for homogeneity of output.
+      Transformational creativity involves the intentional breaking of some regularities or rules,
+      while leaving others intact. Concern has been raised over whether today's models learn
+      representations that support this careful ability. Accordingly, we find that a subset of
+      models surpasses expert human writers in writing surprising and coherent stories, but only by
+      giving unrealistic plot twists. For example, Gemini 2.5 Pro resolves one story by revealing
+      that the caretaker Elias "is not human but a synthetic being," and DeepSeek-V3.2-Exp ends
+      another with its narrator meeting "a perfect duplicate of himself" rather than the alien he
+      expected, which scores 1/5 on realism. This failure mode is consistent with related findings
+      that LLMs struggle to maintain "fair play" when writing mystery short stories.
+    </p>
+
+    <h3>Ablations</h3>
+    <p>
+      <strong>Prompting strategies.</strong> We test two prompting strategies used in prior work.
+      <em>Be creative</em> appends an instruction to the task prompt to avoid clichéd or predictable
+      twists. <em>In-context regeneration</em> generates a model's stories sequentially, provides a
+      one-sentence summary of the twists it has already written, and requires the next twist to be
+      distinct from all previous ones. While <em>Be creative</em> prompting actually degrades
+      overall performance, <em>in-context regeneration</em> leads a single model
+      (Claude-Sonnet-4.5) to reach the human ceiling on the strength of its diversity gain alone.
+      This suggests that principled use of test-time compute can enhance transformational
+      creativity.
+    </p>
+    <p>
+      <strong>Reasoning effort.</strong> We also vary reasoning levels for a set of models with
+      controllable thinking effort. We find that increasing thinking effort slightly improves
+      overall performance, though models still tend to underperform expert humans. Moreover, the
+      underlying creative process is itself largely invariant to thinking effort.
+    </p>
+
+    <h3>Creative process analysis and process-level homogeneity</h3>
+    <p>
+      Although creativity can be attributed to both products and processes, most studies of LLM
+      creativity concentrate analysis on the final products rather than the processes that generated
+      them. To analyze the creative processes employed by models on this task, the authors read a
+      sample of reasoning traces among the 207 total traces obtained from the 9 models with
+      controllable thinking levels and cataloged 10 recurring steps models made.
+    </p>
+    <p>
+      Curiously, models separate the divergent and convergent thinking part of the storywriting
+      process: during <strong>Part 1: Choose the Twist</strong>, models list potential plot twist
+      choices, sketch preliminary expository details, and often reject plot twists that are deemed
+      "too cliché" based on a gut feeling. Afterwards, during <strong>Part 2: Retroactively
+      Determine the Plot</strong>, models construct the story by planning cues to plant, outlining
+      the full plot, choosing a reveal event, and verifying that prior story details remain intact.
+      Even as reasoning effort is scaled from low to medium to high, <strong>the process remains
+      remarkably homogeneous, with every model fixing the plot twist <em>first</em>, then proceeding
+      to reverse engineer the story details.</strong>
     </p>
     <figure>
       <img src="static/figures/creative_process.png" alt="Analysis of reasoning moves and their positions in model reasoning traces.">
-      <figcaption><b>Figure 4.</b> Reasoning moves and where they appear in the trace. The
-      twist-first ordering holds across models and reasoning-effort settings.</figcaption>
+      <figcaption><b>Figure 4.</b> The creative process of reasoning models. All 207 traces roughly
+      follow the same procedure, regardless of effort level. The location of each step is given by
+      its median (± IQR) position among all 207 traces.</figcaption>
     </figure>
   </div>
 </section>

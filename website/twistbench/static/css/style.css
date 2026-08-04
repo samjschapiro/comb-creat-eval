@@ -156,10 +156,6 @@ a:hover { text-decoration: underline; }
 .btn-accent { background: var(--accent); }
 .btn-accent:hover { background: #17466a; }
 
-.stat-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 40px; margin-top: 40px; }
-.stat { display: flex; flex-direction: column; }
-.stat b { font-size: 1.7rem; font-weight: 650; letter-spacing: -.02em; }
-.stat span { font-size: .85rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .06em; }
 
 /* ---------- sections ---------- */
 
@@ -402,5 +398,4 @@ mark.twist {
 @media (max-width: 620px) {
   body { font-size: 16px; }
   .section { padding: 44px 0; }
-  .stat-row { gap: 12px 24px; }
 }
