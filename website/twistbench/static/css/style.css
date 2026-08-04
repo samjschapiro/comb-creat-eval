@@ -168,6 +168,38 @@ p { color: var(--ink-soft); }
 p.lead { text-align: center; max-width: 760px; margin: -12px auto 28px; }
 p.fine { font-size: .87rem; color: var(--ink-faint); }
 
+/* ---------- in-text citations ---------- */
+
+cite[data-k] {
+  position: relative; font-style: normal;
+  color: var(--accent); font-size: .92em; margin-left: .2em;
+  cursor: help; border-bottom: 1px dotted currentColor;
+}
+cite[data-k]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.cite-card {
+  position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translate(-50%, 4px);
+  width: min(330px, 78vw); padding: 11px 13px; z-index: 40;
+  background: #262626; color: #e8e8e8; border-radius: 8px;
+  font-size: .78rem; font-style: normal; line-height: 1.45; text-align: left;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .13s ease, transform .13s ease, visibility .13s;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, .22);
+}
+.cite-ref { display: block; }
+.cite-ref + .cite-ref { margin-top: 9px; padding-top: 9px; border-top: 1px solid #444; }
+.cite-ref b { display: block; color: #fff; font-weight: 600; margin-bottom: 3px; }
+.cite-ref em { display: block; font-style: normal; color: #b0b0b0; margin-top: 2px; }
+.cite-ref a { display: block; margin-top: 4px; color: #9ec5e4; }
+/* Pointer-events return on hover so the links inside the card are clickable. */
+cite[data-k]:hover .cite-card, cite[data-k]:focus-visible .cite-card, .cite-card:hover {
+  opacity: 1; visibility: visible; transform: translate(-50%, 0); pointer-events: auto;
+}
+/* Near the top of the viewport there is no room above; JS flips the card underneath. */
+.cite-card.below { bottom: auto; top: calc(100% + 8px); transform: translate(-50%, -4px); }
+cite[data-k]:hover .cite-card.below, cite[data-k]:focus-visible .cite-card.below,
+.cite-card.below:hover { transform: translate(-50%, 0); }
+
 figure { margin: 32px 0; }
 figure img { width: 100%; height: auto; border: 1px solid var(--rule); border-radius: var(--radius); background: #fff; }
 figcaption { font-size: .88rem; color: var(--ink-faint); margin-top: 10px; text-align: left; }

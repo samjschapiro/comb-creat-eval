@@ -357,8 +357,45 @@ function initAuthorPhotos() {
   });
 }
 
+/* Fill each <cite data-k="key,key"> with its author-year label and a hover card carrying
+ * the full reference. Labels are generated from REFS (refs.js) rather than written into
+ * the HTML, so the page and the paper's refs.bib cannot disagree. */
+function initCitations() {
+  document.querySelectorAll("cite[data-k]").forEach((el) => {
+    const keys = el.dataset.k.split(",").map((k) => k.trim()).filter(Boolean);
+    const known = keys.filter((k) => REFS[k]);
+    if (!known.length) { el.remove(); return; }
+
+    el.textContent = `(${known.map((k) => REFS[k].short).join("; ")})`;
+    el.tabIndex = 0;
+    el.setAttribute("role", "note");
+
+    const card = document.createElement("span");
+    card.className = "cite-card";
+    card.innerHTML = known.map((k) => {
+      const r = REFS[k];
+      const venue = r.venue ? `<i>${esc(r.venue)}</i>${r.year ? ", " + esc(r.year) : ""}`
+                            : esc(r.year || "");
+      const link = r.url
+        ? `<a href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">${esc(
+            r.url.replace(/^https?:\/\//, "").slice(0, 46))}&nbsp;↗</a>` : "";
+      return `<span class="cite-ref"><b>${esc(r.title)}</b>${esc(r.authors)}` +
+             `${venue ? `<em>${venue}</em>` : ""}${link}</span>`;
+    }).join("");
+    el.appendChild(card);
+
+    // Flip the card below the citation when the space above it is too tight — measured
+    // on open, since the card's height depends on how many references it carries.
+    el.addEventListener("mouseenter", () => {
+      const above = el.getBoundingClientRect().top;
+      card.classList.toggle("below", above < card.offsetHeight + 72);
+    });
+  });
+}
+
 async function boot() {
   initAuthorPhotos();
+  initCitations();
   const [lb, idx] = await Promise.all([
     fetch("data/leaderboard.json").then((r) => r.json()),
     fetch("data/stories_index.json").then((r) => r.json()),
