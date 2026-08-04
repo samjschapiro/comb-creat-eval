@@ -54,13 +54,8 @@ a:hover { text-decoration: underline; }
   max-width: 1440px; margin: 0 auto; padding: 0 32px;
   height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
 }
-.nav-brand {
-  display: inline-flex; align-items: center; gap: 9px;
-  font-weight: 650; color: var(--ink); letter-spacing: -.01em;
-}
+.nav-brand { font-weight: 650; color: var(--ink); letter-spacing: -.01em; }
 .nav-brand:hover { text-decoration: none; }
-/* The 180px icon is used rather than the 32px favicon so it stays sharp on retina. */
-.brand-icon { width: 22px; height: 22px; border-radius: 5px; object-fit: cover; display: block; }
 /* min-width:0 lets this scroll inside the bar instead of widening the whole page. */
 .nav-links { display: flex; gap: 20px; overflow-x: auto; min-width: 0; scrollbar-width: none; }
 .nav-links::-webkit-scrollbar { display: none; }
