@@ -75,7 +75,17 @@ a:hover { text-decoration: underline; }
 }
 .subtitle {
   font-size: clamp(1.05rem, 2.2vw, 1.35rem);
-  color: var(--ink-soft); font-weight: 400; margin: 0 auto 32px; max-width: 720px;
+  color: var(--ink-soft); font-weight: 400; margin: 0 auto 18px; max-width: 720px;
+}
+
+.venue {
+  display: inline-flex; align-items: center; gap: 9px; flex-wrap: wrap; justify-content: center;
+  margin: 0 auto 30px; font-size: .88rem; color: var(--ink-faint);
+}
+.venue-tag {
+  background: var(--accent-warm); color: #fff;
+  padding: 2px 9px; border-radius: 999px;
+  font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
 }
 
 /* Equal-width columns, not a flex row: with flex, each author is sized by their name, so
