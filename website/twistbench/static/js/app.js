@@ -336,7 +336,29 @@ function initExplorer() {
 
 // ---------------------------------------------------------------------- boot
 
+/* Swap author initials for a headshot when one exists at static/authors/<slug>.<ext>.
+ * Probed rather than linked directly, so an absent photo leaves the initials in place
+ * instead of rendering a broken image. */
+function initAuthorPhotos() {
+  document.querySelectorAll(".avatar[data-photo]").forEach((el) => {
+    const slug = el.dataset.photo;
+    const exts = ["jpg", "jpeg", "png", "webp"];
+    (function tryNext(i) {
+      if (i >= exts.length) return;               // no photo supplied — keep the initials
+      const img = new Image();
+      img.onload = () => {
+        el.textContent = "";
+        img.alt = el.parentElement.querySelector(".author-name").textContent.trim();
+        el.appendChild(img);
+      };
+      img.onerror = () => tryNext(i + 1);
+      img.src = `static/authors/${slug}.${exts[i]}`;
+    })(0);
+  });
+}
+
 async function boot() {
+  initAuthorPhotos();
   const [lb, idx] = await Promise.all([
     fetch("data/leaderboard.json").then((r) => r.json()),
     fetch("data/stories_index.json").then((r) => r.json()),
