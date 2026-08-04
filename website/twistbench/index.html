@@ -15,7 +15,8 @@
 
 <nav class="navbar">
   <div class="nav-inner">
-    <a class="nav-brand" href="#top">🌀 TwistBench</a>
+    <a class="nav-brand" href="#top"><img class="brand-icon" src="apple-touch-icon.png"
+       alt="" width="22" height="22">TwistBench</a>
     <div class="nav-links">
       <a href="#overview">Overview</a>
       <a href="#benchmark">Benchmark</a>
@@ -88,39 +89,32 @@
       then, that considerable effort has gone towards assessing the creativity of large language
       models in recent years. A growing body of work shows that LLMs can realize forms of
       creativity, such as combinatorial creativity or divergent thinking, at or exceeding human
-      levels, but may fail to surpass humans at more complex types of creativity, especially in
-      scientific domains.
+      levels, but may fail to surpass humans at more complex types of creativity.
     </p>
     <p>
       Indeed, different forms of creativity vary widely in the complexity required to realize them.
-      In the cognitive science literature, a popular categorization of creative processes is
-      Boden's distinction between combinatorial, exploratory, and transformational creativity.
-      <em>Combinatorial creativity</em> involves making unfamiliar combinations of familiar ideas,
-      such as combining ingredients to form a new recipe. <em>Exploratory creativity</em>, meanwhile,
-      presupposes an existing set of rules and constraints, called a conceptual space, that one can
-      follow to discover or create something new, such as inventing a new chess opening.
+      In the cognitive science literature, a popular categorization is Boden's distinction between
+      combinatorial, exploratory, and transformational creativity. <em>Combinatorial creativity</em>
+      involves making unfamiliar combinations of familiar ideas, such as combining ingredients to
+      form a new recipe. <em>Exploratory creativity</em> presupposes an existing set of rules and
+      constraints, called a conceptual space, that one can follow to create something new, such as
+      inventing a new chess opening. Lastly, <em>transformational creativity</em> is the most
+      radical but complex type, one that involves deliberate restructuring of a conceptual space —
+      as in the invention of non-Euclidean geometry, where a single assumption (the parallel
+      postulate) was modified to elicit a radically transformed space. Although it has historically
+      underpinned major scientific, technological, and artistic breakthroughs, transformational
+      creativity has been overlooked by the LLM benchmarking landscape, due to the challenge of
+      reducing such a complex ability into a self-contained and measurable task.
     </p>
     <p>
-      Lastly, <em>transformational creativity</em> is the most radical but complex type of
-      creativity, one that involves deliberate restructuring of a conceptual space. A clear example
-      of this is the invention of non-Euclidean geometry, in which a single assumption (the parallel
-      postulate) was modified to elicit a radically transformed space. Although transformational
-      creativity has historically underpinned major scientific, technological, and artistic
-      breakthroughs, it has been overlooked by the LLM benchmarking landscape due to the challenge
-      of reducing such a complex ability into a self-contained and measurable task.
-    </p>
-    <p>
-      Resolving this gap in the benchmarking landscape, we establish the first large-scale benchmark
-      of <strong>T</strong>ransformational <strong>C</strong>reativity for LLMs, challenging models
-      to generate a <em>diverse</em> set of <em>surprising</em>, <em>coherent</em>, and
-      <em>realistic</em> literary plot twists (<strong>TwistBench</strong>). Literary plot twists
-      require modifying or restructuring conceptual elements established by the story, satisfying
-      the definition of transformational creativity as modifying an existing conceptual space. In
-      particular, writing a story itself supplies the conceptual space, and then the plot twist is a
-      single, unambiguous event that restructures the conceptual space. We administer TwistBench to
-      a large set of 71 LLMs and find that <strong>humans rank first overall above all 71 LLMs
-      tested</strong>, though for one model, elaborate prompting strategies such as in-context
-      regeneration raise its performance to match human scores.
+      Resolving this gap, we establish the first large-scale benchmark of
+      <strong>T</strong>ransformational <strong>C</strong>reativity for LLMs, challenging models to
+      generate a <em>diverse</em> set of <em>surprising</em>, <em>coherent</em>, and
+      <em>realistic</em> literary plot twists (<strong>TwistBench</strong>). Writing a story itself
+      supplies the conceptual space, and then the plot twist is a single, unambiguous event that
+      restructures it — satisfying the definition of transformational creativity as modifying an
+      existing conceptual space. We administer TwistBench to a large set of 71 LLMs and find that
+      <strong>humans rank first overall above all 71 LLMs tested</strong>.
     </p>
     <figure>
       <img src="static/figures/types_of_creativity.png" alt="Boden's three types of creativity: combinatorial, exploratory, and transformational.">
@@ -386,25 +380,6 @@
       another with its narrator meeting "a perfect duplicate of himself" rather than the alien he
       expected, which scores 1/5 on realism. This failure mode is consistent with related findings
       that LLMs struggle to maintain "fair play" when writing mystery short stories.
-    </p>
-
-    <h3>Ablations</h3>
-    <p>
-      <strong>Prompting strategies.</strong> We test two prompting strategies used in prior work.
-      <em>Be creative</em> appends an instruction to the task prompt to avoid clichéd or predictable
-      twists. <em>In-context regeneration</em> generates a model's stories sequentially, provides a
-      one-sentence summary of the twists it has already written, and requires the next twist to be
-      distinct from all previous ones. While <em>Be creative</em> prompting actually degrades
-      overall performance, <em>in-context regeneration</em> leads a single model
-      (Claude-Sonnet-4.5) to reach the human ceiling on the strength of its diversity gain alone.
-      This suggests that principled use of test-time compute can enhance transformational
-      creativity.
-    </p>
-    <p>
-      <strong>Reasoning effort.</strong> We also vary reasoning levels for a set of models with
-      controllable thinking effort. We find that increasing thinking effort slightly improves
-      overall performance, though models still tend to underperform expert humans. Moreover, the
-      underlying creative process is itself largely invariant to thinking effort.
     </p>
 
     <h3>Creative process analysis and process-level homogeneity</h3>
