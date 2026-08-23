@@ -1,0 +1,41 @@
+# Kombine v2 elicitation: 30 models (frontier-heavy), all three tasks, temp 0.9. PAID (OpenRouter).
+upstream_dir: data/kg_creat/kombine_v2/prompts
+output_dir: data/kg_creat/kombine_v2/responses
+modes: [baseline, analogy, blending]
+eval:
+  temperatures: [0.9]
+  n_samples: 1
+  max_tokens: 1600
+concurrency: 12
+budget_usd: 80.0          # hard cap; est elicitation ~$53
+models:
+  - openai/gpt-5
+  - openai/gpt-5.2
+  - openai/gpt-4.1
+  - openai/gpt-4o
+  - anthropic/claude-sonnet-4.6
+  - anthropic/claude-sonnet-4.5
+  - anthropic/claude-3.7-sonnet
+  - anthropic/claude-opus-4.6
+  - google/gemini-3.1-pro-preview
+  - google/gemini-2.5-pro
+  - google/gemini-3-flash-preview
+  - x-ai/grok-4
+  - x-ai/grok-4.5
+  - deepseek/deepseek-r1
+  - qwen/qwen-max
+  - openai/o4-mini
+  - google/gemini-2.5-flash
+  - openai/gpt-4o-mini
+  - openai/gpt-4.1-mini
+  - anthropic/claude-3.5-sonnet
+  - meta-llama/llama-3.1-405b-instruct
+  - meta-llama/llama-4-maverick
+  - mistralai/mistral-large-2512
+  - qwen/qwen3-235b-a22b
+  - cohere/command-a
+  - deepseek/deepseek-chat
+  - meta-llama/llama-3.3-70b-instruct
+  - qwen/qwen-2.5-72b-instruct
+  - meta-llama/llama-3.1-8b-instruct
+  - mistralai/mistral-nemo

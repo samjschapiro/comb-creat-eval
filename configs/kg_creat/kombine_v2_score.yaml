@@ -1,0 +1,16 @@
+# Kombine v2 scoring: factuality single-judge; SUBJECTIVE judges = 3-panel majority vote, but
+# only blending is paneled (panel_open_ended: false keeps open-ended analogy on a single judge).
+# Run WITHOUT LLM_BASE_URL; use .venv_mlx (MLX embedder).
+upstream_dir: data/kg_creat/kombine_v2/responses
+output_dir: data/kg_creat/kombine_v2/scores
+exclude_models: []
+judge:
+  enabled: true
+  models:
+    - openai/gpt-oss-120b
+    - deepseek/deepseek-chat-v3-0324
+    - anthropic/claude-haiku-4.5
+  panel_open_ended: false     # panel blending only; analogy/association judged by models[0]
+  concurrency: 32
+embedding:
+  model: mlx-community/all-MiniLM-L6-v2-4bit

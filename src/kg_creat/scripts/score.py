@@ -153,15 +153,19 @@ def score_free(response: dict, embed) -> list[dict]:
     return recs
 
 
-async def run_judges(recs: list[dict], responses_by_prompt: dict, model: str, concurrency: int):
+async def run_judges(recs: list[dict], responses_by_prompt: dict, models: list, concurrency: int,
+                     panel_open_ended: bool = True):
     """Phase 2: fill factuality / categorical / semantic sat on the records (in place).
 
-    Uses the LLM_BASE_URL-aware client, so the judge runs on the local MLX server when
-    LLM_BASE_URL is set (fully-local, free) and on OpenRouter otherwise.
+    Subjective verdicts are a MAJORITY vote across the ``models`` panel. When ``panel_open_ended`` is
+    False, the OPEN-ENDED analogy validity judgment reverts to a single judge (models[0]) -- analogy is
+    high-volume, so paneling every pair is costly, while blending (one per prompt) stays paneled.
+    Uses the LLM_BASE_URL-aware client (local MLX server if LLM_BASE_URL set, else OpenRouter).
     """
     from src.dat_eval.llm import get_async_client
     client = get_async_client()
     sem = asyncio.Semaphore(concurrency)
+    analogy_models = models if panel_open_ended else models[:1]
     # Keyed by DRAW + path_idx: analogy emits a SET of pairs flattened as [a0, b0, a1, b1, ...]; each
     # even path_idx is a pair head, its partner path_idx+1. Keying includes temperature/sample_idx so a
     # pair head finds its OWN draw's partner, not another temperature's.
@@ -170,21 +174,23 @@ async def run_judges(recs: list[dict], responses_by_prompt: dict, model: str, co
     FACT_BATCH = 10   # paths per batched factuality call (one call judges the whole batch)
 
     async def factual_batch(batch):
+        # Factuality (per-triple hallucination) is objective, so it stays a SINGLE judge (models[0]);
+        # only the subjective verdicts (analogy/blend validity, emergent) use the majority-vote panel.
         async with sem:
-            results = await J.judge_factuality_batch(client, model, [r["triples"] for r in batch])
+            results = await J.judge_factuality_batch(client, models[0], [r["triples"] for r in batch])
         for r, res in zip(batch, results):
             r["factual"] = res
 
     async def categorical(rec):
         c = responses_by_prompt[_draw_key(rec)]["constraint"]
         async with sem:
-            out = await J.judge_categorical(client, model, c["type_label"], rec["triples"])
+            out = await J.judge_categorical(client, models[0], c["type_label"], rec["triples"])
             rec["constraint_sat"] = bool(out.get("satisfied")) if out else None
 
     async def relation_con(rec):
         c = responses_by_prompt[_draw_key(rec)]["constraint"]
         async with sem:
-            out = await J.judge_relation_constraint(client, model, c, rec["triples"])
+            out = await J.judge_relation_constraint(client, models[0], c, rec["triples"])
             rec["constraint_sat"] = bool(out.get("satisfied")) if out else None
 
     async def analogy(rec):
@@ -195,21 +201,23 @@ async def run_judges(recs: list[dict], responses_by_prompt: dict, model: str, co
             rec["semantic_sat"] = False
             return
         async with sem:
-            out = await J.judge_analogy(client, model, rec["u_label"], rec["v_label"], paths[i], paths[i + 1])
-        v = bool(out.get("valid")) if out else None
+            v, agree = await J.panel_analogy(client, analogy_models, rec["u_label"], rec["v_label"],
+                                             paths[i], paths[i + 1])
         rec["semantic_sat"] = partner["semantic_sat"] = v  # the verdict is over the pair
+        rec["judge_agreement"] = partner["judge_agreement"] = agree
 
     async def blending(rec):
-        # Fusion blend: utility is a single judge-only verdict over the one structure (genuine coherent
-        # fusion of u,v, hard gate on the generic space). One blend per prompt -> one item (idx 0).
+        # Fusion blend: utility is a judge-only verdict over the one structure (genuine double-scope
+        # fusion of u,v). One blend per prompt -> one item (idx 0). Panel majority vote.
         item = (responses_by_prompt[_draw_key(rec)].get("items") or [{}])[0]
         async with sem:
-            out = await J.judge_blend_fusion(client, model, rec["u_label"], rec["v_label"],
+            out = await J.panel_blend_fusion(client, models, rec["u_label"], rec["v_label"],
                                              item.get("concept", ""), item.get("generic_space", ""),
                                              rec["triples"])
-        rec["semantic_sat"] = bool(out.get("valid")) if out else None
-        rec["generic_space_ok"] = bool(out.get("generic_space_ok")) if out else None
-        rec["double_scope"] = bool(out.get("double_scope")) if out else None
+        rec["semantic_sat"] = out.get("valid")
+        rec["generic_space_ok"] = out.get("generic_space_ok")
+        rec["double_scope"] = out.get("double_scope")
+        rec["judge_agreement"] = out.get("agreement")
 
     tasks, skipped, fact_recs = [], 0, []
     for rec in recs:
@@ -240,14 +248,18 @@ async def run_judges(recs: list[dict], responses_by_prompt: dict, model: str, co
     await asyncio.gather(*tasks)
 
 
-async def run_emergent_judge(recs, responses_by_prompt, model, concurrency):
-    """Emergent-creativity tier: per item, count candidate inferences the judge confirms are BOTH true
-    and licensed by the whole but not any single part. Result written onto the item's head record
-    (``emergent_count`` + the raw ``emergent_inferences``). This is the ``tab:scoring`` emergent metric.
+async def run_emergent_judge(recs, responses_by_prompt, models, concurrency, panel_open_ended=True):
+    """Emergent-creativity tier: per item, count candidate inferences a MAJORITY of the judge panel
+    confirms are emergent (true+licensed-by-whole for analogy; emergent structure for blending).
+    Written onto the item's head record (``emergent_count`` + raw ``emergent_inferences``).
+
+    When ``panel_open_ended`` is False, the high-volume analogy/association emergent judgment uses a
+    single judge (models[0]); blending emergent (one per prompt, long lists) always uses the panel.
     """
     from src.dat_eval.llm import get_async_client
     client = get_async_client()
     sem = asyncio.Semaphore(concurrency)
+    open_models = models if panel_open_ended else models[:1]
     rec_index = {_draw_key(r) + (r["path_idx"],): r for r in recs}
 
     async def judge_item(draw, head_idx, mode, u_label, v_label, item):
@@ -262,9 +274,8 @@ async def run_emergent_judge(recs, responses_by_prompt, model, concurrency):
             # Fusion blend: emergent structure of the blend -- true of the blend, of NEITHER input alone.
             # Judged against the two INPUT concepts (u,v), not against sub-parts of the structure.
             async with sem:
-                verdict = await J.judge_blend_emergent(client, model, u_label, v_label,
-                                                       item.get("concept", ""), paths[0], inferences)
-            head["emergent_count"] = J.count_blend_emergent(verdict, len(inferences))
+                head["emergent_count"] = await J.panel_blend_emergent_count(
+                    client, models, u_label, v_label, item.get("concept", ""), paths[0], inferences)
             head["emergent_inferences"] = inferences
             return
         if mode == "analogy":
@@ -277,8 +288,7 @@ async def run_emergent_judge(recs, responses_by_prompt, model, concurrency):
             artifact = J.format_path(path)
             parts = [f"Link {i + 1}: {J.format_path([t])}" for i, t in enumerate(path)]
         async with sem:
-            verdict = await J.judge_emergent(client, model, artifact, parts, inferences)
-        head["emergent_count"] = J.count_emergent(verdict, len(inferences))
+            head["emergent_count"] = await J.panel_emergent_count(client, open_models, artifact, parts, inferences)
         head["emergent_inferences"] = inferences
 
     tasks = []
@@ -394,7 +404,10 @@ async def main(config_path, overwrite=False, debug=False):
 
     judge_cfg = config.get("judge", {})
     judge_enabled = judge_cfg.get("enabled", False)
-    judge_model = judge_cfg.get("model", "openai/gpt-oss-120b")
+    # Panel of judges (majority vote). Back-compat: a single `model` becomes a 1-element panel.
+    judge_models = judge_cfg.get("models") or [judge_cfg.get("model", "openai/gpt-oss-120b")]
+    # If False, open-ended analogy/association judgments use a single judge; blending stays paneled.
+    panel_open_ended = judge_cfg.get("panel_open_ended", True)
     concurrency = judge_cfg.get("concurrency", 8)
     embed = get_embedder(config.get("embedding", {}).get("model", "mlx-community/all-MiniLM-L6-v2-4bit"))
 
@@ -404,7 +417,8 @@ async def main(config_path, overwrite=False, debug=False):
                   if (d / "responses.json").exists() and d.name not in exclude_keys]
     if exclude_keys:
         print(f"Excluding {len(exclude_keys)} model(s): {sorted(exclude_keys)}")
-    print(f"Scoring {len(model_dirs)} model(s); judge_enabled={judge_enabled} ({judge_model})")
+    print(f"Scoring {len(model_dirs)} model(s); judge_enabled={judge_enabled} "
+          f"(panel: {', '.join(judge_models)})")
 
     # Item-specific originality needs element frequencies pooled across ALL models, so build the
     # per-item table once, up front, before scoring any single model.
@@ -434,13 +448,13 @@ async def main(config_path, overwrite=False, debug=False):
             n_paths = sum(1 for rec in recs if rec["triples"])
             local = bool(os.environ.get("LLM_BASE_URL"))
             if local:
-                print(f"    running LOCAL judge ({judge_model}) on ~{n_paths} paths (free) ...")
+                print(f"    running LOCAL judge panel on ~{n_paths} paths (free) ...")
             else:
-                est = (n_paths * 700 * PRICING.get(judge_model, (9, 9))[0]
-                       + n_paths * 300 * PRICING.get(judge_model, (9, 9))[1]) / 1e6
-                print(f"    running judge on ~{n_paths} paths (est ~${est:.3f}) ...")
-            await run_judges(recs, by_prompt, judge_model, concurrency)
-            await run_emergent_judge(recs, by_prompt, judge_model, concurrency)
+                est = sum((n_paths * 700 * PRICING.get(jm, (9, 9))[0]
+                           + n_paths * 300 * PRICING.get(jm, (9, 9))[1]) / 1e6 for jm in judge_models)
+                print(f"    running {len(judge_models)}-judge panel on ~{n_paths} paths (est ~${est:.3f}) ...")
+            await run_judges(recs, by_prompt, judge_models, concurrency, panel_open_ended)
+            await run_emergent_judge(recs, by_prompt, judge_models, concurrency, panel_open_ended)
 
         for rec in recs:
             finalize_sat(rec)

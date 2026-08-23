@@ -1,0 +1,8 @@
+# Kombine v2 (scaled): 70 items/task, association + analogy + blending (blending reuses analogy pairs).
+entities: data/kg_creat/entities_curated.json
+output_dir: data/kg_creat/kombine_v2/prompts
+n_association: 70
+n_analogy: 70
+n_blend: 70
+seed: 0
+k: 5

@@ -418,3 +418,87 @@ def count_emergent(verdict: dict | None, n_inferences: int) -> int:
         if isinstance(v, dict) and v.get("true") and v.get("emergent"):
             n += 1
     return n
+
+
+# =====================================================================================
+# 3-judge PANEL. Each judged criterion runs on several judge models (different vendors to
+# limit same-vendor bias with the generators) and their verdicts are combined by MAJORITY
+# vote. Panel functions are drop-in for the single-judge ones in score.py. Each returns the
+# aggregated value plus, where useful, an "agreement" fraction (share of voting judges that
+# matched the majority) for the judge-reliability report.
+# =====================================================================================
+
+
+def _majority(votes: list) -> tuple:
+    """Majority of non-None boolean votes. Returns (verdict|None, agreement_fraction|None)."""
+    v = [bool(x) for x in votes if x is not None]
+    if not v:
+        return None, None
+    trues = sum(v)
+    verdict = trues > len(v) / 2
+    agree = (trues if verdict else len(v) - trues) / len(v)
+    return verdict, agree
+
+
+async def panel_factuality_batch(client, models: list, paths: list) -> list:
+    """Per-path factuality by panel: each triple is majority-voted across judges. list[list[bool]|None]."""
+    per_judge = await asyncio.gather(*[judge_factuality_batch(client, m, paths) for m in models])
+    out = []
+    for pi, path in enumerate(paths):
+        judged = [per_judge[j][pi] for j in range(len(models))]  # each: list[bool]|None
+        if all(x is None for x in judged):
+            out.append(None)
+            continue
+        agg = []
+        for ti in range(len(path)):
+            votes = [j[ti] for j in judged if j is not None and ti < len(j)]
+            agg.append(_majority(votes)[0])
+        out.append(agg if all(x is not None for x in agg) else None)
+    return out
+
+
+async def panel_analogy(client, models: list, u: str, v: str, p1: list, p2: list) -> tuple:
+    """(valid|None, agreement) for an analogy, majority-voted across judges."""
+    outs = await asyncio.gather(*[judge_analogy(client, m, u, v, p1, p2) for m in models])
+    return _majority([o.get("valid") if o else None for o in outs])
+
+
+async def panel_blend_fusion(client, models: list, u: str, v: str, concept: str,
+                             generic_space: str, structure: list) -> dict:
+    """Majority-voted blend-fusion verdict: valid / generic_space_ok / double_scope (+ agreement)."""
+    outs = await asyncio.gather(*[judge_blend_fusion(client, m, u, v, concept, generic_space, structure)
+                                  for m in models])
+    valid, agree = _majority([o.get("valid") if o else None for o in outs])
+    return {"valid": valid, "agreement": agree,
+            "generic_space_ok": _majority([o.get("generic_space_ok") if o else None for o in outs])[0],
+            "double_scope": _majority([o.get("double_scope") if o else None for o in outs])[0]}
+
+
+async def panel_emergent_count(client, models: list, artifact: str, parts: list, inferences: list) -> int:
+    """Emergent count by panel: an inference counts iff a majority of judges mark it true AND emergent."""
+    if not inferences:
+        return 0
+    outs = await asyncio.gather(*[judge_emergent(client, m, artifact, parts, inferences) for m in models])
+    n = 0
+    for i in range(1, len(inferences) + 1):
+        votes = [bool(o[str(i)].get("true") and o[str(i)].get("emergent"))
+                 for o in outs if isinstance(o, dict) and isinstance(o.get(str(i)), dict)]
+        if _majority(votes)[0]:
+            n += 1
+    return n
+
+
+async def panel_blend_emergent_count(client, models: list, u: str, v: str, concept: str,
+                                     structure: list, inferences: list) -> int:
+    """Blend emergent-structure count by panel: majority of judges must mark each item emergent."""
+    if not inferences:
+        return 0
+    outs = await asyncio.gather(*[judge_blend_emergent(client, m, u, v, concept, structure, inferences)
+                                  for m in models])
+    n = 0
+    for i in range(1, len(inferences) + 1):
+        votes = [bool(o[str(i)].get("emergent"))
+                 for o in outs if isinstance(o, dict) and isinstance(o.get(str(i)), dict)]
+        if _majority(votes)[0]:
+            n += 1
+    return n
