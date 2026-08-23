@@ -35,17 +35,15 @@ _OUTPUT_BLOCK_DIVERGENT = _OUTPUT_BLOCK.replace(
 # emitted structure is controllable and unambiguous to the parser.
 _OUTPUT_BLOCK_ASSOC = """Output requirements (strict):
 - Return ONLY a JSON array wrapped in <answer> and </answer> tags. No other text, before or after.
-- Each element of the array is ONE connection: an object with exactly two keys, "path" and "inferences".
+- Each element of the array is ONE connection: an object with a single key, "path".
 - "path" is a list of triples; each triple is [head entity, relationship, tail entity] forming a
   continuous chain from the first entity to the last.
-- "inferences" is a list of short, factual statements that the WHOLE path reveals but that no single
-  triple in it reveals on its own. Give only genuine ones; use [] if the path licenses none.
 - Relationship strings must be 1-3 words. Use canonical, disambiguated entity names.
 - List one object per connection. To stop, simply end the array -- do not pad with weak connections.
 - If you can find no valid connection, return an empty array: <answer>[]</answer>.
 
 Required format (follow this shape exactly):
-<answer>[{"path": [["A", "r1", "B"], ["B", "r2", "C"]], "inferences": ["A short true statement the whole path reveals."]}, {"path": [["A", "s1", "D"], ["D", "s2", "C"]], "inferences": []}]</answer>"""
+<answer>[{"path": [["A", "r1", "B"], ["B", "r2", "C"]]}, {"path": [["A", "s1", "D"], ["D", "s2", "C"]]}]</answer>"""
 
 _OUTPUT_BLOCK_ANALOGY = """Output requirements (strict):
 - Return ONLY a JSON array wrapped in <answer> and </answer> tags. No other text, before or after.
@@ -53,9 +51,10 @@ _OUTPUT_BLOCK_ANALOGY = """Output requirements (strict):
 - "path_a" and "path_b" are each a list of triples; each triple is [head entity, relationship, tail entity].
 - Within one analogy, "path_a" and "path_b" MUST have the same number of triples and the IDENTICAL
   relationship word at every position (only the entities differ).
-- "inferences" is a list of short, true statements the mapping licenses by transfer -- things it
-  predicts about either concept from the other's structure, that you could not claim without the
-  analogy. Use [] if none.
+- "inferences" is a list of TRANSFERRED INFERENCES: each a factual, checkable claim about ONE of the
+  two concepts that you would believe only because the shared structure holds -- a property known of
+  one concept, carried across the mapping to predict something about the other. NOT a restatement that
+  the two are analogous. Use [] if none.
 - Relationship strings must be 1-3 words. Use canonical, disambiguated entity names.
 - List one object per analogy. To stop, simply end the array -- do not pad with weak analogies.
 - If you can find no valid analogy, return an empty array: <answer>[]</answer>.
@@ -142,14 +141,12 @@ paths as you can. A connection path is a sequence of factual triples (head, rela
 a continuous chain: consecutive triples share an entity, the first triple's head is '{u}', and the last
 triple's tail is '{v}'.
 
-We reward four things in every connection:
+We reward three things in every connection:
 - TRUE: every triple is factually correct.
 - REMOTE: the intermediate concepts sit in domains far from the two endpoints and from each other --
   reach across distant fields rather than taking the first obvious link.
 - UNCOMMON: build the path from rare, specific concepts and relations, not the broad, generic ones most
   people would give.
-- GENERATIVE: the path AS A WHOLE should reveal a true inference that no single link in it reveals on
-  its own -- and you must state those inferences.
 
 Produce as MANY DISTINCT connections as you can, most surprising first -- do not stop at a fixed number;
 list every genuine connection you can find, and make them as different from one another as possible
@@ -170,8 +167,10 @@ We reward four things in every analogy:
 - TRUE: every triple is factually correct, and the mapping is a genuine structural correspondence.
 - REMOTE: the two domains are as distant and unexpected as possible.
 - UNCOMMON: use rare, specific roles and relations, not the obvious ones most people would give.
-- GENERATIVE: state the true inferences the analogy licenses by transfer -- things it predicts about
-  '{v}' from '{u}'s structure, and vice versa about '{u}', that you could not claim without the mapping.
+- GENERATIVE: state the TRANSFERRED INFERENCES the analogy licenses -- a factual, checkable claim about
+  '{v}' that follows from carrying a known property of '{u}' across the shared structure (and vice
+  versa about '{u}'), which you would believe only because the mapping holds. Each must be a real fact
+  about one concept, NOT a restatement that '{u}' and '{v}' are analogous.
 
 Each analogy is exactly TWO paths that share an identical relation sequence:
 - "path_a": factual triples describing '{u}' within its own domain, beginning at '{u}'.
@@ -201,25 +200,36 @@ def _blending_prompt(spec: dict) -> str:
     """
     u, v = spec["u_label"], spec["v_label"]
     return f"""Task: You are given TWO concepts: '{u}' and '{v}'. FUSE them into a SINGLE new blended
-concept that is both at once, then describe the structure this fusion generates. (Think "computer
-virus" = biology + software: one new concept, not two things side by side.)
+concept that is both at once, then describe the structure this fusion generates.
+
+What a genuine blend is (the FORM). A real blend fuses two concepts into ONE new concept in which BOTH
+inputs contribute ORGANIZING STRUCTURE -- their relations and roles combine -- so the blend runs as a
+single coherent concept with emergent structure belonging to neither input.
+  Example -- "computer virus" (biology + software): biology's frame (a self-replicating agent that
+  infects a host and provokes an immune response) AND computing's frame (a program that spreads across
+  machines) BOTH organize it; emergent structure of neither input: it can be quarantined; an antivirus
+  behaves like an immune system.
+Do NOT instead (a) list one property from each input joined by "and" ("harnesses energy AND is
+therapeutic"), or (b) treat one input as a mere adjective on the other ("a radioactive solar system").
+Both inputs must do organizing work.
 
 Build the blend in three moves:
-1. GENERIC SPACE: name the shared schema both '{u}' and '{v}' fit -- the abstract structure that lets
-   them fuse at all (for virus + software: "a self-replicating agent that spreads through a host").
-   Be specific; "both exist" or "both involve change" is too vacuous to be a real blend.
-2. STRUCTURE: describe the single blended concept as triples, projecting selectively from BOTH inputs
-   -- some structure carried over from '{u}', some from '{v}', combined into one coherent concept.
-3. EMERGENT: state the concept's EMERGENT STRUCTURE -- properties or behaviours that are true of the
-   BLEND but true of NEITHER '{u}' nor '{v}' on its own. This is the point of the task.
+1. GENERIC SPACE: name the shared schema both '{u}' and '{v}' genuinely instantiate -- the abstract
+   structure that lets them fuse (for virus + software: "a self-replicating agent that spreads through
+   a host"). Be specific; "both exist"/"both involve change" is vacuous, and a one-from-each conjunction
+   does not count.
+2. STRUCTURE: describe the single blended concept as triples in which the relations/roles of BOTH
+   inputs combine into one coherent concept -- not two lists of inherited properties side by side.
+3. EMERGENT: state the concept's EMERGENT STRUCTURE -- properties or behaviours true of the BLEND but
+   true of NEITHER '{u}' nor '{v}' on its own. This is the point of the task.
 
 We reward four things:
-- COHERENT: a genuine fusion with a real, specific generic space -- not a forced mashup of two things.
+- COHERENT: a genuine double-scope fusion with a real, specific generic space -- not a mashup.
 - REMOTE: '{u}' and '{v}' are distant, so the fusion is surprising.
 - UNCOMMON: build from rare, specific structure, not the broad generic properties anyone would list.
 - EMERGENT: give every emergent property you can justify. The test for each, applied literally: it must
-  be true of the blend, yet true of NEITHER '{u}' alone NOR '{v}' alone. Drop anything that is already
-  true of one of the inputs, or that merely restates that they were combined.
+  be true of the blend, yet true of NEITHER '{u}' alone NOR '{v}' alone. Drop anything already true of
+  one input, or that merely restates that they were combined.
 
 Produce exactly ONE blend of '{u}' and '{v}' -- the best, most coherent fusion you can build, developed
 as richly as possible. Use concrete, canonically-named entities in the structure.
