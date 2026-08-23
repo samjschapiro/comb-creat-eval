@@ -181,7 +181,10 @@ async def main(config_path, overwrite=False, debug=False):
         if not done:
             est = estimate_model_cost(model_id, len(specs) * draws_per_prompt)
             reasoning_here = reasoning if model_id in REASONING_MODELS else None
-            mt = max_tokens * 4 if model_id in REASONING_MODELS else max_tokens
+            # Reasoning models spend part of the budget on hidden reasoning that still counts against
+            # max_tokens; on the open-ended association task 4x (6400) left some prompts cut off mid-
+            # reasoning -> empty content (e.g. gpt-5 returned null on 12/30). 8x gives headroom.
+            mt = max_tokens * 8 if model_id in REASONING_MODELS else max_tokens
             if budget_usd > 0 and cumulative + est > budget_usd:
                 print(f"\nBUDGET CAP REACHED: next model {model_id} est ${est:.3f} "
                       f"would exceed ${budget_usd:.2f} (spent ~${cumulative:.3f}). Stopping.")
