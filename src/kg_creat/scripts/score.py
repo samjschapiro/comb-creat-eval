@@ -35,6 +35,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "scripts" / 
 from cost_tracker import PRICING  # noqa: E402
 
 
+def _draw_key(r: dict) -> tuple:
+    """Unique key for one elicitation DRAW. All temperatures/samples of a prompt share ``prompt_id``,
+    so judges and pair-finalizers must key on (prompt_id, temperature, sample_idx) -- keying on
+    prompt_id alone collapses the draws and mixes one draw's structure with another's verdict."""
+    return (r["prompt_id"], r.get("temperature"), r.get("sample_idx"))
+
+
 def score_free(response: dict, embed) -> list[dict]:
     """Phase 1: per emitted path, the free signals (well-formedness + novelty). One record per path.
 
@@ -42,8 +49,10 @@ def score_free(response: dict, embed) -> list[dict]:
     is computed here.
     """
     recs = []
+    # temperature + sample_idx are carried so judges/finalizers can key by DRAW: all temps of one
+    # prompt share prompt_id, so keying on prompt_id alone collapses them and judges the wrong draw.
     spec_keys = ("prompt_id", "bundle_id", "regime", "mode", "u_label", "v_label", "h", "k",
-                 "domain_u", "domain_v", "cross_domain")
+                 "domain_u", "domain_v", "cross_domain", "temperature", "sample_idx")
     base = {k: response.get(k) for k in spec_keys}
     for pi, triples in enumerate(response["paths"]):
         rec = {**base, "path_idx": pi, "triples": triples, "n_hops": len(triples)}
@@ -54,7 +63,11 @@ def score_free(response: dict, embed) -> list[dict]:
         p = EmittedPath(triples)
         if response["regime"] == "A":
             wf, reason = scoring.well_formed(p, base["u_label"], base["v_label"], h=None)  # variable length (CREATE-style)
-        else:  # Regime B: coherent chain, no revisited entities (reject circular / self-referential structures)
+        elif response["mode"] == "blending":
+            # Fusion blend: "structure" is a STAR of triples about the blend, not a continuous chain,
+            # so the chain/revisit checks don't apply -- well-formed = at least one valid triple.
+            wf, reason = (True, "ok") if p.triples else (False, "empty")
+        else:  # Regime B analogy: coherent chain, no revisited entities (reject circular structures)
             if not scoring.is_continuous(p):
                 wf, reason = False, "discontinuous"
             elif len(set(p.entities)) != len(p.entities):
@@ -77,9 +90,10 @@ async def run_judges(recs: list[dict], responses_by_prompt: dict, model: str, co
     from src.dat_eval.llm import get_async_client
     client = get_async_client()
     sem = asyncio.Semaphore(concurrency)
-    # analogy/blending emit a SET of pairs, flattened as [src0, tgt0, src1, tgt1, ...]; each even
-    # path_idx is a pair head, its partner path_idx+1. Index lets a pair judge write onto both paths.
-    rec_index = {(r["prompt_id"], r["path_idx"]): r for r in recs}
+    # Keyed by DRAW + path_idx: analogy emits a SET of pairs flattened as [a0, b0, a1, b1, ...]; each
+    # even path_idx is a pair head, its partner path_idx+1. Keying includes temperature/sample_idx so a
+    # pair head finds its OWN draw's partner, not another temperature's.
+    rec_index = {_draw_key(r) + (r["path_idx"],): r for r in recs}
 
     FACT_BATCH = 10   # paths per batched factuality call (one call judges the whole batch)
 
@@ -90,21 +104,21 @@ async def run_judges(recs: list[dict], responses_by_prompt: dict, model: str, co
             r["factual"] = res
 
     async def categorical(rec):
-        c = responses_by_prompt[rec["prompt_id"]]["constraint"]
+        c = responses_by_prompt[_draw_key(rec)]["constraint"]
         async with sem:
             out = await J.judge_categorical(client, model, c["type_label"], rec["triples"])
             rec["constraint_sat"] = bool(out.get("satisfied")) if out else None
 
     async def relation_con(rec):
-        c = responses_by_prompt[rec["prompt_id"]]["constraint"]
+        c = responses_by_prompt[_draw_key(rec)]["constraint"]
         async with sem:
             out = await J.judge_relation_constraint(client, model, c, rec["triples"])
             rec["constraint_sat"] = bool(out.get("satisfied")) if out else None
 
     async def analogy(rec):
-        paths = responses_by_prompt[rec["prompt_id"]]["paths"]
+        paths = responses_by_prompt[_draw_key(rec)]["paths"]
         i = rec["path_idx"]
-        partner = rec_index.get((rec["prompt_id"], i + 1))
+        partner = rec_index.get(_draw_key(rec) + (i + 1,))
         if i + 1 >= len(paths) or partner is None:
             rec["semantic_sat"] = False
             return
@@ -114,17 +128,15 @@ async def run_judges(recs: list[dict], responses_by_prompt: dict, model: str, co
         rec["semantic_sat"] = partner["semantic_sat"] = v  # the verdict is over the pair
 
     async def blending(rec):
-        paths = responses_by_prompt[rec["prompt_id"]]["paths"]
-        i = rec["path_idx"]
-        partner = rec_index.get((rec["prompt_id"], i + 1))
-        if i + 1 >= len(paths) or partner is None:
-            rec["semantic_sat"] = False
-            return
+        # Fusion blend: utility is a single judge-only verdict over the one structure (genuine coherent
+        # fusion of u,v, hard gate on the generic space). One blend per prompt -> one item (idx 0).
+        item = (responses_by_prompt[_draw_key(rec)].get("items") or [{}])[0]
         async with sem:
-            out = await J.judge_blending(client, model, rec["u_label"], paths[i], paths[i + 1])
-        v = bool(out.get("valid")) if out else None
-        rec["semantic_sat"] = partner["semantic_sat"] = v
-        rec["blend_domains"] = out.get("domains") if out else None
+            out = await J.judge_blend_fusion(client, model, rec["u_label"], rec["v_label"],
+                                             item.get("concept", ""), item.get("generic_space", ""),
+                                             rec["triples"])
+        rec["semantic_sat"] = bool(out.get("valid")) if out else None
+        rec["generic_space_ok"] = bool(out.get("generic_space_ok")) if out else None
 
     tasks, skipped, fact_recs = [], 0, []
     for rec in recs:
@@ -135,14 +147,17 @@ async def run_judges(recs: list[dict], responses_by_prompt: dict, model: str, co
         if not rec.get("well_formed"):
             skipped += 1
             continue
-        fact_recs.append(rec)   # factuality is judged in batches (below), not one call per path
+        # Blending utility is judge-only: a blend's structure is intentionally non-factual (novel
+        # concept), so factuality is neither a gate nor meaningful here -- skip it (saves spend).
+        if rec["mode"] != "blending":
+            fact_recs.append(rec)   # factuality is judged in batches (below), not one call per path
         if rec["mode"] == "categorical":
             tasks.append(categorical(rec))
         elif rec["mode"] in ("exclusion", "inclusion", "inclusion_rare", "ordering"):
             tasks.append(relation_con(rec))
         elif rec["mode"] == "analogy" and rec["path_idx"] % 2 == 0:  # judge each pair (head = even idx)
             tasks.append(analogy(rec))
-        elif rec["mode"] == "blending" and rec["path_idx"] % 2 == 0:  # judge each branch pair
+        elif rec["mode"] == "blending":  # one blend per prompt: judge its single structure
             tasks.append(blending(rec))
     for i in range(0, len(fact_recs), FACT_BATCH):   # batched factuality: ~10x fewer calls
         tasks.append(factual_batch(fact_recs[i:i + FACT_BATCH]))
@@ -160,24 +175,30 @@ async def run_emergent_judge(recs, responses_by_prompt, model, concurrency):
     from src.dat_eval.llm import get_async_client
     client = get_async_client()
     sem = asyncio.Semaphore(concurrency)
-    rec_index = {(r["prompt_id"], r["path_idx"]): r for r in recs}
+    rec_index = {_draw_key(r) + (r["path_idx"],): r for r in recs}
 
-    async def judge_item(pid, head_idx, mode, u_label, v_label, paths, inferences):
-        head = rec_index.get((pid, head_idx))
+    async def judge_item(draw, head_idx, mode, u_label, v_label, item):
+        head = rec_index.get(draw + (head_idx,))
         if head is None:
             return
+        paths, inferences = item["paths"], item["inferences"]
         if not inferences:
             head["emergent_count"] = 0
+            return
+        if mode == "blending":
+            # Fusion blend: emergent structure of the blend -- true of the blend, of NEITHER input alone.
+            # Judged against the two INPUT concepts (u,v), not against sub-parts of the structure.
+            async with sem:
+                verdict = await J.judge_blend_emergent(client, model, u_label, v_label,
+                                                       item.get("concept", ""), paths[0], inferences)
+            head["emergent_count"] = J.count_blend_emergent(verdict, len(inferences))
+            head["emergent_inferences"] = inferences
             return
         if mode == "analogy":
             src, tgt = paths[0], paths[1]
             artifact = f"{u_label}'s side: {J.format_path(src)}\n{v_label}'s side: {J.format_path(tgt)}"
             parts = [f"{u_label} side alone: {J.format_path(src)}",
                      f"{v_label} side alone: {J.format_path(tgt)}"]
-        elif mode == "blending":
-            s1, s2 = paths[0], paths[1]
-            artifact = f"SENSE 1: {J.format_path(s1)}\nSENSE 2: {J.format_path(s2)}"
-            parts = [f"Sense 1 alone: {J.format_path(s1)}", f"Sense 2 alone: {J.format_path(s2)}"]
         else:  # association: parts are the individual links
             path = paths[0]
             artifact = J.format_path(path)
@@ -190,10 +211,10 @@ async def run_emergent_judge(recs, responses_by_prompt, model, concurrency):
     tasks = []
     for r in responses_by_prompt.values():
         items = r.get("items") or []
-        stride = 2 if r["mode"] in ("analogy", "blending") else 1
+        stride = 2 if r["mode"] == "analogy" else 1  # blending is one path per item (like association)
         for item_idx, it in enumerate(items):
-            tasks.append(judge_item(r["prompt_id"], item_idx * stride, r["mode"],
-                                    r.get("u_label"), r.get("v_label"), it["paths"], it["inferences"]))
+            tasks.append(judge_item(_draw_key(r), item_idx * stride, r["mode"],
+                                    r.get("u_label"), r.get("v_label"), it))
     if tasks:
         await asyncio.gather(*tasks)
 
@@ -216,7 +237,21 @@ def finalize_sat(rec: dict):
             rec["sat"], rec["channel"] = None, "unjudged"
             return
         rec["sat"], rec["channel"] = True, "ok"
-    else:  # Regime B
+    elif rec["mode"] == "blending":
+        # Fusion utility is JUDGE-ONLY (docs/tracks/kg_creat/blending_fusion.md): a blend is a novel
+        # concept whose structure is intentionally false of the real world ("elements false or
+        # impossible in both inputs", F&T), so factuality is NOT a gate here -- only a genuine,
+        # coherent fusion (the fusion judge, with its hard generic-space gate).
+        sem = rec.get("semantic_sat")
+        if not rec["well_formed"]:
+            rec["sat"], rec["channel"] = False, "structural"
+        elif sem is False:
+            rec["sat"], rec["channel"] = False, "semantic"
+        elif sem is None:
+            rec["sat"], rec["channel"] = None, "unjudged"
+        else:
+            rec["sat"], rec["channel"] = True, "ok"
+    else:  # Regime B analogy
         if not rec["well_formed"]:
             rec["sat"], rec["channel"] = False, "structural"
             return
@@ -233,20 +268,18 @@ def finalize_sat(rec: dict):
 
 
 def finalize_regime_b(recs: list[dict], embed):
-    """Pair-level verdict for the semantic tier, written onto each prompt's first path record.
+    """Pair-level verdict for the ANALOGY semantic tier, written onto each prompt's pair-head record.
 
-    Analogy and blending are judged over a PAIR of structures, so per-path ``sat`` cannot express
-    them: the unit of success is the mapping, not the path. This lives here (rather than in the
-    plotters) so the figures and any downstream analysis inherit one definition of validity.
-
-    Novelty for blending is the distance between the two branch TIPS -- how far apart the domains
-    the model reached are -- which is the quantity the task actually asks it to maximise.
+    Analogy is judged over a PAIR of structures, so per-path ``sat`` cannot express it: the unit of
+    success is the mapping, not the path. Blending is NOT pair-based anymore (one fused blend per
+    prompt) -- its utility rides the per-path ``sat`` set in ``finalize_sat`` (well-formed -> factual
+    -> semantic fusion verdict), so it is handled there, not here.
     """
     from collections import defaultdict
     by_prompt = defaultdict(dict)
     for r in recs:
-        if r["mode"] in ("analogy", "blending"):
-            by_prompt[r["prompt_id"]][r["path_idx"]] = r
+        if r["mode"] == "analogy":
+            by_prompt[_draw_key(r)][r["path_idx"]] = r   # per-draw: don't merge pairs across temps
     for paths in by_prompt.values():
         # each consecutive (even, even+1) is one emitted pair; verdict written onto the even head.
         for i in sorted(k for k in paths if k % 2 == 0):
@@ -255,10 +288,7 @@ def finalize_regime_b(recs: list[dict], embed):
                 continue
             p0 = head.get("triples")
             p1 = partner.get("triples") if partner else None
-            if head["mode"] == "analogy":
-                ok, reason = RB.analogy_structural_ok(p0, p1)
-            else:
-                ok, reason = RB.blend_structural_ok(p0, p1, head["u_label"])
+            ok, reason = RB.analogy_structural_ok(p0, p1)
             fact = list(head.get("factual") or []) + (list(partner.get("factual") or []) if partner else [])
             sem = head.get("semantic_sat")
             head["pair_idx"] = i // 2
@@ -273,9 +303,6 @@ def finalize_regime_b(recs: list[dict], embed):
                 head["pair_sat"], head["pair_channel"] = None, "unjudged"
             else:
                 head["pair_sat"], head["pair_channel"] = True, "ok"
-            if head["mode"] == "blending" and p0 and p1:
-                a, b = RB.branch_tips(p0, p1)
-                head["tip_distance"] = float(scoring.cosine_distance(embed(a), embed(b)))
 
 
 async def main(config_path, overwrite=False, debug=False):
@@ -318,7 +345,7 @@ async def main(config_path, overwrite=False, debug=False):
         responses = json.loads((md / "responses.json").read_text())
         if debug:
             responses = responses[:6]
-        by_prompt = {r["prompt_id"]: r for r in responses}
+        by_prompt = {_draw_key(r): r for r in responses}   # per-draw, not per-prompt (temps share id)
         recs = []
         for r in responses:
             recs.extend(score_free(r, embed))
@@ -344,8 +371,8 @@ async def main(config_path, overwrite=False, debug=False):
         per_prompt = defaultdict(lambda: [0, None])
         for r in recs:
             per_prompt[r["prompt_id"]][1] = r["mode"]
-            genuine = (r.get("pair_sat") is True) if r["mode"] in ("analogy", "blending") \
-                else (r.get("sat") is True)
+            genuine = (r.get("pair_sat") is True) if r["mode"] == "analogy" \
+                else (r.get("sat") is True)   # blending is one blend per prompt: rides per-path sat
             if genuine:
                 per_prompt[r["prompt_id"]][0] += 1
         for cnt, mode in per_prompt.values():

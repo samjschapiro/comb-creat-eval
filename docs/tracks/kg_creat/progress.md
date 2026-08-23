@@ -457,3 +457,31 @@ A4 = ✗/✓/✓; `tab:scoring` association emergent cell → em-dash.
   (analogy: transferred inference; blending: emergent structure; none for association); `score.py`
   scores emergent only for analogy/blending. (prompts.py currently at the committed uniform-`inferences`
   version — realign to the above.)
+
+### 2026-08-22 (late) — fusion blending implemented + first run
+
+Implemented the fusion reframe end-to-end (prompts, parse_blend, sampler reuses analogy pairs,
+fusion + blend-emergent judges, score/aggregate) — see docs/tracks/kg_creat/blending_fusion.md.
+First run (temp 0.9, 30 pairs, 3 scored models; data/kg_creat/kombine_blend_v2/):
+
+- **Parse 100%** (vs polysemy's 54–83%); single-object format is robust.
+- **Utility (fusion pass) discriminates**: llama-3.3-70b 33% > gemini-flash-lite 23% > gpt-4o-mini 13%.
+  The generic-space HARD GATE does all the rejecting, and its reasoning is sharp: ~80% of blends use a
+  *conjunction pseudo-schema* ("harnesses energy AND has therapeutic effects" = one property from each
+  input stapled together), not a real shared abstraction. Passing blends have genuine shared schemas
+  ("a communication system that unifies distant regions through a central authority" = telephone+Rome).
+  **Finding: models default to conjunction-mashup blending; true generic-space fusion is rare.**
+- **Emergent creativity ~2.2 verified statements/blend** (vs polysemy ~0.5), rich and meaningful; only
+  weakly model-discriminating (level, not spread, is the signal). Models reproduced hand-predicted
+  emergent structure (llama-70b: antibiotic-resistance for photosynthesis+penicillin).
+
+Two fixes landed while validating:
+1. **Blending utility must NOT gate on factuality** — a blend's structure is intentionally false of the
+   real world (F&T), so CREATE's factuality judge was killing 88/90 on the `factual` channel. Fixed:
+   blending sat = well-formed ∧ fusion-judge (judge-only), factuality skipped for blends.
+2. **Per-draw keying bug (pre-existing, all modes)**: judges keyed responses by `prompt_id`, but every
+   temperature shares one `prompt_id`, so `{prompt_id: r}` collapsed the draws — emergent ran on only
+   1/3 of draws and analogy/blending judged the wrong draw's structure. Fixed with a `_draw_key`
+   (prompt_id, temperature, sample_idx) throughout score.py. Needed for the temp ablations.
+
+First benchmark run pinned to **temp 0.9 only** (temp ablations deferred).

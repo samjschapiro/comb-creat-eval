@@ -60,23 +60,28 @@ def _regime_a_items(samples):
 
 
 def _regime_b_items(samples, mode):
-    """(all_items, valid_items) as flattened triple-lists: one item per 2-path STRUCTURE.
+    """(all_items, valid_items) as flattened triple-lists: one item per emitted STRUCTURE.
 
-    The structure's embedding is the centroid of BOTH its paths' triples, so a whole analogy/blend
-    is one point; validity is the structural predicate (same-relation + disjointness / antanaclasis
-    shape), judge-independent.
+    Analogy: one item per 2-path mapping (centroid of both paths); validity = the structural predicate
+    (same-relation + disjointness). Fusion blending: one item per blend -- its single ``structure``
+    star (one path per response); validity = a non-empty structure (utility is judge-only, so the
+    judge-independent structural check here is just well-formedness).
     """
     all_items, valid_items = [], []
     for r in samples:
         ps = r["paths"]
+        if mode == "blending":
+            if not ps or not ps[0]:
+                continue
+            all_items.append(list(ps[0]))
+            valid_items.append(list(ps[0]))   # utility is judge-only; structure presence = well-formed
+            continue
         if len(ps) < 2 or not ps[0] or not ps[1]:
             continue
         p1, p2 = ps[0], ps[1]
         combined = list(p1) + list(p2)
         all_items.append(combined)
-        ok = (RB.analogy_structural_ok(p1, p2)[0] if mode == "analogy"
-              else RB.blend_structural_ok(p1, p2, r["u_label"])[0])
-        if ok:
+        if RB.analogy_structural_ok(p1, p2)[0]:
             valid_items.append(combined)
     return all_items, valid_items
 

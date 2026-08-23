@@ -1,0 +1,19 @@
+# Kombine blending RE-ADMINISTRATION (v2): fusion blends (two concepts -> one blend with emergent
+# structure), superseding the failed polysemy framing. Reuses the pilot's analogy (u,v) pairs, so
+# analogy and fusion run on identical inputs. See docs/tracks/kg_creat/blending_fusion.md.
+# PAID (OpenRouter) unless LLM_BASE_URL points at a local server. Budget-capped below.
+upstream_dir: data/kg_creat/kombine_blend_v2/prompts
+output_dir: data/kg_creat/kombine_blend_v2/responses
+modes: [blending]
+
+eval:
+  temperatures: [0.9]                  # first benchmark run: single temp; temp ablations later
+  n_samples: 1
+  max_tokens: 1600
+concurrency: 12
+budget_usd: 1.0                        # generous cap; est spend ~$0.10
+models:
+  - meta-llama/llama-3.1-8b-instruct
+  - openai/gpt-4o-mini
+  - google/gemini-2.5-flash-lite
+  - meta-llama/llama-3.3-70b-instruct

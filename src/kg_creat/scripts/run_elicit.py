@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 from src.utils import load_config, init_directory, save_config  # noqa: E402
 from src.dat_eval.llm import call_llm_async, get_async_client, model_id_to_key  # noqa: E402
 from src.kg_creat.prompts import build_prompt  # noqa: E402
-from src.kg_creat.parse import parse_items  # noqa: E402
+from src.kg_creat.parse import parse_items, parse_blend  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "scripts" / "safety"))
 from cost_tracker import PRICING  # noqa: E402
@@ -68,11 +68,25 @@ async def _run_one(async_client, sem, model_id, spec, max_tokens, temperature, s
             if raw is None:
                 return {**base, "raw_response": None, "paths": [], "n_paths": 0,
                         "parse_success": False, "api_error": "null content"}
-            # All modes emit a JSON array of item objects, each with its path(s) + emergent "inferences".
-            # association: one "path" per item; analogy/blending: a "source"/"target" (or "sense_1"/
-            # "sense_2") PAIR. Paths are flattened into "paths" (src,tgt interleaved) for scoring.
-            path_keys = {"analogy": ("path_a", "path_b"),
-                         "blending": ("sense_1", "sense_2")}.get(spec.get("mode"), ("path",))
+            mode = spec.get("mode")
+            if mode == "blending":
+                # Fusion blend: ONE object {concept, generic_space, structure, emergent}. Shaped like an
+                # association item (structure = one path, emergent -> "inferences") plus two string
+                # fields; single item per prompt. See docs/tracks/kg_creat/blending_fusion.md.
+                blend = parse_blend(raw)
+                if blend is None:
+                    items = []
+                else:
+                    items = [{"paths": [blend["structure"].triples], "inferences": blend["emergent"],
+                              "concept": blend["concept"], "generic_space": blend["generic_space"]}]
+                flat = [it["paths"][0] for it in items]
+                return {**base, "raw_response": raw, "items": items,
+                        "paths": flat, "n_paths": len(flat), "n_items": len(items),
+                        "parse_success": len(items) > 0, "api_error": None}
+            # association / analogy emit a JSON array of item objects, each with its path(s) + emergent
+            # "inferences". association: one "path" per item; analogy: a "path_a"/"path_b" PAIR. Paths
+            # are flattened into "paths" (a,b interleaved) for scoring.
+            path_keys = {"analogy": ("path_a", "path_b")}.get(mode, ("path",))
             items = parse_items(raw, path_keys)
             flat = [p.triples for it in items for p in it["paths"]]
             result = {**base, "raw_response": raw,
@@ -80,7 +94,7 @@ async def _run_one(async_client, sem, model_id, spec, max_tokens, temperature, s
                                  "inferences": it["inferences"]} for it in items],
                       "paths": flat, "n_paths": len(flat), "n_items": len(items),
                       "parse_success": len(items) > 0, "api_error": None}
-            if spec.get("mode") in ("analogy", "blending"):
+            if mode == "analogy":
                 result["pairs"] = [[it["paths"][0].triples, it["paths"][1].triples] for it in items]
                 result["n_pairs"] = len(items)
             return result

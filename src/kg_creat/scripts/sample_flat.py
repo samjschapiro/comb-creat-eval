@@ -3,8 +3,9 @@
 The model supplies the connections from its own knowledge (open KG); this script only draws the
 anchor entities we hand it. Entities come from a domain-tagged JSON pool (see
 ``data/kg_creat/entities_curated.json``). Association and analogy draw CROSS-DOMAIN pairs (two
-distinct domains -> one entity each) so the anchors are genuinely remote; blending draws single
-anchors. Output is a flat ``prompts.json`` in the same spec shape ``run_elicit``/``score`` expect.
+distinct domains -> one entity each) so the anchors are genuinely remote; blending REUSES the
+analogy pairs (fusion of the same two concepts). Output is a flat ``prompts.json`` in the same
+spec shape ``run_elicit``/``score`` expect.
 
     python src/kg_creat/scripts/sample_flat.py configs/kg_creat/sample_flat.yaml --overwrite
 """
@@ -71,11 +72,13 @@ def main(config_path, overwrite=False, debug=False):
 
     for i, (u, du, v, dv) in enumerate(_cross_domain_pairs(pool, n_assoc, rng)):
         prompts.append(spec(f"A{i}.baseline", "baseline", "A", u, du, v, dv))
-    for i, (u, du, v, dv) in enumerate(_cross_domain_pairs(pool, n_ana, rng)):
+    analogy_pairs = _cross_domain_pairs(pool, n_ana, rng)
+    for i, (u, du, v, dv) in enumerate(analogy_pairs):
         prompts.append(spec(f"E{i}", "analogy", "B", u, du, v, dv))
-    anchors = rng.sample(pool, min(n_blend, len(pool)))
-    for i, (u, du) in enumerate(anchors):
-        prompts.append(spec(f"F{i}", "blending", "B", u, du, None, None))
+    # Blending reuses the analogy pairs verbatim: analogy and fusion run on the IDENTICAL (u,v) so the
+    # map-between vs. fuse-into distinction is isolated (docs/tracks/kg_creat/blending_fusion.md).
+    for i, (u, du, v, dv) in enumerate(analogy_pairs[:n_blend]):
+        prompts.append(spec(f"F{i}", "blending", "B", u, du, v, dv))
 
     (output_dir / "prompts.json").write_text(json.dumps(prompts, indent=2))
     n_a = sum(1 for p in prompts if p["mode"] == "baseline")

@@ -64,20 +64,20 @@ Required format (follow this shape exactly):
 <answer>[{"path_a": [["A", "r1", "B"], ["B", "r2", "C"]], "path_b": [["D", "r1", "E"], ["E", "r2", "F"]], "inferences": ["A true statement the mapping predicts about A or D."]}]</answer>"""
 
 _OUTPUT_BLOCK_BLENDING = """Output requirements (strict):
-- Return ONLY a JSON array wrapped in <answer> and </answer> tags. No other text, before or after.
-- Each element of the array is ONE blend (one polysemy): an object with keys "sense_1", "sense_2", and "inferences".
-- "sense_1" and "sense_2" are each a list of triples; each triple is [head entity, relationship, tail entity].
-  Both lists must start at the given anchor word.
-- Within one blend, "sense_1" and "sense_2" MUST have the same number of triples and the IDENTICAL
-  relationship word at every position (only the entities differ).
-- "inferences" is a list of short, true statements that hold only when BOTH senses are read at once --
-  things neither sense gives on its own. Use [] if none.
+- Return ONLY a SINGLE JSON object wrapped in <answer> and </answer> tags. No other text, before or after.
+  (Produce ONE blend, not a list.)
+- The object has exactly these four keys: "concept", "generic_space", "structure", "emergent".
+- "concept": a short name for the single blended concept you create by fusing the two inputs.
+- "generic_space": ONE phrase naming the shared schema both inputs fit -- what makes them fusable. Be
+  specific; a vacuous schema ("both exist", "both involve change") does not count as a blend.
+- "structure": a list of triples [head, relationship, tail] describing the blend. It must draw on BOTH
+  inputs (some triples carry structure from one input, some from the other). The head is usually the blend.
+- "emergent": a list of short statements, each true of the BLEND but true of NEITHER input on its own.
+  Give every one you can justify; use [] if the blend licenses none. Do not pad with restatements.
 - Relationship strings must be 1-3 words. Use canonical, disambiguated entity names.
-- List one object per distinct second meaning. To stop, simply end the array -- do not pad with non-genuine senses.
-- If the word has no valid second meaning, return an empty array: <answer>[]</answer>.
 
 Required format (follow this shape exactly):
-<answer>[{"sense_1": [["Boxer", "is a", "Athlete"], ["Athlete", "chases", "Records"]], "sense_2": [["Boxer", "is a", "Dog"], ["Dog", "chases", "Squirrels"]], "inferences": ["A true statement that holds only under both readings."]}]</answer>"""
+<answer>{"concept": "computer virus", "generic_space": "a self-replicating agent that spreads through a host", "structure": [["computer virus", "infects", "a computer"], ["computer virus", "is a", "program"], ["computer virus", "spreads between", "machines"]], "emergent": ["it can be quarantined", "an antivirus behaves like an immune system"]}</answer>"""
 
 # CREATE's rules/dedup scaffolding (K.3), shared across modes.
 _ENTITY_RULES = """Rules and quality constraints:
@@ -191,45 +191,38 @@ give every genuine analogy you can find, and make them as different from one ano
 
 
 def _blending_prompt(spec: dict) -> str:
-    """Blending as antanaclasis: the anchor is fixed; the model must find a VALID POLYSEMY of it.
+    """Blending as conceptual FUSION (Fauconnier & Turner): fuse two concepts into ONE new concept.
 
-    A true blend hinges on one word carrying two genuinely different senses (the C6 'Boxer' figure:
-    Boxer-the-athlete vs Boxer-the-dog). So the task is not "two facts about the anchor" but "two
-    *meanings* of the anchor", each developed under a shared relational frame. Finding a second sense
-    for an arbitrary given concept is the hard, creative act -- and for many anchors it is not
-    possible, which is why baseline success is a measurement, not a precondition.
+    Given two concepts u, v, the model finds the shared generic space, projects selectively from both
+    into a single blended concept, and reads off the concept's EMERGENT STRUCTURE -- properties true of
+    the blend but of neither input alone. One blend per pair (fusion converges; generativity lives in
+    the emergent structure, not in a count of blends). Supersedes the earlier polysemy framing, which
+    degenerated into listing word-senses. See docs/tracks/kg_creat/blending_fusion.md.
     """
-    u = spec["u_label"]
-    return f"""Task: You are given ONE concept: '{u}'. Find as MANY VALID POLYSEMIES of it as you can --
-each a second, genuinely different meaning that the word '{u}' can be read as -- and for each, build a
-conceptual BLEND that holds both meanings at once.
+    u, v = spec["u_label"], spec["v_label"]
+    return f"""Task: You are given TWO concepts: '{u}' and '{v}'. FUSE them into a SINGLE new blended
+concept that is both at once, then describe the structure this fusion generates. (Think "computer
+virus" = biology + software: one new concept, not two things side by side.)
 
-A polysemy reads the SAME word in two unrelated senses. For example, the word "Boxer":
-  "sense_1": [["Boxer", "is a", "Athlete"], ["Athlete", "chases", "Records"]]
-  "sense_2": [["Boxer", "is a", "Dog"], ["Dog", "chases", "Squirrels"]]
-"Boxer" means a person in one reading and a dog breed in the other. Both senses share the SAME frame
-("is a ... chases ...") but land in completely different domains. That double meaning is one blend.
+Build the blend in three moves:
+1. GENERIC SPACE: name the shared schema both '{u}' and '{v}' fit -- the abstract structure that lets
+   them fuse at all (for virus + software: "a self-replicating agent that spreads through a host").
+   Be specific; "both exist" or "both involve change" is too vacuous to be a real blend.
+2. STRUCTURE: describe the single blended concept as triples, projecting selectively from BOTH inputs
+   -- some structure carried over from '{u}', some from '{v}', combined into one coherent concept.
+3. EMERGENT: state the concept's EMERGENT STRUCTURE -- properties or behaviours that are true of the
+   BLEND but true of NEITHER '{u}' nor '{v}' on its own. This is the point of the task.
 
-We reward four things in every blend:
-- TRUE: every triple is factually correct, and both readings are genuine senses of the word.
-- REMOTE: the two senses are as distant and unrelated as possible.
-- UNCOMMON: pick rare, non-obvious second meanings, not the first one that comes to mind.
-- GENERATIVE: state the true inferences that hold only when BOTH senses are read at once -- things
-  neither sense gives on its own.
+We reward four things:
+- COHERENT: a genuine fusion with a real, specific generic space -- not a forced mashup of two things.
+- REMOTE: '{u}' and '{v}' are distant, so the fusion is surprising.
+- UNCOMMON: build from rare, specific structure, not the broad generic properties anyone would list.
+- EMERGENT: give every emergent property you can justify. The test for each, applied literally: it must
+  be true of the blend, yet true of NEITHER '{u}' alone NOR '{v}' alone. Drop anything that is already
+  true of one of the inputs, or that merely restates that they were combined.
 
-Each blend is exactly TWO paths, both beginning at '{u}':
-- "sense_1": develops '{u}' under one meaning.
-- "sense_2": develops '{u}' under a DIFFERENT meaning of the SAME word.
-Rules that hold within each blend:
-- The two readings must be genuinely distinct SENSES of the word -- NOT two facts about the same thing.
-- The second meaning must be the SAME spelled word read differently -- not a homophone or near-pun
-  (e.g. "Beatles" -> "beetles" does NOT count; it must be the identical word).
-- "sense_1" and "sense_2" must use the EXACT SAME relationship word at every position; only the entities differ.
-- The two senses share no entity except '{u}'; the more unrelated the two meanings, the better the blend.
-Use concrete, factual, canonically-named entities, and do not repeat an entity within a path.
-
-Produce as MANY DISTINCT blends (distinct second meanings) as you can, most surprising first -- do not
-stop at a fixed number. Stop only when the word has no further genuine second meaning.
+Produce exactly ONE blend of '{u}' and '{v}' -- the best, most coherent fusion you can build, developed
+as richly as possible. Use concrete, canonically-named entities in the structure.
 
 {_OUTPUT_BLOCK_BLENDING}"""
 

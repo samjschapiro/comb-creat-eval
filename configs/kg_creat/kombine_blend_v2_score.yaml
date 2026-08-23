@@ -1,0 +1,18 @@
+# Kombine blending v2 scoring: fusion utility judge (genuine coherent blend, hard gate on generic
+# space) + blend-emergent judge (emergent structure: true of the blend, of neither input) + batched
+# factuality on the structure triples; local MLX embeddings for surprise.
+# Run WITHOUT LLM_BASE_URL so the judge routes to OpenRouter; embeddings stay local (MLX).
+# Use the .venv_mlx environment for this step (MLX embedder).
+upstream_dir: data/kg_creat/kombine_blend_v2/responses
+output_dir: data/kg_creat/kombine_blend_v2/scores
+
+exclude_models:                          # llama-3.1-8b parsed only ~54% in the pilot -> skip
+  - meta-llama/llama-3.1-8b-instruct
+
+judge:
+  enabled: true
+  model: openai/gpt-oss-120b
+  concurrency: 32
+
+embedding:
+  model: mlx-community/all-MiniLM-L6-v2-4bit

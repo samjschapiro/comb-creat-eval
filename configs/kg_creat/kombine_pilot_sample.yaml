@@ -6,6 +6,6 @@ output_dir: data/kg_creat/kombine_pilot/prompts
 
 n_association: 30     # cross-domain pairs (u, v) for the association task
 n_analogy: 30         # cross-domain pairs for the analogy task
-n_blend: 30           # single anchors for the blending task
+n_blend: 30           # fusion blends -- REUSES the analogy pairs (same (u,v))
 seed: 0
 k: 5                  # legacy field carried through (no longer imposed in the prompt)

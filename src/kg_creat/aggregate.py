@@ -59,12 +59,13 @@ def _by(recs, key):
 def aggregate(recs: list[dict]) -> dict:
     per_mode = {}
     for mode, rs in _by(recs, "mode").items():
-        # an "item" is one combination: a path (association) or a pair (analogy/blending). Verified
-        # genuine = judge-passed items (utility), the count that isn't inflated by padded near-dupes.
-        if mode in ("analogy", "blending"):
+        # an "item" is one combination: a path (association), an analogy PAIR, or a fusion blend
+        # (one per prompt, path-level sat). Verified genuine = judge-passed items (utility), the count
+        # that isn't inflated by padded near-dupes.
+        if mode == "analogy":
             items = [r for r in rs if "pair_sat" in r]                 # pair heads
             verified = sum(1 for r in items if r.get("pair_sat") is True)
-        else:
+        else:  # association + fusion blending: one path per item, per-path sat
             items = rs
             verified = sum(1 for r in items if r.get("sat") is True)
         per_mode[mode] = {

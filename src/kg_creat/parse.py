@@ -139,8 +139,8 @@ def parse_items(raw_response: str | None, path_keys: tuple[str, ...],
     """Parse an ``<answer>``-wrapped JSON ARRAY of item objects into structured items.
 
     Each item object has one or two path fields (named by ``path_keys``: ``("path",)`` for association,
-    ``("path_a", "path_b")`` for analogy, ``("sense_1", "sense_2")`` for blending) plus an optional
-    ``"inferences"`` list (the emergent-creativity signal). Returns a list of
+    ``("path_a", "path_b")`` for analogy) plus an optional ``"inferences"`` list (the emergent-creativity
+    signal). (Fusion blending does NOT use this -- it emits one object; see ``parse_blend``.) Returns a list of
     ``{"paths": [EmittedPath, ...], "inferences": [str, ...]}``; drops any item missing a path.
     Salvages complete items from a token-cap-truncated array.
     """
@@ -167,6 +167,45 @@ def parse_items(raw_response: str | None, path_keys: tuple[str, ...],
                       if isinstance(raw_inf, list) else [])
         out.append({"paths": paths, "inferences": inferences})
     return out
+
+
+def parse_blend(raw_response: str | None) -> dict | None:
+    """Parse a fusion-blend response into ``{concept, generic_space, structure, emergent}``.
+
+    The new blending task (docs/tracks/kg_creat/blending_fusion.md) emits ONE JSON object with keys
+    ``concept`` (str), ``generic_space`` (str), ``structure`` (list of triples -> one EmittedPath),
+    and ``emergent`` (list of str). Returns None if nothing usable parses (no structure triples).
+    Tolerates a stray array wrapper (takes the first object) and a token-cap truncation (salvages the
+    last closed object).
+    """
+    if not raw_response or not isinstance(raw_response, str):
+        return None
+    text = raw_response
+    m = re.search(r"<answer>(.*?)</answer>", text, re.DOTALL | re.IGNORECASE)
+    if m:
+        text = m.group(1)
+    obj = None
+    try:
+        parsed = json.loads(text.strip())
+        if isinstance(parsed, dict):
+            obj = parsed
+        elif isinstance(parsed, list):  # model over-produced a list; take the first blend object
+            obj = next((el for el in parsed if isinstance(el, dict)), None)
+    except Exception:  # noqa: BLE001 - salvage a single object truncated mid-emission
+        salv = _salvage_pairs("[" + text.strip().lstrip("[").rstrip("]") + "]")
+        obj = salv[0] if salv else None
+    if not isinstance(obj, dict):
+        return None
+    structure = _coerce_path(obj.get("structure"))
+    if structure is None:
+        return None
+    raw_emergent = obj.get("emergent")
+    emergent = ([str(x).strip() for x in raw_emergent
+                 if isinstance(x, (str, int, float)) and str(x).strip()]
+                if isinstance(raw_emergent, list) else [])
+    return {"concept": str(obj.get("concept") or "").strip(),
+            "generic_space": str(obj.get("generic_space") or "").strip(),
+            "structure": structure, "emergent": emergent}
 
 
 def parse_paths(raw_response: str | list | None) -> list[EmittedPath]:

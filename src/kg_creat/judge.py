@@ -271,6 +271,84 @@ async def judge_blending(client, model: str, u: str, path1: list, path2: list) -
     return _extract_json(raw) if raw else None
 
 
+# --- Fusion blending (docs/tracks/kg_creat/blending_fusion.md) -----------------------
+# Utility for a fusion blend is judge-only: a blend is a NOVEL concept, so literal factuality of the
+# blend is not the gate (F&T: elements "false or impossible in both inputs" are a feature). The judge
+# checks it is a genuine, coherent fusion drawing on BOTH inputs, with a HARD gate on a real (non-
+# vacuous) generic space.
+BLEND_FUSION_JUDGE_PROMPT = """You are judging whether a proposed conceptual BLEND is a genuine fusion
+of two input concepts, or merely a forced mashup.
+Input concept 1: '{u}'
+Input concept 2: '{v}'
+Proposed blend concept: '{concept}'
+Claimed generic space (shared schema): '{generic_space}'
+Structure of the blend (ordered triples): {structure}
+
+A valid blend requires ALL of:
+1. GENERIC SPACE (hard gate): the claimed generic space is a real, SPECIFIC schema that both '{u}' and
+   '{v}' genuinely fit. A vacuous or near-empty schema ("both exist", "both are things", "both involve
+   change/energy") FAILS -- that is a mashup, not a blend.
+2. DUAL PROJECTION: the structure draws on BOTH inputs -- it carries recognizable structure from '{u}'
+   AND from '{v}', combined into one concept. If it is essentially just one of the inputs with the
+   other's name attached, it FAILS.
+3. COHERENCE: the blended concept holds together as a single intelligible concept (it need NOT be a
+   real/existing thing, and may assert properties false of either input -- that is allowed).
+Return valid JSON only, exactly:
+{{ "explanation": "string", "generic_space_ok": true or false, "valid": true or false }}"""
+
+
+async def judge_blend_fusion(client, model: str, u: str, v: str, concept: str,
+                             generic_space: str, structure: list) -> dict | None:
+    """Utility judge for a fusion blend: genuine coherent fusion of u,v (hard gate on generic space)."""
+    prompt = BLEND_FUSION_JUDGE_PROMPT.format(
+        u=u, v=v, concept=concept or "(unnamed)", generic_space=generic_space or "(none given)",
+        structure=format_path(structure))
+    raw = await _ask(client, model, prompt, max_tokens=800)
+    return _extract_json(raw) if raw else None
+
+
+# Emergent creativity for fusion blends: each candidate is EMERGENT STRUCTURE -- true of the blend but
+# of NEITHER input alone. Unlike the generic emergent judge, "true in the real world" is NOT required
+# (the blend may be fictional); we check coherence-in-the-blend + in-neither-input + non-triviality.
+BLEND_EMERGENT_JUDGE_PROMPT = """You are judging the EMERGENT STRUCTURE of a conceptual blend.
+The blend '{concept}' fuses two input concepts:
+Input 1: '{u}'
+Input 2: '{v}'
+Blend structure (ordered triples): {structure}
+
+You are given candidate EMERGENT properties of the blend. For each, decide independently:
+- "emergent": is it a property that holds of the BLEND but of NEITHER '{u}' alone NOR '{v}' alone, AND
+  is non-trivial (not merely restating that the two were combined, and not vacuous)? (true / false)
+  If the property is already true of '{u}' by itself, or of '{v}' by itself, answer false.
+  If it coherently follows only from fusing the two, answer true.
+
+CANDIDATE EMERGENT PROPERTIES:
+{inferences}
+
+Return ONLY a JSON object mapping each number to its verdict, and nothing else. Example:
+{{"1": {{"emergent": true}}, "2": {{"emergent": false}}}}"""
+
+
+async def judge_blend_emergent(client, model: str, u: str, v: str, concept: str,
+                               structure: list, inferences: list[str]) -> dict | None:
+    """Verdict per candidate: is it emergent structure (of the blend, in neither input, non-trivial)?"""
+    if not inferences:
+        return {}
+    inf_block = "\n".join(f"{i + 1}. {s}" for i, s in enumerate(inferences))
+    prompt = BLEND_EMERGENT_JUDGE_PROMPT.format(
+        concept=concept or "(unnamed)", u=u, v=v, structure=format_path(structure), inferences=inf_block)
+    raw = await _ask(client, model, prompt, max_tokens=800)
+    return _extract_json(raw) if raw else None
+
+
+def count_blend_emergent(verdict: dict | None, n_inferences: int) -> int:
+    """Number of candidates the judge marked emergent (the blend emergent-creativity score)."""
+    if not verdict:
+        return 0
+    return sum(1 for i in range(1, n_inferences + 1)
+               if isinstance(verdict.get(str(i)), dict) and verdict[str(i)].get("emergent"))
+
+
 EMERGENT_JUDGE_PROMPT = """You are a careful, factual judge assessing EMERGENT inferences licensed by a
 combinatorial artifact. You are given an ARTIFACT (a whole), the PARTS it is built from, and a numbered
 list of candidate INFERENCES the artifact is claimed to license.
