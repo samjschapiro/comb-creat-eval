@@ -429,3 +429,31 @@ llama-3.1-8b, 54% parse), batched factuality.
 4. Deploy the **human generation** experiment (jsPsych, in `llm_creativity_mech_interp`).
 
 Details: `docs/logs/2026-08-22/1913_kombine_pilot_flat_pool_and_human_study.md`.
+
+### 2026-08-22 (late) — emergent creativity is task-specific; blending → fusion (decisions locked, redesign pending)
+
+Per-task emergent-creativity mechanism, grounded in the Combinatorial Creativity paragraph of the
+paper (`04_background.tex`):
+- **Association has NO emergent creativity** — it only *reveals a connection*. Score it on utility,
+  surprise, originality only (no emergent field, no GENERATIVE elicitation).
+- **Analogy: emergent = transferred inferences** — novel true claims about one/both domains via the
+  mapping (Gentner's *systematicity principle* → candidate inferences; NOT comp-gen systematicity).
+- **Blending: emergent = the emergent structure of the blend** — properties/behaviors the fused
+  concept has that neither input has (may be false of each), per the F&T quote.
+- **Blending also reframed from lexical polysemy → two-concept FUSION**: given two concepts, fuse into
+  a blend (name + `structure` triples from both) with emergent structure. (computer virus = biology +
+  software.) Sampler draws blending as a *pair*, like analogy.
+
+**Done in the paper (pushed):** Table 1 (`tab:cg-vs-cc`) split into association/analogy/blending with
+A4 = ✗/✓/✓; `tab:scoring` association emergent cell → em-dash.
+
+**Pending redesign (next session):**
+- Paper prose: Preliminaries + `tab:scoring` caption (emergent = analogy/blending only); association
+  motivation (drop "elicits novel inferences"); analogy motivation (emergent = transferred inference);
+  blending prose reframe to two-concept fusion; §2.2 A4 discussion.
+- Code (`src/kg_creat`): association prompt drops emergent field; analogy emergent = transferred
+  inferences; blending → two-concept fusion (blend + structure) + emergent structure; `sample_flat.py`
+  blending → pairs; `parse.py`/`run_elicit.py` new blending format; **task-specific emergent judge**
+  (analogy: transferred inference; blending: emergent structure; none for association); `score.py`
+  scores emergent only for analogy/blending. (prompts.py currently at the committed uniform-`inferences`
+  version — realign to the above.)
