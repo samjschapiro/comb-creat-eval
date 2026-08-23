@@ -87,6 +87,15 @@ in `04_drat.tex`. Utility-gate aggregator ablation
 
 ### kg_creat (active; venue TBD — reframed 2026-06-04)
 
+**Current (2026-08-22): "Kombine."** Now a three-task combinatorial-creativity benchmark
+(association / analogy / blending) over a **flat curated domain-balanced entity pool** (the
+CREATE-style seed-BFS graph was dropped — person-biased and unused, since the model connects from
+its own knowledge). Each artifact is scored on four criteria — utility, surprise, originality,
+emergent creativity. First pilot: factual validity discriminates models cleanly; blending
+underperforms (arbitrary anchors rarely admit a 2nd sense) and emergent creativity is not yet a
+discriminating signal (judge too lenient). A jsPsych human-generation study is built. See
+`docs/tracks/kg_creat/progress.md`. (Older framing below.)
+
 Re-purposes the **comb_eval / Comb-Creat** task setup (constrained labeled-
 graph pathfinding with novelty×utility scoring) into a **test-time creativity
 task on a real knowledge graph** (Wikidata et al.), administered to frontier

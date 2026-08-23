@@ -1,0 +1,18 @@
+# Kombine PILOT elicitation: association (baseline) + analogy + blending, cheap models, 3 temps.
+# PAID (OpenRouter) unless LLM_BASE_URL points at a local server. Budget-capped below.
+# Run WITHOUT LLM_BASE_URL for the paid pilot; the cap refuses unpriced models.
+upstream_dir: data/kg_creat/kombine_pilot/prompts
+output_dir: data/kg_creat/kombine_pilot/responses
+modes: [baseline, analogy, blending]   # baseline = association (Regime A); skip constraint cells
+
+eval:
+  temperatures: [0.9, 1.0, 1.2]        # decoding sweep (paper's 3 temps)
+  n_samples: 1                         # M resamples per (prompt, temp); 1 for the pilot
+  max_tokens: 1600
+concurrency: 12
+budget_usd: 2.0                        # generous cap; actual pilot spend estimated << this
+models:                               # a few cheap models for the pilot
+  - meta-llama/llama-3.1-8b-instruct
+  - openai/gpt-4o-mini
+  - google/gemini-2.5-flash-lite
+  - meta-llama/llama-3.3-70b-instruct

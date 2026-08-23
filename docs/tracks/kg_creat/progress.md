@@ -393,3 +393,39 @@ testable before spending on elicitation):
 - Path-set aggregator for the **secondary** `C`: greedy `s_γ` vs mean·`D` (pilot decision;
   no longer headline-critical since `C` is demoted).
 - Venue: LM4Sci COLM vs a broader LLM-eval/creativity venue (framing is now broader).
+
+## 2026-08-22 — Kombine pivot: flat pool, four criteria, first pilot
+
+**State.** The track is now framed as **Kombine**: three tasks (association / analogy / blending),
+each scored on four criteria — **utility (factual + judge)**, **surprise** (cosine distance),
+**originality** (inverse frequency; *paper-defined, not yet coded*), **emergent creativity**
+(count of true inferences licensed by the whole but not any part). Prompts are open-ended
+(array-of-objects, each item carries an `inferences` field) and motivate the four criteria
+(TRUE/REMOTE/UNCOMMON/GENERATIVE).
+
+**Big change: dropped the seed-BFS knowledge graph.** It was person-biased (biographical/family
+relations dominate the top-28 frequency vocab → ~60% humans) and unnecessary (the model connects
+from its own knowledge; the graph is never traversed). Replaced by a flat curated domain-balanced
+pool: `data/kg_creat/entities_curated.json` + `src/kg_creat/scripts/sample_flat.py` (cross-domain
+stratified). No graph / min_degree / relation vocabulary.
+
+**Pilot (curated pool, ~$2.1).** Elicit 4 cheap models × 90 prompts × 3 temps; score 3 (dropped
+llama-3.1-8b, 54% parse), batched factuality.
+- Factual validity discriminates cleanly (llama-70b > gpt-4o-mini > gemini-lite).
+- Combinatorial **scarcity** confirmed (verified-genuine/prompt): association 6.0, analogy 1.5,
+  **blending 0.5 (78% of anchors yield zero)**.
+- **Emergent creativity flat (~0.5)** across strong models → emergent judge too lenient; not
+  discriminating.
+- Surprise is item-driven (fixed cross-domain pairs), not a model signal.
+
+**Open / next (incl. user's 2026-08-22 revision prompts):**
+1. **Blending underperforms** post-pivot (arbitrary anchors rarely admit a 2nd sense) — rethink how
+   to assess it (curated polysemy anchors, or a different blending operationalization).
+2. **Models are weak at emergent creativity**, and the metric doesn't discriminate — beef up how we
+   *prompt for* and *assess* it (interesting real cases: discovering a **common cause** between two
+   things, a shared hidden mechanism, a transferred prediction). Likely: stricter emergent judge +
+   prompt that asks for a specific *kind* of emergent inference.
+3. Implement the **originality (inverse-frequency)** scorer.
+4. Deploy the **human generation** experiment (jsPsych, in `llm_creativity_mech_interp`).
+
+Details: `docs/logs/2026-08-22/1913_kombine_pilot_flat_pool_and_human_study.md`.

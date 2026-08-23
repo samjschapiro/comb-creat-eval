@@ -49,7 +49,7 @@ src/
 │   ├── embed.py                # local MLX MiniLM embeddings (novelty R)
 │   ├── scoring.py, parse.py (truncation salvage), aggregate.py
 │   ├── vendor/create/          # vendored CREATE scorer (author-cleared)
-│   └── scripts/                # build_gc, sample_bundles, run_elicit (M-sampling+temp sweep), make_pass2 (baseline-derived targets), score, rejudge, compute_diversity, datasheet, show_failures, plot_*/fig_* (Nature-spec), *_review
+│   └── scripts/                # sample_flat (flat curated pool — no BFS; current), build_gc/sample_bundles (legacy seed-BFS), run_elicit, score (+emergent judge), make_pass2, rejudge, compute_diversity, datasheet, plot_*/fig_*, *_review
 └── plot_twist/                 # active track (TwistBench: transformational creativity via plot twists)
     ├── llm.py                  # OpenRouter wrapper (+ optional `reasoning` param)
     ├── generate.py             # durable per-story twist generation (multi-temp, resumable)

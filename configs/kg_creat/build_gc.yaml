@@ -3,11 +3,12 @@
 # whose neighborhood reached it. The relation vocabulary is frequency-derived, and the
 # analogy/blend/endpoint pairs are randomly sampled from the graph.
 #
-# v2 (2026-07-26): grown from 22 -> 51 seeds across 15 domains (~3-4 anchors/domain) to widen the
-# prominent-entity pool for a CREATE-parity (~931-query) benchmark without heavy entity reuse.
-# radius stays 2 (radius 3 explodes and pulls obscure tails); max_neighbors 40 -> 50 to densify.
-output_dir: data/kg_creat/gc_domains_v2
-name: gc_domains_v2
+# v3 (2026-08-22): grown from 51 -> ~130 seeds across ~22 domains. The narrow v2 seed set made the
+# prominent (high-degree) pool dominated by a few families' obscure relatives (Lincoln's children,
+# Beethoven's brother, ...). Broadening the seeds gives the min_degree-confined pool real breadth of
+# genuinely well-known entities. radius stays 2; max_neighbors 50.
+output_dir: data/kg_creat/gc_domains_v3
+name: gc_domains_v3
 radius: 2
 max_neighbors_per_relation: 50
 top_n_relations: 28
@@ -15,54 +16,161 @@ vocab_sample_radius: 1
 vocab_survey_entities: 1200
 
 seeds:                       # {well-known anchor: domain}
+  # --- science ---
   Albert Einstein: science
+  Isaac Newton: science
   Charles Darwin: science
   Marie Curie: science
-  Isaac Newton: science
+  Galileo Galilei: science
+  Nikola Tesla: science
+  Stephen Hawking: science
+  Niels Bohr: science
+  Richard Feynman: science
+  Michael Faraday: science
+  Dmitri Mendeleev: science
+  Rosalind Franklin: science
+  # --- mathematics ---
+  Euclid: mathematics
+  Carl Friedrich Gauss: mathematics
+  Leonhard Euler: mathematics
+  Pythagoras: mathematics
+  Archimedes: mathematics
+  Alan Turing: mathematics
+  Ada Lovelace: mathematics
+  John von Neumann: mathematics
+  # --- art ---
   Leonardo da Vinci: art
   Pablo Picasso: art
   Vincent van Gogh: art
   Frida Kahlo: art
+  Michelangelo: art
+  Rembrandt: art
+  Claude Monet: art
+  Salvador Dali: art
+  Andy Warhol: art
+  # --- music ---
   Ludwig van Beethoven: music
-  The Beatles: music
   Wolfgang Amadeus Mozart: music
+  Johann Sebastian Bach: music
+  The Beatles: music
   Bob Dylan: music
+  Elvis Presley: music
+  Michael Jackson: music
+  Louis Armstrong: music
+  Aretha Franklin: music
+  # --- literature ---
   William Shakespeare: literature
   Homer: literature
   Jane Austen: literature
   Leo Tolstoy: literature
+  Charles Dickens: literature
+  Mark Twain: literature
+  Virginia Woolf: literature
+  Fyodor Dostoevsky: literature
+  Franz Kafka: literature
+  Gabriel Garcia Marquez: literature
+  # --- film ---
   Alfred Hitchcock: film
   Akira Kurosawa: film
   Steven Spielberg: film
+  Charlie Chaplin: film
+  Stanley Kubrick: film
+  Martin Scorsese: film
+  Walt Disney: film
+  # --- politics & history ---
   Abraham Lincoln: politics
   Napoleon: politics
   Nelson Mandela: politics
   Winston Churchill: politics
+  Mahatma Gandhi: politics
+  Julius Caesar: politics
+  Cleopatra: politics
+  Martin Luther King Jr.: politics
+  George Washington: politics
+  Alexander the Great: politics
+  Queen Victoria: politics
+  # --- geography ---
   Japan: geography
-  Amazon rainforest: geography
   Egypt: geography
+  Amazon rainforest: geography
   Mount Everest: geography
+  France: geography
+  Brazil: geography
+  India: geography
+  Sahara: geography
+  Nile: geography
+  Rome: geography
+  # --- biology ---
   Lion: biology
   Honey bee: biology
   Blue whale: biology
   Oak: biology
+  Tiger: biology
+  Dolphin: biology
+  Elephant: biology
+  Octopus: biology
+  # --- technology ---
   Internet: technology
   Steam engine: technology
   Printing press: technology
+  Telephone: technology
+  Computer: technology
+  Automobile: technology
+  Airplane: technology
+  # --- sports ---
   Muhammad Ali: sports
   Association football: sports
   Olympic Games: sports
+  Pele: sports
+  Michael Jordan: sports
+  Serena Williams: sports
+  Usain Bolt: sports
+  # --- philosophy ---
   Aristotle: philosophy
   Immanuel Kant: philosophy
   Confucius: philosophy
-  Coffee: food
-  Wine: food
-  Rice: food
+  Plato: philosophy
+  Socrates: philosophy
+  Friedrich Nietzsche: philosophy
+  Rene Descartes: philosophy
+  Karl Marx: philosophy
+  # --- religion ---
   Buddhism: religion
   Christianity: religion
   Islam: religion
-  Euclid: mathematics
-  Carl Friedrich Gauss: mathematics
+  Hinduism: religion
+  Judaism: religion
+  # --- food ---
+  Coffee: food
+  Wine: food
+  Rice: food
+  Chocolate: food
+  Tea: food
+  # --- medicine ---
   Hippocrates: medicine
   Louis Pasteur: medicine
+  Penicillin: medicine
+  Vaccine: medicine
+  # --- economics ---
   Adam Smith: economics
+  John Maynard Keynes: economics
+  # --- astronomy ---
+  Sun: astronomy
+  Moon: astronomy
+  Solar System: astronomy
+  Black hole: astronomy
+  NASA: astronomy
+  Mars: astronomy
+  # --- architecture ---
+  Great Pyramid of Giza: architecture
+  Eiffel Tower: architecture
+  Colosseum: architecture
+  Taj Mahal: architecture
+  Great Wall of China: architecture
+  Statue of Liberty: architecture
+  # --- exploration ---
+  Christopher Columbus: exploration
+  Marco Polo: exploration
+  Ferdinand Magellan: exploration
+  Amelia Earhart: exploration
+  Neil Armstrong: exploration

@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 from src.utils import load_config, init_directory, save_config  # noqa: E402
 from src.dat_eval.llm import call_llm_async, get_async_client, model_id_to_key  # noqa: E402
 from src.kg_creat.prompts import build_prompt  # noqa: E402
-from src.kg_creat.parse import parse_paths  # noqa: E402
+from src.kg_creat.parse import parse_items  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "scripts" / "safety"))
 from cost_tracker import PRICING  # noqa: E402
@@ -68,10 +68,22 @@ async def _run_one(async_client, sem, model_id, spec, max_tokens, temperature, s
             if raw is None:
                 return {**base, "raw_response": None, "paths": [], "n_paths": 0,
                         "parse_success": False, "api_error": "null content"}
-            paths = parse_paths(raw)
-            return {**base, "raw_response": raw,
-                    "paths": [p.triples for p in paths], "n_paths": len(paths),
-                    "parse_success": len(paths) > 0, "api_error": None}
+            # All modes emit a JSON array of item objects, each with its path(s) + emergent "inferences".
+            # association: one "path" per item; analogy/blending: a "source"/"target" (or "sense_1"/
+            # "sense_2") PAIR. Paths are flattened into "paths" (src,tgt interleaved) for scoring.
+            path_keys = {"analogy": ("path_a", "path_b"),
+                         "blending": ("sense_1", "sense_2")}.get(spec.get("mode"), ("path",))
+            items = parse_items(raw, path_keys)
+            flat = [p.triples for it in items for p in it["paths"]]
+            result = {**base, "raw_response": raw,
+                      "items": [{"paths": [p.triples for p in it["paths"]],
+                                 "inferences": it["inferences"]} for it in items],
+                      "paths": flat, "n_paths": len(flat), "n_items": len(items),
+                      "parse_success": len(items) > 0, "api_error": None}
+            if spec.get("mode") in ("analogy", "blending"):
+                result["pairs"] = [[it["paths"][0].triples, it["paths"][1].triples] for it in items]
+                result["n_pairs"] = len(items)
+            return result
         except Exception as e:  # noqa: BLE001
             return {**base, "raw_response": None, "paths": [], "n_paths": 0,
                     "parse_success": False, "api_error": f"{type(e).__name__}: {e}"}

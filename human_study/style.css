@@ -1,0 +1,163 @@
+/* Concept Pairs — visual identity layered over jsPsych's default CSS.
+   Palette encodes the idea: entity A = warm coral, entity B = cool teal,
+   what the participant creates = emergent violet. Light + dark themes. */
+
+:root{
+  --ground:#F4F3F7; --surface:#FFFFFF; --surface-2:#FAF9FC;
+  --ink:#1C1A29; --muted:#6C6780; --faint:#918BA3;
+  --line:#E4E1EC; --line-strong:#D6D2E1;
+  --accent:#6E56E8; --accent-ink:#4F3BC6; --accent-soft:rgba(110,86,232,.10);
+  --warm:#CA5A34; --warm-soft:rgba(202,90,52,.11);
+  --cool:#17827E; --cool-soft:rgba(23,130,126,.11);
+  --good:#2E9E6B;
+  --shadow:0 1px 2px rgba(28,26,41,.04),0 10px 30px -14px rgba(28,26,41,.16);
+  --font-display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+  --font-ui:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#121118; --surface:#1B1A24; --surface-2:#201F2B;
+    --ink:#ECEAF4; --muted:#9A94AC; --faint:#726C82;
+    --line:#2C2A38; --line-strong:#3A3748;
+    --accent:#9B85FF; --accent-ink:#B7A6FF; --accent-soft:rgba(155,133,255,.14);
+    --warm:#E7855E; --warm-soft:rgba(231,133,94,.15);
+    --cool:#3FB0AA; --cool-soft:rgba(63,176,170,.15);
+    --good:#4FBE88;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 14px 34px -16px rgba(0,0,0,.65);
+  }
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--ground); color:var(--ink);
+  font-family:var(--font-ui); -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
+
+/* jsPsych containers */
+.jspsych-display-element{font-family:var(--font-ui); color:var(--ink)}
+.jspsych-content-wrapper{max-width:860px}
+.jspsych-content{max-width:760px; text-align:left}
+
+/* jsPsych default buttons -> our style */
+.jspsych-btn{
+  font-family:var(--font-ui); font-size:15px; font-weight:600;
+  padding:11px 20px; border-radius:10px; cursor:pointer;
+  background:var(--accent); color:#fff; border:1px solid var(--accent);
+  transition:background .15s,border-color .15s,transform .05s;
+}
+.jspsych-btn:hover{background:var(--accent-ink); border-color:var(--accent-ink)}
+.jspsych-btn:active{transform:translateY(1px)}
+.jspsych-btn:disabled{opacity:.45; cursor:not-allowed}
+/* instructions has two nav buttons; make "back" quieter */
+.jspsych-instructions-nav .jspsych-btn:first-child{
+  background:transparent; color:var(--muted); border-color:var(--line-strong);
+}
+.jspsych-instructions-nav .jspsych-btn:first-child:hover{color:var(--ink); border-color:var(--faint)}
+
+/* Type */
+h1{font-family:var(--font-display); font-weight:600; font-size:clamp(26px,4.2vw,38px); line-height:1.1; letter-spacing:-.02em; margin:0 0 14px; text-wrap:balance}
+h2{font-family:var(--font-display); font-weight:600; font-size:23px; letter-spacing:-.01em; margin:0 0 10px}
+.lede{font-size:17px; color:var(--muted); max-width:60ch; margin:0 0 22px}
+.eyebrow{font-family:var(--font-mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--faint); margin:0 0 12px}
+p{margin:0 0 14px; line-height:1.55}
+
+.intro,.instr{padding:6px 2px}
+.instr .tk{font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; font-weight:600; color:var(--faint)}
+.instr.t-association .tk{color:var(--warm)} .instr.t-analogy .tk{color:var(--cool)} .instr.t-blend .tk{color:var(--accent)}
+.egline{background:var(--accent-soft); border-left:2px solid var(--accent); border-radius:0 10px 10px 0; padding:14px 16px; color:var(--muted); font-size:15px}
+.egline b{color:var(--ink)}
+
+/* consent */
+.consent{display:flex; gap:11px; align-items:flex-start; font-size:14.5px; color:var(--muted); margin-top:6px}
+.consent input{margin-top:3px; accent-color:var(--accent); width:16px; height:16px; flex:none}
+
+/* trial eyebrow */
+.prompt-eyebrow{display:flex; align-items:center; gap:10px; margin-bottom:16px}
+.prompt-eyebrow .num{font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; color:var(--faint)}
+.prompt-eyebrow .eyebrow{margin:0}
+
+.stage{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:26px}
+.stage[data-t="association"]{border-top:3px solid var(--warm)}
+.stage[data-t="analogy"]{border-top:3px solid var(--cool)}
+.stage[data-t="blend"]{border-top:3px solid var(--accent)}
+
+/* prompt chips */
+.pairline{display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap; margin:2px 0 6px}
+.chip{font-family:var(--font-display); font-size:clamp(20px,3.2vw,27px); font-weight:600; letter-spacing:-.01em; padding:10px 18px; border-radius:12px; border:1.5px solid; line-height:1.1}
+.chip.a{color:var(--warm); background:var(--warm-soft); border-color:color-mix(in srgb,var(--warm) 35%,transparent)}
+.chip.b{color:var(--cool); background:var(--cool-soft); border-color:color-mix(in srgb,var(--cool) 35%,transparent)}
+.chip.solo{color:var(--accent); background:var(--accent-soft); border-color:color-mix(in srgb,var(--accent) 38%,transparent)}
+.tween{font-family:var(--font-mono); font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint)}
+.ask{text-align:center; color:var(--muted); font-size:15px; max-width:56ch; margin:14px auto 22px}
+.ask b{color:var(--ink); font-weight:600}
+
+/* inputs */
+label.fld{display:flex; flex-direction:column; gap:6px; font-size:12.5px; color:var(--muted); font-family:var(--font-mono); letter-spacing:.04em; text-transform:uppercase; margin-top:4px}
+input[type=text],textarea{
+  font-family:var(--font-ui); font-size:15.5px; color:var(--ink); background:var(--surface-2);
+  border:1px solid var(--line-strong); border-radius:9px; padding:10px 12px; width:100%; resize:vertical;
+}
+input[type=text]::placeholder,textarea::placeholder{color:var(--faint)}
+input[type=text]:focus,textarea:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+
+/* association path builder */
+.path{display:flex; flex-direction:column}
+.node{display:flex; align-items:center; gap:12px}
+.dot{width:12px; height:12px; border-radius:50%; flex:none; border:2px solid}
+.dot.a{border-color:var(--warm); background:var(--warm-soft)}
+.dot.b{border-color:var(--cool); background:var(--cool-soft)}
+.node .lbl{font-family:var(--font-display); font-size:18px; font-weight:600}
+.node .lbl.a{color:var(--warm)} .node .lbl.b{color:var(--cool)}
+.rung{display:flex; align-items:center; gap:12px; padding:8px 0}
+.rail{width:12px; flex:none; align-self:stretch; display:flex; justify-content:center}
+.rail::before{content:""; width:2px; background:var(--line-strong); min-height:26px}
+.stepwrap{flex:1; display:flex; gap:8px; align-items:center}
+.relinput,.entinput{flex:1}
+.xbtn{width:30px; height:30px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--faint); cursor:pointer; flex:none; font-size:15px; line-height:1}
+.xbtn:hover{color:var(--warm); border-color:color-mix(in srgb,var(--warm) 40%,var(--line))}
+.addstep{margin:8px 0 4px 24px}
+.addstep button{font-family:var(--font-mono); font-size:12px; letter-spacing:.06em; color:var(--accent); background:transparent; border:1px dashed color-mix(in srgb,var(--accent) 45%,var(--line)); border-radius:8px; padding:7px 12px; cursor:pointer}
+.addstep button:hover{background:var(--accent-soft)}
+
+/* analogy */
+.analogy{display:flex; flex-direction:column; gap:14px}
+.arow{display:grid; grid-template-columns:minmax(90px,auto) 1fr; gap:12px; align-items:center}
+.arow .from{font-family:var(--font-display); font-size:18px; font-weight:600}
+.arow .from.a{color:var(--warm)} .arow .from.b{color:var(--cool)}
+.rel-shared{background:var(--accent-soft); border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line)); border-radius:10px; padding:14px}
+
+/* blend */
+.senses{display:grid; gap:14px; margin-bottom:14px}
+@media (min-width:620px){.senses{grid-template-columns:1fr 1fr}}
+.sense{border:1px solid var(--line-strong); border-radius:12px; padding:16px; background:var(--surface-2); display:flex; flex-direction:column; gap:10px}
+.sense .stag{font-family:var(--font-mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--faint)}
+.sense.two{border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+.sense.two .stag{color:var(--accent)}
+
+/* worked example */
+.example{margin:20px 0 4px}
+.example summary{cursor:pointer; font-family:var(--font-mono); font-size:12px; letter-spacing:.06em; color:var(--accent); list-style:none; display:inline-flex; align-items:center; gap:7px}
+.example summary::-webkit-details-marker{display:none}
+.example summary::before{content:"+"; font-size:14px}
+.example[open] summary::before{content:"\2013"}
+.example .body{margin-top:12px; padding:14px 16px; border-left:2px solid var(--accent); background:var(--accent-soft); border-radius:0 10px 10px 0; font-size:14.5px; color:var(--muted)}
+.example .body b{color:var(--ink)}
+
+/* ratings */
+.ratings{margin-top:24px; padding-top:20px; border-top:1px dashed var(--line-strong); display:flex; flex-direction:column; gap:18px}
+.rate{display:grid; grid-template-columns:1fr auto; gap:6px 14px; align-items:center}
+.rate .rlabel{font-weight:600; font-size:14.5px}
+.rate .rlabel small{display:block; font-weight:400; color:var(--muted); font-size:12.5px}
+.rate output{font-family:var(--font-mono); font-size:13px; color:var(--accent); font-variant-numeric:tabular-nums; text-align:right}
+.rate input[type=range]{grid-column:1/-1; width:100%; accent-color:var(--accent)}
+.scaleends{grid-column:1/-1; display:flex; justify-content:space-between; font-size:11.5px; color:var(--faint); font-family:var(--font-mono); margin-top:-4px}
+
+/* survey-html-form places the submit button after the form; give it room */
+.jspsych-survey-html-form{margin:0}
+#jspsych-survey-html-form-next,.jspsych-survey-html-form ~ #jspsych-survey-html-form-next{margin-top:22px}
+
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}

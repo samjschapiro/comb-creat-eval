@@ -59,14 +59,26 @@ def _by(recs, key):
 def aggregate(recs: list[dict]) -> dict:
     per_mode = {}
     for mode, rs in _by(recs, "mode").items():
+        # an "item" is one combination: a path (association) or a pair (analogy/blending). Verified
+        # genuine = judge-passed items (utility), the count that isn't inflated by padded near-dupes.
+        if mode in ("analogy", "blending"):
+            items = [r for r in rs if "pair_sat" in r]                 # pair heads
+            verified = sum(1 for r in items if r.get("pair_sat") is True)
+        else:
+            items = rs
+            verified = sum(1 for r in items if r.get("sat") is True)
         per_mode[mode] = {
             "n_paths": len(rs),
+            "n_items": len(items),
+            "verified_genuine": verified,
             "R_emit": _mean([r["R"] for r in rs]),
             "R_valid": _mean([r["R"] for r in rs if r.get("sat") is True]),
             "sat_rate": _sat_rate(rs),
             "creativity": _creativity(rs),
             "wf_rate": _mean([1.0 if r["well_formed"] else 0.0 for r in rs]),
             "channels": dict(Counter(r.get("channel") for r in rs)),
+            # emergent creativity: mean # of verified emergent inferences per item (heads carry it)
+            "emergent_mean": _mean([r["emergent_count"] for r in rs if "emergent_count" in r]),
         }
 
     # Within-bundle deltas vs baseline (Regime A only): the 2x2 coordinates.

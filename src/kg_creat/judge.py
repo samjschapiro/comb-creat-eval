@@ -269,3 +269,50 @@ async def judge_blending(client, model: str, u: str, path1: list, path2: list) -
     prompt = BLENDING_JUDGE_PROMPT.format(u=u, path1=format_path(path1), path2=format_path(path2))
     raw = await _ask(client, model, prompt, max_tokens=800)
     return _extract_json(raw) if raw else None
+
+
+EMERGENT_JUDGE_PROMPT = """You are a careful, factual judge assessing EMERGENT inferences licensed by a
+combinatorial artifact. You are given an ARTIFACT (a whole), the PARTS it is built from, and a numbered
+list of candidate INFERENCES the artifact is claimed to license.
+
+For each inference, decide two things independently:
+- "true": is the statement factually correct in the real world? (true / false)
+- "emergent": does it follow from the ARTIFACT AS A WHOLE, yet NOT from any single PART on its own?
+  (true / false). If any single part already licenses it, or if it does not actually follow from the
+  whole, answer false.
+
+ARTIFACT (the whole):
+{artifact}
+
+PARTS (each considered alone):
+{parts}
+
+CANDIDATE INFERENCES:
+{inferences}
+
+Return ONLY a JSON object mapping each inference number to its verdict, and nothing else. Example:
+{{"1": {{"true": true, "emergent": true}}, "2": {{"true": true, "emergent": false}}}}"""
+
+
+async def judge_emergent(client, model: str, artifact: str, parts: list[str],
+                         inferences: list[str]) -> dict | None:
+    """Verdict per candidate inference: is it true, and licensed by the whole but not any single part?"""
+    if not inferences:
+        return {}
+    parts_block = "\n".join(f"- Part {i + 1}: {p}" for i, p in enumerate(parts))
+    inf_block = "\n".join(f"{i + 1}. {s}" for i, s in enumerate(inferences))
+    prompt = EMERGENT_JUDGE_PROMPT.format(artifact=artifact, parts=parts_block, inferences=inf_block)
+    raw = await _ask(client, model, prompt, max_tokens=800)
+    return _extract_json(raw) if raw else None
+
+
+def count_emergent(verdict: dict | None, n_inferences: int) -> int:
+    """Number of inferences the judge marked BOTH true and emergent (the emergent-creativity score)."""
+    if not verdict:
+        return 0
+    n = 0
+    for i in range(1, n_inferences + 1):
+        v = verdict.get(str(i))
+        if isinstance(v, dict) and v.get("true") and v.get("emergent"):
+            n += 1
+    return n

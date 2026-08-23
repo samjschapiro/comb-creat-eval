@@ -8,10 +8,10 @@ designs new tests on top of that infrastructure (headline:
 DRAT — a hybrid of RAT and DAT); `plot_twist` benchmarks
 *transformational* creativity via literary plot twists (TwistBench), scoring
 twists on surprise, coherence, diversity, and realism, with the first
-human-vs-LLM comparison; `kg_creat` administers a real-knowledge-graph
-(Wikidata) combinatorial-creativity task to frontier models — a constraint
-taxonomy plus an analogy tier (can a model find a valid analogy between two
-*arbitrary* entities?). Paper drafts live in `papers/iccc-2026/`
+human-vs-LLM comparison; `kg_creat` (**Kombine**) administers a combinatorial-creativity
+benchmark — association, analogy, and blending between arbitrary recognizable
+entities — scored on utility, surprise, originality, and emergent creativity.
+Paper drafts live in `papers/iccc-2026/`
 (dat_eval/new_tests), `papers/pt2cb-iclr-2027/` (plot_twist), and
 `papers/kg_creat-iclr/` (kg_creat).
 

@@ -18,6 +18,7 @@ import json
 import math
 import os
 import sys
+from collections import Counter, defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
@@ -76,10 +77,17 @@ async def run_judges(recs: list[dict], responses_by_prompt: dict, model: str, co
     from src.dat_eval.llm import get_async_client
     client = get_async_client()
     sem = asyncio.Semaphore(concurrency)
+    # analogy/blending emit a SET of pairs, flattened as [src0, tgt0, src1, tgt1, ...]; each even
+    # path_idx is a pair head, its partner path_idx+1. Index lets a pair judge write onto both paths.
+    rec_index = {(r["prompt_id"], r["path_idx"]): r for r in recs}
 
-    async def factual(rec):
+    FACT_BATCH = 10   # paths per batched factuality call (one call judges the whole batch)
+
+    async def factual_batch(batch):
         async with sem:
-            rec["factual"] = await J.judge_factuality(client, model, rec["triples"]) if rec["triples"] else None
+            results = await J.judge_factuality_batch(client, model, [r["triples"] for r in batch])
+        for r, res in zip(batch, results):
+            r["factual"] = res
 
     async def categorical(rec):
         c = responses_by_prompt[rec["prompt_id"]]["constraint"]
@@ -95,24 +103,30 @@ async def run_judges(recs: list[dict], responses_by_prompt: dict, model: str, co
 
     async def analogy(rec):
         paths = responses_by_prompt[rec["prompt_id"]]["paths"]
-        if len(paths) < 2:
+        i = rec["path_idx"]
+        partner = rec_index.get((rec["prompt_id"], i + 1))
+        if i + 1 >= len(paths) or partner is None:
             rec["semantic_sat"] = False
             return
         async with sem:
-            out = await J.judge_analogy(client, model, rec["u_label"], rec["v_label"], paths[0], paths[1])
-            rec["semantic_sat"] = bool(out.get("valid")) if out else None
+            out = await J.judge_analogy(client, model, rec["u_label"], rec["v_label"], paths[i], paths[i + 1])
+        v = bool(out.get("valid")) if out else None
+        rec["semantic_sat"] = partner["semantic_sat"] = v  # the verdict is over the pair
 
     async def blending(rec):
         paths = responses_by_prompt[rec["prompt_id"]]["paths"]
-        if len(paths) < 2:
+        i = rec["path_idx"]
+        partner = rec_index.get((rec["prompt_id"], i + 1))
+        if i + 1 >= len(paths) or partner is None:
             rec["semantic_sat"] = False
             return
         async with sem:
-            out = await J.judge_blending(client, model, rec["u_label"], paths[0], paths[1])
-            rec["semantic_sat"] = bool(out.get("valid")) if out else None
-            rec["blend_domains"] = out.get("domains") if out else None
+            out = await J.judge_blending(client, model, rec["u_label"], paths[i], paths[i + 1])
+        v = bool(out.get("valid")) if out else None
+        rec["semantic_sat"] = partner["semantic_sat"] = v
+        rec["blend_domains"] = out.get("domains") if out else None
 
-    tasks, skipped = [], 0
+    tasks, skipped, fact_recs = [], 0, []
     for rec in recs:
         if not rec["triples"]:
             continue
@@ -121,19 +135,67 @@ async def run_judges(recs: list[dict], responses_by_prompt: dict, model: str, co
         if not rec.get("well_formed"):
             skipped += 1
             continue
-        tasks.append(factual(rec))
+        fact_recs.append(rec)   # factuality is judged in batches (below), not one call per path
         if rec["mode"] == "categorical":
             tasks.append(categorical(rec))
         elif rec["mode"] in ("exclusion", "inclusion", "inclusion_rare", "ordering"):
             tasks.append(relation_con(rec))
-        elif rec["mode"] == "analogy" and rec["path_idx"] == 0:  # judge the pair once
+        elif rec["mode"] == "analogy" and rec["path_idx"] % 2 == 0:  # judge each pair (head = even idx)
             tasks.append(analogy(rec))
-        elif rec["mode"] == "blending" and rec["path_idx"] == 0:  # judge the branch pair once
+        elif rec["mode"] == "blending" and rec["path_idx"] % 2 == 0:  # judge each branch pair
             tasks.append(blending(rec))
+    for i in range(0, len(fact_recs), FACT_BATCH):   # batched factuality: ~10x fewer calls
+        tasks.append(factual_batch(fact_recs[i:i + FACT_BATCH]))
     if skipped:
         print(f"    (skipping {skipped} structurally-failed paths — they fail on the "
               f"'structural' channel regardless, so no judge call is needed)")
     await asyncio.gather(*tasks)
+
+
+async def run_emergent_judge(recs, responses_by_prompt, model, concurrency):
+    """Emergent-creativity tier: per item, count candidate inferences the judge confirms are BOTH true
+    and licensed by the whole but not any single part. Result written onto the item's head record
+    (``emergent_count`` + the raw ``emergent_inferences``). This is the ``tab:scoring`` emergent metric.
+    """
+    from src.dat_eval.llm import get_async_client
+    client = get_async_client()
+    sem = asyncio.Semaphore(concurrency)
+    rec_index = {(r["prompt_id"], r["path_idx"]): r for r in recs}
+
+    async def judge_item(pid, head_idx, mode, u_label, v_label, paths, inferences):
+        head = rec_index.get((pid, head_idx))
+        if head is None:
+            return
+        if not inferences:
+            head["emergent_count"] = 0
+            return
+        if mode == "analogy":
+            src, tgt = paths[0], paths[1]
+            artifact = f"{u_label}'s side: {J.format_path(src)}\n{v_label}'s side: {J.format_path(tgt)}"
+            parts = [f"{u_label} side alone: {J.format_path(src)}",
+                     f"{v_label} side alone: {J.format_path(tgt)}"]
+        elif mode == "blending":
+            s1, s2 = paths[0], paths[1]
+            artifact = f"SENSE 1: {J.format_path(s1)}\nSENSE 2: {J.format_path(s2)}"
+            parts = [f"Sense 1 alone: {J.format_path(s1)}", f"Sense 2 alone: {J.format_path(s2)}"]
+        else:  # association: parts are the individual links
+            path = paths[0]
+            artifact = J.format_path(path)
+            parts = [f"Link {i + 1}: {J.format_path([t])}" for i, t in enumerate(path)]
+        async with sem:
+            verdict = await J.judge_emergent(client, model, artifact, parts, inferences)
+        head["emergent_count"] = J.count_emergent(verdict, len(inferences))
+        head["emergent_inferences"] = inferences
+
+    tasks = []
+    for r in responses_by_prompt.values():
+        items = r.get("items") or []
+        stride = 2 if r["mode"] in ("analogy", "blending") else 1
+        for item_idx, it in enumerate(items):
+            tasks.append(judge_item(r["prompt_id"], item_idx * stride, r["mode"],
+                                    r.get("u_label"), r.get("v_label"), it["paths"], it["inferences"]))
+    if tasks:
+        await asyncio.gather(*tasks)
 
 
 def finalize_sat(rec: dict):
@@ -186,30 +248,34 @@ def finalize_regime_b(recs: list[dict], embed):
         if r["mode"] in ("analogy", "blending"):
             by_prompt[r["prompt_id"]][r["path_idx"]] = r
     for paths in by_prompt.values():
-        head = paths.get(0)
-        if head is None:
-            continue
-        p0, p1 = head.get("triples"), (paths.get(1) or {}).get("triples")
-        if head["mode"] == "analogy":
-            ok, reason = RB.analogy_structural_ok(p0, p1)
-        else:
-            ok, reason = RB.blend_structural_ok(p0, p1, head["u_label"])
-        fact = [f for r in paths.values() for f in (r.get("factual") or [])]
-        sem = head.get("semantic_sat")
-        head["pair_structural_ok"], head["pair_structural_reason"] = ok, reason
-        if not ok:
-            head["pair_sat"], head["pair_channel"] = False, "structural"
-        elif not fact or not all(fact):
-            head["pair_sat"], head["pair_channel"] = False, "factual"
-        elif sem is False:
-            head["pair_sat"], head["pair_channel"] = False, "semantic"
-        elif sem is None:
-            head["pair_sat"], head["pair_channel"] = None, "unjudged"
-        else:
-            head["pair_sat"], head["pair_channel"] = True, "ok"
-        if head["mode"] == "blending" and p0 and p1:
-            a, b = RB.branch_tips(p0, p1)
-            head["tip_distance"] = float(scoring.cosine_distance(embed(a), embed(b)))
+        # each consecutive (even, even+1) is one emitted pair; verdict written onto the even head.
+        for i in sorted(k for k in paths if k % 2 == 0):
+            head, partner = paths.get(i), paths.get(i + 1)
+            if head is None:
+                continue
+            p0 = head.get("triples")
+            p1 = partner.get("triples") if partner else None
+            if head["mode"] == "analogy":
+                ok, reason = RB.analogy_structural_ok(p0, p1)
+            else:
+                ok, reason = RB.blend_structural_ok(p0, p1, head["u_label"])
+            fact = list(head.get("factual") or []) + (list(partner.get("factual") or []) if partner else [])
+            sem = head.get("semantic_sat")
+            head["pair_idx"] = i // 2
+            head["pair_structural_ok"], head["pair_structural_reason"] = ok, reason
+            if not ok:
+                head["pair_sat"], head["pair_channel"] = False, "structural"
+            elif not fact or not all(fact):
+                head["pair_sat"], head["pair_channel"] = False, "factual"
+            elif sem is False:
+                head["pair_sat"], head["pair_channel"] = False, "semantic"
+            elif sem is None:
+                head["pair_sat"], head["pair_channel"] = None, "unjudged"
+            else:
+                head["pair_sat"], head["pair_channel"] = True, "ok"
+            if head["mode"] == "blending" and p0 and p1:
+                a, b = RB.branch_tips(p0, p1)
+                head["tip_distance"] = float(scoring.cosine_distance(embed(a), embed(b)))
 
 
 async def main(config_path, overwrite=False, debug=False):
@@ -232,10 +298,16 @@ async def main(config_path, overwrite=False, debug=False):
     concurrency = judge_cfg.get("concurrency", 8)
     embed = get_embedder(config.get("embedding", {}).get("model", "mlx-community/all-MiniLM-L6-v2-4bit"))
 
-    model_dirs = [d for d in upstream_dir.iterdir() if (d / "responses.json").exists()]
+    from src.dat_eval.llm import model_id_to_key
+    exclude_keys = {model_id_to_key(m) for m in config.get("exclude_models", [])}
+    model_dirs = [d for d in upstream_dir.iterdir()
+                  if (d / "responses.json").exists() and d.name not in exclude_keys]
+    if exclude_keys:
+        print(f"Excluding {len(exclude_keys)} model(s): {sorted(exclude_keys)}")
     print(f"Scoring {len(model_dirs)} model(s); judge_enabled={judge_enabled} ({judge_model})")
 
     all_summaries = {}
+    genuine_dist = defaultdict(list)   # mode -> [verified-genuine count per (model, prompt)]
     for md in model_dirs:
         # Resume: skip a model already scored in this output dir (unless --overwrite).
         done_scores = output_dir / md.name / "summary.json"
@@ -262,10 +334,22 @@ async def main(config_path, overwrite=False, debug=False):
                        + n_paths * 300 * PRICING.get(judge_model, (9, 9))[1]) / 1e6
                 print(f"    running judge on ~{n_paths} paths (est ~${est:.3f}) ...")
             await run_judges(recs, by_prompt, judge_model, concurrency)
+            await run_emergent_judge(recs, by_prompt, judge_model, concurrency)
 
         for rec in recs:
             finalize_sat(rec)
         finalize_regime_b(recs, embed)
+
+        # per-prompt verified-genuine count (judge-passed combinations), for the scarcity check
+        per_prompt = defaultdict(lambda: [0, None])
+        for r in recs:
+            per_prompt[r["prompt_id"]][1] = r["mode"]
+            genuine = (r.get("pair_sat") is True) if r["mode"] in ("analogy", "blending") \
+                else (r.get("sat") is True)
+            if genuine:
+                per_prompt[r["prompt_id"]][0] += 1
+        for cnt, mode in per_prompt.values():
+            genuine_dist[mode].append(cnt)
 
         out_md = output_dir / md.name
         out_md.mkdir(parents=True, exist_ok=True)
@@ -275,6 +359,18 @@ async def main(config_path, overwrite=False, debug=False):
         all_summaries[md.name] = summary
 
     (output_dir / "scores_summary.json").write_text(json.dumps(all_summaries, indent=2))
+
+    # Verified-genuine-count distribution per mode (combinatorial-scarcity check): how many
+    # judge-passed combinations each (model, prompt) yielded. A pile-up at 0/1 => the items
+    # themselves admit few genuine combinations, not just model homogenization.
+    print("\nVerified-genuine combinations per (model, prompt):")
+    for mode in ("baseline", "analogy", "blending"):
+        vals = genuine_dist.get(mode) or []
+        if not vals:
+            continue
+        hist = Counter(min(v, 3) for v in vals)
+        bars = "  ".join(f"{k if k < 3 else '3+'}:{hist.get(k,0)}" for k in (0, 1, 2, 3))
+        print(f"  {mode:9s} n={len(vals):3d}  mean={sum(vals)/len(vals):.2f}   [{bars}]")
     print(f"\nScores + per-constraint roll-up saved to {output_dir}")
 
 

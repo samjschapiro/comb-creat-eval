@@ -29,6 +29,56 @@ _OUTPUT_BLOCK_DIVERGENT = _OUTPUT_BLOCK.replace(
     '"2": [["Entity A", "relation", "Entity D"], ["Entity D", "relation", "Entity C"]]',
     '"2": [["Entity A", "relation", "Entity D"], ["Entity D", "relation", "Entity E"]]')
 
+# All three tasks emit a SET of items (as many as the model can produce), each item a JSON object.
+# Every item carries an "inferences" field: the true statements the WHOLE artifact licenses that its
+# parts do not -- the emergent-creativity signal we score. Wording is deliberately explicit so the
+# emitted structure is controllable and unambiguous to the parser.
+_OUTPUT_BLOCK_ASSOC = """Output requirements (strict):
+- Return ONLY a JSON array wrapped in <answer> and </answer> tags. No other text, before or after.
+- Each element of the array is ONE connection: an object with exactly two keys, "path" and "inferences".
+- "path" is a list of triples; each triple is [head entity, relationship, tail entity] forming a
+  continuous chain from the first entity to the last.
+- "inferences" is a list of short, factual statements that the WHOLE path reveals but that no single
+  triple in it reveals on its own. Give only genuine ones; use [] if the path licenses none.
+- Relationship strings must be 1-3 words. Use canonical, disambiguated entity names.
+- List one object per connection. To stop, simply end the array -- do not pad with weak connections.
+- If you can find no valid connection, return an empty array: <answer>[]</answer>.
+
+Required format (follow this shape exactly):
+<answer>[{"path": [["A", "r1", "B"], ["B", "r2", "C"]], "inferences": ["A short true statement the whole path reveals."]}, {"path": [["A", "s1", "D"], ["D", "s2", "C"]], "inferences": []}]</answer>"""
+
+_OUTPUT_BLOCK_ANALOGY = """Output requirements (strict):
+- Return ONLY a JSON array wrapped in <answer> and </answer> tags. No other text, before or after.
+- Each element of the array is ONE analogy: an object with keys "path_a", "path_b", and "inferences".
+- "path_a" and "path_b" are each a list of triples; each triple is [head entity, relationship, tail entity].
+- Within one analogy, "path_a" and "path_b" MUST have the same number of triples and the IDENTICAL
+  relationship word at every position (only the entities differ).
+- "inferences" is a list of short, true statements the mapping licenses by transfer -- things it
+  predicts about either concept from the other's structure, that you could not claim without the
+  analogy. Use [] if none.
+- Relationship strings must be 1-3 words. Use canonical, disambiguated entity names.
+- List one object per analogy. To stop, simply end the array -- do not pad with weak analogies.
+- If you can find no valid analogy, return an empty array: <answer>[]</answer>.
+
+Required format (follow this shape exactly):
+<answer>[{"path_a": [["A", "r1", "B"], ["B", "r2", "C"]], "path_b": [["D", "r1", "E"], ["E", "r2", "F"]], "inferences": ["A true statement the mapping predicts about A or D."]}]</answer>"""
+
+_OUTPUT_BLOCK_BLENDING = """Output requirements (strict):
+- Return ONLY a JSON array wrapped in <answer> and </answer> tags. No other text, before or after.
+- Each element of the array is ONE blend (one polysemy): an object with keys "sense_1", "sense_2", and "inferences".
+- "sense_1" and "sense_2" are each a list of triples; each triple is [head entity, relationship, tail entity].
+  Both lists must start at the given anchor word.
+- Within one blend, "sense_1" and "sense_2" MUST have the same number of triples and the IDENTICAL
+  relationship word at every position (only the entities differ).
+- "inferences" is a list of short, true statements that hold only when BOTH senses are read at once --
+  things neither sense gives on its own. Use [] if none.
+- Relationship strings must be 1-3 words. Use canonical, disambiguated entity names.
+- List one object per distinct second meaning. To stop, simply end the array -- do not pad with non-genuine senses.
+- If the word has no valid second meaning, return an empty array: <answer>[]</answer>.
+
+Required format (follow this shape exactly):
+<answer>[{"sense_1": [["Boxer", "is a", "Athlete"], ["Athlete", "chases", "Records"]], "sense_2": [["Boxer", "is a", "Dog"], ["Dog", "chases", "Squirrels"]], "inferences": ["A true statement that holds only under both readings."]}]</answer>"""
+
 # CREATE's rules/dedup scaffolding (K.3), shared across modes.
 _ENTITY_RULES = """Rules and quality constraints:
 - Entities must be concrete, real-world entities only (people, organizations, works, places,
@@ -82,51 +132,62 @@ def _constraint_clause(constraint: dict | None) -> str:
 
 
 def _regime_a_prompt(spec: dict) -> str:
-    u, v, k = spec["u_label"], spec["v_label"], spec["k"]
+    u, v = spec["u_label"], spec["v_label"]
     clause = _constraint_clause(spec["constraint"])
     clause_block = f"\n{clause}\n" if clause else "\n"
     return f"""Query: What are different ways in which '{u}' is connected to '{v}'?
 
-Task: Identify how these two real-world entities are connected by producing {k} DISTINCT
-connection paths. A connection path is a sequence of factual triples (head, relationship,
-tail) forming a continuous chain: consecutive triples share an entity, the first triple's
-head is '{u}', and the last triple's tail is '{v}'.
+Task: Identify how these two real-world entities are connected by producing as MANY DISTINCT connection
+paths as you can. A connection path is a sequence of factual triples (head, relationship, tail) forming
+a continuous chain: consecutive triples share an entity, the first triple's head is '{u}', and the last
+triple's tail is '{v}'.
 
-BE CREATIVE: your goal is not merely to connect '{u}' and '{v}', but to connect them in the most
-NOVEL, SURPRISING, and non-obvious ways you can imagine. Favour remote, unexpected intermediate
-entities and imaginative routes over the first obvious link -- reach across distant domains. Every
-triple must still be factually true.
+We reward four things in every connection:
+- TRUE: every triple is factually correct.
+- REMOTE: the intermediate concepts sit in domains far from the two endpoints and from each other --
+  reach across distant fields rather than taking the first obvious link.
+- UNCOMMON: build the path from rare, specific concepts and relations, not the broad, generic ones most
+  people would give.
+- GENERATIVE: the path AS A WHOLE should reveal a true inference that no single link in it reveals on
+  its own -- and you must state those inferences.
 
-Produce {k} DISTINCT paths that are as different from one another as possible (different intermediate
-entities and relationships, spanning different domains; do not over-concentrate on the most obvious
-domain). Prefer paths through intermediate entities rather than a single direct link, and prefer
-specific, distinctive relationships over broad generic ones (e.g., 'attended', 'lives in').
+Produce as MANY DISTINCT connections as you can, most surprising first -- do not stop at a fixed number;
+list every genuine connection you can find, and make them as different from one another as possible
+(different intermediate entities and relations, spanning different domains).
 {clause_block}
 {_ENTITY_RULES}
 
-{_OUTPUT_BLOCK}"""
+{_OUTPUT_BLOCK_ASSOC}"""
 
 
 def _analogy_prompt(spec: dict) -> str:
     u, v = spec["u_label"], spec["v_label"]
-    return f"""Task: You are given two concepts: '{u}' and '{v}'. Find a deep analogy between them --
-a shared relational structure in which '{u}' plays a role in its domain analogous to the role
-'{v}' plays in its domain.
+    return f"""Task: You are given two concepts: '{u}' and '{v}'. Find as MANY deep analogies between them
+as you can. In each analogy, '{u}' plays a role in its domain analogous to the role '{v}' plays in its
+domain, through a shared relational structure.
 
-BE CREATIVE: the more SURPRISING and non-obvious the analogy -- the more distant and unexpected the
-two domains -- the better, as long as the structural mapping is genuine and every triple is factual.
+We reward four things in every analogy:
+- TRUE: every triple is factually correct, and the mapping is a genuine structural correspondence.
+- REMOTE: the two domains are as distant and unexpected as possible.
+- UNCOMMON: use rare, specific roles and relations, not the obvious ones most people would give.
+- GENERATIVE: state the true inferences the analogy licenses by transfer -- things it predicts about
+  '{v}' from '{u}'s structure, and vice versa about '{u}', that you could not claim without the mapping.
 
-Produce exactly TWO paths:
-- Path 1: factual triples describing '{u}' within its own domain.
-- Path 2: factual triples describing '{v}' within its own domain.
-CRITICAL: the two paths must use the EXACT SAME relationship word at every position -- if Path 1's
-relations are [r1, r2, r3], Path 2's relations must be the identical words [r1, r2, r3], in the same
-order. Do NOT paraphrase or substitute synonyms (e.g. if Path 1 uses 'awards', Path 2 must also use
-'awards', not 'grants'). Only the ENTITIES differ between the two paths; the relations are identical.
-The two paths must use disjoint, concrete, canonically-named entities that play corresponding roles.
-Do not repeat an entity within a path.
+Each analogy is exactly TWO paths that share an identical relation sequence:
+- "path_a": factual triples describing '{u}' within its own domain, beginning at '{u}'.
+- "path_b": factual triples describing '{v}' within its own domain, beginning at '{v}'.
+CRITICAL (holds within each analogy): the "path_a" and "path_b" paths must use the EXACT SAME
+relationship word at every position -- if "path_a" relations are [r1, r2, r3], "path_b" relations must
+be the identical words [r1, r2, r3], in the same order. Do NOT paraphrase or substitute synonyms (e.g.
+if "path_a" uses 'awards', "path_b" must also use 'awards', not 'grants'). Only the ENTITIES differ.
+Use disjoint, concrete, canonically-named entities that play corresponding roles, and do not repeat an
+entity within a path.
 
-{_OUTPUT_BLOCK}"""
+Produce as MANY DISTINCT analogies as you can, most surprising first -- do not stop at a fixed number;
+give every genuine analogy you can find, and make them as different from one another as possible
+(different relation sequences, different domains). Stop only when you can find no further genuine analogy.
+
+{_OUTPUT_BLOCK_ANALOGY}"""
 
 
 def _blending_prompt(spec: dict) -> str:
@@ -139,32 +200,70 @@ def _blending_prompt(spec: dict) -> str:
     possible, which is why baseline success is a measurement, not a precondition.
     """
     u = spec["u_label"]
-    return f"""Task: You are given ONE concept: '{u}'. Your challenge is to find a VALID POLYSEMY for it
--- a second, genuinely different meaning that the word '{u}' can be read as -- and build a conceptual
-BLEND that holds both meanings at once.
+    return f"""Task: You are given ONE concept: '{u}'. Find as MANY VALID POLYSEMIES of it as you can --
+each a second, genuinely different meaning that the word '{u}' can be read as -- and for each, build a
+conceptual BLEND that holds both meanings at once.
 
 A polysemy reads the SAME word in two unrelated senses. For example, the word "Boxer":
-  Path 1:  ["Boxer", "is a", "Athlete"], ["Athlete", "chases", "Records"]
-  Path 2:  ["Boxer", "is a", "Dog"],     ["Dog", "chases", "Squirrels"]
-"Boxer" means a person in one reading and a dog breed in the other. Both paths share the SAME frame
-("is a ... chases ...") but land in completely different domains. That double meaning is the blend.
+  "sense_1": [["Boxer", "is a", "Athlete"], ["Athlete", "chases", "Records"]]
+  "sense_2": [["Boxer", "is a", "Dog"], ["Dog", "chases", "Squirrels"]]
+"Boxer" means a person in one reading and a dog breed in the other. Both senses share the SAME frame
+("is a ... chases ...") but land in completely different domains. That double meaning is one blend.
 
-BE CREATIVE: the more SURPRISING and non-obvious the second meaning -- the more distant the two senses
--- the better the blend, as long as it is a genuine sense of the word and every triple is factual.
+We reward four things in every blend:
+- TRUE: every triple is factually correct, and both readings are genuine senses of the word.
+- REMOTE: the two senses are as distant and unrelated as possible.
+- UNCOMMON: pick rare, non-obvious second meanings, not the first one that comes to mind.
+- GENERATIVE: state the true inferences that hold only when BOTH senses are read at once -- things
+  neither sense gives on its own.
 
-Produce exactly TWO paths:
-- Both paths start at '{u}'.
-- Path 1 develops '{u}' under one meaning; Path 2 develops '{u}' under a DIFFERENT meaning of the SAME word.
+Each blend is exactly TWO paths, both beginning at '{u}':
+- "sense_1": develops '{u}' under one meaning.
+- "sense_2": develops '{u}' under a DIFFERENT meaning of the SAME word.
+Rules that hold within each blend:
 - The two readings must be genuinely distinct SENSES of the word -- NOT two facts about the same thing.
 - The second meaning must be the SAME spelled word read differently -- not a homophone or near-pun
   (e.g. "Beatles" -> "beetles" does NOT count; it must be the identical word).
-- Use the EXACT SAME relationship word at every position in both paths; only the entities differ.
-- The two paths share no entity except '{u}'; the more unrelated the two meanings, the better the blend.
+- "sense_1" and "sense_2" must use the EXACT SAME relationship word at every position; only the entities differ.
+- The two senses share no entity except '{u}'; the more unrelated the two meanings, the better the blend.
+Use concrete, factual, canonically-named entities, and do not repeat an entity within a path.
 
-Use concrete, factual, canonically-named entities and do not repeat an entity within a path.
-If '{u}' genuinely has no valid second meaning, return an empty JSON object.
+Produce as MANY DISTINCT blends (distinct second meanings) as you can, most surprising first -- do not
+stop at a fixed number. Stop only when the word has no further genuine second meaning.
 
-{_OUTPUT_BLOCK_DIVERGENT}"""
+{_OUTPUT_BLOCK_BLENDING}"""
+
+
+def _anagram_prompt(spec: dict) -> str:
+    """Anagram (exploratory-creativity) prompt: rearrange the entity's letters into a DISTANT word.
+
+    Single stimulus, string output (not triples). Novelty = semantic remoteness of the anagram from
+    the source (same measure as the combinatorial tasks); utility is deterministic (exact letters +
+    real word), so this task is judge-free.
+    """
+    u = spec["u_label"]
+    return f"""Task: You are given ONE word or name: '{u}'. Rearrange ALL of its letters -- using every
+letter exactly once, ignoring spaces and capitalization -- into a NEW, real word or phrase (an
+ANAGRAM of '{u}') whose MEANING is as DIFFERENT and DISTANT from '{u}' as possible.
+
+An anagram uses exactly the same letters as the original, in a different order. Examples (same
+letters, unrelated meaning):
+  "stressed" -> "desserts"   (a feeling -> a food)
+  "Elvis"    -> "levis"      (a musician -> a jeans brand)
+  "listen"   -> "tinsel"     (perception -> a decoration)
+
+BE CREATIVE: the further the anagram's meaning is from '{u}' -- a completely different domain -- the
+better. Every anagram must (1) be a real word or phrase, and (2) use EXACTLY the letters of '{u}':
+the same letters, the same number of each, none added or dropped.
+
+Produce as MANY DISTINCT valid anagrams as you can find, most semantically distant first -- do not stop
+at a fixed number; list every one you can. If '{u}' genuinely has no valid anagram, return an empty JSON
+object.
+
+Output requirements (strict):
+- Return ONLY a JSON object wrapped in <answer> and </answer> tags. No other text.
+- Keys are integers starting from 1; each value is a single string (the anagram).
+<answer>{{"1": "desserts", "2": "..."}}</answer>"""
 
 
 def build_prompt(spec: dict) -> str:
@@ -174,6 +273,8 @@ def build_prompt(spec: dict) -> str:
     only on the graph/sampling side, not imposed on the model.
     """
     mode = spec["mode"]
+    if mode == "anagram":
+        return _anagram_prompt(spec)
     if mode == "analogy":
         return _analogy_prompt(spec)
     if mode == "blending":

@@ -1,0 +1,11 @@
+# Kombine PILOT sampling from a FLAT curated entity pool -- NO graph, NO BFS.
+# The model connects entities from its own knowledge; this just draws the anchor entities.
+# Run with sample_flat.py (not sample_bundles.py).
+entities: data/kg_creat/entities_curated.json
+output_dir: data/kg_creat/kombine_pilot/prompts
+
+n_association: 30     # cross-domain pairs (u, v) for the association task
+n_analogy: 30         # cross-domain pairs for the analogy task
+n_blend: 30           # single anchors for the blending task
+seed: 0
+k: 5                  # legacy field carried through (no longer imposed in the prompt)
