@@ -35,6 +35,72 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "scripts" / 
 from cost_tracker import PRICING  # noqa: E402
 
 
+def _norm(x) -> str:
+    return str(x).strip().lower()
+
+
+def _artifact_elements(triple_lists, u, v) -> set:
+    """Non-anchor elements of an artifact: its concepts (minus anchors u,v) and its relations.
+
+    Elements are tagged ('c', concept) / ('r', relation) so a concept and a relation that share a
+    surface string are counted separately. Used for the item-specific originality frequency.
+    """
+    au, av = _norm(u), _norm(v)
+    els = set()
+    for triples in triple_lists:
+        for t in triples:
+            if len(t) != 3:
+                continue
+            h, r, tl = _norm(t[0]), _norm(t[1]), _norm(t[2])
+            els.add(("r", r))
+            if h not in (au, av):
+                els.add(("c", h))
+            if tl not in (au, av):
+                els.add(("c", tl))
+    return els
+
+
+def build_item_frequency(model_dirs) -> dict:
+    """Per-item element frequency p_a(e): fraction of RESPONSES to an item (a prompt/pair) whose
+    artifacts contain element e, pooled across all models (the psychometric item-bank analogue,
+    \\citealt Stevenson2022). Each (model, draw) response counts once; empty responses are skipped."""
+    from collections import Counter, defaultdict
+    total = Counter()
+    elem = defaultdict(Counter)
+    for md in model_dirs:
+        try:
+            responses = json.loads((md / "responses.json").read_text())
+        except Exception:  # noqa: BLE001
+            continue
+        for r in responses:
+            paths = r.get("paths") or []
+            if not any(paths):
+                continue
+            pid = r["prompt_id"]
+            total[pid] += 1
+            for e in _artifact_elements(paths, r.get("u_label"), r.get("v_label")):
+                elem[pid][e] += 1
+    return {pid: {e: c / total[pid] for e, c in ec.items()} for pid, ec in elem.items()}
+
+
+def score_originality(recs, responses_by_prompt, item_freq):
+    """Item-specific originality per artifact: mean inverse frequency p_a(e)^-1 over its non-anchor
+    elements E_a (Table 3). Written onto the artifact's head record (per path for association, the
+    even pair-head for analogy, the single structure record for blending)."""
+    rec_index = {_draw_key(r) + (r["path_idx"],): r for r in recs}
+    for r in responses_by_prompt.values():
+        freq = item_freq.get(r["prompt_id"], {})
+        u, v = r.get("u_label"), r.get("v_label")
+        stride = 2 if r["mode"] == "analogy" else 1
+        for idx, it in enumerate(r.get("items") or []):
+            head = rec_index.get(_draw_key(r) + (idx * stride,))
+            if head is None:
+                continue
+            ea = _artifact_elements(it["paths"], u, v)
+            vals = [1.0 / freq[e] for e in ea if freq.get(e, 0) > 0]
+            head["originality"] = (sum(vals) / len(vals)) if vals else None
+
+
 def _draw_key(r: dict) -> tuple:
     """Unique key for one elicitation DRAW. All temperatures/samples of a prompt share ``prompt_id``,
     so judges and pair-finalizers must key on (prompt_id, temperature, sample_idx) -- keying on
@@ -76,7 +142,13 @@ def score_free(response: dict, embed) -> list[dict]:
                 wf, reason = True, "ok"
         rec["well_formed"] = wf
         rec["wf_reason"] = reason
-        rec["R"] = scoring.novelty_R(p, embed, unit="triple")
+        if response["mode"] == "blending":
+            # Blending surprise is the remoteness of the two FUSED inputs, d_cos(u,v) -- item-driven,
+            # not the within-structure spread (docs/tracks/kg_creat/blending_fusion.md).
+            a, b = base["u_label"], base["v_label"]
+            rec["R"] = float(scoring.cosine_distance(embed(a), embed(b))) if a and b else None
+        else:
+            rec["R"] = scoring.novelty_R(p, embed, unit="triple")
         recs.append(rec)
     return recs
 
@@ -137,6 +209,7 @@ async def run_judges(recs: list[dict], responses_by_prompt: dict, model: str, co
                                              rec["triples"])
         rec["semantic_sat"] = bool(out.get("valid")) if out else None
         rec["generic_space_ok"] = bool(out.get("generic_space_ok")) if out else None
+        rec["double_scope"] = bool(out.get("double_scope")) if out else None
 
     tasks, skipped, fact_recs = [], 0, []
     for rec in recs:
@@ -333,6 +406,11 @@ async def main(config_path, overwrite=False, debug=False):
         print(f"Excluding {len(exclude_keys)} model(s): {sorted(exclude_keys)}")
     print(f"Scoring {len(model_dirs)} model(s); judge_enabled={judge_enabled} ({judge_model})")
 
+    # Item-specific originality needs element frequencies pooled across ALL models, so build the
+    # per-item table once, up front, before scoring any single model.
+    item_freq = build_item_frequency(model_dirs)
+    print(f"Built item-frequency table over {len(item_freq)} items (for originality).")
+
     all_summaries = {}
     genuine_dist = defaultdict(list)   # mode -> [verified-genuine count per (model, prompt)]
     for md in model_dirs:
@@ -349,6 +427,7 @@ async def main(config_path, overwrite=False, debug=False):
         recs = []
         for r in responses:
             recs.extend(score_free(r, embed))
+        score_originality(recs, by_prompt, item_freq)   # judge-free; item-specific inverse frequency
         print(f"  {md.name}: {len(responses)} prompts, {len(recs)} paths (free scored)")
 
         if judge_enabled:

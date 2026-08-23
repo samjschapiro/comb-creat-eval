@@ -80,6 +80,9 @@ def aggregate(recs: list[dict]) -> dict:
             "channels": dict(Counter(r.get("channel") for r in rs)),
             # emergent creativity: mean # of verified emergent inferences per item (heads carry it)
             "emergent_mean": _mean([r["emergent_count"] for r in rs if "emergent_count" in r]),
+            # originality: mean item-specific inverse frequency per artifact (heads carry it)
+            "originality_mean": _mean([r["originality"] for r in rs
+                                       if r.get("originality") is not None]),
         }
 
     # Within-bundle deltas vs baseline (Regime A only): the 2x2 coordinates.
