@@ -145,7 +145,7 @@ We reward three things in every connection:
 - TRUE: every triple is factually correct.
 - REMOTE: the intermediate concepts sit in domains far from the two endpoints and from each other --
   reach across distant fields rather than taking the first obvious link.
-- UNCOMMON: build the path from rare, specific concepts and relations, not the broad, generic ones most
+- UNCOMMON: build the path from rare, specific concepts and relations, not generic ones most
   people would give.
 
 Produce as MANY DISTINCT connections as you can, most surprising first -- do not stop at a fixed number;
@@ -159,14 +159,14 @@ list every genuine connection you can find, and make them as different from one 
 
 def _analogy_prompt(spec: dict) -> str:
     u, v = spec["u_label"], spec["v_label"]
-    return f"""Task: You are given two concepts: '{u}' and '{v}'. Find as MANY deep analogies between them
+    return f"""Task: You are given two concepts: '{u}' and '{v}'. Find as MANY analogies between them
 as you can. In each analogy, '{u}' plays a role in its domain analogous to the role '{v}' plays in its
 domain, through a shared relational structure.
 
 We reward four things in every analogy:
 - TRUE: every triple is factually correct, and the mapping is a genuine structural correspondence.
-- REMOTE: the two domains are as distant and unexpected as possible.
-- UNCOMMON: use rare, specific roles and relations, not the obvious ones most people would give.
+- REMOTE: the two domains are as distant as possible.
+- UNCOMMON: use rare, specific roles and relations, not the obvious ones.
 - GENERATIVE: state the TRANSFERRED INFERENCES the analogy licenses -- a factual, checkable claim about
   '{v}' that follows from carrying a known property of '{u}' across the shared structure (and vice
   versa about '{u}'), which you would believe only because the mapping holds. Each must be a real fact
@@ -199,8 +199,7 @@ def _blending_prompt(spec: dict) -> str:
     degenerated into listing word-senses. See docs/tracks/kg_creat/blending_fusion.md.
     """
     u, v = spec["u_label"], spec["v_label"]
-    return f"""Task: You are given TWO concepts: '{u}' and '{v}'. FUSE them into a SINGLE new blended
-concept that is both at once, then describe the structure this fusion generates.
+    return f"""Task: You are given TWO concepts: '{u}' and '{v}'. FUSE them into a SINGLE new concept, then describe the structure this fusion generates.
 
 What a genuine blend is (the FORM). A real blend fuses two concepts into ONE new concept in which BOTH
 inputs contribute ORGANIZING STRUCTURE -- their relations and roles combine -- so the blend runs as a
@@ -214,7 +213,7 @@ therapeutic"), or (b) treat one input as a mere adjective on the other ("a radio
 Both inputs must do organizing work.
 
 Build the blend in three moves:
-1. GENERIC SPACE: name the shared schema both '{u}' and '{v}' genuinely instantiate -- the abstract
+1. GENERIC SPACE: name the shared schema both '{u}' and '{v}' instantiate -- the abstract
    structure that lets them fuse (for virus + software: "a self-replicating agent that spreads through
    a host"). Be specific; "both exist"/"both involve change" is vacuous, and a one-from-each conjunction
    does not count.
@@ -226,13 +225,12 @@ Build the blend in three moves:
 We reward four things:
 - COHERENT: a genuine double-scope fusion with a real, specific generic space -- not a mashup.
 - REMOTE: '{u}' and '{v}' are distant, so the fusion is surprising.
-- UNCOMMON: build from rare, specific structure, not the broad generic properties anyone would list.
+- UNCOMMON: build from rare, specific structure, not the generic properties anyone would list.
 - EMERGENT: give every emergent property you can justify. The test for each, applied literally: it must
   be true of the blend, yet true of NEITHER '{u}' alone NOR '{v}' alone. Drop anything already true of
   one input, or that merely restates that they were combined.
 
-Produce exactly ONE blend of '{u}' and '{v}' -- the best, most coherent fusion you can build, developed
-as richly as possible. Use concrete, canonically-named entities in the structure.
+Produce exactly ONE blend of '{u}' and '{v}' -- the best fusion you can build, developed as richly as possible. Use concrete, canonically-named entities in the structure.
 
 {_OUTPUT_BLOCK_BLENDING}"""
 
