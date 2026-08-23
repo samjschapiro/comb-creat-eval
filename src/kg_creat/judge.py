@@ -276,30 +276,52 @@ async def judge_blending(client, model: str, u: str, path1: list, path2: list) -
 # blend is not the gate (F&T: elements "false or impossible in both inputs" are a feature). The judge
 # checks it is a genuine, coherent fusion drawing on BOTH inputs, with a HARD gate on a real (non-
 # vacuous) generic space.
-BLEND_FUSION_JUDGE_PROMPT = """You are judging whether a proposed conceptual BLEND is a genuine fusion
-of two input concepts, or merely a forced mashup.
+BLEND_FUSION_JUDGE_PROMPT = """You are judging whether a proposed BLEND is a genuine conceptual fusion
+of two input concepts.
+
+THE FORM OF A GENUINE BLEND (Fauconnier & Turner conceptual integration). A genuine blend fuses two
+inputs into ONE new concept in which BOTH inputs contribute ORGANIZING STRUCTURE -- their relations and
+roles combine, not merely their labels or a property each -- so the blend runs as a single coherent
+concept and has emergent structure true of neither input alone. This is the "double-scope" form.
+  Genuine example -- "computer virus" (biology + software): biology's frame (a self-replicating agent
+  that infects a host and provokes an immune response) AND computing's frame (a program that spreads
+  across machines and networks) BOTH organize the blend; emergent structure belonging to neither input:
+  it can be quarantined; an antivirus behaves like an immune system.
+
+It is NOT a genuine blend if it merely:
+  (a) CONJUNCTION -- lists one property from each input joined by "and", a schema that fits neither
+      cleanly (e.g. generic space "harnesses energy AND exhibits therapeutic effects" for
+      photosynthesis + penicillin: energy from one, therapeutic from the other, stapled together); or
+  (b) ADJECTIVE -- demotes one input to a modifier on the other, which stays fully itself (e.g. "a
+      radioactive solar system" = a solar system that happens to be radioactive).
+
+Now judge this blend:
 Input concept 1: '{u}'
 Input concept 2: '{v}'
-Proposed blend concept: '{concept}'
+Blend concept: '{concept}'
 Claimed generic space (shared schema): '{generic_space}'
 Structure of the blend (ordered triples): {structure}
 
-A valid blend requires ALL of:
-1. GENERIC SPACE (hard gate): the claimed generic space is a real, SPECIFIC schema that both '{u}' and
-   '{v}' genuinely fit. A vacuous or near-empty schema ("both exist", "both are things", "both involve
-   change/energy") FAILS -- that is a mashup, not a blend.
-2. DUAL PROJECTION: the structure draws on BOTH inputs -- it carries recognizable structure from '{u}'
-   AND from '{v}', combined into one concept. If it is essentially just one of the inputs with the
-   other's name attached, it FAILS.
-3. COHERENCE: the blended concept holds together as a single intelligible concept (it need NOT be a
-   real/existing thing, and may assert properties false of either input -- that is allowed).
+Decide independently:
+1. GENERIC SPACE: is '{generic_space}' a real, SPECIFIC schema that both '{u}' and '{v}' genuinely
+   instantiate -- NOT a conjunction of one property from each, and NOT vacuous ("both exist", "both
+   involve change")?
+2. DOUBLE-SCOPE: do BOTH inputs contribute organizing structure (relations/roles) to the blend, rather
+   than one input merely supplying properties or acting as an adjective on the other?
+A genuine blend needs BOTH. The blend need NOT be a real/existing thing and MAY assert properties false
+of either input -- that is allowed and does not affect this judgment.
 Return valid JSON only, exactly:
-{{ "explanation": "string", "generic_space_ok": true or false, "valid": true or false }}"""
+{{ "explanation": "string", "generic_space_ok": true or false, "double_scope": true or false, "valid": true or false }}"""
 
 
 async def judge_blend_fusion(client, model: str, u: str, v: str, concept: str,
                              generic_space: str, structure: list) -> dict | None:
-    """Utility judge for a fusion blend: genuine coherent fusion of u,v (hard gate on generic space)."""
+    """Task-specific blend judge J_Bl: genuine double-scope conceptual fusion of u,v.
+
+    The genuine-blend form (both inputs project organizing structure; real, non-conjunction generic
+    space) is baked in via description + one positive and two negative examples, so the judge shares
+    the generator's definition of a blend. ``valid`` = generic_space_ok AND double_scope.
+    """
     prompt = BLEND_FUSION_JUDGE_PROMPT.format(
         u=u, v=v, concept=concept or "(unnamed)", generic_space=generic_space or "(none given)",
         structure=format_path(structure))
@@ -337,7 +359,9 @@ async def judge_blend_emergent(client, model: str, u: str, v: str, concept: str,
     inf_block = "\n".join(f"{i + 1}. {s}" for i, s in enumerate(inferences))
     prompt = BLEND_EMERGENT_JUDGE_PROMPT.format(
         concept=concept or "(unnamed)", u=u, v=v, structure=format_path(structure), inferences=inf_block)
-    raw = await _ask(client, model, prompt, max_tokens=800)
+    # Generous budget: a reasoning judge (gpt-oss) needs room to think AND emit a verdict per item;
+    # 800 truncated the most generative models (e.g. gpt-5 emits up to 15) to a None verdict -> 0.
+    raw = await _ask(client, model, prompt, max_tokens=3000)
     return _extract_json(raw) if raw else None
 
 
@@ -380,7 +404,7 @@ async def judge_emergent(client, model: str, artifact: str, parts: list[str],
     parts_block = "\n".join(f"- Part {i + 1}: {p}" for i, p in enumerate(parts))
     inf_block = "\n".join(f"{i + 1}. {s}" for i, s in enumerate(inferences))
     prompt = EMERGENT_JUDGE_PROMPT.format(artifact=artifact, parts=parts_block, inferences=inf_block)
-    raw = await _ask(client, model, prompt, max_tokens=800)
+    raw = await _ask(client, model, prompt, max_tokens=3000)  # reasoning judge + many items need room
     return _extract_json(raw) if raw else None
 
 
