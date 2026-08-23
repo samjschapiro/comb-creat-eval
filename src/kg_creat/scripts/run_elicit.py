@@ -38,6 +38,9 @@ REASONING_MODELS = {
     # low-effort reasoning param OpenRouter ignores when unsupported).
     "openai/gpt-5.6-sol", "x-ai/grok-4.6", "google/gemini-3.1-pro-preview", "google/gemini-3.7-flash",
     "qwen/qwen3-max", "qwen/qwen3-235b-a22b", "qwen/qwen3-30b-a3b", "z-ai/glm-4.6",
+    # Claude 5 family are extended-thinking by default -> at low max_tokens the thinking consumes the
+    # budget and returns empty ("null content"); they need the 8x bump + a bounded reasoning param.
+    "anthropic/claude-opus-5", "anthropic/claude-sonnet-5", "anthropic/claude-fable-5",
 }
 
 
@@ -67,8 +70,10 @@ async def _run_one(async_client, sem, model_id, spec, max_tokens, temperature, s
     base = {**base, "temperature": temperature, "sample_idx": sample_idx}
     async with sem:
         try:
-            raw = await call_llm_async(async_client, messages=messages, model=model_id,
-                                       temperature=temperature, max_tokens=max_tokens, reasoning=reasoning)
+            raw, reasoning_trace = await call_llm_async(
+                async_client, messages=messages, model=model_id, temperature=temperature,
+                max_tokens=max_tokens, reasoning=reasoning, capture_reasoning=True)
+            base["reasoning"] = reasoning_trace   # saved for analysis (also present when content is empty)
             if raw is None:
                 return {**base, "raw_response": None, "paths": [], "n_paths": 0,
                         "parse_success": False, "api_error": "null content"}
@@ -169,7 +174,9 @@ async def main(config_path, overwrite=False, debug=False):
     n_samples = eval_cfg.get("n_samples", 1)
     max_tokens = eval_cfg.get("max_tokens", 1500)
     concurrency = config.get("concurrency", 8)
-    reasoning = config.get("reasoning", {"effort": "low", "exclude": True})
+    # exclude=False so OpenRouter RETURNS the reasoning trace (we already pay for the tokens; keep them
+    # for analysis). capture happens in _run_one via capture_reasoning=True.
+    reasoning = config.get("reasoning", {"effort": "low", "exclude": False})
     budget_usd = config.get("budget_usd", 0.0)
     models = config["models"]
     draws_per_prompt = len(temperatures) * n_samples

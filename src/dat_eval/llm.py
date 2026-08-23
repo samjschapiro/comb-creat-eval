@@ -106,6 +106,7 @@ async def call_llm_async(
     top_p: float | None = None,
     top_k: int | None = None,
     reasoning: dict | None = None,
+    capture_reasoning: bool = False,
 ) -> str:
     """Async version of call_llm. Caller provides the AsyncOpenAI client so
     many concurrent calls can share one connection pool.
@@ -159,8 +160,16 @@ async def call_llm_async(
     # Some providers return an error-shaped 200 with choices=None; treat as
     # empty rather than crashing on the subscript.
     if not response.choices:
-        return None
-    return response.choices[0].message.content
+        return (None, None) if capture_reasoning else None
+    msg = response.choices[0].message
+    if capture_reasoning:
+        # OpenRouter surfaces the trace as message.reasoning (string) and/or
+        # message.reasoning_details (structured); both live in model_extra on the SDK object.
+        extra = getattr(msg, "model_extra", None) or {}
+        reasoning_trace = (getattr(msg, "reasoning", None) or extra.get("reasoning")
+                           or extra.get("reasoning_details"))
+        return msg.content, reasoning_trace
+    return msg.content
 
 
 def extract_words_from_response(raw: str | None, expected_count: int = 10) -> list[str]:
