@@ -78,6 +78,7 @@ PRICING = {
     # Mistral
     "mistralai/mistral-large-2407":     (2.00, 6.00),
     "mistralai/mistral-large-2411":     (2.00, 6.00),
+    "mistralai/mistral-large-2512":     (0.50, 1.50),
     "mistralai/mistral-nemo":           (0.07, 0.07),
     "mistralai/mistral-7b-instruct-v0.1": (0.03, 0.06),
     "mistralai/mistral-small-24b-instruct-2501": (0.10, 0.30),
@@ -102,6 +103,7 @@ PRICING = {
     "openai/gpt-5.2":                   (1.75, 14.00),
     "google/gemini-3-flash-preview":    (0.50, 3.00),
     "x-ai/grok-4":                      (3.00, 15.00),
+    "x-ai/grok-4.5":                    (2.00, 6.00),
     # --- LIB-pool gap-fill additions (2026-05-10) ---
     # Prices conservative (rounded up from OpenRouter listed rates).
     "anthropic/claude-3-opus":          (15.00, 75.00),
@@ -114,6 +116,16 @@ PRICING = {
     "qwen/qwen-2.5-7b-instruct":        (0.05, 0.10),
     "amazon/nova-pro-v1":               (0.80, 3.20),
     "amazon/nova-lite-v1":              (0.06, 0.24),
+    "openai/gpt-5.6-sol": (2, 10),  # added 2026-08-23 from OpenRouter live pricing
+    "anthropic/claude-opus-5": (5, 25),  # added 2026-08-23 from OpenRouter live pricing
+    "anthropic/claude-sonnet-5": (2, 10),  # added 2026-08-23 from OpenRouter live pricing
+    "anthropic/claude-fable-5": (10, 50),  # added 2026-08-23 from OpenRouter live pricing
+    "google/gemini-3.7-flash": (0.375, 1.875),  # added 2026-08-23 from OpenRouter live pricing
+    "x-ai/grok-4.6": (2, 6),  # added 2026-08-23 from OpenRouter live pricing
+    "qwen/qwen3-max": (0.78, 3.9),  # added 2026-08-23 from OpenRouter live pricing
+    "qwen/qwen3-30b-a3b": (0.12, 0.5),  # added 2026-08-23 from OpenRouter live pricing
+    "mistralai/mixtral-8x22b-instruct": (2, 6),  # added 2026-08-23 from OpenRouter live pricing
+    "z-ai/glm-4.6": (0.5, 2),  # added 2026-08-23 from OpenRouter live pricing
 }
 
 

@@ -34,6 +34,10 @@ REASONING_MODELS = {
     "openai/gpt-5", "openai/gpt-5-mini", "openai/gpt-5-nano",
     "openai/gpt-5.4", "openai/gpt-5.4-mini", "openai/gpt-5.4-nano",
     "deepseek/deepseek-r1", "qwen/qwq-32b",
+    # newer reasoning-capable models (over-including is safe: it only raises the token cap and passes a
+    # low-effort reasoning param OpenRouter ignores when unsupported).
+    "openai/gpt-5.6-sol", "x-ai/grok-4.6", "google/gemini-3.1-pro-preview", "google/gemini-3.7-flash",
+    "qwen/qwen3-max", "qwen/qwen3-235b-a22b", "qwen/qwen3-30b-a3b", "z-ai/glm-4.6",
 }
 
 
