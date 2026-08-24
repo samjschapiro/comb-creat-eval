@@ -143,10 +143,14 @@ def score_free(response: dict, embed) -> list[dict]:
         rec["well_formed"] = wf
         rec["wf_reason"] = reason
         if response["mode"] == "blending":
-            # Blending surprise is the remoteness of the two FUSED inputs, d_cos(u,v) -- item-driven,
-            # not the within-structure spread (docs/tracks/kg_creat/blending_fusion.md).
+            # Blending surprise is the mean semantic distance from each fused input to the blend's
+            # GENERIC SPACE g -- a proxy for how far the shared schema abstracts away from the
+            # concrete inputs (docs/tracks/kg_creat/blending_fusion.md).
             a, b = base["u_label"], base["v_label"]
-            rec["R"] = float(scoring.cosine_distance(embed(a), embed(b))) if a and b else None
+            g = ((response.get("items") or [{}])[0].get("generic_space") or "").strip()
+            rec["R"] = (float((scoring.cosine_distance(embed(a), embed(g)) +
+                               scoring.cosine_distance(embed(b), embed(g))) / 2)
+                        if a and b and g else None)
         else:
             rec["R"] = scoring.novelty_R(p, embed, unit="triple")
         recs.append(rec)

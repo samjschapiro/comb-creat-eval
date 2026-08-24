@@ -50,7 +50,7 @@ star) plus two string fields, with `emergent` mapping onto the `inferences` slot
 | criterion | blending |
 |---|---|
 | **utility** | **judge-only**: a genuine, coherent fusion — real (non-vacuous) generic space, selective projection from *both* inputs — vs. a forced mashup. A blend is a novel concept, so literal factuality of the blend is NOT the gate (F&T: elements "false or impossible in both inputs" are a feature). Factuality applies only to the input-grounded structural claims. Hard gate: vacuous `generic_space` → utility fails. |
-| **surprise** | cos(`u`, `v`) — item-driven, same as analogy. |
+| **surprise** | mean of cos(`u`, `g`) and cos(`v`, `g`), the semantic distance from each anchor to the blend's `generic_space` `g` — a proxy for how far the shared schema abstracts away from the concrete inputs. |
 | **originality** | inverse item-frequency of the bridging concepts introduced (pending scorer). |
 | **emergent creativity** | count of `emergent` statements the judge confirms are (a) coherent / follow from the blend, (b) present in neither input alone, (c) non-trivial. **Not** "true in the real world" — blends may be fictional. Padding doesn't pay: only verified statements count. |
 
