@@ -57,7 +57,7 @@ def render(composite: dict, top_n: int = 10) -> str:
         "% examples table (\\captionof needs the caption package).",
         "\\captionof{table}{\\textbf{Top systems by combinatorial creativity.} The highest-scoring models on "
         "\\textit{Overall} and on each task, by the utility-gated, equal-weight per-dimension "
-        "$z$-composite (\\Cref{tab:scoring}). Each column is ranked independently; parenthetical values "
+        "$z$-composite (\\Cref{sec:benchmark}). Each column is ranked independently; parenthetical values "
         "are that column's $z$-score.}",
         "\\label{tab:leaderboard}",
         "{\\footnotesize",

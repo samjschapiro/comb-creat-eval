@@ -14,15 +14,46 @@ Model colors come from the batlow scientific colormap. Font is Nimbus Roman to m
 
 import argparse
 import json
+import re
 from pathlib import Path
 
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
-from matplotlib.patches import Patch
+from matplotlib.patches import Patch, PathPatch
+from matplotlib.offsetbox import AnnotationBbox, AuxTransformBox
+from matplotlib.transforms import Affine2D
+from svgpath2mpl import parse_path
 from cmcrameri import cm as cmc
+
+LOGO_DIR = Path(__file__).resolve().parents[3] / "assets" / "logos"
+LOGO_SLUG = {"openai": "openai", "google": "googlegemini", "anthropic": "claude",
+             "qwen": "qwen", "meta": "meta"}
+
+
+def _provider(model_key):
+    return next((p for p in LOGO_SLUG if model_key.startswith(p)), None)
+
+
+def _load_logos():
+    """Parse each provider's single-path SVG into a matplotlib Path, normalized to a unit box
+    centered at the origin (y flipped so it renders upright)."""
+    out = {}
+    for prov, slug in LOGO_SLUG.items():
+        f = LOGO_DIR / f"{slug}.svg"
+        if not f.exists():
+            continue
+        d = re.search(r'\sd="([^"]+)"', f.read_text()).group(1)
+        p = parse_path(d)
+        # normalize by the flattened glyph extent (curve points, not bezier control points)
+        polys = p.to_polygons()
+        verts = np.concatenate(polys) if polys else p.vertices
+        (x0, y0), (x1, y1) = verts.min(0), verts.max(0)
+        s = 1.0 / max(x1 - x0, y1 - y0)
+        t = Affine2D().translate(-(x0 + x1) / 2, -(y0 + y1) / 2).scale(s, -s)
+        out[prov] = p.transformed(t)
+    return out
 
 DISPLAY = {
     "openai_gpt-5": "gpt-5", "openai_gpt-5-6-sol": "gpt-5.6-sol", "openai_gpt-4-1": "gpt-4.1",
@@ -40,11 +71,12 @@ DIM_LABEL = {"utility": "Utility", "surprise": "Surprise", "originality": "Origi
              "emergent": "Emergent"}
 
 
-def _bars(ax, vals, colors, title, show_y):
+def _bars(ax, vals, colors, logos, title, show_y):
     x = np.arange(len(vals))
     ax.axhline(50, color="#CFCFCF", lw=0.8, ls=(0, (4, 3)), zorder=1)  # median (50th pctile)
     ax.bar(x, vals, 0.72, color=colors, zorder=3)
     ax.set_ylim(0, 100)
+    ax.set_xlim(-0.5, len(vals) - 0.5)
     ax.set_yticks([0, 25, 50, 75, 100])
     ax.set_xticks([])
     ax.grid(axis="y", color="#DDDDDD", lw=0.6, alpha=0.8, zorder=0)
@@ -59,6 +91,15 @@ def _bars(ax, vals, colors, title, show_y):
         ax.set_yticklabels([])
         ax.tick_params(axis="y", length=0)
     ax.set_title(title, fontsize=15, pad=8)
+    # provider logo beneath each bar (in place of x tick labels)
+    for i, lp in enumerate(logos):
+        if lp is None:
+            continue
+        box = AuxTransformBox(Affine2D().scale(80))
+        box.add_artist(PathPatch(lp, fc="#333333", ec="none"))
+        ab = AnnotationBbox(box, ((i + 0.5) / len(vals), -0.03), xycoords="axes fraction",
+                            frameon=False, box_alignment=(0.5, 1.0), pad=0, annotation_clip=False)
+        ax.add_artist(ab)
 
 
 def main(composite_path, out_stem, top_n):
@@ -81,48 +122,29 @@ def main(composite_path, out_stem, top_n):
         allv = [x for x in vals.values() if x is not None]
         pct[(key, d)] = {m: (pctl(vals[m], allv) if vals[m] is not None else None) for m in models}
 
-    fig = plt.figure(figsize=(15.0, 10.5))
-    # 12 columns = 4 per task, each dimension panel spans 2; a lone row-3 panel spans the middle two.
-    gs = GridSpec(3, 12, figure=fig, height_ratios=[1.15, 1.0, 1.0], hspace=0.42, wspace=1.1)
-
+    logos = _load_logos()
+    fig = plt.figure(figsize=(15.0, 7.4))
+    subfigs = fig.subfigures(1, 3, wspace=0.04)
     for ti, (label, key, r2, r3) in enumerate(TASKS):
-        base = 4 * ti
+        sf = subfigs[ti]
         letter = "abc"[ti]
-        # Row 1: clean ranked mini-leaderboard (rank, colour chip, model, right-aligned z)
-        axr = fig.add_subplot(gs[0, base:base + 4])
-        axr.axis("off")
-        axr.set_title(f"({letter}) {label}", fontsize=27, pad=4)
-        axr.plot([0.05, 0.97], [0.965, 0.965], color="#CCCCCC", lw=0.8,
-                 transform=axr.transAxes, clip_on=False)
-        ranked = sorted(top, key=lambda m: comp[key][m], reverse=True)
-        y0, dy = 0.80, 0.175
-        for i, m in enumerate(ranked):
-            y = y0 - i * dy
-            axr.text(0.05, y, f"{i+1}", fontsize=14, color="#777777",
-                     ha="left", va="center", transform=axr.transAxes)
-            axr.plot([0.155], [y], marker="s", ms=11, color=cmap[m],
-                     transform=axr.transAxes, clip_on=False)
-            axr.text(0.24, y, DISPLAY.get(m, m), fontsize=14.5, color="#1a1a1a",
-                     ha="left", va="center", transform=axr.transAxes)
-            axr.text(0.97, y, f"{comp[key][m]:+.2f}", fontsize=14.5, color="#1a1a1a",
-                     ha="right", va="center", transform=axr.transAxes)
-        # Rows 2 and 3: percentile panels, bars sorted DESCENDING, labelled (letter.n).
-        # 2 dims fill the block; a single dim is centered under the pair above.
-        for row, dims in ((1, r2), (2, r3)):
+        sf.suptitle(f"({letter}) {label}", fontsize=26, y=1.0)
+        # 4 sub-columns: each dim panel spans 2; a lone bottom panel spans the middle two (centered).
+        gs = sf.add_gridspec(2, 4, hspace=0.5, wspace=0.85)
+        for row, dims in ((0, r2), (1, r3)):
             for j, d in enumerate(dims):
-                cs = slice(base + 2 * j, base + 2 * j + 2) if len(dims) == 2 \
-                    else slice(base + 1, base + 3)
-                n = (0 if row == 1 else len(r2)) + j + 1
-                ax = fig.add_subplot(gs[row, cs])
+                cs = slice(2 * j, 2 * j + 2) if len(dims) == 2 else slice(1, 3)
+                n = (0 if row == 0 else len(r2)) + j + 1
+                ax = sf.add_subplot(gs[row, cs])
                 show_y = (ti == 0 and j == 0)  # leftmost panel of each row (shared 0-100 scale)
-                pairs = sorted(((pct[(key, d)][m], cmap[m]) for m in top), key=lambda t: -t[0])
-                _bars(ax, [p[0] for p in pairs], [p[1] for p in pairs],
+                pairs = sorted(((pct[(key, d)][m], m) for m in top), key=lambda t: -t[0])
+                _bars(ax, [p[0] for p in pairs], [cmap[m] for _, m in pairs],
+                      [logos.get(_provider(m)) for _, m in pairs],
                       f"({letter}.{n}) {DIM_LABEL[d]}", show_y)
 
     handles = [Patch(color=cmap[m], label=DISPLAY.get(m, m)) for m in top]
-    fig.legend(handles=handles, loc="lower center", ncol=len(top), frameon=False, fontsize=16,
-               bbox_to_anchor=(0.5, 0.0), columnspacing=1.6, handlelength=1.2)
-    fig.tight_layout(rect=(0, 0.05, 1, 1))
+    fig.legend(handles=handles, loc="lower center", ncol=len(top), frameon=False, fontsize=15,
+               bbox_to_anchor=(0.5, -0.02), columnspacing=1.6, handlelength=1.2)
     for ext in ("pdf", "png"):
         fig.savefig(f"{out_stem}.{ext}", bbox_inches="tight", dpi=300)
     print(f"Wrote {out_stem}.pdf / .png  (top {top_n}: {', '.join(DISPLAY.get(m, m) for m in top)})")
