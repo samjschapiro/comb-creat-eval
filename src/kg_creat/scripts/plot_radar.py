@@ -2,8 +2,8 @@
 
 Each task gets its own radar whose axes are that task's scoring dimensions (association: utility,
 surprise, originality; analogy and blending add emergent). A model's value on each axis is its gated
-score for that task, min-max normalized across all models so every axis runs 0 (weakest model) to 1
-(strongest). Font is Nimbus Roman to match the paper (\\usepackage{times}).
+score for that task, z-scored across all models (0 = field mean, marked by the dashed ring; +1 = one
+SD above). All three radars share one radial scale. Font is Nimbus Roman to match the paper.
 
     python src/kg_creat/scripts/plot_radar.py data/kg_creat/kombine_v2/scores/composite.json \\
         papers/kg_creat-iclr/media/radar_profiles
@@ -41,35 +41,48 @@ def main(composite_path, out_stem, top_n):
     c = json.loads(Path(composite_path).read_text())
     models, top = c["ranking"], c["ranking"][:top_n]
 
-    fig, axes = plt.subplots(1, len(TASKS), figsize=(13.5, 5.0), subplot_kw=dict(polar=True))
-    for ax, (label, key, dims) in zip(axes, TASKS):
-        # per-axis min-max normalization across all models for this task
+    # First pass: z-score each (task, dimension) across all models; collect the range over the plotted
+    # top-N so all three radars share one radial scale.
+    panels, zvals = [], []
+    for label, key, dims in TASKS:
         raw = {m: c["per_model"][m]["raw"].get(key, {}) for m in models}
-        col = {d: np.array([raw[m].get(d, np.nan) for m in models], float) for d in dims}
-        norm = {d: (col[d] - np.nanmin(col[d])) / (np.nanmax(col[d]) - np.nanmin(col[d]) + 1e-9)
-                for d in dims}
+        z = {}
+        for d in dims:
+            col = np.array([raw[m].get(d, np.nan) for m in models], float)
+            mu, sd = np.nanmean(col), np.nanstd(col)
+            z[d] = (col - mu) / sd if sd > 1e-9 else np.zeros_like(col)
+        panels.append((label, dims, z))
+        zvals += [z[d][models.index(m)] for m in top for d in dims]
+    ymin, ymax = min(zvals) - 0.4, max(zvals) + 0.4
+    yticks = list(range(int(np.ceil(ymin)), int(np.floor(ymax)) + 1))
+
+    fig, axes = plt.subplots(1, len(TASKS), figsize=(13.5, 5.0), subplot_kw=dict(polar=True))
+    for ax, (label, dims, z) in zip(axes, panels):
         N = len(dims)
         angles = np.linspace(0, 2 * np.pi, N, endpoint=False).tolist()
         angles += angles[:1]
         ax.set_theta_offset(np.pi / 2)
         ax.set_theta_direction(-1)
+        ax.set_ylim(ymin, ymax)
+        # emphasize the z = 0 ring (the field mean across all models)
+        fine = np.linspace(0, 2 * np.pi, 200)
+        ax.plot(fine, np.zeros_like(fine), color="#666666", lw=0.9, ls=(0, (4, 3)), zorder=2)
         for i, m in enumerate(top):
-            v = [norm[d][models.index(m)] for d in dims]
+            v = [z[d][models.index(m)] for d in dims]
             v += v[:1]
             ax.plot(angles, v, color=COLORS[i], lw=1.8, label=DISPLAY.get(m, m), zorder=3)
             ax.fill(angles, v, color=COLORS[i], alpha=0.06, zorder=1)
         ax.set_xticks(angles[:-1])
         ax.set_xticklabels([DIM_LABEL[d] for d in dims], fontsize=12)
         ax.tick_params(axis="x", pad=6)
-        ax.set_ylim(0, 1.12)
-        ax.set_yticks([0.25, 0.5, 0.75, 1.0])
-        ax.set_yticklabels([])
+        ax.set_yticks(yticks)
+        ax.set_yticklabels([f"{t:+d}" if t else "0" for t in yticks], fontsize=8, color="#888888")
         ax.grid(color="#BBBBBB", lw=0.6, alpha=0.8)
         ax.spines["polar"].set_color("#BBBBBB")
-        ax.set_title(label, fontsize=15, pad=18)
+        ax.set_title(label, fontsize=30, pad=22)
 
     handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center", ncol=len(top), frameon=False, fontsize=12,
+    fig.legend(handles, labels, loc="lower center", ncol=len(top), frameon=False, fontsize=16,
                bbox_to_anchor=(0.5, -0.02), columnspacing=1.6, handlelength=1.5)
     fig.tight_layout(rect=(0, 0.06, 1, 1))
     for ext in ("pdf", "png"):
