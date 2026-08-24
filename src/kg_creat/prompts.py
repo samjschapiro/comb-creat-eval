@@ -76,7 +76,7 @@ _OUTPUT_BLOCK_BLENDING = """Output requirements (strict):
 - Relationship strings must be 1-3 words. Use canonical, disambiguated entity names.
 
 Required format (follow this shape exactly):
-<answer>{"concept": "computer virus", "generic_space": "a self-replicating agent that spreads through a host", "structure": [["computer virus", "infects", "a computer"], ["computer virus", "is a", "program"], ["computer virus", "spreads between", "machines"]], "emergent": ["it can be quarantined", "an antivirus behaves like an immune system"]}</answer>"""
+<answer>{"concept": "computer virus", "generic_space": "a self-replicating agent that spreads through a host", "structure": [["computer virus", "infects", "a computer"], ["computer virus", "is a", "program"], ["computer virus", "spreads between", "machines"]], "emergent": ["its contagion is unbound from geography, infecting machines worldwide at nearly the same instant"]}</answer>"""
 
 # CREATE's rules/dedup scaffolding (K.3), shared across modes.
 _ENTITY_RULES = """Rules and quality constraints:
@@ -205,9 +205,11 @@ What a genuine blend is (the FORM). A real blend fuses two concepts into ONE new
 inputs contribute ORGANIZING STRUCTURE -- their relations and roles combine -- so the blend runs as a
 single coherent concept with emergent structure belonging to neither input.
   Example -- "computer virus" (biology + software): biology's frame (a self-replicating agent that
-  infects a host and provokes an immune response) AND computing's frame (a program that spreads across
-  machines) BOTH organize it; emergent structure of neither input: it can be quarantined; an antivirus
-  behaves like an immune system.
+  infects a host) AND computing's frame (a program that spreads across machines) BOTH organize it;
+  emergent structure of neither input: its contagion is unbound from physical space, so it can infect
+  nearly every computer at once -- unlike a biological virus, whose spread is limited by geography.
+  (Note what does NOT count as emergent here: "it can be quarantined" or "an antivirus fights it like an
+  immune system" are already true of the biological input, so they are inherited, not emergent.)
 Do NOT instead (a) list one property from each input joined by "and" ("harnesses energy AND is
 therapeutic"), or (b) treat one input as a mere adjective on the other ("a radioactive solar system").
 Both inputs must do organizing work.
