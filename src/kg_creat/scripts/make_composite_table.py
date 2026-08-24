@@ -16,9 +16,14 @@ from pathlib import Path
 
 DISPLAY = {
     "openai_gpt-5": "gpt-5",
+    "openai_gpt-5-6-sol": "gpt-5.6-sol",
+    "openai_gpt-4-1": "gpt-4.1",
     "openai_gpt-4o-mini": "gpt-4o-mini",
     "anthropic_claude-sonnet-4-5": "claude-sonnet-4.5",
     "google_gemini-2-5-flash": "gemini-2.5-flash",
+    "google_gemini-3-1-pro-preview": "gemini-3.1-pro",
+    "google_gemini-3-7-flash": "gemini-3.7-flash",
+    "qwen_qwen3-max": "qwen3-max",
     "qwen_qwen-2-5-72b-instruct": "qwen-2.5-72b",
     "meta-llama_llama-3-3-70b-instruct": "llama-3.3-70b",
     "meta-llama_llama-3-1-8b-instruct": "llama-3.1-8b",
