@@ -1,7 +1,7 @@
 """Render a sampled prompt spec into the model-facing prompt text.
 
 Regime-A prompts are CREATE's base prompt (K.3, arXiv:2603.09970 p.34) adapted: we keep
-its scaffolding (concrete-entity rule, disambiguation, dedup, strong/diverse guidance,
+its scaffolding (entity-recognizability rule, disambiguation, dedup, strong/diverse guidance,
 and the strict ``<answer>`` JSON output contract that ``parse.parse_paths`` expects) and
 layer on our deliberate deviations -- a fixed hop count ``h``, a fixed path count ``k``,
 and our constraint block replacing CREATE's terminal ``rel_b`` requirement. This keeps a
@@ -80,8 +80,8 @@ Required format (follow this shape exactly):
 
 # CREATE's rules/dedup scaffolding (K.3), shared across modes.
 _ENTITY_RULES = """Rules and quality constraints:
-- Entities must be concrete, real-world entities only (people, organizations, works, places,
-  genes, diseases, species, etc.). No abstract concepts.
+- Entities may be concrete or abstract (people, works, places, species, events, ideas,
+  phenomena, theories, etc.), but must be real and recognizable -- do not invent entities.
 - Do not ask follow-up questions; respond using the best available factual knowledge.
 - Temporal connections are allowed (relationships may span different historical periods).
 - Disambiguation is required: use canonical names and qualifiers where necessary
@@ -136,7 +136,7 @@ def _regime_a_prompt(spec: dict) -> str:
     clause_block = f"\n{clause}\n" if clause else "\n"
     return f"""Query: What are different ways in which '{u}' is connected to '{v}'?
 
-Task: Identify how these two real-world entities are connected by producing as MANY DISTINCT connection
+Task: Identify how these two entities are connected by producing as MANY DISTINCT connection
 paths as you can. A connection path is a sequence of factual triples (head, relationship, tail) forming
 a continuous chain: consecutive triples share an entity, the first triple's head is '{u}', and the last
 triple's tail is '{v}'.
@@ -179,7 +179,7 @@ CRITICAL (holds within each analogy): the "path_a" and "path_b" paths must use t
 relationship word at every position -- if "path_a" relations are [r1, r2, r3], "path_b" relations must
 be the identical words [r1, r2, r3], in the same order. Do NOT paraphrase or substitute synonyms (e.g.
 if "path_a" uses 'awards', "path_b" must also use 'awards', not 'grants'). Only the ENTITIES differ.
-Use disjoint, concrete, canonically-named entities that play corresponding roles, and do not repeat an
+Use disjoint, recognizable, canonically-named entities that play corresponding roles, and do not repeat an
 entity within a path.
 
 Produce as MANY DISTINCT analogies as you can, most surprising first -- do not stop at a fixed number;
@@ -230,7 +230,7 @@ We reward four things:
   be true of the blend, yet true of NEITHER '{u}' alone NOR '{v}' alone. Drop anything already true of
   one input, or that merely restates that they were combined.
 
-Produce exactly ONE blend of '{u}' and '{v}' -- the best fusion you can build, developed as richly as possible. Use concrete, canonically-named entities in the structure.
+Produce exactly ONE blend of '{u}' and '{v}' -- the best fusion you can build, developed as richly as possible. Use recognizable, canonically-named entities in the structure.
 
 {_OUTPUT_BLOCK_BLENDING}"""
 
