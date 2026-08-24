@@ -13,6 +13,7 @@ Model colors come from the batlow scientific colormap. Font is Nimbus Roman to m
 """
 
 import argparse
+import colorsys
 import json
 import re
 from pathlib import Path
@@ -22,23 +23,51 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch, PathPatch
-from matplotlib.offsetbox import AnnotationBbox, AuxTransformBox
+from matplotlib.offsetbox import AnnotationBbox, OffsetImage
 from matplotlib.transforms import Affine2D
+from matplotlib.colors import to_rgb
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 from svgpath2mpl import parse_path
-from cmcrameri import cm as cmc
 
 LOGO_DIR = Path(__file__).resolve().parents[3] / "assets" / "logos"
 LOGO_SLUG = {"openai": "openai", "google": "googlegemini", "anthropic": "claude",
              "qwen": "qwen", "meta": "meta"}
+# approximate brand colors; models sharing a provider get distinct shades of the same hue.
+BRAND = {"openai": "#10A37F", "google": "#4285F4", "anthropic": "#D97757",
+         "qwen": "#615CED", "meta": "#0866FF"}
 
 
 def _provider(model_key):
     return next((p for p in LOGO_SLUG if model_key.startswith(p)), None)
 
 
+def _shades(base_hex, k):
+    """k lightness-varied shades of a brand hue, darkest first (for the higher-ranked model)."""
+    r, g, b = to_rgb(base_hex)
+    h, lgt, s = colorsys.rgb_to_hls(r, g, b)
+    offs = [0.0] if k == 1 else np.linspace(-0.14, 0.16, k)
+    return [colorsys.hls_to_rgb(h, min(0.88, max(0.22, lgt + o)), s) for o in offs]
+
+
+def _rasterize(path, color="#333333", px=300):
+    """Render a normalized (unit, origin-centered) Path to a transparent RGBA image. Rasterizing
+    sidesteps the PDF backend's mishandling of compound SVG paths inside offset boxes."""
+    fig = Figure(figsize=(1, 1), dpi=px)
+    FigureCanvasAgg(fig)
+    fig.patch.set_alpha(0)
+    ax = fig.add_axes([0, 0, 1, 1])
+    ax.set_axis_off()
+    ax.patch.set_alpha(0)
+    ax.set_xlim(-0.55, 0.55)
+    ax.set_ylim(-0.55, 0.55)
+    ax.add_patch(PathPatch(path, fc=color, ec="none"))
+    fig.canvas.draw()
+    return np.asarray(fig.canvas.buffer_rgba()).copy()
+
+
 def _load_logos():
-    """Parse each provider's single-path SVG into a matplotlib Path, normalized to a unit box
-    centered at the origin (y flipped so it renders upright)."""
+    """Each provider's single-path SVG -> a transparent RGBA logo image, normalized to a unit box."""
     out = {}
     for prov, slug in LOGO_SLUG.items():
         f = LOGO_DIR / f"{slug}.svg"
@@ -52,7 +81,7 @@ def _load_logos():
         (x0, y0), (x1, y1) = verts.min(0), verts.max(0)
         s = 1.0 / max(x1 - x0, y1 - y0)
         t = Affine2D().translate(-(x0 + x1) / 2, -(y0 + y1) / 2).scale(s, -s)
-        out[prov] = p.transformed(t)
+        out[prov] = _rasterize(p.transformed(t))
     return out
 
 DISPLAY = {
@@ -92,13 +121,12 @@ def _bars(ax, vals, colors, logos, title, show_y):
         ax.tick_params(axis="y", length=0)
     ax.set_title(title, fontsize=15, pad=8)
     # provider logo beneath each bar (in place of x tick labels)
-    for i, lp in enumerate(logos):
-        if lp is None:
+    for i, img in enumerate(logos):
+        if img is None:
             continue
-        box = AuxTransformBox(Affine2D().scale(80))
-        box.add_artist(PathPatch(lp, fc="#333333", ec="none"))
-        ab = AnnotationBbox(box, ((i + 0.5) / len(vals), -0.03), xycoords="axes fraction",
-                            frameon=False, box_alignment=(0.5, 1.0), pad=0, annotation_clip=False)
+        ab = AnnotationBbox(OffsetImage(img, zoom=0.062), ((i + 0.5) / len(vals), -0.03),
+                            xycoords="axes fraction", frameon=False,
+                            box_alignment=(0.5, 1.0), pad=0, annotation_clip=False)
         ax.add_artist(ab)
 
 
@@ -107,8 +135,14 @@ def main(composite_path, out_stem, top_n):
                          "mathtext.rm": "Nimbus Roman", "axes.linewidth": 0.8, "font.size": 12})
     c = json.loads(Path(composite_path).read_text())
     models, top = c["ranking"], c["ranking"][:top_n]
-    colors = [cmc.batlow(x) for x in np.linspace(0.08, 0.92, len(top))]
-    cmap = {m: colors[i] for i, m in enumerate(top)}
+    # color bars by provider brand hue; models sharing a provider get distinct shades.
+    prov_models = {}
+    for m in top:
+        prov_models.setdefault(_provider(m), []).append(m)
+    cmap = {}
+    for prov, ms in prov_models.items():
+        for m, col in zip(ms, _shades(BRAND.get(prov, "#777777"), len(ms))):
+            cmap[m] = col
 
     raw = {(t[1], d): {m: c["per_model"][m]["raw"].get(t[1], {}).get(d)
                        for m in models}
