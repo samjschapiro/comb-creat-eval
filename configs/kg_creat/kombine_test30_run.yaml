@@ -1,0 +1,16 @@
+# Kombine test30: 30 items/task (90 prompts) on gpt-5-mini + claude-sonnet-4.5. Default reasoning
+# effort (traces saved for reasoning models). PAID (OpenRouter).
+upstream_dir: data/kg_creat/kombine_test30/prompts
+output_dir: data/kg_creat/kombine_test30/responses
+modes: [baseline, analogy, blending]
+eval:
+  temperatures: [0.9]
+  n_samples: 1
+  max_tokens: 1600
+concurrency: 8
+reasoning:
+  exclude: false             # default effort; RETURN + SAVE the trace for reasoning models
+budget_usd: 15.0
+models:
+  - openai/gpt-5-mini
+  - anthropic/claude-sonnet-4.5

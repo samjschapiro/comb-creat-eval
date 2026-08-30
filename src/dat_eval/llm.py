@@ -107,6 +107,7 @@ async def call_llm_async(
     top_k: int | None = None,
     reasoning: dict | None = None,
     capture_reasoning: bool = False,
+    capture_usage: bool = False,
 ) -> str:
     """Async version of call_llm. Caller provides the AsyncOpenAI client so
     many concurrent calls can share one connection pool.
@@ -157,19 +158,30 @@ async def call_llm_async(
             response = await async_client.chat.completions.create(**kwargs)
         else:
             raise
+    # Actual billed usage (reasoning tokens are counted in completion_tokens). Extracted before the
+    # choices check so a null-content reasoning draw still reports the tokens it spent.
+    u = getattr(response, "usage", None)
+    usage = {"in": getattr(u, "prompt_tokens", 0) or 0,
+             "out": getattr(u, "completion_tokens", 0) or 0} if u else {"in": 0, "out": 0}
     # Some providers return an error-shaped 200 with choices=None; treat as
     # empty rather than crashing on the subscript.
     if not response.choices:
-        return (None, None) if capture_reasoning else None
-    msg = response.choices[0].message
-    if capture_reasoning:
+        content, reasoning_trace = None, None
+    else:
+        msg = response.choices[0].message
+        content = msg.content
         # OpenRouter surfaces the trace as message.reasoning (string) and/or
         # message.reasoning_details (structured); both live in model_extra on the SDK object.
         extra = getattr(msg, "model_extra", None) or {}
         reasoning_trace = (getattr(msg, "reasoning", None) or extra.get("reasoning")
                            or extra.get("reasoning_details"))
-        return msg.content, reasoning_trace
-    return msg.content
+    if capture_reasoning and capture_usage:
+        return content, reasoning_trace, usage
+    if capture_reasoning:
+        return content, reasoning_trace
+    if capture_usage:
+        return content, usage
+    return content
 
 
 def extract_words_from_response(raw: str | None, expected_count: int = 10) -> list[str]:

@@ -74,8 +74,22 @@ Only a path that passes all three is valid. Return valid JSON only, exactly:
 {{ "explanation": "string", "sense_1": "string", "sense_2": "string", "valid": true or false }}"""
 
 
+from collections import defaultdict as _defaultdict
+_JUDGE_USAGE = _defaultdict(lambda: {"in": 0, "out": 0, "calls": 0})   # per-judge-model actual token usage
+
+
+def reset_judge_usage() -> None:
+    _JUDGE_USAGE.clear()
+
+
+def get_judge_usage() -> dict:
+    """Per-judge-model {in, out, calls} accumulated since the last reset (for the cost ledger)."""
+    return {m: dict(u) for m, u in _JUDGE_USAGE.items()}
+
+
 async def _ask(client, model: str, prompt: str, max_tokens: int = 800, attempts: int = 3) -> str | None:
-    """One judge call, retried on transient provider failures, never raising.
+    """One judge call, retried on transient provider failures, never raising. Accumulates actual token
+    usage per model into ``_JUDGE_USAGE`` so scoring spend lands in the cost ledger.
 
     A single malformed response body from the provider used to propagate out of ``asyncio.gather``
     and abort an entire model's scoring mid-run (losing ~25 minutes of paid judging). A judge that
@@ -83,8 +97,12 @@ async def _ask(client, model: str, prompt: str, max_tokens: int = 800, attempts:
     """
     for i in range(attempts):
         try:
-            return await call_llm_async(client, messages=[{"role": "user", "content": prompt}],
-                                        model=model, temperature=0.0, max_tokens=max_tokens)
+            content, usage = await call_llm_async(client, messages=[{"role": "user", "content": prompt}],
+                                                  model=model, temperature=0.0, max_tokens=max_tokens,
+                                                  capture_usage=True)
+            u = _JUDGE_USAGE[model]
+            u["in"] += usage.get("in", 0); u["out"] += usage.get("out", 0); u["calls"] += 1
+            return content
         except Exception as e:  # noqa: BLE001 - provider/transport errors are all retry-or-skip
             if i == attempts - 1:
                 print(f"    judge call failed after {attempts} attempts ({type(e).__name__}); "
@@ -296,26 +314,36 @@ It is NOT a genuine blend if it merely:
       radioactive solar system" = a solar system that happens to be radioactive).
 
 Now judge this blend:
-Input concept 1: '{u}'
-Input concept 2: '{v}'
+Input 1 (u): '{u}'
+Input 2 (v): '{v}'
 Blend concept: '{concept}'
-Claimed generic space (shared schema): '{generic_space}'
-Structure of the blend (ordered triples): {structure}
+Generic space (claimed shared schema): '{generic_space}'
+Structure (each triple tagged "u", "v", or "emergent"): {structure}
 
-Decide independently:
-1. GENERIC SPACE: is '{generic_space}' a real, SPECIFIC schema that both '{u}' and '{v}' genuinely
-   instantiate -- NOT a conjunction of one property from each, and NOT vacuous ("both exist", "both
-   involve change")?
-2. DOUBLE-SCOPE: do BOTH inputs contribute organizing structure (relations/roles) to the blend, rather
-   than one input merely supplying properties or acting as an adjective on the other?
-A genuine blend needs BOTH. The blend need NOT be a real/existing thing and MAY assert properties false
-of either input -- that is allowed and does not affect this judgment.
+The blend need NOT be a real/existing thing and MAY assert properties false of either input -- that is allowed. Decide the following independently:
+1. GENERIC SPACE (generic_ok): is '{generic_space}' a REAL, specific schema that BOTH '{u}' and '{v}' genuinely instantiate -- not vacuous ("both exist", "both involve change"), and not a one-from-each conjunction?
+2. COHERENT (coherent): do the triples together describe a single, coherent new concept -- not two lists of properties placed side by side?
+3. TAGS: verify each triple's tag. A "u" triple must be organizing structure genuinely from '{u}'; a "v" triple genuinely from '{v}'; an "emergent" triple must be true of the BLEND but of NEITHER '{u}' alone NOR '{v}' alone (a property already true of one input is inherited, not emergent). Ignore any triple whose tag is wrong.
+4. SCOPE (scope): using only the correctly-tagged structure, classify the fusion: 1 = single-scope (only ONE input contributes organizing structure); 2 = double-scope (BOTH inputs contribute organizing structure); 3 = double-scope emergent (double-scope, AND at least one genuine "emergent" triple).
 Return valid JSON only, exactly:
-{{ "explanation": "string", "generic_space_ok": true or false, "double_scope": true or false, "valid": true or false }}"""
+{{ "explanation": "string", "generic_ok": true or false, "coherent": true or false, "scope": 1 or 2 or 3 }}"""
+
+
+def format_tagged_structure(triples: list, tags: list | None) -> str:
+    """Render the blend structure with each triple's provenance tag, as the judge prompt expects
+    (``(head, rel, tail)  [u|v|emergent]``). Without the tags the judge cannot verify them or assign
+    the double-scope score Q_bl."""
+    tags = tags or []
+    lines = []
+    for i, tr in enumerate(triples):
+        tag = tags[i] if i < len(tags) and tags[i] else "?"
+        h, r, t = (list(tr) + ["", "", ""])[:3]
+        lines.append(f"  ({h}, {r}, {t})  [{tag}]")
+    return "\n".join(lines) if lines else "  (none)"
 
 
 async def judge_blend_fusion(client, model: str, u: str, v: str, concept: str,
-                             generic_space: str, structure: list) -> dict | None:
+                             generic_space: str, structure: list, tags: list | None = None) -> dict | None:
     """Task-specific blend judge J_Bl: genuine double-scope conceptual fusion of u,v.
 
     The genuine-blend form (both inputs project organizing structure; real, non-conjunction generic
@@ -324,8 +352,8 @@ async def judge_blend_fusion(client, model: str, u: str, v: str, concept: str,
     """
     prompt = BLEND_FUSION_JUDGE_PROMPT.format(
         u=u, v=v, concept=concept or "(unnamed)", generic_space=generic_space or "(none given)",
-        structure=format_path(structure))
-    raw = await _ask(client, model, prompt, max_tokens=800)
+        structure=format_tagged_structure(structure, tags))
+    raw = await _ask(client, model, prompt, max_tokens=3000)   # reasoning judge (gpt-oss) needs room
     return _extract_json(raw) if raw else None
 
 
@@ -440,6 +468,17 @@ def _majority(votes: list) -> tuple:
     return verdict, agree
 
 
+def _majority_val(votes: list) -> tuple:
+    """Most-common non-None value (mode) + agreement fraction. For ORDINAL/categorical votes such as
+    the Q_bl scope in {1,2,3}, where _majority's bool() coercion (any nonzero -> True) would be wrong."""
+    from collections import Counter
+    v = [x for x in votes if x is not None]
+    if not v:
+        return None, None
+    val, cnt = Counter(v).most_common(1)[0]
+    return val, cnt / len(v)
+
+
 async def panel_factuality_batch(client, models: list, paths: list) -> list:
     """Per-path factuality by panel: each triple is majority-voted across judges. list[list[bool]|None]."""
     per_judge = await asyncio.gather(*[judge_factuality_batch(client, m, paths) for m in models])
@@ -463,15 +502,73 @@ async def panel_analogy(client, models: list, u: str, v: str, p1: list, p2: list
     return _majority([o.get("valid") if o else None for o in outs])
 
 
-async def panel_blend_fusion(client, models: list, u: str, v: str, concept: str,
-                             generic_space: str, structure: list) -> dict:
-    """Majority-voted blend-fusion verdict: valid / generic_space_ok / double_scope (+ agreement)."""
-    outs = await asyncio.gather(*[judge_blend_fusion(client, m, u, v, concept, generic_space, structure)
-                                  for m in models])
+# --- Analogy INVENTION judge: emergent creativity (coherence + validity of the invented concept) -----
+ANALOGY_INVENTION_JUDGE_PROMPT = """You are judging an ANALOGY that invents a new concept by projecting structure across a mapping.
+
+You are given two aligned paths (position i of path_a corresponds to position i of path_b), a "projected" source concept, an "invention" name, and a "projection": a list of (source, image) triple pairs.
+path_a: {path_a}
+path_b: {path_b}
+projected: {projected}
+invention: {invention}
+projection:
+{projection}
+
+Decide two things independently:
+1. VALID (valid): is the invention a genuine projection through the mapping? All must hold: (a) each "source" triple is factually true of the "projected" concept in its own domain; (b) each "image" carries its "source" across the mapping -- same relationship, every entity replaced by its counterpart under the path alignment (path_a[i] corresponds to path_b[i]), with any new counterparts used consistently; (c) the invention is NOVEL to the target domain -- not already an established concept there.
+2. COHERENT (coherent): do the "image" triples together describe a single, sensible new concept, not a disjointed list?
+
+Return valid JSON only, exactly:
+{{ "explanation": "string", "valid": true or false, "coherent": true or false }}"""
+
+
+def _fmt_projection(projection) -> str:
+    if not isinstance(projection, list):
+        return "  (none)"
+    lines = [f"  {p.get('source')} -> {p.get('image')}" for p in projection if isinstance(p, dict)]
+    return "\n".join(lines) if lines else "  (none)"
+
+
+async def judge_analogy_invention(client, model: str, path_a: list, path_b: list, projected: str,
+                                  invention: str, projection: list) -> dict | None:
+    """Emergent-creativity judge for the analogy invention: is it a genuine, novel projection (valid),
+    and does it cohere into one concept (coherent)?"""
+    prompt = ANALOGY_INVENTION_JUDGE_PROMPT.format(
+        path_a=format_path(path_a), path_b=format_path(path_b),
+        projected=projected or "(none)", invention=invention or "(unnamed)",
+        projection=_fmt_projection(projection))
+    raw = await _ask(client, model, prompt, max_tokens=3000)   # reasoning judge (gpt-oss) needs room
+    return _extract_json(raw) if raw else None
+
+
+async def panel_analogy_invention(client, models: list, path_a: list, path_b: list, projected: str,
+                                  invention: str, projection: list) -> dict:
+    """Majority-voted invention verdict: valid (J^val), coherent (J^coh), + agreement."""
+    outs = await asyncio.gather(*[
+        judge_analogy_invention(client, m, path_a, path_b, projected, invention, projection)
+        for m in models])
     valid, agree = _majority([o.get("valid") if o else None for o in outs])
-    return {"valid": valid, "agreement": agree,
-            "generic_space_ok": _majority([o.get("generic_space_ok") if o else None for o in outs])[0],
-            "double_scope": _majority([o.get("double_scope") if o else None for o in outs])[0]}
+    coherent = _majority([o.get("coherent") if o else None for o in outs])[0]
+    return {"valid": valid, "coherent": coherent, "agreement": agree,
+            # per-judge raw output (explanation + verdicts), persisted so nothing is ever re-judged.
+            "judges": [{"model": m, **(o or {})} for m, o in zip(models, outs)]}
+
+
+async def panel_blend_fusion(client, models: list, u: str, v: str, concept: str,
+                             generic_space: str, structure: list, tags: list | None = None) -> dict:
+    """Majority-voted blend verdict: generic_ok (utility J^gen), coherent (J^coh), scope (Q_bl in {1,2,3}),
+    plus agreement. Backward-compat keys (generic_space_ok / double_scope / valid) are derived from scope
+    so existing score.py reads keep working until they adopt `scope` directly."""
+    outs = await asyncio.gather(*[judge_blend_fusion(client, m, u, v, concept, generic_space, structure, tags)
+                                  for m in models])
+    generic_ok, agree = _majority([o.get("generic_ok") if o else None for o in outs])
+    coherent = _majority([o.get("coherent") if o else None for o in outs])[0]
+    scope = _majority_val([o.get("scope") if o else None for o in outs])[0]
+    double = (scope in (2, 3)) if scope is not None else None
+    return {"generic_ok": generic_ok, "coherent": coherent, "scope": scope, "agreement": agree,
+            "generic_space_ok": generic_ok, "double_scope": double,
+            "valid": (bool(generic_ok) and double) if double is not None else None,
+            # per-judge raw output (explanation + verdicts), persisted so nothing is ever re-judged.
+            "judges": [{"model": m, **(o or {})} for m, o in zip(models, outs)]}
 
 
 async def panel_emergent_count(client, models: list, artifact: str, parts: list, inferences: list) -> int:

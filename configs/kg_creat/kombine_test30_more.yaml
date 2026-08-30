@@ -1,0 +1,18 @@
+# Kombine test30 expansion: 4 more diverse models at 30/task, appended to the test30 responses
+# (resume-safe: skips gpt-5-mini + sonnet-4.5 already done). Default reasoning effort, traces saved.
+upstream_dir: data/kg_creat/kombine_test30/prompts
+output_dir: data/kg_creat/kombine_test30/responses
+modes: [baseline, analogy, blending]
+eval:
+  temperatures: [0.9]
+  n_samples: 1
+  max_tokens: 1600
+concurrency: 8
+reasoning:
+  exclude: false
+budget_usd: 12.0
+models:
+  - deepseek/deepseek-chat
+  - google/gemini-3.7-flash
+  - meta-llama/llama-3.3-70b-instruct
+  - x-ai/grok-4.6

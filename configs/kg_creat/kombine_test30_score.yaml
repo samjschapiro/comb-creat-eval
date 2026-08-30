@@ -1,0 +1,12 @@
+# Test30 scoring VALIDATION: single cheap judge (gpt-oss-120b) to test the full loop end-to-end.
+# Real run swaps in the 3-judge panel. Run WITHOUT LLM_BASE_URL (paid OpenRouter judges + MLX embeddings).
+upstream_dir: data/kg_creat/kombine_test30/responses
+output_dir: data/kg_creat/kombine_test30/scores
+judge:
+  enabled: true
+  models:
+    - openai/gpt-oss-120b
+  panel_open_ended: false
+  concurrency: 16
+embedding:
+  model: mlx-community/all-MiniLM-L6-v2-4bit

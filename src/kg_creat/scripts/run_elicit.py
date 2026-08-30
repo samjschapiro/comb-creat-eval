@@ -70,10 +70,11 @@ async def _run_one(async_client, sem, model_id, spec, max_tokens, temperature, s
     base = {**base, "temperature": temperature, "sample_idx": sample_idx}
     async with sem:
         try:
-            raw, reasoning_trace = await call_llm_async(
+            raw, reasoning_trace, usage = await call_llm_async(
                 async_client, messages=messages, model=model_id, temperature=temperature,
-                max_tokens=max_tokens, reasoning=reasoning, capture_reasoning=True)
+                max_tokens=max_tokens, reasoning=reasoning, capture_reasoning=True, capture_usage=True)
             base["reasoning"] = reasoning_trace   # saved for analysis (also present when content is empty)
+            base["usage"] = usage                 # actual billed tokens {in, out} -> cost ledger
             if raw is None:
                 return {**base, "raw_response": None, "paths": [], "n_paths": 0,
                         "parse_success": False, "api_error": "null content"}
@@ -87,7 +88,8 @@ async def _run_one(async_client, sem, model_id, spec, max_tokens, temperature, s
                     items = []
                 else:
                     items = [{"paths": [blend["structure"].triples], "inferences": blend["emergent"],
-                              "concept": blend["concept"], "generic_space": blend["generic_space"]}]
+                              "concept": blend["concept"], "generic_space": blend["generic_space"],
+                              "tags": blend["tags"]}]
                 flat = [it["paths"][0] for it in items]
                 return {**base, "raw_response": raw, "items": items,
                         "paths": flat, "n_paths": len(flat), "n_items": len(items),
@@ -100,7 +102,9 @@ async def _run_one(async_client, sem, model_id, spec, max_tokens, temperature, s
             flat = [p.triples for it in items for p in it["paths"]]
             result = {**base, "raw_response": raw,
                       "items": [{"paths": [p.triples for p in it["paths"]],
-                                 "inferences": it["inferences"]} for it in items],
+                                 "inferences": it["inferences"],
+                                 **{k: it[k] for k in ("projected", "invention", "projection") if k in it}}
+                                for it in items],
                       "paths": flat, "n_paths": len(flat), "n_items": len(items),
                       "parse_success": len(items) > 0, "api_error": None}
             if mode == "analogy":
@@ -113,7 +117,7 @@ async def _run_one(async_client, sem, model_id, spec, max_tokens, temperature, s
 
 
 async def run_model(async_client, sem, model_id, specs, max_tokens, temperatures, n_samples,
-                    reasoning, output_dir):
+                    reasoning, output_dir, config_name=""):
     model_dir = output_dir / model_id_to_key(model_id)
     model_dir.mkdir(parents=True, exist_ok=True)
     responses_path = model_dir / "responses.json"
@@ -133,10 +137,24 @@ async def run_model(async_client, sem, model_id, specs, max_tokens, temperatures
     responses_path.write_text(json.dumps(results, indent=2, default=str))
     n_ok = sum(1 for r in results if r["parse_success"])
     n_api = sum(1 for r in results if r["api_error"])
+    # Actual billed tokens (reasoning tokens included in "out") -> persistent cost ledger. Only fresh
+    # (non-skipped) runs reach here, so re-running a completed model never double-counts spend.
+    in_tok = sum((r.get("usage") or {}).get("in", 0) for r in results)
+    out_tok = sum((r.get("usage") or {}).get("out", 0) for r in results)
+    n_trace = sum(1 for r in results if r.get("reasoning"))
     (model_dir / "summary.json").write_text(json.dumps({
         "model_id": model_id, "n_prompts": len(specs), "temperatures": temperatures,
         "n_samples": n_samples, "n_draws": len(draws), "n_parsed": n_ok,
-        "n_api_fail": n_api, "elapsed_seconds": round(time.time() - t0, 1)}, indent=2))
+        "n_api_fail": n_api, "in_tokens": in_tok, "out_tokens": out_tok,
+        "n_reasoning_traces": n_trace, "elapsed_seconds": round(time.time() - t0, 1)}, indent=2))
+    try:
+        from src.kg_creat.cost_ledger import record
+        e = record("elicit", model_id, len(results), in_tok, out_tok, config=config_name,
+                   note=f"parsed={n_ok}/{len(draws)} api_fail={n_api} traces={n_trace}")
+        cost_str = f"${e['cost_usd']:.4f}" if e["cost_usd"] is not None else "unpriced"
+        print(f"    [ledger] {model_id}: {in_tok:,}+{out_tok:,} tok -> {cost_str}  (traces={n_trace}/{len(draws)})")
+    except Exception as ex:  # noqa: BLE001
+        print(f"    [ledger] record failed: {ex}")
     print(f"    done in {time.time()-t0:.1f}s — parsed={n_ok}/{len(draws)} api_fail={n_api}")
     return results
 
@@ -206,7 +224,7 @@ async def main(config_path, overwrite=False, debug=False):
             reasoning_here, mt = None, max_tokens
             print(f"\n{model_id}  (already done)")
         results = await run_model(async_client, sem, model_id, specs, mt, temperatures, n_samples,
-                                  reasoning_here, output_dir)
+                                  reasoning_here, output_dir, config_name=Path(config_path).stem)
         summaries.append({"model_id": model_id, "n": len(results)})
 
     (output_dir / "run_summary.json").write_text(json.dumps(summaries, indent=2))

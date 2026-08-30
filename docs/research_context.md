@@ -87,13 +87,17 @@ in `04_drat.tex`. Utility-gate aggregator ablation
 
 ### kg_creat (active; venue TBD — reframed 2026-06-04)
 
-**Current (2026-08-22): "Kombine."** Now a three-task combinatorial-creativity benchmark
-(association / analogy / blending) over a **flat curated domain-balanced entity pool** (the
-CREATE-style seed-BFS graph was dropped — person-biased and unused, since the model connects from
-its own knowledge). Each artifact is scored on four criteria — utility, surprise, originality,
-emergent creativity. First pilot: factual validity discriminates models cleanly; blending
-underperforms (arbitrary anchors rarely admit a 2nd sense) and emergent creativity is not yet a
-discriminating signal (judge too lenient). A jsPsych human-generation study is built. See
+**Current (2026-08-30): "Kombine."** A three-task combinatorial-creativity benchmark
+(association / analogy / blending) over a **flat curated domain-balanced entity pool**. The task
+formalism is now unified under a projection operator — analogy invents `M[Φ]`; a blend fuses two
+inputs via two selective projections into a shared **generic space `g`**. Each artifact is scored on
+utility, surprise, and originality (**pool-relative embedding distance**), and — for analogy/blending
+only — emergent creativity kept as **separate** dimensions (coherence + validity/scope), never
+aggregated. The elicitation + scoring code was realigned to this formalism, judge explanations are
+persisted per record, and a persistent per-phase/model **cost ledger** tracks all spend. First
+multi-model run: **6 frontier/open models × 30 items/task, 100% parse**, scores discriminate
+(grok-4.6 tops utility); total spend **$10.53**, dominated by heavy reasoning models (grok-4.6 alone
+$5.43). A jsPsych human-generation study is built to the same structure. See
 `docs/tracks/kg_creat/progress.md`. (Older framing below.)
 
 Re-purposes the **comb_eval / Comb-Creat** task setup (constrained labeled-

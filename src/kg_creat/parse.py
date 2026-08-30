@@ -165,7 +165,13 @@ def parse_items(raw_response: str | None, path_keys: tuple[str, ...],
         inferences = ([str(x).strip() for x in raw_inf
                        if isinstance(x, (str, int, float)) and str(x).strip()]
                       if isinstance(raw_inf, list) else [])
-        out.append({"paths": paths, "inferences": inferences})
+        item = {"paths": paths, "inferences": inferences}
+        # Analogy carries its invented concept + the projection that builds it -- the emergent-creativity
+        # signal that scoring judges; preserve these fields verbatim when the model emits them.
+        for extra in ("projected", "invention", "projection"):
+            if extra in el:
+                item[extra] = el[extra]
+        out.append(item)
     return out
 
 
@@ -196,16 +202,30 @@ def parse_blend(raw_response: str | None) -> dict | None:
         obj = salv[0] if salv else None
     if not isinstance(obj, dict):
         return None
-    structure = _coerce_path(obj.get("structure"))
-    if structure is None:
+    # Schema: structure is a list of {"triple": [h, r, t], "from": "u"|"v"|"emergent"}. Extract the
+    # triples (one EmittedPath) and keep the per-triple provenance tags -- the "emergent" tags and the
+    # u/v coverage feed the double-scope quality score Q_bl. Tolerates a bare triple with no tag.
+    raw_struct = obj.get("structure")
+    triples: list[tuple[str, str, str]] = []
+    tags: list[str] = []
+    if isinstance(raw_struct, list):
+        for it in raw_struct:
+            if isinstance(it, dict):
+                tr, tag = it.get("triple"), str(it.get("from") or "").strip().lower()
+            elif isinstance(it, list):
+                tr, tag = it, ""
+            else:
+                continue
+            if isinstance(tr, list) and len(tr) == 3 and all(str(x).strip() for x in tr):
+                triples.append(tuple(str(x).strip() for x in tr))
+                tags.append(tag if tag in ("u", "v", "emergent") else "")
+    if not triples:
         return None
-    raw_emergent = obj.get("emergent")
-    emergent = ([str(x).strip() for x in raw_emergent
-                 if isinstance(x, (str, int, float)) and str(x).strip()]
-                if isinstance(raw_emergent, list) else [])
+    structure = EmittedPath(triples=triples)
+    emergent = [" ".join(t) for t, tag in zip(triples, tags) if tag == "emergent"]
     return {"concept": str(obj.get("concept") or "").strip(),
             "generic_space": str(obj.get("generic_space") or "").strip(),
-            "structure": structure, "emergent": emergent}
+            "structure": structure, "tags": tags, "emergent": emergent}
 
 
 def parse_paths(raw_response: str | list | None) -> list[EmittedPath]:

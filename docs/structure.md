@@ -47,7 +47,8 @@ src/
 │   ├── regime_b.py             # shared structure-mapping predicates (analogy + single-anchor blending)
 │   ├── diversity.py            # set-level diversity D over M-resamples (per temperature; all + valid)
 │   ├── embed.py                # local MLX MiniLM embeddings (novelty R)
-│   ├── scoring.py, parse.py (truncation salvage), aggregate.py
+│   ├── scoring.py, parse.py (new blend {triple,from} schema + tags), aggregate.py
+│   ├── cost_ledger.py          # persistent per-phase/model USD ledger (data/kg_creat/cost_ledger.jsonl)
 │   ├── vendor/create/          # vendored CREATE scorer (author-cleared)
 │   └── scripts/                # sample_flat (flat curated pool — no BFS; current), build_gc/sample_bundles (legacy seed-BFS), run_elicit, score (+emergent judge), make_pass2, rejudge, compute_diversity, datasheet, plot_*/fig_*, *_review
 └── plot_twist/                 # active track (TwistBench: transformational creativity via plot twists)
@@ -69,6 +70,7 @@ src/
         ├── judge_reliability.py, grm_irt.py, bayes_grm_jrt.py  # inter-judge reliability
         ├── cost_log.py                # OpenRouter spend → docs/tracks/plot_twist/cost_log.md
         ├── build_website_data.py      # JSON payload for the project page (website/twistbench/)
+        ├── build_human_eval_stimuli.py  # length-matched human-vs-top-LLM pairs -> jsPsych stimuli
         └── make_tc_barplot.py         # TC scorecard (Overall + 2×2 facet grid) + breakdown figures
 
 configs/
@@ -92,6 +94,7 @@ configs/
     ├── realism.yaml                 # realism judge (single cheap judge, durable)
     ├── tc.yaml                      # scorecard / TC composite (4-facet, human STRONG-only)
     ├── annotate.yaml, dsi_quality.yaml
+    ├── human_eval_stimuli.yaml      # human-vs-top-LLM preference study: pair selection + length matching
     ├── judge_reliability.yaml, grm_irt.yaml, bayes_grm_jrt.yaml
     └── pd_manifest.json             # human gold stories + twist_type (STRONG/BORDERLINE/NONE)
 

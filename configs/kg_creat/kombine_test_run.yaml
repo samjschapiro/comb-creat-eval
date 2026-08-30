@@ -1,0 +1,15 @@
+# Kombine TEST RUN -- validate the current pipeline end-to-end (new prompts + schema + cost ledger)
+# on ONE cheaper frontier reasoning model before the full multi-model run. PAID (OpenRouter).
+upstream_dir: data/kg_creat/kombine_v2/prompts
+output_dir: data/kg_creat/kombine_test/responses
+modes: [baseline, analogy, blending]
+eval:
+  temperatures: [0.9]
+  n_samples: 1
+  max_tokens: 1600            # reasoning models auto-get an 8x cap (12800) for their thinking budget
+concurrency: 8
+reasoning:
+  exclude: false             # default reasoning effort; RETURN the trace so it is SAVED (we pay for the tokens regardless)
+budget_usd: 8.0              # hard cap; gpt-5-mini is a reasoning model, so actual spend > the flat estimate
+models:
+  - openai/gpt-5-mini

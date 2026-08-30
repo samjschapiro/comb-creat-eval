@@ -485,3 +485,46 @@ Two fixes landed while validating:
    (prompt_id, temperature, sample_idx) throughout score.py. Needed for the temp ablations.
 
 First benchmark run pinned to **temp 0.9 only** (temp ablations deferred).
+
+### 2026-08-30 — task formalism finalized, scoring pipeline realigned, cost ledger, first multi-model run
+
+Big multi-day session (08-28 → 30). Full log: `docs/logs/2026-08-30/1002_kombine_scoring_pipeline_ledger_and_test30.md`.
+
+**Task formalism (paper, pushed).** Unified analogy/blending under a projection operator `M[·]`:
+analogy invents `h := M[Φ]`; blend `c' := M_u[Φ_u] ∪ M_v[Φ_v] ∪ Δ` with two independent selective
+projections. **Generic space `g` reintroduced as a textual schema** (not a triple set). Blend base
+dimensions all score `g`: utility `U_bl = J^gen` (both inputs instantiate `g`), surprise
+`S_bl = ½(d(u,g)+d(v,g))`, originality `O_bl = ρ_g(g)`. Double-scope quality `Q_bl ∈ {1,2,3}`.
+**Emergent creativity is kept as SEPARATE dimensions** (originality/coherence/validity-or-scope), never
+aggregated. **Originality = pool-relative embedding distance ρ (kNN)** everywhere, replacing
+inverse-frequency. Restored `tab:scoring`; minimalized `tab:examples`; judge-prompt appendix (F +
+analogy-invention + blend `J^gen`/`J^coh`/`Q_bl`), all user-approved.
+
+**Prompts (`prompts.py`).** Analogy asks for ONE analogy; blend example → cyborg; no mid-sentence line
+breaks; reward bullets map 1:1 to scoring dims (blend surprise instruction dropped); brevity rule (short
+recognizable entities, no CamelCase/dash coinages); blend structure capped at 4–6 triples.
+
+**Scoring realigned (`judge.py`/`parse.py`/`score.py`/`run_elicit.py`/`dat_eval/llm.py`).** `parse_blend`
+reads `{triple, from}` + keeps u/v/emergent tags; `parse_items` keeps analogy invention/projection.
+Blend judge → `generic_ok`/`coherent`/`scope` (**must** get the tagged structure); new analogy-invention
+judge. Surprise made paper-exact per task; analogy utility = structural (relation-identity) ∧ factual
+(dropped the old semantic judge). **Judge explanations + verdicts now persisted** (`blend_judges`,
+`invention_judges`). Bugs fixed: `_majority` bool-coerced ordinal `Q_bl` (→ `_majority_val`); reasoning
+judge (`gpt-oss-120b`) truncation at low `max_tokens` (→ 3000).
+
+**Cost ledger (`src/kg_creat/cost_ledger.py`, NEW).** Persistent `data/kg_creat/cost_ledger.jsonl`
+(gitignored), actual token usage → USD, by phase/model; `python -m src.kg_creat.cost_ledger`. Wired into
+elicit + score.
+
+**Run + findings.** 6 models × 30/task (gpt-5-mini, sonnet-4.5, deepseek-chat, gemini-3.7-flash,
+llama-3.3-70b, grok-4.6): **100% parse**, blend triples in 4–6, concise entities; scores discriminate
+(grok-4.6 tops utility). **Cost $10.53 total** (elicit $10.08 + score $0.45); **grok-4.6 alone $5.43**
+(870k reasoning tokens) — reasoning models dominate cost and the flat budget-cap misses it.
+
+**Human study** (sibling repo `llm_creativity_mech_interp/.../kombine_generation/`) redesigned to the new
+structure: ID page; per-task intros; association = path of full triples; analogy = a full triple per
+domain per row (path_a | path_b) + invention triple below a divider; blend example → cyborg;
+"I can't think of one" opt-out.
+
+**Next:** persist factuality-judge explanations; swap single judge → 3-panel; add an actual-cost stop to
+`run_elicit` + per-model effort caps before a full ~30-model × 70-item run.

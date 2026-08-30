@@ -9,6 +9,9 @@ clean head-to-head with CREATE (the no-constraint baseline is a controlled CREAT
 
 Regime-B (analogy / blending) are our own ``(u, v)``-only open tasks; they reuse the shared
 entity/dedup rules and the same output contract but not the many-paths diversity guidance.
+
+Prompt strings keep each paragraph and each bullet on a single physical line (no mid-sentence
+line breaks): a newline in a triple-quoted string is a literal newline in the model-facing text.
 """
 
 from __future__ import annotations
@@ -17,7 +20,7 @@ _OUTPUT_BLOCK = """Output requirements (strict):
 - Return ONLY a JSON object wrapped in <answer> and </answer> tags. No other text.
 - The JSON object's keys are integers starting from 1, one key per path (NOT a "paths" wrapper).
 - Each path's value is a list of triples; each triple is [head entity, relationship, tail entity].
-- Relationship strings must be 1-3 words. Use canonical, disambiguated entity names.
+- Relationship strings must be 1-3 words. Keep every entity SHORT and CONCRETE: a few plain, recognizable words naming a real concept -- not a descriptive phrase, a clause, an invented CamelCase compound, or words joined by a dash into a coinage (write "petition threshold", never "PetitionThreshold" or "petition-threshold").
 - If you cannot find a valid path, return an empty JSON object.
 
 Required format (follow this shape exactly):
@@ -29,16 +32,17 @@ _OUTPUT_BLOCK_DIVERGENT = _OUTPUT_BLOCK.replace(
     '"2": [["Entity A", "relation", "Entity D"], ["Entity D", "relation", "Entity C"]]',
     '"2": [["Entity A", "relation", "Entity D"], ["Entity D", "relation", "Entity E"]]')
 
-# All three tasks emit a SET of items (as many as the model can produce), each item a JSON object.
-# Every item carries an "inferences" field: the true statements the WHOLE artifact licenses that its
-# parts do not -- the emergent-creativity signal we score. Wording is deliberately explicit so the
-# emitted structure is controllable and unambiguous to the parser.
+# Each item is a JSON object whose emergent-creativity signal is a NEW structured concept the model
+# builds and annotates with its mechanism: analogy emits a "projected"/"invention"/"projection" (a
+# concept invented by carrying source structure across the mapping), and blending emits a "structure"
+# whose triples are each tagged "u"/"v"/"emergent" (which input each projects from, or the fused
+# structure belonging to neither). Wording is deliberately explicit so the emitted structure is
+# controllable and unambiguous to the parser.
 _OUTPUT_BLOCK_ASSOC = """Output requirements (strict):
 - Return ONLY a JSON array wrapped in <answer> and </answer> tags. No other text, before or after.
 - Each element of the array is ONE connection: an object with a single key, "path".
-- "path" is a list of triples; each triple is [head entity, relationship, tail entity] forming a
-  continuous chain from the first entity to the last.
-- Relationship strings must be 1-3 words. Use canonical, disambiguated entity names.
+- "path" is a list of triples; each triple is [head entity, relationship, tail entity] forming a continuous chain from the first entity to the last.
+- Relationship strings must be 1-3 words. Keep every entity SHORT and CONCRETE: a few plain, recognizable words naming a real concept -- not a descriptive phrase, a clause, an invented CamelCase compound, or words joined by a dash into a coinage (write "petition threshold", never "PetitionThreshold" or "petition-threshold").
 - List one object per connection. To stop, simply end the array -- do not pad with weak connections.
 - If you can find no valid connection, return an empty array: <answer>[]</answer>.
 
@@ -46,51 +50,40 @@ Required format (follow this shape exactly):
 <answer>[{"path": [["A", "r1", "B"], ["B", "r2", "C"]]}, {"path": [["A", "s1", "D"], ["D", "s2", "C"]]}]</answer>"""
 
 _OUTPUT_BLOCK_ANALOGY = """Output requirements (strict):
-- Return ONLY a JSON array wrapped in <answer> and </answer> tags. No other text, before or after.
-- Each element of the array is ONE analogy: an object with keys "path_a", "path_b", and "inferences".
-- "path_a" and "path_b" are each a list of triples; each triple is [head entity, relationship, tail entity].
-- Within one analogy, "path_a" and "path_b" MUST have the same number of triples and the IDENTICAL
-  relationship word at every position (only the entities differ).
-- "inferences" is a list of TRANSFERRED INFERENCES: each a factual, checkable claim about ONE of the
-  two concepts that you would believe only because the shared structure holds -- a property known of
-  one concept, carried across the mapping to predict something about the other. NOT a restatement that
-  the two are analogous. Use [] if none.
-- Relationship strings must be 1-3 words. Use canonical, disambiguated entity names.
-- List one object per analogy. To stop, simply end the array -- do not pad with weak analogies.
+- Return ONLY a JSON array wrapped in <answer> and </answer> tags, containing EXACTLY ONE analogy object. No other text, before or after.
+- The single array element is the analogy: an object with keys "path_a", "path_b", "projected", "invention", and "projection".
+- "path_a" and "path_b" are each a list of triples [head, relationship, tail] that establish the mapping. They MUST have the same number of triples and the IDENTICAL relationship word at every position (only the entities differ); the entity at position i of "path_a" corresponds to the entity at position i of "path_b".
+- "projected" is a real concept from ONE domain (the source) that has NO counterpart in the other -- the thing you carry across the mapping to INVENT something new (e.g. "vaccine").
+- "invention" is a short name for the NEW concept the projection creates in the other (target) domain.
+- "projection" is a list of {"source": [triple], "image": [triple]} pairs. Each "source" is a true triple about the "projected" concept in its own domain; each "image" carries it across the mapping onto the invention -- same relationship, entities replaced by their counterparts. The invention need NOT already exist (that is the point), but every "image" must be a coherent projection of its "source".
+- Relationship strings must be 1-3 words. Keep every entity SHORT and CONCRETE: a few plain, recognizable words naming a real concept -- not a descriptive phrase, a clause, an invented CamelCase compound, or words joined by a dash into a coinage (write "petition threshold", never "PetitionThreshold" or "petition-threshold").
+- The array must contain exactly one analogy object.
 - If you can find no valid analogy, return an empty array: <answer>[]</answer>.
 
 Required format (follow this shape exactly):
-<answer>[{"path_a": [["A", "r1", "B"], ["B", "r2", "C"]], "path_b": [["D", "r1", "E"], ["E", "r2", "F"]], "inferences": ["A true statement the mapping predicts about A or D."]}]</answer>"""
+<answer>[{"path_a": [["A", "r1", "B"], ["B", "r2", "C"]], "path_b": [["D", "r1", "E"], ["E", "r2", "F"]], "projected": "X", "invention": "Y", "projection": [{"source": ["X", "r", "B"], "image": ["Y", "r", "E"]}]}]</answer>"""
 
 _OUTPUT_BLOCK_BLENDING = """Output requirements (strict):
-- Return ONLY a SINGLE JSON object wrapped in <answer> and </answer> tags. No other text, before or after.
-  (Produce ONE blend, not a list.)
-- The object has exactly these four keys: "concept", "generic_space", "structure", "emergent".
+- Return ONLY a SINGLE JSON object wrapped in <answer> and </answer> tags. No other text, before or after. (Produce ONE blend, not a list.)
+- The object has exactly these three keys: "concept", "generic_space", "structure".
 - "concept": a short name for the single blended concept you create by fusing the two inputs.
-- "generic_space": ONE phrase naming the shared schema both inputs fit -- what makes them fusable. Be
-  specific; a vacuous schema ("both exist", "both involve change") does not count as a blend.
-- "structure": a list of triples [head, relationship, tail] describing the blend. It must draw on BOTH
-  inputs (some triples carry structure from one input, some from the other). The head is usually the blend.
-- "emergent": a list of short statements, each true of the BLEND but true of NEITHER input on its own.
-  Give every one you can justify; use [] if the blend licenses none. Do not pad with restatements.
-- Relationship strings must be 1-3 words. Use canonical, disambiguated entity names.
+- "generic_space": ONE phrase naming the shared schema both inputs fit -- what makes them fusable. Be specific; a vacuous schema ("both exist", "both involve change") does not count as a blend.
+- "structure": a list of objects {"triple": [head, relationship, tail], "from": TAG} describing the blend, where TAG is EXACTLY one of: "u" (this structure is projected from the FIRST input), "v" (this structure is projected from the SECOND input), or "emergent" (this structure is true of the BLEND but of NEITHER input alone; it arises only from running the fusion -- this is the point of the task, so elaborate the blend to find it). A genuine (double-scope) blend has structure tagged BOTH "u" AND "v", plus at least one "emergent".
+- Relationship strings must be 1-3 words; the head is usually the blend. Keep every entity SHORT and CONCRETE: a few plain, recognizable words naming a real concept -- not a descriptive phrase, a clause, an invented CamelCase compound, or words joined by a dash into a coinage (write "voting claims", never "voting-claims"). State the generic space briefly and in plain language too, even when the underlying schema is abstract.
 
 Required format (follow this shape exactly):
-<answer>{"concept": "computer virus", "generic_space": "a self-replicating agent that spreads through a host", "structure": [["computer virus", "infects", "a computer"], ["computer virus", "is a", "program"], ["computer virus", "spreads between", "machines"]], "emergent": ["its contagion is unbound from geography, infecting machines worldwide at nearly the same instant"]}</answer>"""
+<answer>{"concept": "cyborg", "generic_space": "a functional system whose parts can fail and be replaced", "structure": [{"triple": ["cyborg", "can", "die"], "from": "u"}, {"triple": ["cyborg", "has", "components"], "from": "v"}, {"triple": ["cyborg", "replaces components", "without healing downtime"], "from": "emergent"}]}</answer>"""
 
 # CREATE's rules/dedup scaffolding (K.3), shared across modes.
 _ENTITY_RULES = """Rules and quality constraints:
-- Entities may be concrete or abstract (people, works, places, species, events, ideas,
-  phenomena, theories, etc.), but must be real and recognizable -- do not invent entities.
+- Entities may be concrete or abstract (people, works, places, species, events, ideas, phenomena, theories, etc.), but must be real and recognizable -- do not invent entities.
 - Do not ask follow-up questions; respond using the best available factual knowledge.
 - Temporal connections are allowed (relationships may span different historical periods).
-- Disambiguation is required: use canonical names and qualifiers where necessary
-  (e.g., 'Michael Jordan (basketball)').
+- Disambiguation is required: use canonical names and qualifiers where necessary (e.g., 'Michael Jordan (basketball)').
 
 Deduplication:
 - Do not repeat the same path, and do not repeat the same entity within a single path.
-- Prefer paths that are meaningfully different (different intermediate nodes and/or
-  relationships), not trivial rephrasings."""
+- Prefer paths that are meaningfully different (different intermediate nodes and/or relationships), not trivial rephrasings."""
 
 
 def _ex(constraint: dict, key: str = "exemplars", n: int = 4) -> str:
@@ -136,21 +129,14 @@ def _regime_a_prompt(spec: dict) -> str:
     clause_block = f"\n{clause}\n" if clause else "\n"
     return f"""Query: What are different ways in which '{u}' is connected to '{v}'?
 
-Task: Identify how these two entities are connected by producing as MANY DISTINCT connection
-paths as you can. A connection path is a sequence of factual triples (head, relationship, tail) forming
-a continuous chain: consecutive triples share an entity, the first triple's head is '{u}', and the last
-triple's tail is '{v}'.
+Task: Identify how these two entities are connected by producing as MANY DISTINCT connection paths as you can. A connection path is a sequence of factual triples (head, relationship, tail) forming a continuous chain: consecutive triples share an entity, the first triple's head is '{u}', and the last triple's tail is '{v}'.
 
 We reward three things in every connection:
 - TRUE: every triple is factually correct.
-- REMOTE: the intermediate concepts sit in domains far from the two endpoints and from each other --
-  reach across distant fields rather than taking the first obvious link.
-- UNCOMMON: build the path from rare, specific concepts and relations, not generic ones most
-  people would give.
+- REMOTE: the intermediate concepts sit in domains far from the two endpoints and from each other -- reach across distant fields rather than taking the first obvious link.
+- UNCOMMON: build the path from rare, specific concepts and relations, not generic ones most people would give.
 
-Produce as MANY DISTINCT connections as you can, most surprising first -- do not stop at a fixed number;
-list every genuine connection you can find, and make them as different from one another as possible
-(different intermediate entities and relations, spanning different domains).
+Produce as MANY DISTINCT connections as you can, most surprising first -- do not stop at a fixed number; list every genuine connection you can find, and make them as different from one another as possible (different intermediate entities and relations, spanning different domains).
 {clause_block}
 {_ENTITY_RULES}
 
@@ -159,32 +145,22 @@ list every genuine connection you can find, and make them as different from one 
 
 def _analogy_prompt(spec: dict) -> str:
     u, v = spec["u_label"], spec["v_label"]
-    return f"""Task: You are given two concepts: '{u}' and '{v}'. Find as MANY analogies between them
-as you can. In each analogy, '{u}' plays a role in its domain analogous to the role '{v}' plays in its
-domain, through a shared relational structure.
+    return f"""Task: You are given two concepts: '{u}' and '{v}'. Build the single best analogy between them, and use it to INVENT a new concept in one of the two domains.
 
-We reward four things in every analogy:
-- TRUE: every triple is factually correct, and the mapping is a genuine structural correspondence.
-- REMOTE: the two domains are as distant as possible.
-- UNCOMMON: use rare, specific roles and relations, not the obvious ones.
-- GENERATIVE: state the TRANSFERRED INFERENCES the analogy licenses -- a factual, checkable claim about
-  '{v}' that follows from carrying a known property of '{u}' across the shared structure (and vice
-  versa about '{u}'), which you would believe only because the mapping holds. Each must be a real fact
-  about one concept, NOT a restatement that '{u}' and '{v}' are analogous.
+An analogy aligns the two domains through a shared relational structure -- '{u}' plays a role in its domain analogous to the role '{v}' plays in its. You then use that alignment to invent something new: carry a concept from one domain across the mapping into the other.
 
-Each analogy is exactly TWO paths that share an identical relation sequence:
+We reward four things, matching exactly how the analogy is scored:
+- UTILITY: every triple in "path_a" and "path_b" is factually correct, and the two paths share an IDENTICAL relation sequence -- a genuine structural correspondence, not a loose resemblance.
+- SURPRISE: the aligned entities in corresponding roles of the two paths are as semantically DISTANT as possible, so the mapping travels far across domains.
+- ORIGINALITY: build the analogy from RARE, uncommon entities and relations, far from the obvious ones others would give.
+- EMERGENT CREATIVITY (the invention): pick a real "projected" concept from ONE domain that has NO counterpart in the other, and carry its structure across the mapping to INVENT a new concept in the other domain -- rewarded for being novel, internally coherent, and a genuine projection through the mapping (the invention need NOT already exist -- inventing it is the point, as the solar system did for the atom).
+
+Each analogy is TWO paths that share an identical relation sequence:
 - "path_a": factual triples describing '{u}' within its own domain, beginning at '{u}'.
 - "path_b": factual triples describing '{v}' within its own domain, beginning at '{v}'.
-CRITICAL (holds within each analogy): the "path_a" and "path_b" paths must use the EXACT SAME
-relationship word at every position -- if "path_a" relations are [r1, r2, r3], "path_b" relations must
-be the identical words [r1, r2, r3], in the same order. Do NOT paraphrase or substitute synonyms (e.g.
-if "path_a" uses 'awards', "path_b" must also use 'awards', not 'grants'). Only the ENTITIES differ.
-Use disjoint, recognizable, canonically-named entities that play corresponding roles, and do not repeat an
-entity within a path.
+CRITICAL: "path_a" and "path_b" must use the EXACT SAME relationship word at every position (only the entities differ), so that position i of "path_a" corresponds to position i of "path_b". Do NOT paraphrase or substitute synonyms (e.g. if "path_a" uses 'awards', "path_b" must also use 'awards', not 'grants'). Use disjoint, recognizable, canonically-named entities, and do not repeat an entity within a path.
 
-Produce as MANY DISTINCT analogies as you can, most surprising first -- do not stop at a fixed number;
-give every genuine analogy you can find, and make them as different from one another as possible
-(different relation sequences, different domains). Stop only when you can find no further genuine analogy.
+Produce exactly ONE analogy -- the single most surprising, genuine analogy you can build, together with its invention.
 
 {_OUTPUT_BLOCK_ANALOGY}"""
 
@@ -201,38 +177,21 @@ def _blending_prompt(spec: dict) -> str:
     u, v = spec["u_label"], spec["v_label"]
     return f"""Task: You are given TWO concepts: '{u}' and '{v}'. FUSE them into a SINGLE new concept, then describe the structure this fusion generates.
 
-What a genuine blend is (the FORM). A real blend fuses two concepts into ONE new concept in which BOTH
-inputs contribute ORGANIZING STRUCTURE -- their relations and roles combine -- so the blend runs as a
-single coherent concept with emergent structure belonging to neither input.
-  Example -- "computer virus" (biology + software): biology's frame (a self-replicating agent that
-  infects a host) AND computing's frame (a program that spreads across machines) BOTH organize it;
-  emergent structure of neither input: its contagion is unbound from physical space, so it can infect
-  nearly every computer at once -- unlike a biological virus, whose spread is limited by geography.
-  (Note what does NOT count as emergent here: "it can be quarantined" or "an antivirus fights it like an
-  immune system" are already true of the biological input, so they are inherited, not emergent.)
-Do NOT instead (a) list one property from each input joined by "and" ("harnesses energy AND is
-therapeutic"), or (b) treat one input as a mere adjective on the other ("a radioactive solar system").
-Both inputs must do organizing work.
+What a genuine blend is (the FORM). A real blend fuses two concepts into ONE new concept in which BOTH inputs contribute ORGANIZING STRUCTURE -- their relations and roles combine -- so the blend runs as a single coherent concept with emergent structure belonging to neither input.
+Example -- "cyborg" (organism + machine): the organism frame (a living system of tissue that can die) AND the machine frame (a system of components that can be swapped and rebooted) BOTH organize it; emergent structure of neither input: its components can be surgically replaced without the downtime a body needs to let tissue heal -- neither a pure organism (which must heal) nor a pure machine (which has no tissue) works this way.
+(Note what does NOT count as emergent here: "it can be rebooted" is already true of the machine input and "it can die" of the organism, so they are inherited, not emergent.)
+Do NOT instead (a) list one property from each input joined by "and" ("harnesses energy AND is therapeutic"), or (b) treat one input as a mere adjective on the other ("a radioactive solar system"). Both inputs must do organizing work.
 
-Build the blend in three moves:
-1. GENERIC SPACE: name the shared schema both '{u}' and '{v}' instantiate -- the abstract
-   structure that lets them fuse (for virus + software: "a self-replicating agent that spreads through
-   a host"). Be specific; "both exist"/"both involve change" is vacuous, and a one-from-each conjunction
-   does not count.
-2. STRUCTURE: describe the single blended concept as triples in which the relations/roles of BOTH
-   inputs combine into one coherent concept -- not two lists of inherited properties side by side.
-3. EMERGENT: state the concept's EMERGENT STRUCTURE -- properties or behaviours true of the BLEND but
-   true of NEITHER '{u}' nor '{v}' on its own. This is the point of the task.
+Build the blend in two moves:
+1. GENERIC SPACE: name the shared schema both '{u}' and '{v}' instantiate -- the abstract structure that lets them fuse (for organism + machine: "a functional system whose parts can fail and be replaced"). Be specific; "both exist"/"both involve change" is vacuous, and a one-from-each conjunction does not count.
+2. STRUCTURE: describe the single blended concept as triples, and TAG each triple by where its structure comes from -- "u" (projected from '{u}'), "v" (projected from '{v}'), or "emergent" (true of the BLEND but of NEITHER '{u}' nor '{v}' alone -- structure that appears only when you RUN the fusion forward). A genuine blend has triples tagged BOTH "u" and "v", and at least one "emergent".
 
-We reward four things:
-- COHERENT: a genuine double-scope fusion with a real, specific generic space -- not a mashup.
-- REMOTE: '{u}' and '{v}' are distant, so the fusion is surprising.
-- UNCOMMON: build from rare, specific structure, not the generic properties anyone would list.
-- EMERGENT: give every emergent property you can justify. The test for each, applied literally: it must
-  be true of the blend, yet true of NEITHER '{u}' alone NOR '{v}' alone. Drop anything already true of
-  one input, or that merely restates that they were combined.
+We reward three things:
+- UTILITY: the generic space is a REAL, specific schema that BOTH '{u}' and '{v}' genuinely instantiate -- not vacuous ("both exist") and not a one-from-each conjunction.
+- ORIGINALITY: the generic space is UNCOMMON -- a shared schema few would think to name, not the first obvious one.
+- EMERGENT CREATIVITY: a genuine DOUBLE-SCOPE fusion in which BOTH inputs contribute organizing structure, developed into a coherent, original blended concept with EMERGENT structure true of the BLEND but of NEITHER '{u}' alone NOR '{v}' alone (tag these "emergent"). Merely restating that the two were combined does not count.
 
-Produce exactly ONE blend of '{u}' and '{v}' -- the best fusion you can build, developed as richly as possible. Use recognizable, canonically-named entities in the structure.
+Produce exactly ONE blend of '{u}' and '{v}'. Keep the structure tight: give the 4-6 triples that best showcase the blend's most important properties (at least one from each input, plus at least one emergent), not an exhaustive dump. Use recognizable, canonically-named entities in the structure.
 
 {_OUTPUT_BLOCK_BLENDING}"""
 
@@ -245,23 +204,16 @@ def _anagram_prompt(spec: dict) -> str:
     real word), so this task is judge-free.
     """
     u = spec["u_label"]
-    return f"""Task: You are given ONE word or name: '{u}'. Rearrange ALL of its letters -- using every
-letter exactly once, ignoring spaces and capitalization -- into a NEW, real word or phrase (an
-ANAGRAM of '{u}') whose MEANING is as DIFFERENT and DISTANT from '{u}' as possible.
+    return f"""Task: You are given ONE word or name: '{u}'. Rearrange ALL of its letters -- using every letter exactly once, ignoring spaces and capitalization -- into a NEW, real word or phrase (an ANAGRAM of '{u}') whose MEANING is as DIFFERENT and DISTANT from '{u}' as possible.
 
-An anagram uses exactly the same letters as the original, in a different order. Examples (same
-letters, unrelated meaning):
+An anagram uses exactly the same letters as the original, in a different order. Examples (same letters, unrelated meaning):
   "stressed" -> "desserts"   (a feeling -> a food)
   "Elvis"    -> "levis"      (a musician -> a jeans brand)
   "listen"   -> "tinsel"     (perception -> a decoration)
 
-BE CREATIVE: the further the anagram's meaning is from '{u}' -- a completely different domain -- the
-better. Every anagram must (1) be a real word or phrase, and (2) use EXACTLY the letters of '{u}':
-the same letters, the same number of each, none added or dropped.
+BE CREATIVE: the further the anagram's meaning is from '{u}' -- a completely different domain -- the better. Every anagram must (1) be a real word or phrase, and (2) use EXACTLY the letters of '{u}': the same letters, the same number of each, none added or dropped.
 
-Produce as MANY DISTINCT valid anagrams as you can find, most semantically distant first -- do not stop
-at a fixed number; list every one you can. If '{u}' genuinely has no valid anagram, return an empty JSON
-object.
+Produce as MANY DISTINCT valid anagrams as you can find, most semantically distant first -- do not stop at a fixed number; list every one you can. If '{u}' genuinely has no valid anagram, return an empty JSON object.
 
 Output requirements (strict):
 - Return ONLY a JSON object wrapped in <answer> and </answer> tags. No other text.

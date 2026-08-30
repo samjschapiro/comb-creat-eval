@@ -60,13 +60,13 @@ def _artifact_elements(triple_lists, u, v) -> set:
     return els
 
 
-def build_item_frequency(model_dirs) -> dict:
-    """Per-item element frequency p_a(e): fraction of RESPONSES to an item (a prompt/pair) whose
-    artifacts contain element e, pooled across all models (the psychometric item-bank analogue,
-    \\citealt Stevenson2022). Each (model, draw) response counts once; empty responses are skipped."""
-    from collections import Counter, defaultdict
-    total = Counter()
-    elem = defaultdict(Counter)
+def build_item_element_pool(model_dirs, embed) -> dict:
+    """Per-item pool of EMBEDDED non-anchor elements: ``{prompt_id: {surface: vector}}``, pooled across
+    all responses/models. An artifact element's originality is its embedding distance to nearest
+    neighbors in this pool (pool-relative novelty), replacing inverse-frequency so that synonyms --
+    which are close in embedding space -- no longer game the score. Empty responses are skipped."""
+    from collections import defaultdict
+    surfaces = defaultdict(set)
     for md in model_dirs:
         try:
             responses = json.loads((md / "responses.json").read_text())
@@ -76,29 +76,38 @@ def build_item_frequency(model_dirs) -> dict:
             paths = r.get("paths") or []
             if not any(paths):
                 continue
-            pid = r["prompt_id"]
-            total[pid] += 1
-            for e in _artifact_elements(paths, r.get("u_label"), r.get("v_label")):
-                elem[pid][e] += 1
-    return {pid: {e: c / total[pid] for e, c in ec.items()} for pid, ec in elem.items()}
+            for _kind, s in _artifact_elements(paths, r.get("u_label"), r.get("v_label")):
+                surfaces[r["prompt_id"]].add(s)
+    return {pid: {s: embed(s) for s in surfs} for pid, surfs in surfaces.items()}
 
 
-def score_originality(recs, responses_by_prompt, item_freq):
-    """Item-specific originality per artifact: mean inverse frequency p_a(e)^-1 over its non-anchor
-    elements E_a (Table 3). Written onto the artifact's head record (per path for association, the
-    even pair-head for analogy, the single structure record for blending)."""
+def score_originality(recs, responses_by_prompt, item_pool, k: int = 5):
+    """Item-specific originality per artifact: mean pool-relative embedding distance rho_a(e) over the
+    artifact's non-anchor elements E_a, where rho_a(e) is e's mean cosine distance to its k nearest
+    neighbors among all responses' elements to the SAME item. Written onto the artifact's head record
+    (per path for association, the even pair-head for analogy, the single structure record for blending)."""
     rec_index = {_draw_key(r) + (r["path_idx"],): r for r in recs}
     for r in responses_by_prompt.values():
-        freq = item_freq.get(r["prompt_id"], {})
+        pool = item_pool.get(r["prompt_id"], {})
         u, v = r.get("u_label"), r.get("v_label")
         stride = 2 if r["mode"] == "analogy" else 1
         for idx, it in enumerate(r.get("items") or []):
             head = rec_index.get(_draw_key(r) + (idx * stride,))
             if head is None:
                 continue
-            ea = _artifact_elements(it["paths"], u, v)
-            vals = [1.0 / freq[e] for e in ea if freq.get(e, 0) > 0]
-            head["originality"] = (sum(vals) / len(vals)) if vals else None
+            surfs = {s for (_k, s) in _artifact_elements(it["paths"], u, v)}
+            rhos = []
+            for s in surfs:
+                vec = pool.get(s)
+                if vec is None:
+                    continue
+                dists = sorted(scoring.cosine_distance(vec, other)
+                               for os, other in pool.items() if os != s)
+                if not dists:
+                    continue
+                kk = min(k, len(dists))
+                rhos.append(sum(dists[:kk]) / kk)
+            head["originality"] = (sum(rhos) / len(rhos)) if rhos else None
 
 
 def _draw_key(r: dict) -> tuple:
@@ -143,16 +152,30 @@ def score_free(response: dict, embed) -> list[dict]:
         rec["well_formed"] = wf
         rec["wf_reason"] = reason
         if response["mode"] == "blending":
-            # Blending surprise is the mean semantic distance from each fused input to the blend's
-            # GENERIC SPACE g -- a proxy for how far the shared schema abstracts away from the
-            # concrete inputs (docs/tracks/kg_creat/blending_fusion.md).
+            # Blend surprise S_bl = mean distance from each fused input to the blend's GENERIC SPACE g
+            # -- how far the shared schema abstracts away from the concrete inputs.
             a, b = base["u_label"], base["v_label"]
             g = ((response.get("items") or [{}])[0].get("generic_space") or "").strip()
             rec["R"] = (float((scoring.cosine_distance(embed(a), embed(g)) +
                                scoring.cosine_distance(embed(b), embed(g))) / 2)
                         if a and b and g else None)
+        elif response["mode"] == "analogy":
+            # Analogy surprise S_an = mean d(a_i, b_i) over the ALIGNED entities of path_a and path_b
+            # (i.e. cross-path, not within-path). Computed on the head (even) record; the partner
+            # path_b record carries no surprise of its own.
+            if pi % 2 == 0 and pi + 1 < len(response["paths"]):
+                ea = EmittedPath(response["paths"][pi]).entities
+                eb = EmittedPath(response["paths"][pi + 1]).entities
+                m = min(len(ea), len(eb))
+                dd = [scoring.cosine_distance(embed(ea[i]), embed(eb[i])) for i in range(m)]
+                rec["R"] = (sum(dd) / len(dd)) if dd else None
+            else:
+                rec["R"] = None
         else:
-            rec["R"] = scoring.novelty_R(p, embed, unit="triple")
+            # Association surprise S_as = mean distance between ADJACENT entities along the path.
+            ents = p.entities
+            dd = [scoring.cosine_distance(embed(ents[i]), embed(ents[i + 1])) for i in range(len(ents) - 1)]
+            rec["R"] = (sum(dd) / len(dd)) if dd else None
         recs.append(rec)
     return recs
 
@@ -217,11 +240,13 @@ async def run_judges(recs: list[dict], responses_by_prompt: dict, models: list, 
         async with sem:
             out = await J.panel_blend_fusion(client, models, rec["u_label"], rec["v_label"],
                                              item.get("concept", ""), item.get("generic_space", ""),
-                                             rec["triples"])
-        rec["semantic_sat"] = out.get("valid")
-        rec["generic_space_ok"] = out.get("generic_space_ok")
-        rec["double_scope"] = out.get("double_scope")
+                                             rec["triples"], item.get("tags"))
+        rec["semantic_sat"] = out.get("generic_ok")   # blend UTILITY U_bl = generic-space judge J^gen
+        rec["generic_ok"] = out.get("generic_ok")
+        rec["blend_coherent"] = out.get("coherent")   # emergent-creativity coherence J^coh (kept separate)
+        rec["scope"] = out.get("scope")               # emergent-creativity quality Q_bl in {1,2,3} (separate)
         rec["judge_agreement"] = out.get("agreement")
+        rec["blend_judges"] = out.get("judges")       # per-judge explanations + raw verdicts (persisted)
 
     tasks, skipped, fact_recs = [], 0, []
     for rec in recs:
@@ -240,8 +265,6 @@ async def run_judges(recs: list[dict], responses_by_prompt: dict, models: list, 
             tasks.append(categorical(rec))
         elif rec["mode"] in ("exclusion", "inclusion", "inclusion_rare", "ordering"):
             tasks.append(relation_con(rec))
-        elif rec["mode"] == "analogy" and rec["path_idx"] % 2 == 0:  # judge each pair (head = even idx)
-            tasks.append(analogy(rec))
         elif rec["mode"] == "blending":  # one blend per prompt: judge its single structure
             tasks.append(blending(rec))
     for i in range(0, len(fact_recs), FACT_BATCH):   # batched factuality: ~10x fewer calls
@@ -270,7 +293,21 @@ async def run_emergent_judge(recs, responses_by_prompt, models, concurrency, pan
         head = rec_index.get(draw + (head_idx,))
         if head is None:
             return
-        paths, inferences = item["paths"], item["inferences"]
+        paths = item["paths"]
+        if mode == "analogy":
+            # Emergent creativity = coherence + validity of the INVENTION (a genuine projection through
+            # M): judged from the aligned paths + the projected concept, invention name, and projection.
+            async with sem:
+                verdict = await J.panel_analogy_invention(
+                    client, open_models, paths[0], paths[1],
+                    item.get("projected", ""), item.get("invention", ""), item.get("projection", []))
+            head["invention"] = item.get("invention")
+            head["invention_valid"] = verdict["valid"]
+            head["invention_coherent"] = verdict["coherent"]
+            head["judge_agreement_invention"] = verdict["agreement"]
+            head["invention_judges"] = verdict.get("judges")   # per-judge explanations + verdicts (persisted)
+            return
+        inferences = item["inferences"]
         if not inferences:
             head["emergent_count"] = 0
             return
@@ -282,15 +319,10 @@ async def run_emergent_judge(recs, responses_by_prompt, models, concurrency, pan
                     client, models, u_label, v_label, item.get("concept", ""), paths[0], inferences)
             head["emergent_inferences"] = inferences
             return
-        if mode == "analogy":
-            src, tgt = paths[0], paths[1]
-            artifact = f"{u_label}'s side: {J.format_path(src)}\n{v_label}'s side: {J.format_path(tgt)}"
-            parts = [f"{u_label} side alone: {J.format_path(src)}",
-                     f"{v_label} side alone: {J.format_path(tgt)}"]
-        else:  # association: parts are the individual links
-            path = paths[0]
-            artifact = J.format_path(path)
-            parts = [f"Link {i + 1}: {J.format_path([t])}" for i, t in enumerate(path)]
+        # association: parts are the individual links
+        path = paths[0]
+        artifact = J.format_path(path)
+        parts = [f"Link {i + 1}: {J.format_path([t])}" for i, t in enumerate(path)]
         async with sem:
             head["emergent_count"] = await J.panel_emergent_count(client, open_models, artifact, parts, inferences)
         head["emergent_inferences"] = inferences
@@ -375,19 +407,18 @@ def finalize_regime_b(recs: list[dict], embed):
                 continue
             p0 = head.get("triples")
             p1 = partner.get("triples") if partner else None
-            ok, reason = RB.analogy_structural_ok(p0, p1)
+            ok, reason = RB.analogy_structural_ok(p0, p1)   # includes relations_match = I[r_i==q_i]
             fact = list(head.get("factual") or []) + (list(partner.get("factual") or []) if partner else [])
-            sem = head.get("semantic_sat")
             head["pair_idx"] = i // 2
             head["pair_structural_ok"], head["pair_structural_reason"] = ok, reason
+            # Analogy UTILITY U_an = structural (relation-identity) AND factual. No separate semantic
+            # judge -- the invention judge scores emergent creativity, not utility.
             if not ok:
                 head["pair_sat"], head["pair_channel"] = False, "structural"
-            elif not fact or not all(fact):
-                head["pair_sat"], head["pair_channel"] = False, "factual"
-            elif sem is False:
-                head["pair_sat"], head["pair_channel"] = False, "semantic"
-            elif sem is None:
+            elif not fact:
                 head["pair_sat"], head["pair_channel"] = None, "unjudged"
+            elif not all(fact):
+                head["pair_sat"], head["pair_channel"] = False, "factual"
             else:
                 head["pair_sat"], head["pair_channel"] = True, "ok"
 
@@ -424,10 +455,11 @@ async def main(config_path, overwrite=False, debug=False):
     print(f"Scoring {len(model_dirs)} model(s); judge_enabled={judge_enabled} "
           f"(panel: {', '.join(judge_models)})")
 
-    # Item-specific originality needs element frequencies pooled across ALL models, so build the
-    # per-item table once, up front, before scoring any single model.
-    item_freq = build_item_frequency(model_dirs)
-    print(f"Built item-frequency table over {len(item_freq)} items (for originality).")
+    # Item-specific originality needs the embedded element pool across ALL models, so build the
+    # per-item pool once, up front, before scoring any single model.
+    item_pool = build_item_element_pool(model_dirs, embed)
+    print(f"Built embedded element pool over {len(item_pool)} items (for originality).")
+    J.reset_judge_usage()   # track actual judge token spend across all models -> cost ledger
 
     all_summaries = {}
     genuine_dist = defaultdict(list)   # mode -> [verified-genuine count per (model, prompt)]
@@ -445,7 +477,7 @@ async def main(config_path, overwrite=False, debug=False):
         recs = []
         for r in responses:
             recs.extend(score_free(r, embed))
-        score_originality(recs, by_prompt, item_freq)   # judge-free; item-specific inverse frequency
+        score_originality(recs, by_prompt, item_pool)   # judge-free; pool-relative embedding distance
         print(f"  {md.name}: {len(responses)} prompts, {len(recs)} paths (free scored)")
 
         if judge_enabled:
@@ -483,6 +515,14 @@ async def main(config_path, overwrite=False, debug=False):
         all_summaries[md.name] = summary
 
     (output_dir / "scores_summary.json").write_text(json.dumps(all_summaries, indent=2))
+
+    # Record scoring judge spend (actual token usage) to the persistent cost ledger, per judge model.
+    if judge_enabled and not bool(os.environ.get("LLM_BASE_URL")):
+        from src.kg_creat.cost_ledger import record
+        for jm, u in J.get_judge_usage().items():
+            e = record("score", jm, u["calls"], u["in"], u["out"], config=Path(config_path).stem)
+            cost = f"${e['cost_usd']:.4f}" if e["cost_usd"] is not None else "unpriced"
+            print(f"  [ledger] score {jm}: {u['calls']} calls, {u['in']:,}+{u['out']:,} tok -> {cost}")
 
     # Verified-genuine-count distribution per mode (combinatorial-scarcity check): how many
     # judge-passed combinations each (model, prompt) yielded. A pile-up at 0/1 => the items

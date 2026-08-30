@@ -1,0 +1,14 @@
+# Smoke test: 1 prompt per task on gpt-5-mini. Validates parse + usage + reasoning traces + ledger.
+upstream_dir: data/kg_creat/kombine_smoke/prompts
+output_dir: data/kg_creat/kombine_smoke/responses
+modes: [baseline, analogy, blending]
+eval:
+  temperatures: [0.9]
+  n_samples: 1
+  max_tokens: 1600
+concurrency: 3
+reasoning:
+  exclude: false             # default reasoning effort; return the trace so it is saved
+budget_usd: 2.0
+models:
+  - openai/gpt-5-mini
