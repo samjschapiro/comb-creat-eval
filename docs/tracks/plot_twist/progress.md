@@ -62,6 +62,120 @@ the page cannot drift from the run outputs. The human panel defaults to the 18 S
 (the set the leaderboard's human ceiling is computed on) with the other 17 vetted stories behind a
 toggle. The three hero buttons (paper/code/data) are still placeholders awaiting real URLs.
 
+**Human preference study (2026-08-24, built — not yet deployed):** a blinded pairwise forced choice
+that tests the headline claim (humans beat every LLM) against readers rather than the LLM judge
+panel. Each trial pairs one vetted-STRONG, realism-gated human gold story with one realism-gated,
+cleanly-finished `anthropic/claude-sonnet-4.5` story (rank 1 among LLMs); the participant reads both
+in full and gives a forced-choice preference plus 1-5 **surprise, coherence and realism** for each.
+Every item is worded from the judge prompts (`rubric_judge.py`, `run_realism.py`) rather than
+paraphrased, so human and automated ratings measure the same construct — in particular coherence is
+"does the earlier story still hold together after the reveal", not fair-play clue-planting, and
+items are kept short — the scale anchors carry the definition rather than a paragraph of
+instruction. Rating realism means the human data can check the gate, which is where the "breaking
+the world model" failure mode lives.
+
+**Markdown emphasis was a perfect authorship tell (found and fixed 2026-08-29).** The Gutenberg
+human texts mark emphasis with `_underscores_` (12 in the pair pool, no asterisks); sonnet-4.5 uses
+`*asterisks*` (31, no underscores) plus 4 `---` scene rules. Rendered as literal text — as they
+were — any participant noticing the difference could sort human from LLM with no errors, and raw
+markers read as unpolished machine output, biasing preference on its own. The experiment now
+renders both to `<em>` and rules to a `· · ·` break. **Re-check this whenever the stimulus set
+changes**, and note the same raw markers may be visible in the public story explorer
+(`website/twistbench/`).
+
+Stimuli are built by `src/plot_twist/scripts/build_human_eval_stimuli.py`
+(`configs/plot_twist/human_eval_stimuli.yaml`) from the website payload, so the study cannot drift
+from the run outputs. Every human story is **length-matched** to the nearest-length LLM story —
+length is both a visible authorship cue and a reading-effort confound — and pairs above a 1.35 ratio
+are dropped: **9 pairs survive, 8 of them matched within 3%**. The four 5k-20k-word human classics
+are excluded by the 3,200-word cap.
+
+The jsPsych 7.3.4 experiment lives in
+`llm_creativity_mech_interp/src/experiments/twistbench_preference/` (template-repo conventions;
+`js/stimuli-data.js` is generated). Reading is gated on scrolling to the end plus a dwell floor, and
+`read_ms` is recorded per story. **1 pair per participant, ~20-35 min** — price Prolific
+accordingly; with 9 pairs, N participants gives ~N/9 judgments per pair. `pairs_per_participant`
+lives in the config, and the participant-facing story counts and duration estimates are computed
+from the stimulus set, so the consent form and instructions cannot quote a stale number.
+
+**Open caveat:** the human gold stories are famous public-domain classics, so recognition is a live
+confound. The instructions ask people to answer honestly if they recognise one; if that needs
+measuring rather than tolerating, add a "have you read this before?" item to the judgment screen.
+The app runs end to end locally: `python3 server/serve.py` (add `--debug` to serve the walkthrough,
+with its skip-reading button, at a bare `/`) — stdlib only. It serves the study and stores
+sessions in SQLite through the same `POST /submitData` contract the deployed lambda uses, so the
+frontend is identical locally and in production. Three explicit entry paths — `?PROLIFIC_PID=...`
+(no ID screen), `?DEBUG=1` (no reading gate at all — Continue live immediately, no countdown,
+no scroll requirement — plus a fixed "Skip reading" button per story and raw data at the end), or neither (an **ID screen** where a non-Prolific participant types and confirms
+their own ID). Skipping sets `gate_skipped` on the story read, alongside `is_debug` on the session,
+so walked-through stories can never be mistaken for read ones. Note for anyone editing the layout:
+jsPsych sets `overflow: auto` on `.jspsych-display-element`, which silently neutralizes
+`position: sticky` — the gate hint is inline and the debug button is `position: fixed`. Saving happens on its own screen before
+the completion screen, which then states the outcome; the POST retries once and a copy goes to
+`localStorage` first, so a backend outage is visible rather than silent. Each session lands in three
+tables: `sessions` (raw payload), `judgments` (one row per pair), `reads` (one row per story, with
+`read_ms`).
+
+**Round 2 of reviewer feedback (2026-09-02, Roger Beaty + John Walkiewicz, jointly).** John timed
+the live preview at ~20 min, matching the app's own estimate. Four changes:
+1. **Instructions quiz removed** — they judged the task straightforward enough not to need one, and
+   it cost completion time. This retracts their own request from 08-31.
+2. **Ratings moved to immediately after each story** (order is now read A → rate A → check A →
+   read B → rate B → check B → prefer). Rating A only after B is read contaminates A with contrast
+   and recency. It also removes a problem from round 1: the comprehension options restated each
+   twist before any rating was given, and now they follow that story's ratings.
+3. **Task description broadened** — the instructions no longer enumerate every rating question,
+   just that there will be a few per story plus a final preference.
+4. **Comprehension distractors authored per story** (`configs/plot_twist/comprehension_items.json`,
+   18 stories × 4 options). Borrowed reveals from other stories carried the wrong characters and
+   setting, so a first-page skimmer could eliminate them; all four options now share the story's
+   own characters. The **correct option is authored too**, in the same voice — otherwise style
+   marks it. Distractors were written against the story TEXT, which caught an error in the
+   annotations: the reveal for `…t09__s01` says the sister never existed, but the story's memorial
+   wall confirms she was real and died. The browser gets opaque option ids only; the answer key
+   lives in `server/pairs.json` and the server scores it. The builder fails on any pool story
+   without an entry, and the name-stripping machinery from round 1 is gone (unnecessary once all
+   options share a story). **Samuel overruled** the reviewers' point 3 (drop the "plot twist"
+   framing): the framing stays, which keeps priming uniform across both stories rather than
+   leaving story A unprimed and story B primed.
+
+**Attention guardrails added 2026-08-31, after Roger Beaty reviewed the live preview.** He asked
+for (1) a short instructions quiz with feedback and (2) a check that people actually read the story.
+
+- **Instructions quiz** before the first story: 4 items (3 T/F + 1 MC) on task mechanics only —
+  forced choice, read to the end, surprise and fit rated separately, what they will be asked to do.
+  Mixed keying so acquiescence fails; wrong answers get an inline correction and a retry until all
+  four are right; `attempts` recorded. No item re-defines "surprising" or "realistic".
+- **Reading comprehension** immediately after each story (screen order: read A → check A → read B
+  → check B → judge): "which of these was revealed at the end?", correct = that story's `reveal`
+  annotation, distractors = reveals from stories outside the pair, drawn in one sample without
+  replacement so no option repeats across the pair's two items. **Character names are stripped from every option** — a name is learnable from page one,
+  so unstripped items catch non-readers but not skimmers. The builder now **fails** on any
+  capitalized word not classified in `CHARACTER_NAMES`/`NOT_A_NAME`, since inconsistent stripping
+  would itself cue the answer. Placement was moved from after-the-ratings to after-each-story at
+  Samuel's direction: the options restate each twist plainly, so this may lift coherence ratings
+  overall, but the treatment is identical for both stories and slot assignment is randomized, so it
+  is a level effect rather than a human-vs-LLM bias. Wrong answers gate nothing — stored as
+  `reads.comp_correct`, an exclusion criterion alongside `read_ms`; `/admin/comprehension` tallies.
+
+**Frontend published 2026-08-29 (preview only): https://schapiro.ai/twistbench/study/** — via
+`scripts/plot_twist/deploy_study.sh`, into the `study/` subdirectory of the project-page repo, so
+`/twistbench/` is untouched. No backend yet, so `DATA_SUBMISSION_URL` is empty off-localhost and the
+app says "nothing you do here is recorded" on the consent screen and at the end; the banner
+disappears once a real URL is wired in.
+
+**Client payload no longer carries authorship (2026-08-29).** `stimuli-data.js` used to ship
+`author_kind`, story titles and the judges' own scores — one view-source from breaking the blind on
+a public URL. The browser now gets `{id, words, text}` only; `serve.py` attaches authorship from
+`server/pairs.json`, which is never served. The deploy script hard-fails if `author_kind` reappears
+in the payload and excludes both `server/` and the README (which names the LLM source).
+
+Still to do: a backend (DataPipe/OSF is the fastest path for a static host; Vercel + submit-data
+lambda matches the other experiments — this machine has neither node/npm nor aws/sam installed),
+Prolific setup (`COMPLETION_URL` is still empty), and an analysis script for the returned JSON.
+With no server in the DataPipe path, authorship would be attached at analysis time by joining
+`story_id` against `data/plot_twist/human_eval/pairs.json`.
+
 The sections below document the earlier (superseded) method-paper framing and remain for history.
 
 ---

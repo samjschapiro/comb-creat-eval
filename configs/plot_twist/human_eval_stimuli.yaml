@@ -1,0 +1,35 @@
+# Build the stimulus file for the TwistBench human preference study.
+#
+# The study is a blinded pairwise forced choice: one human gold story vs one story by the
+# top-ranked LLM, read in full. This config selects the pair pool and writes it as the
+# jsPsych experiment's `js/stimuli-data.js`.
+#
+#   uv run python src/plot_twist/scripts/build_human_eval_stimuli.py \
+#       configs/plot_twist/human_eval_stimuli.yaml --overwrite
+
+# --- inputs (already-built website payload: prose + per-story judge scores) ---
+stories_index_path: "website/twistbench/data/stories_index.json"
+stories_dir: "website/twistbench/data/stories"
+pd_manifest_path: "configs/plot_twist/pd_manifest.json"
+# Authored comprehension items (4 options per story, correct one first). The builder
+# fails if any story in the pair pool is missing from this file.
+comprehension_items_path: "configs/plot_twist/comprehension_items.json"
+
+# --- the two sides of every pair ---
+llm_source_key: "anthropic-claude-sonnet-4-5"   # rank 2 overall, rank 1 among LLMs
+human_twist_type: "STRONG"                      # the vetted set the human ceiling is computed on
+require_gated: true                             # realism == 5; matches the headline metric
+
+# --- length control -------------------------------------------------------------
+# Length is a visible cue and drives reading time, so each human story is matched to the
+# nearest-length LLM story (greedy, without replacement) and pairs whose longer side
+# exceeds the shorter by more than max_length_ratio are dropped.
+max_words: 3200          # per story; excludes the four 5k-20k word human classics
+max_length_ratio: 1.35
+
+# --- what the participant does --------------------------------------------------
+pairs_per_participant: 1
+
+# --- outputs --------------------------------------------------------------------
+output_dir: "data/plot_twist/human_eval"
+experiment_dir: "/Users/schapiro/Desktop/Experiments/llm_creativity_mech_interp/src/experiments/twistbench_preference"

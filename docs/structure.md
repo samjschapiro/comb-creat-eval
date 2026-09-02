@@ -95,6 +95,7 @@ configs/
     ├── tc.yaml                      # scorecard / TC composite (4-facet, human STRONG-only)
     ├── annotate.yaml, dsi_quality.yaml
     ├── human_eval_stimuli.yaml      # human-vs-top-LLM preference study: pair selection + length matching
+    ├── comprehension_items.json     # authored reading-check options (4 per pool story)
     ├── judge_reliability.yaml, grm_irt.yaml, bayes_grm_jrt.yaml
     └── pd_manifest.json             # human gold stories + twist_type (STRONG/BORDERLINE/NONE)
 
