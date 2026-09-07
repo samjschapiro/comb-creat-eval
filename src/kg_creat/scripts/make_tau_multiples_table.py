@@ -32,13 +32,14 @@ def render(d) -> str:
         r"\begin{table}[t]",
         r"\centering",
         r"\small",
-        r"\caption{\textbf{$\tau$-inventive multiples.} The share of co-response model pairs whose "
+        # caption text is machine-authored, so it ships inside \ai{} for the author to review
+        r"\caption{\ai{\textbf{$\tau$-inventive multiples.} The share of co-response model pairs whose "
         r"inventions re-use at least $\tau$ of each other's (relation, object) properties, over "
         f"{n_pairs:,} pairs of the {n_inv:,} inventions. "
         r"\emph{Same} and \emph{cross} are pairs of models from the same and different providers. "
         f"Properties are matched one-to-one at cosine $\\ge {cos_slot}$; the invented concept's own "
         r"name is excluded throughout. Blends carry more properties than analogy inventions "
-        r"(mean $5.0$ vs $2.6$), so a fixed $\tau$ is a stricter bar for analogy.}",
+        r"(mean $5.0$ vs $2.6$), so a fixed $\tau$ is a stricter bar for analogy.}}",
         r"\label{tab:tau_multiples}",
         r"\begin{tabular}{ccccccccc}",
         r"\toprule",
