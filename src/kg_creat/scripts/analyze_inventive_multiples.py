@@ -8,10 +8,16 @@ dropped), so what is compared is the properties asserted of the invention, not w
 For a pair of inventions (same task, same anchor pair):
 
   SHARED PROPERTIES -- greedily match each triple of one against an unused triple of the other; a pair
-                       counts as shared when their "relation object" texts are within TAU_SLOT.
-  MULTIPLE          -- at least K_SHARED shared properties AND the underlying abstraction also aligns
-                       (the projected source concept for analogy, the generic space for blending, at
-                       cosine >= TAU_CON). Both clauses are structure; neither is a label.
+                       counts as shared when their "relation object" texts are within COS_SLOT.
+  TAU-INVENTIVE     -- at least TAU shared properties AND the underlying abstraction also aligns
+  MULTIPLE             (the projected source concept for analogy, the generic space for blending, at
+                       cosine >= COS_CON). Both clauses are structure; neither is a label.
+
+TAU IS THE REPORTED AXIS, not a hidden constant. `tau_curve` gives the multiple rate for every tau the
+data supports, so the blending-vs-analogy gap can be read off at each strictness rather than at one
+chosen bar; the module-level TAU only says which point the prose quotes. The two COSINE bars
+(COS_SLOT for "same property", COS_CON for "same abstraction") are separate and stay fixed --
+they were calibrated from lexically-identical pairs and are not what tau varies.
 
 NOMINAL -- the coined names matching -- is computed but is NEVER an input. It is the independent check:
 under this definition only ~7% of same-name pairs qualify, so name convergence and structural
@@ -37,9 +43,11 @@ from src.kg_creat.embed import get_embedder
 NPZ = "data/kg_creat/kombine_test30/analysis/invention_vectors.npz"
 RESP = "data/kg_creat/kombine_test30/responses"
 OUT = "data/kg_creat/kombine_test30/analysis/inventive_multiples.json"
-TAU_SLOT = 0.58  # "relation object" cosine at which two models count as asserting the same property
-K_SHARED = 2     # properties two inventions must share to be a multiple ("the same properties", plural)
-TAU_CON = 0.50   # concept (phi / generic-space) cosine the abstraction clause requires
+COS_SLOT = 0.58  # "relation object" cosine at which two models count as asserting the same property
+TAU = 2     # the headline tau: a tau-inventive multiple re-uses >= TAU of the other invention's
+            # properties. The rate is reported as a FUNCTION of tau (see tau_curve); TAU only picks
+            # which point on that curve the prose quotes.
+COS_CON = 0.50   # concept (phi / generic-space) cosine the abstraction clause requires
 _PROV = ["openai", "anthropic", "google", "x-ai", "deepseek", "qwen", "z-ai", "meta-llama"]
 
 
@@ -122,21 +130,63 @@ def calibrate(pairs_all, tasks_of):
             "n_pairs": len(sel), "n_lexical": len(lex),
             "shared_lexical_mean": float(np.mean(lex)) if lex else float("nan"),
             "shared_nonmatch_mean": float(np.mean(non)) if non else float("nan"),
-            "shared_lexical_pct_ge_k": float(np.mean(np.asarray(lex) >= K_SHARED)) if lex else float("nan"),
-            "shared_nonmatch_pct_ge_k": float(np.mean(np.asarray(non) >= K_SHARED)) if non else float("nan"),
+            "shared_lexical_pct_ge_tau": float(np.mean(np.asarray(lex) >= TAU)) if lex else float("nan"),
+            "shared_nonmatch_pct_ge_tau": float(np.mean(np.asarray(non) >= TAU)) if non else float("nan"),
             "con_lexical_mean": float(np.mean(lexc)) if lexc else float("nan"),
             "con_nonmatch_mean": float(np.mean(nonc)) if nonc else float("nan"),
-            "con_frac_ge_tau_lexical": float(np.mean(np.asarray(lexc) >= TAU_CON)) if lexc else float("nan"),
-            "con_frac_ge_tau_nonmatch": float(np.mean(np.asarray(nonc) >= TAU_CON)) if nonc else float("nan"),
+            "con_frac_ge_cos_lexical": float(np.mean(np.asarray(lexc) >= COS_CON)) if lexc else float("nan"),
+            "con_frac_ge_cos_nonmatch": float(np.mean(np.asarray(nonc) >= COS_CON)) if nonc else float("nan"),
         }
     print("\nCALIBRATION (properties re-used; the name is reported against the criterion, never in it)")
     for s, c in out.items():
         print(f"  {s:9s} same-name n={c['n_lexical']:4d} mean shared={c['shared_lexical_mean']:.2f} "
-              f"({100*c['shared_lexical_pct_ge_k']:.0f}% reach {K_SHARED}) | other pairs "
-              f"mean={c['shared_nonmatch_mean']:.2f} ({100*c['shared_nonmatch_pct_ge_k']:.0f}%)")
-    print(f"  abstraction >= {TAU_CON}: same-name {100*out['pooled']['con_frac_ge_tau_lexical']:.0f}%"
-          f" vs other pairs {100*out['pooled']['con_frac_ge_tau_nonmatch']:.0f}%")
+              f"({100*c['shared_lexical_pct_ge_tau']:.0f}% reach {TAU}) | other pairs "
+              f"mean={c['shared_nonmatch_mean']:.2f} ({100*c['shared_nonmatch_pct_ge_tau']:.0f}%)")
+    print(f"  abstraction >= {COS_CON}: same-name {100*out['pooled']['con_frac_ge_cos_lexical']:.0f}%"
+          f" vs other pairs {100*out['pooled']['con_frac_ge_cos_nonmatch']:.0f}%")
     return out
+
+
+def tau_curve(pairs_all):
+    """The headline as a function of tau: what fraction of co-response pairs are tau-inventive
+    multiples, for every tau the data can support.
+
+    A tau-inventive multiple is a pair re-using >= tau of each other's properties AND agreeing on the
+    underlying abstraction (cosine >= COS_CON). tau = 1 is "one property in common"; raising tau makes
+    the criterion strictly stricter, so the curve is monotone non-increasing by construction. Reporting
+    the curve rather than a single tau is the point: the blending-vs-analogy gap should be visible at
+    every tau if it is real, rather than being an artifact of where the bar was placed.
+    """
+    n = len(pairs_all)
+    bl = [p for p in pairs_all if p["task"] == "blending"]
+    an = [p for p in pairs_all if p["task"] == "analogy"]
+    same = [p for p in pairs_all if p["same_provider"]]
+    cross = [p for p in pairs_all if not p["same_provider"]]
+    tau_max = max((p["shared"] for p in pairs_all), default=0)
+    rows = []
+    for tau in range(1, int(tau_max) + 1):
+        ok = lambda ps: [p for p in ps
+                         if p["shared"] >= tau and np.isfinite(p["cos_con"]) and p["cos_con"] >= COS_CON]
+        hit = ok(pairs_all)
+        if not hit:
+            break
+        pct = lambda sub, tot: (100.0 * len(sub) / len(tot)) if tot else float("nan")
+        rows.append({"tau": tau, "n": len(hit), "overall_pct": pct(hit, pairs_all),
+                     "blending_pct": pct(ok(bl), bl), "analogy_pct": pct(ok(an), an),
+                     "same_provider_pct": pct(ok(same), same), "cross_provider_pct": pct(ok(cross), cross)})
+    print("\nTAU-INVENTIVE MULTIPLES AS A FUNCTION OF TAU"
+          f"  (abstraction fixed at cosine >= {COS_CON}; properties matched at {COS_SLOT})")
+    print(f"  {'tau':>4}{'n pairs':>10}{'overall':>10}{'blending':>10}{'analogy':>10}"
+          f"{'same-prov':>11}{'cross-prov':>12}{'blend/analogy':>15}")
+    print("  " + "-" * 90)
+    for r in rows:
+        ratio = (r["blending_pct"] / r["analogy_pct"]) if r["analogy_pct"] > 0 else float("inf")
+        rs = f"{ratio:.1f}x" if np.isfinite(ratio) else "--"
+        print(f"  {r['tau']:>4}{r['n']:>10}{r['overall_pct']:>9.2f}%{r['blending_pct']:>9.2f}%"
+              f"{r['analogy_pct']:>9.2f}%{r['same_provider_pct']:>10.2f}%{r['cross_provider_pct']:>11.2f}%"
+              f"{rs:>15}")
+    print(f"  tau = {TAU} is the value quoted in the prose.")
+    return rows
 
 
 def sensitivity(pairs_all):
@@ -152,7 +202,7 @@ def sensitivity(pairs_all):
             hb = sum(1 for p in hit if p["task"] == "blending")
             ha = sum(1 for p in hit if p["task"] == "analogy")
             row.append((tc, 100*len(hit)/n, 100*hb/len(bl), 100*ha/len(an)))
-            grid.append({"k_shared": k, "tau_con": tc, "overall_pct": 100*len(hit)/n,
+            grid.append({"tau": k, "cos_con": tc, "overall_pct": 100*len(hit)/n,
                          "blending_pct": 100*hb/len(bl), "analogy_pct": 100*ha/len(an)})
         cells = "  ".join(f"tc={tc:.2f}: {o:.1f}/{b:.1f}/{a:.1f}" for tc, o, b, a in row)
         print(f"  k>={k}  {cells}")
@@ -214,7 +264,7 @@ def prepost():
             for a, b in itertools.combinations(idx, 2):
                 sh = shared_properties(SM[a], SM[b]); cc = float(CV[a] @ CV[b])
                 pairs.append((k, a, b, bool(_nn(names[a]) == _nn(names[b]) and _nn(names[a])),
-                              sh >= 1 and cc >= TAU_CON, sh >= K_SHARED and cc >= TAU_CON))
+                              sh >= 1 and cc >= COS_CON, sh >= TAU and cc >= COS_CON))
         tot = len(pairs)
         nclust, best = 0, 0
         for k, idx in groups.items():
@@ -260,7 +310,7 @@ def slot_texts(task, st):
             for q in st if q.get("image") and len(q["image"]) > 2]
 
 
-def shared_properties(A, B, tau=TAU_SLOT):
+def shared_properties(A, B, tau=COS_SLOT):
     """How many properties two inventions re-use, as a greedy one-to-one matching of their triples.
     One-to-one matters: without it a single generic property of A could match three of B's."""
     if not len(A) or not len(B):
@@ -309,32 +359,37 @@ def main():
     for i in range(len(names)):
         groups[(str(tk[i]), str(us[i]), str(vs[i]))].append(i)
 
-    # A multiple = at least K_SHARED re-used properties AND an aligned abstraction. An AND, not an OR,
+    # A multiple = at least TAU re-used properties AND an aligned abstraction. An AND, not an OR,
     # and the name is in neither clause: `nominal` is recorded only to be reported against the result.
     pairs = []
     for (task, u, v), idx in groups.items():
         for a, b in itertools.combinations(idx, 2):
             sh = shared_properties(SMAT[a], SMAT[b])
             cc = float(CV[a] @ CV[b]) if (concept[a] and concept[b]) else float("nan")
-            con = bool(np.isfinite(cc) and cc >= TAU_CON)
+            con = bool(np.isfinite(cc) and cc >= COS_CON)
             pairs.append({"task": task, "item": (u, v), "a": a, "b": b, "shared": sh, "cos_con": cc,
                           "nominal": bool(_nn(names[a]) == _nn(names[b]) and _nn(names[a])),
-                          "one_property": sh >= 1 and con, "structural": sh >= K_SHARED and con,
+                          "one_property": sh >= 1 and con, "structural": sh >= TAU and con,
                           "same_provider": _provider(mo[a]) == _provider(mo[b])})
 
     tot = len(pairs)
     print(f"inventions: {len(names)}  |  co-response model-pairs (same task + anchors): {tot}")
     levels = {}
-    for lvl in ("nominal", "one_property", "structural"):
+    # `one_property` and `structural` are the tau = 1 and tau = TAU points of the same curve; they are
+    # kept as named keys because downstream consumers read them, but the label says which tau it is.
+    for lvl, label in (("nominal", "nominal (name)"), ("one_property", "tau = 1"),
+                       ("structural", f"tau = {TAU}")):
         c = sum(p[lvl] for p in pairs)
-        levels[lvl] = {"count": c, "pct": 100*c/tot}
-        print(f"  {lvl:13s}: {c:5d}  ({100*c/tot:.1f}%)")
+        levels[lvl] = {"count": c, "pct": 100*c/tot, "tau": (1 if lvl == "one_property"
+                                                             else TAU if lvl == "structural" else None)}
+        print(f"  {label:15s}: {c:5d}  ({100*c/tot:.1f}%)")
     named_hit = [p for p in pairs if p["nominal"]]
     print(f"  (of the {len(named_hit)} pairs that coined the SAME NAME, "
           f"{100*np.mean([p['structural'] for p in named_hit]):.0f}% are multiples -- the name is not "
           f"an input, and it does not stand in for one)")
-    print(f"\nMultiple = >={K_SHARED} shared properties (matched at {TAU_SLOT}) AND abstraction "
-          f">= {TAU_CON}. Names excluded throughout.")
+    print(f"\nA tau-inventive multiple re-uses >= tau properties (matched at {COS_SLOT}) AND agrees on "
+          f"the abstraction (>= {COS_CON}).\nHeadline tau = {TAU}; the full curve over tau is below. "
+          f"Names are excluded throughout.")
 
     calib = calibrate(pairs, tk)
 
@@ -354,7 +409,7 @@ def main():
     # asserted of the invention often do not, so the compressed view of a cluster is its recurring
     # slots, not its names. The invention's own name is dropped from each triple (it is the subject of
     # all of them) and the remaining "relation object" text is embedded and grouped by an EXEMPLAR:
-    # repeatedly take the slot with the most distinct models within TAU_SLOT and remove that group.
+    # repeatedly take the slot with the most distinct models within COS_SLOT and remove that group.
     # Single-link would chain "builds ethical immunity" to "adjusts consent norms" through neighbours.
     # 0.58, not 0.62: at 0.62 a paraphrase like "splits politically along perfect cleavage planes"
     # (0.58 to "fractures along cleavage planes") fell just outside its own slot, so a model that had
@@ -376,7 +431,7 @@ def main():
         while alive:
             best, grp = None, None
             for i in alive:
-                g = {j for j in alive if S[i, j] >= TAU_SLOT}
+                g = {j for j in alive if S[i, j] >= COS_SLOT}
                 n = len({rows[j][0] for j in g})
                 if best is None or n > best:
                     best, grp = n, g
@@ -404,7 +459,7 @@ def main():
     def outsider_stats(comp, i):
         sh = max(shared_properties(SMAT[i], SMAT[j]) for j in comp)
         abs_ = max(float(CV[i] @ CV[j]) for j in comp) if concept[i] else float("nan")
-        ok_s, ok_a = sh >= K_SHARED, np.isfinite(abs_) and abs_ >= TAU_CON
+        ok_s, ok_a = sh >= TAU, np.isfinite(abs_) and abs_ >= COS_CON
         return {"shared": sh, "abs_cos": None if not np.isfinite(abs_) else round(abs_, 3),
                 "blocked_by": "abstraction" if ok_s and not ok_a else "properties" if ok_a and not ok_s
                 else "both"}
@@ -504,6 +559,7 @@ def main():
     print(f"  relation-label Jaccard: lexically-identical median {np.median(jac_lex):.2f} "
           f"(mean {np.mean(jac_lex):.2f}, n={len(jac_lex)}) vs non-matching median {np.median(jac_non):.2f}")
 
+    curve = tau_curve(pairs)
     grid = sensitivity(pairs)
 
     print("\nMost-rediscovered inventions (largest structural clusters):")
@@ -512,12 +568,12 @@ def main():
         print(f"  [{task[:4]}] ({u}, {v}) x{len(c)}: {', '.join(nm[:6])}")
 
     dump = {
-        "n_inventions": int(len(names)), "n_pairs": tot, "k_shared": K_SHARED,
-        "tau_slot": TAU_SLOT, "tau_con": TAU_CON,
+        "n_inventions": int(len(names)), "n_pairs": tot, "tau": TAU,
+        "cos_slot": COS_SLOT, "cos_con": COS_CON,
         "levels": levels,
         "same_name_pairs": {"n": len(named_hit),
                             "pct_that_are_multiples": 100*float(np.mean([p["structural"] for p in named_hit]))},
-        "calibration": calib, "sensitivity": grid,
+        "calibration": calib, "tau_curve": curve, "sensitivity": grid,
         "settings_with_multiple": hit, "n_settings": len(groups), "n_clusters": len(clusters),
         "task": {"blending_pct": 100*float(np.mean(bl)), "analogy_pct": 100*float(np.mean(an)),
                  "wilcoxon_p": float(w_task), "n_items": len(bl),
