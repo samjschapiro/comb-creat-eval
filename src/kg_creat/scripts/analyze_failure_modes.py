@@ -26,9 +26,16 @@ import numpy as np
 SCORES = Path("data/kg_creat/kombine_test30/scores")
 OUT = Path("data/kg_creat/kombine_test30/analysis/failure_modes.json")
 # the recent flagships, named so the subset is auditable rather than "the good ones"
-FRONTIER = {"openai_gpt-5", "openai_gpt-5-2", "openai_gpt-5-6-sol", "anthropic_claude-opus-4-5",
-            "anthropic_claude-opus-4-6", "anthropic_claude-opus-5", "anthropic_claude-fable-5",
-            "anthropic_claude-sonnet-5", "google_gemini-3-1-pro-preview", "google_gemini-3-7-flash",
+# The recent flagship tier. The line follows each vendor's own generations: the whole opus line plus
+# fable and sonnet-5 for Anthropic (sonnet-4.5/4.6 are the mid tier and stay out), the gpt-5 flagships
+# plus gpt-6-astra-flex for OpenAI (gpt-5-mini and the gpt-4 generation stay out).
+# Extended 2026-09-07 with the four flagships from the 30 -> 35 pool expansion; every frontier-only
+# number downstream (failure modes, blend difficulty, task dissociation, Fig. 5) moves with this set.
+FRONTIER = {"openai_gpt-5", "openai_gpt-5-2", "openai_gpt-5-6-sol", "openai_gpt-6-astra-flex",
+            "anthropic_claude-opus-4-5", "anthropic_claude-opus-4-6", "anthropic_claude-opus-4-7",
+            "anthropic_claude-opus-4-8", "anthropic_claude-opus-5", "anthropic_claude-fable-5",
+            "anthropic_claude-fable-5-1", "anthropic_claude-sonnet-5",
+            "google_gemini-3-1-pro-preview", "google_gemini-3-7-flash",
             "google_gemini-3-flash-preview", "x-ai_grok-4-5", "x-ai_grok-4-6", "deepseek_deepseek-r1",
             "z-ai_glm-4-6"}
 

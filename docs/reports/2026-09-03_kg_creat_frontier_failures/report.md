@@ -24,16 +24,16 @@
 
 ## Data & sampling
 
-**Frame.** The 30-model Kombine run at temperature 0.9, one draw per model per item. The **frontier subset** is 15 recent flagships, named explicitly in the script rather than described: the GPT-5.x models, Grok-4.5/4.6, Claude Opus-4.5/4.6/5, Fable-5, Sonnet-5, Gemini-3.x, DeepSeek-R1, GLM-4.6. Counts below are frontier unless stated: **7,079 association paths, 446 analogy pair-heads, 450 blends**. Utility on association and analogy is a single factuality judge; the blend gate and both invention gates are 3-judge panel majorities (ICC 0.48–0.65).
+**Frame.** The 35-model Kombine run at temperature 0.9, one draw per model per item. The **frontier subset** is 19 recent flagships, named explicitly in the script rather than described: the GPT-5.x models plus GPT-6-Astra-Flex, Grok-4.5/4.6, Claude Opus-4.5/4.6/4.7/4.8/5, Fable-5/5.1, Sonnet-5, Gemini-3.x, DeepSeek-R1, GLM-4.6. Counts below are frontier unless stated: **9,703 association paths, 565 analogy pair-heads, 568 blends**. Utility on association and analogy is a single factuality judge (`claude-haiku-4.5` since 2026-09-07); the blend gate and both invention gates are 3-judge panel majorities (ICC 0.48–0.67).
 
 | task | pass | dominant failure | other |
 |---|--:|---|---|
-| association | 71% | **factual (hallucination) 21%** | structural 7% |
-| analogy (path gate) | 88% | factual 10% | structural 2% |
-| analogy (invention) | — | **incoherent 20%** | mapping not applied 9% |
-| blending (abstraction gate) | 53% | **one-sided generic space 47%** | — |
+| association | 66% | **factual (hallucination) 28%** | structural 6% |
+| analogy (path gate) | 84% | factual 14% | structural 2% |
+| analogy (invention) | — | **incoherent 20%** | mapping not applied 8% |
+| blending (abstraction gate) | 54% | **one-sided generic space 47%** | — |
 
-All-30-model figures are worse throughout, as the pool now includes nine cheaper models: association 62% pass, analogy 87%, blending 43%. Every frontier number in this report is unchanged by the pool growth — the frontier subset is the same 15 models.
+All-35-model figures are worse throughout, as the pool includes cheaper models: association 61% pass, analogy 86%, blending 44%. The frontier subset **grew from 15 to 19 on 2026-09-07** (Opus-4.7/4.8, Fable-5.1, GPT-6-Astra-Flex), so unlike the earlier pool expansion the frontier numbers here did move — but barely: the blend gate went 46.7% → 46.5% rejected, invention incoherence 20.2% → 20.0%, mapping-not-applied 8.5% → 8.3%. The association hallucination rate moved more (21% → 28%), but for a different reason: the factuality judge was replaced after the old one was found to be leaving a quarter of paths unjudged.
 
 ## Finding 1 — fabricated connective facts, mostly in association
 
@@ -53,15 +53,15 @@ A genuine blend needs a `g` that both inputs instantiate. 47% of frontier blends
 
 **Past the gate the work is good**: 97% coherent, 76% at full scope 3. Frontier models elaborate a blended space competently and cannot reliably find a schema to elaborate.
 
-**The gate is not measuring distance, which is worth knowing before anyone tries to automate it.** If "unequally instantiated" were a proximity fact, a rejected `g` would sit closer to one input than to the other. It does not: mean |d(u,g) − d(v,g)| is **0.1138 for rejected blends and 0.1167 for accepted ones** (n = 276 vs 354, Mann-Whitney p = 0.76, rank-biserial −0.01). The panel is detecting whether each input *instantiates* the schema — a relation the embedding does not represent — so this gate cannot be replaced by a cheap cosine, and any future automation of it has to be validated against the panel rather than assumed.
+**The gate is not measuring distance, which is worth knowing before anyone tries to automate it.** If "unequally instantiated" were a proximity fact, a rejected `g` would sit closer to one input than to the other. It does not: mean |d(u,g) − d(v,g)| is **0.1190 for rejected blends and 0.1215 for accepted ones** (n = 480 vs 553 over the whole 35-model pool, Mann-Whitney p = 0.91). The panel is detecting whether each input *instantiates* the schema — a relation the embedding does not represent — so this gate cannot be replaced by a cheap cosine, and any future automation of it has to be validated against the panel rather than assumed.
 
-**The geometry does show one thing the gate does not: a position effect.** The generic space sits closer to the **second-listed anchor in 59.5%** of blends (mean signed difference +0.031, Wilcoxon p = 1.2×10⁻⁷), and near-identically among failures (55.8%). So models lean toward the second input when abstracting, regardless of whether the result passes. It is small, it is not what separates pass from fail, and it is an argument for counterbalancing anchor order in future runs — at present every item presents `u` before `v` to every model.
+**The geometry does show one thing the gate does not: a position effect.** The generic space sits closer to the **second-listed anchor in 59.0%** of blends (mean signed difference +0.032, Wilcoxon p = 7.5×10⁻¹²). So models lean toward the second input when abstracting, regardless of whether the result passes. It is small, it is not what separates pass from fail, and it is an argument for counterbalancing anchor order in future runs — at present every item presents `u` before `v` to every model.
 
 Per-model rejection rate at this gate, frontier models:
 
-| gemini-3.1-pro | gpt-5.6-sol | gemini-3.7-flash | fable-5 | opus-4.6 | gpt-5.2 | opus-4.5 | opus-5 | gpt-5 | grok-4.5 | grok-4.6 | r1 | sonnet-5 | glm-4.6 | gemini-3-flash |
-|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
-| 17% | 17% | 30% | 40% | 43% | 47% | 50% | 50% | 50% | 50% | 53% | 57% | 60% | 67% | 70% |
+| gemini-3.1-pro | gpt-5.6-sol | astra-flex | gemini-3.7-flash | fable-5 | opus-4.6 | fable-5.1 | gpt-5.2 | opus-5 | gpt-5 | opus-4.5 | grok-4.5 | opus-4.8 | grok-4.6 | r1 | sonnet-5 | opus-4.7 | glm-4.6 | gemini-3-flash |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 17% | 17% | 27% | 30% | 40% | 43% | 43% | 47% | 50% | 50% | 50% | 50% | 52% | 53% | 57% | 60% | 62% | 67% | 70% |
 
 A four-fold spread on a single gate, with gemini-3.1-pro and gpt-5.6-sol at one end and gemini-3-flash at the other. Blending rank is largely *this* skill.
 
@@ -73,11 +73,11 @@ It is not a refusal, a hedge, or a malformed answer. Every blend in the corpus c
 
 **The rate.** The panel rejects the schema in **47% of frontier blends** (210 of 450); **182** are scope 1, meaning no genuine shared slot survived verification. Per model it runs **17% to 70%**, and the spread does not track capability rank: gemini-3.1-pro and gpt-5.6-sol sit at 17%, gemini-3-flash at 70%.
 
-**It is a model failure, not an item failure.** Every one of the **30 anchor pairs has at least one accepted blend**. On the hardest pair, *Photosynthesis + Bread*, 14 of 15 frontier models fail and claude-opus-4.6 does not: the others write a schema built from one side — claude-opus-5's *"a slow process that builds solid volume out of gas taken from the air"* is photosynthesis, and claude-fable-5's *"captured energy and gas swell a starchy mass into stored food"* is bread — while opus-4.6 writes *"an activating agent causes inert substrate to rise into a structured energy rich product"*, which chlorophyll-in-light and yeast-in-dough both instantiate. The full catalogue of all 210 failures, each paired with the successes on the same anchors, is in [`generic_space_catalogue.md`](generic_space_catalogue.md).
+**It is a model failure, not an item failure.** Every one of the **30 anchor pairs has at least one accepted blend**. On the hardest pair, *Photosynthesis + Bread*, 18 of 19 frontier models fail and claude-opus-4.6 does not: the others write a schema built from one side — claude-opus-5's *"a slow process that builds solid volume out of gas taken from the air"* is photosynthesis, and claude-fable-5's *"captured energy and gas swell a starchy mass into stored food"* is bread — while opus-4.6 writes *"an activating agent causes inert substrate to rise into a structured energy rich product"*, which chlorophyll-in-light and yeast-in-dough both instantiate. The full catalogue of all 264 failures, each paired with the successes on the same anchors, is in [`generic_space_catalogue.md`](generic_space_catalogue.md).
 
 ![Shared abstraction failure](figures/fig_abstraction_failure.png)
 
-*Figure 1. Shared abstraction failure across 15 frontier models and 30 anchor pairs. A filled cell means the 3-judge panel **rejected** the generic space — the schema is instantiated by one input only. Rows are sorted by failure rate (17%–70%), columns by difficulty (93% down to 0%). No column is fully filled: every anchor pair was solved by some model, so this is a model failure, not item difficulty. Cells are majority verdicts at ICC 0.48–0.65, not ground truth.*
+*Figure 1. Shared abstraction failure across 19 frontier models and 30 anchor pairs. A filled cell means the 3-judge panel **rejected** the generic space — the schema is instantiated by one input only. Rows are sorted by failure rate (17%–70%), columns by difficulty (95% down to 0%). No column is fully filled: every anchor pair was solved by some model, so this is a model failure, not item difficulty. Cells are majority verdicts at ICC 0.48–0.67, not ground truth.*
 
 **Everything downstream of the schema is fine.** Past the gate, 97% of blends are coherent and 76% reach full double-scope. Models elaborate a shared structure competently; what they cannot do reliably is find one.
 
@@ -105,7 +105,7 @@ Two smaller, actionable findings. Input order is not neutral: the schema sits cl
 
 ### Red-team
 
-- **The gate is a 3-judge majority**, ICC 0.48–0.65, with a blind author check agreeing 66% overall and 75% where the panel is unanimous. Roughly half of these 210 rejections rest on a moderately reliable subjective call, and the rate would move with a stricter or looser panel.
+- **The gate is a 3-judge majority**, ICC 0.48–0.67, with a blind author check agreeing 66% overall and 75% where the panel is unanimous. Roughly half of these 264 rejections rest on a moderately reliable subjective call, and the rate would move with a stricter or looser panel.
 - **One prompt, one draw, one temperature.** Nothing here bounds what the same models would do with retrieval, a scratchpad, or three attempts — and the ensemble result suggests attempts help.
 - **The failures do not converge measurably.** They *look* alike on the hardest pairs (everyone reaching for "penetration"), but rejected schemas are more similar to each other than accepted ones on only 9 of 25 pairs (mean difference −0.034). "A recurring failure mode with a common shape" is supported; "models converge on the same wrong schema" is not.
 - **Blending is one task.** This says nothing about whether the same weakness appears when the shared structure is given rather than sought.
@@ -125,8 +125,8 @@ The Anthropic/xAI contrast is the same one the first version reported, with the 
 ## Limitations and red-team
 
 - **Factuality is a single judge** (gpt-oss-120b). Spot-checking flagged triples turns up occasional false positives — one model's "cheese appears in Aesop's Fables" (true, via the Fox and the Crow) was marked false — so 21% is an upper bound.
-- **The subjective gates are 3-judge majorities** with fair-to-good agreement (ICC 0.48–0.65) and a blind 60-item author check at 66% agreement (75% where the panel is unanimous). Noisy, and the per-model rates below are 30 artifacts each.
-- **"Frontier" is a hand-drawn set of 15 models**, listed in the script so the choice is auditable; per-model rates on 30 artifacts should be read as tiers, not point estimates.
+- **The subjective gates are 3-judge majorities** with fair-to-good agreement (ICC 0.48–0.67) and a blind 60-item author check at 66% agreement (75% where the panel is unanimous). Noisy, and the per-model rates below are 30 artifacts each.
+- **"Frontier" is a hand-drawn set of 19 models**, listed in the script so the choice is auditable; per-model rates on 30 artifacts should be read as tiers, not point estimates. The set follows each vendor's own generations (the whole Opus line, Fable, Sonnet-5, the GPT-5 flagships plus Astra-Flex); Sonnet-4.5/4.6 are the mid tier and stay out.
 - **Examples illustrate their channel**, they are not randomly sampled.
 - **Two of the three probes came back negative**, and they are reported that way: embedding asymmetry does not separate rejected from accepted generic spaces, and neither projection length nor source remoteness separates coherent from incoherent inventions. Negative probes of a gate are worth as much as confirmations — they say the gate is not reducible to the cheap proxy.
 - **This report's own history is the caution.** Two of three headline numbers in the hand-built version were wrong in the same direction — they made analogy look as unreliable as association, and made the invention failure look like a fidelity problem rather than a coherence problem. Both are now computed by a script that prints its denominators.
