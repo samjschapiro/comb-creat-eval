@@ -126,8 +126,8 @@ def _axes_common(ax, title):
     ax.set_yticks(yt, [f"{THETA_EDGES[i]:.2f}" for i in yt])
     ax.tick_params(labelsize=14)
     # the reported theta, as a reference line rather than a boxed cell
-    y058 = float(np.searchsorted(THETA_EDGES, 0.58) - 1)
-    ax.axhline(y058, color="#111111", lw=1.2, ls="--", alpha=0.85)
+    y = float(np.searchsorted(THETA_EDGES, M.COS_SLOT) - 1)
+    ax.axhline(y, color="#111111", lw=1.4, ls="--", alpha=0.85)
 
 
 def main():

@@ -52,7 +52,12 @@ from src.kg_creat.embed import get_embedder
 NPZ = "data/kg_creat/kombine_test30/analysis/invention_vectors.npz"
 RESP = "data/kg_creat/kombine_test30/responses"
 OUT = "data/kg_creat/kombine_test30/analysis/inventive_multiples.json"
-COS_SLOT = 0.58  # "relation object" cosine at which two models count as asserting the same property
+COS_SLOT = 0.545  # "relation object" cosine at which two models count as asserting the same
+                  # property. CALIBRATED, not chosen: two inventions answering DIFFERENT anchor
+                  # pairs cannot share an item-specific property, so their greedy matches are a
+                  # null. 0.545 is the null's 99.75th percentile -- alpha = 0.25%, one property
+                  # pair in 400 from unrelated inventions clears it. See calibrate_theta.py.
+                  # (The previous 0.58 had no derivation; it implied alpha = 0.15%.)
 TAU = 2     # the headline tau: a tau-inventive multiple re-uses >= TAU of the other invention's
             # properties. The rate is reported as a FUNCTION of tau (see tau_curve); TAU only picks
             # which point on that curve the prose quotes.
