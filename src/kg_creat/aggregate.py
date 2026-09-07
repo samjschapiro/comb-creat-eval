@@ -12,6 +12,29 @@ import math
 from collections import Counter, defaultdict
 
 
+# Emergent-creativity field renames (paper, 2026-08-30): "coherence" -> UTILITY (J^utl) and
+# "validity"/"scope" -> INTEGRATION QUALITY (J^qua). Records scored before the rename carry the old
+# keys, so normalize on read and existing path_scores.json keep working without re-judging.
+_RENAMED = {
+    "invention_coherent": "invention_utility",     # J^utl_an
+    "invention_valid": "invention_integration",    # J^qua_an
+    "blend_coherent": "blend_utility",             # J^utl_bl
+    "scope": "blend_integration",                  # J^qua_bl in {1,2,3}
+}
+
+
+def normalize_scored_records(recs: list[dict]) -> list[dict]:
+    """Upgrade pre-rename score records in place: old emergent-creativity keys -> the paper's names.
+
+    Additive and idempotent -- old keys are left alone, so readers not yet migrated still work.
+    """
+    for r in recs:
+        for old, new in _RENAMED.items():
+            if old in r and new not in r:
+                r[new] = r[old]
+    return recs
+
+
 def _clean(xs):
     return [x for x in xs if x is not None and not (isinstance(x, float) and math.isnan(x))]
 
@@ -57,6 +80,7 @@ def _by(recs, key):
 
 
 def aggregate(recs: list[dict]) -> dict:
+    normalize_scored_records(recs)
     per_mode = {}
     for mode, rs in _by(recs, "mode").items():
         # an "item" is one combination: a path (association), an analogy PAIR, or a fusion blend
@@ -65,19 +89,23 @@ def aggregate(recs: list[dict]) -> dict:
         if mode == "analogy":
             items = [r for r in rs if "pair_sat" in r]                 # pair heads
             verified = sum(1 for r in items if r.get("pair_sat") is True)
+            # analogy UTILITY is a PAIR verdict (structural AND factual) on the even head, not per-path
+            # sat -- alias pair_sat/pair_channel onto sat/channel so the shared metric helpers read it.
+            metric = [{**r, "sat": r.get("pair_sat"), "channel": r.get("pair_channel")} for r in items]
         else:  # association + fusion blending: one path per item, per-path sat
             items = rs
             verified = sum(1 for r in items if r.get("sat") is True)
+            metric = rs
         per_mode[mode] = {
             "n_paths": len(rs),
             "n_items": len(items),
             "verified_genuine": verified,
             "R_emit": _mean([r["R"] for r in rs]),
-            "R_valid": _mean([r["R"] for r in rs if r.get("sat") is True]),
-            "sat_rate": _sat_rate(rs),
-            "creativity": _creativity(rs),
+            "R_valid": _mean([r["R"] for r in metric if r.get("sat") is True]),
+            "sat_rate": _sat_rate(metric),
+            "creativity": _creativity(metric),
             "wf_rate": _mean([1.0 if r["well_formed"] else 0.0 for r in rs]),
-            "channels": dict(Counter(r.get("channel") for r in rs)),
+            "channels": dict(Counter(r.get("channel") for r in metric)),
             # emergent creativity: mean # of verified emergent inferences per item (heads carry it)
             "emergent_mean": _mean([r["emergent_count"] for r in rs if "emergent_count" in r]),
             # originality: mean item-specific inverse frequency per artifact (heads carry it)

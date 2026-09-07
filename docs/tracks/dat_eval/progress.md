@@ -371,3 +371,70 @@ cached test scores + `benchmarks.json`, and confirms the CDAT +0.60
 NoveltyBench specificity is **n.s. (p≈0.21) at n=8–10** — the number to
 lead the rebuttal's power discussion with. (DRAT/RAT are out of scope
 for this submission per the author — a different paper.)
+
+### 2026-07-28 — Rebuttal posted; NoveltyBench n=10→23; CDAT claim downgraded
+
+Rebuttal to all three reviewers posted to OpenReview. Drafts and source
+checks in [rebuttal_neurips_2026.md](rebuttal_neurips_2026.md).
+
+**NoveltyBench expansion complete (n=10 → 23).** 13 models scored with the
+authors' released pipeline (validated to within 1.8% — 3.69 vs 3.76 on
+llama-3.1-8b): 7 on 2026-07-24, 6 more on 2026-07-27. `benchmarks.json` now
+carries 33 `noveltybench_utility` values (20 transcribed + 13 self-run,
+source-tagged). Correlations at n=23 (via
+`scripts/new_tests/recompute_noveltybench_corr.py`, run under `.venv-mlx`
+— the main env's CUDA-pinned torch will not resolve on this Mac):
+
+| test | validity | specificity |
+|---|---|---|
+| DAT | −0.07 (p=.75) | −0.04 (p=.85) |
+| CDAT | +0.14 (p=.53) | +0.03 (p=.90) |
+| CDAT-N | +0.27 (p=.22) | +0.08 (p=.73) |
+| CDAT-A | −0.30 (p=.16) | −0.03 (p=.90) |
+| PACE | −0.15 (p=.50) | +0.11 (p=.64) |
+
+Nothing significant; min p = 0.16.
+
+**Two causes, not one.** The CDAT NoveltyBench specificity trajectory is
++0.60 (n=8) → +0.20 (n=23, buggy gate) → **+0.03 (n=23, fixed gate)**. The
+second step is the BH NaN bug in `cdat_gate.py`
+([log](../../logs/2026-07-27/cdat_gate_bh_nan_bug_fix.md)), which had made
+gated CDAT effectively a T=1.5-only measure and shifted the whole CDAT row
+of Table 1, not just NoveltyBench. The posted rebuttal frames the drop
+around the n expansion; **the camera-ready needs to attribute it to both.**
+
+**Power (α=.05 two-sided, 80%, df=n−2−k).** Minimum detectable |r|: n=8
+with 2 controls → 0.92; n=10 validity → 0.79; n=23 validity → 0.56; n=23
+with 2 controls → 0.58. So the original +0.60 was never interpretable, and
+n=23 now rules out large NoveltyBench effects but not moderate ones.
+
+### Revision commitments made in the rebuttal (must land before camera-ready)
+
+- [ ] Downgrade "CDAT is the best predictor of divergent thinking" in the
+      abstract and §5 to a relative-ranking statement with explicit
+      non-significance. Note CDAT-N outranks CDAT on both divergent-thinking
+      benchmarks jointly (v+s 0.74 vs 0.50) — the claim holds only if
+      CDAT-N/-A are read as facets of CDAT rather than separate tests.
+- [ ] Caveat creative achievement within Kaufman & Beghetto's Four-C model
+      (indexes little-c to Pro-C at best).
+- [ ] Add Rhodes (1961) product-level scope statement: no claims at the
+      process level.
+- [ ] Make the creativity-test-score vs creative-achievement distinction
+      explicit at first use.
+- [ ] State the anticipated use cases (per-checkpoint measurement during
+      training; proxy without human raters) in Future Work.
+- [ ] Promote the greedy-DAT algorithm from Appendix to the main body as
+      motivation. Wording: it *substantially exceeds mean* human and LLM
+      scores (94.1 vs 78.4 / 83.75) — not "outperforms all humans."
+- [ ] Relate findings to convergent/divergent thinking theory (Dietrich).
+- [ ] Concede F63x on CDAT-A: "non-positive specificity throughout" is
+      inaccurate (+.05 EQ-Bench CW, +.17 LiveIdeaBench).
+- [ ] Bib hygiene: `Bellemare-Pepin2024DivergentLLMs` is now published in
+      Scientific Reports (2026), doi 10.1038/s41598-025-25157-3;
+      `wang2025large` version of record is Nat. Hum. Behav. 10(3):531–540
+      (2026). Add Rhodes (1961), Kaufman & Beghetto (2009).
+
+**Do not cite `cropley2023artificial` as an example of over-generalizing
+from the DAT** — his abstract says the opposite ("a range of factors call
+into question the 'creativity' of generative AI"), and his 2025 follow-up
+is "Why Generative AI Has Limited Creativity." He supports our motivation.

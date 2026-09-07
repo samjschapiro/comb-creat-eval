@@ -77,3 +77,10 @@ checkpoints/
 # TwistBench site: generated payload (rebuildable via build_website_data.py); it is
 # published on the gh-pages branch, not tracked on main.
 website/twistbench/data/
+
+# env backups (contain live API keys) -- .env.example stays tracked
+.env.*
+!.env.example
+
+# raw run logs
+scratchpad_logs/

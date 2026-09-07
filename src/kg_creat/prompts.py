@@ -35,8 +35,8 @@ _OUTPUT_BLOCK_DIVERGENT = _OUTPUT_BLOCK.replace(
 # Each item is a JSON object whose emergent-creativity signal is a NEW structured concept the model
 # builds and annotates with its mechanism: analogy emits a "projected"/"invention"/"projection" (a
 # concept invented by carrying source structure across the mapping), and blending emits a "structure"
-# whose triples are each tagged "u"/"v"/"emergent" (which input each projects from, or the fused
-# structure belonging to neither). Wording is deliberately explicit so the emitted structure is
+# whose triples are each tagged "u"/"v"/"uv"/"emergent" (which input organizes each, "uv" for one slot
+# both inputs organize at once, "emergent" for structure belonging to neither). Wording is deliberately explicit so the emitted structure is
 # controllable and unambiguous to the parser.
 _OUTPUT_BLOCK_ASSOC = """Output requirements (strict):
 - Return ONLY a JSON array wrapped in <answer> and </answer> tags. No other text, before or after.
@@ -68,11 +68,11 @@ _OUTPUT_BLOCK_BLENDING = """Output requirements (strict):
 - The object has exactly these three keys: "concept", "generic_space", "structure".
 - "concept": a short name for the single blended concept you create by fusing the two inputs.
 - "generic_space": ONE phrase naming the shared schema both inputs fit -- what makes them fusable. Be specific; a vacuous schema ("both exist", "both involve change") does not count as a blend.
-- "structure": a list of objects {"triple": [head, relationship, tail], "from": TAG} describing the blend, where TAG is EXACTLY one of: "u" (this structure is projected from the FIRST input), "v" (this structure is projected from the SECOND input), or "emergent" (this structure is true of the BLEND but of NEITHER input alone; it arises only from running the fusion -- this is the point of the task, so elaborate the blend to find it). A genuine (double-scope) blend has structure tagged BOTH "u" AND "v", plus at least one "emergent".
+- "structure": a list of objects {"triple": [head, relationship, tail], "from": TAG} describing the blend, where TAG is EXACTLY one of: "u" (this property is organized by the FIRST input only), "v" (this property is organized by the SECOND input only), "uv" (a SINGLE property that BOTH inputs organize at once -- the same slot carries both frames, e.g. a "liquid franchise" whose one "allocates" slot is fed by democracy's "allocates votes" AND banking's "allocates credit"), or "emergent" (this property is true of the BLEND but of NEITHER input alone; it arises only from running the fusion). A genuine blend has at least one "uv" triple -- a property both inputs feed -- plus at least one "emergent"; separate "u" and "v" lines that never share a slot are a concatenation, not a fusion.
 - Relationship strings must be 1-3 words; the head is usually the blend. Keep every entity SHORT and CONCRETE: a few plain, recognizable words naming a real concept -- not a descriptive phrase, a clause, an invented CamelCase compound, or words joined by a dash into a coinage (write "voting claims", never "voting-claims"). State the generic space briefly and in plain language too, even when the underlying schema is abstract.
 
 Required format (follow this shape exactly):
-<answer>{"concept": "cyborg", "generic_space": "a functional system whose parts can fail and be replaced", "structure": [{"triple": ["cyborg", "can", "die"], "from": "u"}, {"triple": ["cyborg", "has", "components"], "from": "v"}, {"triple": ["cyborg", "replaces components", "without healing downtime"], "from": "emergent"}]}</answer>"""
+<answer>{"concept": "cyborg", "generic_space": "a functional system whose parts can fail and be replaced", "structure": [{"triple": ["cyborg", "can", "die"], "from": "u"}, {"triple": ["cyborg", "has", "components"], "from": "v"}, {"triple": ["cyborg", "regulates itself via", "feedback"], "from": "uv"}, {"triple": ["cyborg", "replaces components", "without healing downtime"], "from": "emergent"}]}</answer>"""
 
 # CREATE's rules/dedup scaffolding (K.3), shared across modes.
 _ENTITY_RULES = """Rules and quality constraints:
@@ -177,21 +177,21 @@ def _blending_prompt(spec: dict) -> str:
     u, v = spec["u_label"], spec["v_label"]
     return f"""Task: You are given TWO concepts: '{u}' and '{v}'. FUSE them into a SINGLE new concept, then describe the structure this fusion generates.
 
-What a genuine blend is (the FORM). A real blend fuses two concepts into ONE new concept in which BOTH inputs contribute ORGANIZING STRUCTURE -- their relations and roles combine -- so the blend runs as a single coherent concept with emergent structure belonging to neither input.
-Example -- "cyborg" (organism + machine): the organism frame (a living system of tissue that can die) AND the machine frame (a system of components that can be swapped and rebooted) BOTH organize it; emergent structure of neither input: its components can be surgically replaced without the downtime a body needs to let tissue heal -- neither a pure organism (which must heal) nor a pure machine (which has no tissue) works this way.
-(Note what does NOT count as emergent here: "it can be rebooted" is already true of the machine input and "it can die" of the organism, so they are inherited, not emergent.)
-Do NOT instead (a) list one property from each input joined by "and" ("harnesses energy AND is therapeutic"), or (b) treat one input as a mere adjective on the other ("a radioactive solar system"). Both inputs must do organizing work.
+What a genuine blend is (the FORM). A real blend fuses two concepts into ONE new concept in which BOTH inputs contribute ORGANIZING STRUCTURE to the SAME property -- one slot of the blend is fed by both inputs at once, so their frames combine there rather than sit side by side. The classic case is a "liquid franchise" (democracy + banking): its one "allocates" slot carries BOTH democracy's "allocates votes" AND banking's "allocates credit", fusing into "allocates transferable vote-shares" -- a single property both inputs organize.
+Example -- "cyborg" (organism + machine): the organism frame (a living system that self-regulates through homeostasis) AND the machine frame (a control system that self-regulates through feedback) BOTH organize its ONE "regulates itself" slot; and it has emergent structure of neither input: its components can be surgically replaced without the downtime a body needs to let tissue heal -- neither a pure organism (which must heal) nor a pure machine (which has no tissue) works this way.
+(Note what does NOT count: "it can be rebooted" is already true of the machine alone and "it can die" of the organism alone, so those are inherited, not emergent; and listing "can die" beside "has components" is only a concatenation until some ONE property is fed by both.)
+Do NOT instead (a) list one property from each input side by side with no shared slot ("harnesses energy" from one AND "is therapeutic" from the other), or (b) treat one input as a mere adjective on the other ("a radioactive solar system"). At least one property must be organized by BOTH inputs at once.
 
 Build the blend in two moves:
 1. GENERIC SPACE: name the shared schema both '{u}' and '{v}' instantiate -- the abstract structure that lets them fuse (for organism + machine: "a functional system whose parts can fail and be replaced"). Be specific; "both exist"/"both involve change" is vacuous, and a one-from-each conjunction does not count.
-2. STRUCTURE: describe the single blended concept as triples, and TAG each triple by where its structure comes from -- "u" (projected from '{u}'), "v" (projected from '{v}'), or "emergent" (true of the BLEND but of NEITHER '{u}' nor '{v}' alone -- structure that appears only when you RUN the fusion forward). A genuine blend has triples tagged BOTH "u" and "v", and at least one "emergent".
+2. STRUCTURE: describe the single blended concept as triples, and TAG each triple by where its structure comes from -- "u" (organized by '{u}' only), "v" (organized by '{v}' only), "uv" (ONE property organized by BOTH inputs at once -- the same slot carries both frames, like the liquid franchise's single "allocates" slot fed by votes AND credit), or "emergent" (true of the BLEND but of NEITHER '{u}' nor '{v}' alone -- structure that appears only when you RUN the fusion forward). A genuine blend has at least one "uv" triple -- a property both inputs feed -- plus at least one "emergent"; separate "u" and "v" lines that never share a slot are a concatenation, not a fusion.
 
 We reward three things:
 - UTILITY: the generic space is a REAL, specific schema that BOTH '{u}' and '{v}' genuinely instantiate -- not vacuous ("both exist") and not a one-from-each conjunction.
 - ORIGINALITY: the generic space is UNCOMMON -- a shared schema few would think to name, not the first obvious one.
-- EMERGENT CREATIVITY: a genuine DOUBLE-SCOPE fusion in which BOTH inputs contribute organizing structure, developed into a coherent, original blended concept with EMERGENT structure true of the BLEND but of NEITHER '{u}' alone NOR '{v}' alone (tag these "emergent"). Merely restating that the two were combined does not count.
+- EMERGENT CREATIVITY: a genuine DOUBLE-SCOPE fusion in which at least one property is organized by BOTH inputs at once (tag it "uv"), developed into a coherent, original blended concept with EMERGENT structure true of the BLEND but of NEITHER '{u}' alone NOR '{v}' alone (tag these "emergent"). Merely listing one input's properties beside the other's, with no shared slot, does not count.
 
-Produce exactly ONE blend of '{u}' and '{v}'. Keep the structure tight: give the 4-6 triples that best showcase the blend's most important properties (at least one from each input, plus at least one emergent), not an exhaustive dump. Use recognizable, canonically-named entities in the structure.
+Produce exactly ONE blend of '{u}' and '{v}'. Keep the structure tight: give the 4-6 triples that best showcase the blend's most important properties (at least one "uv" property both inputs organize, plus at least one emergent), not an exhaustive dump. Use recognizable, canonically-named entities in the structure.
 
 {_OUTPUT_BLOCK_BLENDING}"""
 

@@ -1,0 +1,41 @@
+# Kombine test30 BLENDING RE-ELICITATION (v3): re-run blends ONLY for the full 21-model pool with the
+# fixed prompt (adds a "uv" tag for a single slot both inputs organize; shared-property fusion was
+# previously unrepresentable, forcing concatenation). Same 30 anchor pairs (prompts.json) as the
+# original run, so the re-elicited blends are head-to-head comparable. Writes to a SEPARATE output_dir
+# (the canonical responses.json holds all 3 modes and would otherwise be skipped); a merge step folds
+# the new blends back into the canonical dir afterward. Default reasoning effort; RETURN + SAVE traces.
+# PAID (OpenRouter). Models ordered fast/cheap -> slow/expensive so a runaway halts before the priciest.
+upstream_dir: data/kg_creat/kombine_test30/prompts
+output_dir: data/kg_creat/kombine_test30/blends_v3
+modes: [blending]
+eval:
+  temperatures: [0.9]                # match the original run's single-temp draw
+  n_samples: 1
+  max_tokens: 1600
+concurrency: 12
+reasoning:
+  exclude: false                     # default effort; RETURN + SAVE the reasoning trace for every model that emits one
+  max_tokens: 8000                   # HARD cap on extended thinking; with the 8x completion budget (12,800) this guarantees output room so a call cannot spend its whole budget on reasoning and return null
+budget_usd: 110.0                    # HARD cap (actual-cost stop) -- well under the API key's ~$137 ceiling; est spend ~$50
+models:
+  - google/gemini-3-flash-preview
+  - meta-llama/llama-3.3-70b-instruct
+  - qwen/qwen3-max
+  - deepseek/deepseek-chat
+  - anthropic/claude-sonnet-4.5
+  - google/gemini-3.7-flash
+  - google/gemini-2.5-pro
+  - anthropic/claude-sonnet-5
+  - anthropic/claude-fable-5
+  - openai/gpt-5-mini
+  - anthropic/claude-opus-4.5
+  - google/gemini-3.1-pro-preview
+  - anthropic/claude-opus-4.6
+  - anthropic/claude-opus-5
+  - openai/gpt-5
+  - openai/gpt-5.6-sol
+  - openai/gpt-5.2
+  - x-ai/grok-4.5
+  - z-ai/glm-4.6
+  - x-ai/grok-4.6
+  - deepseek/deepseek-r1

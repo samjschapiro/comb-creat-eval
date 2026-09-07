@@ -7,7 +7,32 @@
       "Bash(python -m py_compile src/plot_twist/scripts/make_move_positions.py)",
       "Bash(PYTHONPATH=. .venv/bin/python src/plot_twist/scripts/make_move_positions.py)",
       "Bash(pdflatex -interaction=nonstopmode -output-directory=/tmp /tmp/bgtest.tex)",
-      "Bash(echo \"exit: $?\")"
+      "Bash(echo \"exit: $?\")",
+      "Bash(uv python *)",
+      "Bash(.venv-mlx/bin/python -)",
+      "Bash(cd /Users/schapiro/Desktop/Experiments/comb-creat-eval; echo \"=== dat_eval/llm.py get_async_client ===\"; grep -n \"def get_async_client\\\\|base_url\\\\|def get_client\\\\|OPENROUTER\\\\|AsyncOpenAI\\\\|def call_llm_async\" src/dat_eval/llm.py | head; echo \"--- show get_async_client + call_llm_async bodies ---\"; sed -n \"/def get_async_client/,/^def /p\" src/dat_eval/llm.py | head -40; echo \"=== noveltybench.py: score_model / generation call ===\"; grep -n \"def score_model\\\\|generate_many_async\\\\|generate\\\\|async def\\\\|_quality\\\\|distinct\\\\|call_llm\" src/new_tests/noveltybench.py | head -30)",
+      "Bash(.venv-mlx/bin/python -m json.tool)",
+      "Bash(awk '/12:3[2-9]|12:[4-5][0-9]/ && /chat\\\\/completions/' /tmp/mlx_server.log)",
+      "Bash(.venv-mlx/bin/python scripts/new_tests/merge_local_noveltybench.py)",
+      "Bash(kill 52419)",
+      "Bash(pkill -f run_noveltybench_served_batch.sh)",
+      "Bash(pkill -f \"run_noveltybench.py\")",
+      "Bash(find /Users/schapiro/Downloads /Users/schapiro/.ssh /Users/schapiro -maxdepth 2 -iname sam*.pem)",
+      "Bash(ssh -i /Users/schapiro/Desktop/sam.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=25 ubuntu@132.145.198.155 'cd ~/novelty-bench; echo \"=== score.py \\(reward model + calibration\\) ===\"; grep -niE \"skywork|reward|model|calibrat|mt-bench|mtbench|utility|AutoModel|from_pretrained|flash|bin|quantil|scale\" src/score.py | head -40; echo; echo \"=== score.py head ===\"; sed -n \"1,50p\" src/score.py')",
+      "Bash(ssh -i /Users/schapiro/Desktop/sam.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@132.145.198.155 'cd ~/novelty-bench *)",
+      "Bash(ssh -i /Users/schapiro/Desktop/sam.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@132.145.198.155 'cd ~/novelty-bench && source ~/.creds *)",
+      "Bash(ssh -i /Users/schapiro/Desktop/sam.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@132.145.198.155 'pkill -f \"inference.py\" 2>/dev/null; sleep 2 *)",
+      "Bash(ssh -i /Users/schapiro/Desktop/sam.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@132.145.198.155 'pkill -9 -f inference.py 2>/dev/null; sleep 3; echo \"killed; remaining: $\\(pgrep -f inference.py | wc -l\\)\" *)",
+      "Bash(ssh -i /Users/schapiro/Desktop/sam.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@132.145.198.155 \"until [ \\\\$\\(wc -l < ~/novelty-bench/results/curated/llama-3.1-8b/generations.jsonl 2>/dev/null || echo 0\\) -ge 100 ] || [ \\\\$\\(pgrep -f '[i]nference.py' | wc -l\\) -eq 0 ]; do sleep 15; done; echo GEN_DONE gens=\\\\$\\(wc -l < ~/novelty-bench/results/curated/llama-3.1-8b/generations.jsonl\\); tail -2 ~/gen_llama.log\")",
+      "Bash(ssh -i *)",
+      "Bash(ssh -i /Users/schapiro/Desktop/sam.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@132.145.198.155 \"echo '=== GPU util ==='; nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader; echo '=== score.log tail \\(progress bar?\\) ==='; tail -c 400 ~/score.log; echo; echo '=== scores written ==='; wc -l < ~/novelty-bench/results/curated/llama-3.1-8b/scores.jsonl 2>/dev/null; echo '=== proc cpu/mem ==='; ps -o pid,etime,%cpu,%mem -p \\\\$\\(pgrep -f '[s]core.py'\\) 2>/dev/null\")",
+      "Bash(mkdir -p data/new_tests/noveltybench_skywork/llama-3.1-8b)",
+      "Bash(ssh -i /Users/schapiro/Desktop/sam.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@150.136.47.73 'cd ~/novelty-bench; python3 -c \" *)",
+      "Bash(scp -i /Users/schapiro/Desktop/sam.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -q ubuntu@150.136.47.73:~/novelty-bench/results/curated/llama-3.1-8b/scores.jsonl data/new_tests/noveltybench_skywork/llama-3.1-8b/)",
+      "Bash(ssh -i /Users/schapiro/Desktop/sam.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@150.136.47.73 \"cd ~/novelty-bench; grep -n 'self.model.generate' -A 12 src/inference.py | head -40\")"
+    ],
+    "additionalDirectories": [
+      "/Users/schapiro/Desktop/Experiments/comb-creat-eval/src/dat_eval"
     ]
   }
 }

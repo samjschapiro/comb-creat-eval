@@ -23,6 +23,14 @@ import matplotlib.pyplot as plt
 from src.kg_creat.embed import get_embedder
 from src.kg_creat import regime_b as RB
 
+# Nimbus Roman is the URW clone of Adobe Times that the LaTeX times package resolves to, so the
+# figures are set in the same face as the paper's body text.
+plt.rcParams.update({
+    "font.family": "serif",
+    "font.serif": ["Nimbus Roman", "Times New Roman", "DejaVu Serif"],
+    "mathtext.fontset": "stix",
+})
+
 INK, MUTED, GRID = "#1f2933", "#66727f", "#e3e8ee"
 BAR = "#93b4e6"          # recessive fill
 NEAR, FAR = "#2563EB", "#EA580C"  # near / far tertile markers (CVD-safe blue/orange)

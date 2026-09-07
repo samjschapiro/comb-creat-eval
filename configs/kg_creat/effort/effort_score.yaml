@@ -1,0 +1,28 @@
+# SCORING for the thinking-effort study (2026-09-07).
+#
+# All SIX configs (2 models x low/medium/high) are scored in ONE pass against a shared upstream dir of
+# symlinks, deliberately. Originality is pool-relative: scoring each effort level on its own would
+# compute each level's originality against a 2-model pool of itself, and the levels would not be
+# comparable -- which is the one comparison the study exists to make. Pooling all six makes an
+# artifact's originality its novelty relative to everything the two models produced at any effort.
+#
+# The judge panel is the pool's panel, unchanged, so these scores sit on the same scale as the 35
+# pool models. Neither subject (gpt-5.6-sol, gpt-6-astra-flex) is a judge, so there is no self-scoring
+# bias. Judges run on OpenRouter; elicitation was on the user's LiteLLM key.
+upstream_dir: data/kg_creat/effort_study/all
+output_dir: data/kg_creat/effort_study/scores
+judge:
+  enabled: true
+  models:
+    - anthropic/claude-haiku-4.5
+    - openai/gpt-5.4
+    - openai/o3
+  # claude-haiku-4.5, matching the pool after its 2026-09-07 re-judge. gpt-oss-120b batches 10 paths
+  # per call and truncated on long association paths, marking them "unjudged" -- which utility counts
+  # as failures. In THIS study that bug scaled with the independent variable (sol: 27% unjudged at low
+  # effort, 41% at medium), so it would have manufactured an "effort hurts association" result.
+  factuality_model: anthropic/claude-haiku-4.5
+  panel_open_ended: true
+  concurrency: 16
+embedding:
+  model: mlx-community/all-MiniLM-L6-v2-4bit

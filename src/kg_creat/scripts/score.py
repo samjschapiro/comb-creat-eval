@@ -181,17 +181,20 @@ def score_free(response: dict, embed) -> list[dict]:
 
 
 async def run_judges(recs: list[dict], responses_by_prompt: dict, models: list, concurrency: int,
-                     panel_open_ended: bool = True):
+                     panel_open_ended: bool = True, factuality_model: str | None = None):
     """Phase 2: fill factuality / categorical / semantic sat on the records (in place).
 
-    Subjective verdicts are a MAJORITY vote across the ``models`` panel. When ``panel_open_ended`` is
-    False, the OPEN-ENDED analogy validity judgment reverts to a single judge (models[0]) -- analogy is
-    high-volume, so paneling every pair is costly, while blending (one per prompt) stays paneled.
+    Subjective verdicts (blend fusion, emergent) are a MAJORITY vote across the ``models`` panel. The
+    OBJECTIVE factuality/constraint gate rides ``factuality_model`` (a single cheap judge; defaults to
+    ``models[0]``) so upgrading the subjective panel to costly frontier judges does not blow up the
+    bulk factuality spend. When ``panel_open_ended`` is False the open-ended analogy validity judgment
+    reverts to a single judge (models[0]); blending (one per prompt) stays paneled.
     Uses the LLM_BASE_URL-aware client (local MLX server if LLM_BASE_URL set, else OpenRouter).
     """
     from src.dat_eval.llm import get_async_client
     client = get_async_client()
     sem = asyncio.Semaphore(concurrency)
+    fact_model = factuality_model or models[0]   # objective gate: single cheap judge
     analogy_models = models if panel_open_ended else models[:1]
     # Keyed by DRAW + path_idx: analogy emits a SET of pairs flattened as [a0, b0, a1, b1, ...]; each
     # even path_idx is a pair head, its partner path_idx+1. Keying includes temperature/sample_idx so a
@@ -204,20 +207,20 @@ async def run_judges(recs: list[dict], responses_by_prompt: dict, models: list, 
         # Factuality (per-triple hallucination) is objective, so it stays a SINGLE judge (models[0]);
         # only the subjective verdicts (analogy/blend validity, emergent) use the majority-vote panel.
         async with sem:
-            results = await J.judge_factuality_batch(client, models[0], [r["triples"] for r in batch])
+            results = await J.judge_factuality_batch(client, fact_model, [r["triples"] for r in batch])
         for r, res in zip(batch, results):
             r["factual"] = res
 
     async def categorical(rec):
         c = responses_by_prompt[_draw_key(rec)]["constraint"]
         async with sem:
-            out = await J.judge_categorical(client, models[0], c["type_label"], rec["triples"])
+            out = await J.judge_categorical(client, fact_model, c["type_label"], rec["triples"])
             rec["constraint_sat"] = bool(out.get("satisfied")) if out else None
 
     async def relation_con(rec):
         c = responses_by_prompt[_draw_key(rec)]["constraint"]
         async with sem:
-            out = await J.judge_relation_constraint(client, models[0], c, rec["triples"])
+            out = await J.judge_relation_constraint(client, fact_model, c, rec["triples"])
             rec["constraint_sat"] = bool(out.get("satisfied")) if out else None
 
     async def analogy(rec):
@@ -243,8 +246,10 @@ async def run_judges(recs: list[dict], responses_by_prompt: dict, models: list, 
                                              rec["triples"], item.get("tags"))
         rec["semantic_sat"] = out.get("generic_ok")   # blend UTILITY U_bl = generic-space judge J^gen
         rec["generic_ok"] = out.get("generic_ok")
-        rec["blend_coherent"] = out.get("coherent")   # emergent-creativity coherence J^coh (kept separate)
-        rec["scope"] = out.get("scope")               # emergent-creativity quality Q_bl in {1,2,3} (separate)
+        # Emergent-creativity dimensions, kept SEPARATE and never aggregated (paper 05_benchmark.tex).
+        rec["blend_utility"] = out.get("emergent_utility")          # J^utl_bl in {0,1}
+        rec["blend_integration"] = out.get("integration_quality")   # J^qua_bl in {1,2,3}
+        rec["shared_properties"] = out.get("shared_properties")     # consensus fused slots (scope>=2)
         rec["judge_agreement"] = out.get("agreement")
         rec["blend_judges"] = out.get("judges")       # per-judge explanations + raw verdicts (persisted)
 
@@ -295,15 +300,17 @@ async def run_emergent_judge(recs, responses_by_prompt, models, concurrency, pan
             return
         paths = item["paths"]
         if mode == "analogy":
-            # Emergent creativity = coherence + validity of the INVENTION (a genuine projection through
-            # M): judged from the aligned paths + the projected concept, invention name, and projection.
+            # Emergent creativity of the INVENTION, scored on two separate dimensions: utility
+            # (J^utl_an -- does h hold together as one usable concept?) and integration quality
+            # (J^qua_an -- was the mapping M actually used to invent h?). Judged from the aligned
+            # paths + the projected concept, invention name, and projection.
             async with sem:
                 verdict = await J.panel_analogy_invention(
                     client, open_models, paths[0], paths[1],
                     item.get("projected", ""), item.get("invention", ""), item.get("projection", []))
             head["invention"] = item.get("invention")
-            head["invention_valid"] = verdict["valid"]
-            head["invention_coherent"] = verdict["coherent"]
+            head["invention_utility"] = verdict["emergent_utility"]
+            head["invention_integration"] = verdict["integration_quality"]
             head["judge_agreement_invention"] = verdict["agreement"]
             head["invention_judges"] = verdict.get("judges")   # per-judge explanations + verdicts (persisted)
             return
@@ -370,17 +377,16 @@ def finalize_sat(rec: dict):
             rec["sat"], rec["channel"] = None, "unjudged"
         else:
             rec["sat"], rec["channel"] = True, "ok"
-    else:  # Regime B analogy
+    else:  # Regime B analogy: per-path sanity only (well-formed + factual). The analogy UTILITY is a
+           # PAIR verdict (pair_sat/pair_channel) set in finalize_regime_b -- aggregate() reads THAT,
+           # not this per-path sat. (The old semantic-judge gate was dropped; utility = structural AND
+           # factual, so gating per-path sat on a nonexistent semantic_sat wrongly marked all unjudged.)
+        factual = rec.get("factual")
         if not rec["well_formed"]:
             rec["sat"], rec["channel"] = False, "structural"
-            return
-        factual = rec.get("factual")
-        sem = rec.get("semantic_sat")
-        if factual is not None and not all(factual):
+        elif factual is not None and not all(factual):
             rec["sat"], rec["channel"] = False, "factual"
-        elif sem is False:
-            rec["sat"], rec["channel"] = False, "semantic"
-        elif factual is None or sem is None:
+        elif factual is None:
             rec["sat"], rec["channel"] = None, "unjudged"
         else:
             rec["sat"], rec["channel"] = True, "ok"
@@ -441,6 +447,9 @@ async def main(config_path, overwrite=False, debug=False):
     judge_enabled = judge_cfg.get("enabled", False)
     # Panel of judges (majority vote). Back-compat: a single `model` becomes a 1-element panel.
     judge_models = judge_cfg.get("models") or [judge_cfg.get("model", "openai/gpt-oss-120b")]
+    # Objective factuality gate rides its own cheap single judge (default gpt-oss-120b) so a costly
+    # frontier SUBJECTIVE panel does not inflate the bulk factuality spend.
+    factuality_model = judge_cfg.get("factuality_model", "openai/gpt-oss-120b")
     # If False, open-ended analogy/association judgments use a single judge; blending stays paneled.
     panel_open_ended = judge_cfg.get("panel_open_ended", True)
     concurrency = judge_cfg.get("concurrency", 8)
@@ -489,7 +498,7 @@ async def main(config_path, overwrite=False, debug=False):
                 est = sum((n_paths * 700 * PRICING.get(jm, (9, 9))[0]
                            + n_paths * 300 * PRICING.get(jm, (9, 9))[1]) / 1e6 for jm in judge_models)
                 print(f"    running {len(judge_models)}-judge panel on ~{n_paths} paths (est ~${est:.3f}) ...")
-            await run_judges(recs, by_prompt, judge_models, concurrency, panel_open_ended)
+            await run_judges(recs, by_prompt, judge_models, concurrency, panel_open_ended, factuality_model)
             await run_emergent_judge(recs, by_prompt, judge_models, concurrency, panel_open_ended)
 
         for rec in recs:

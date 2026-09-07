@@ -85,20 +85,20 @@ anchor count $k \in \{2,3,4\}$ and vocabulary corpus
 in `04_drat.tex`. Utility-gate aggregator ablation
 ($\max$ / $\min$ / $\mathrm{avg}$) in `06_appendix.tex`.
 
-### kg_creat (active; venue TBD — reframed 2026-06-04)
+### kg_creat (active, ICLR 2027 — Kombine)
 
-**Current (2026-08-30): "Kombine."** A three-task combinatorial-creativity benchmark
-(association / analogy / blending) over a **flat curated domain-balanced entity pool**. The task
-formalism is now unified under a projection operator — analogy invents `M[Φ]`; a blend fuses two
-inputs via two selective projections into a shared **generic space `g`**. Each artifact is scored on
-utility, surprise, and originality (**pool-relative embedding distance**), and — for analogy/blending
-only — emergent creativity kept as **separate** dimensions (coherence + validity/scope), never
-aggregated. The elicitation + scoring code was realigned to this formalism, judge explanations are
-persisted per record, and a persistent per-phase/model **cost ledger** tracks all spend. First
-multi-model run: **6 frontier/open models × 30 items/task, 100% parse**, scores discriminate
-(grok-4.6 tops utility); total spend **$10.53**, dominated by heavy reasoning models (grok-4.6 alone
-$5.43). A jsPsych human-generation study is built to the same structure. See
-`docs/tracks/kg_creat/progress.md`. (Older framing below.)
+**Current (2026-09-03): "Kombine."** A three-task combinatorial-creativity benchmark (association / analogy / blending) over a **flat curated domain-balanced entity pool** (283 Wikidata-grounded anchors). The task formalism is unified under a projection operator — analogy invents `h := M[Φ]`; a blend fuses two inputs through a shared textual **generic space `g`**. Each artifact is scored on utility, surprise, and originality (**pool-relative embedding distance**), and — for analogy/blending only — emergent creativity kept as **separate** dimensions, never aggregated; originality is split into **base** (the scored artifact) and **emergent** (the invention), which behave differently across tasks. **Target venue: ICLR 2027**; paper drafting in `papers/kg_creat-iclr/`; a jsPsych human-generation study is built to the same structure but not yet fielded. See `docs/tracks/kg_creat/progress.md`. (Older framing below.)
+
+**Run and judging (2026-09-07)**: **35 models × 30 items/task × 3 tasks** at temp 0.9. The subjective verdicts come from a **3-judge panel of non-subject frontier models** (Haiku 4.5, GPT-5.4, o3; inter-judge ICC(2,3) 0.48–0.67, fair-to-good), with a single judge on the objective per-triple factuality gate — **`claude-haiku-4.5` since 2026-09-07**, replacing `gpt-oss-120b`, which was returning no parsable verdict on a large share of paths and so had been silently scoring them as factuality failures. A **blind 60-item author re-rating** corroborates the panel: 66% agreement over 150 dimension judgments, 75% where the panel is unanimous, and the leaderboard ordering is robust to restricting it to unanimous items (ρ = 0.945). Blending was **re-elicited for the whole pool** after a format fix — triples now carry a **`uv` tag for a slot both inputs organize**, which the previous format made unrepresentable and so forced concatenation by construction. Cumulative spend **$379.74**, with judging now nearly half of it (o3 $88.96 and GPT-5.4 $58.92 as panel judges, more than any subject model).
+
+**Headline findings** (reports in `docs/reports/2026-08-31_…` → `2026-09-03_…`):
+- **The three tasks fail in three different ways**: association and analogy on **factual grounding** (**27.1%** of path triples are hallucinated specific-entity connective facts, measured after the 2026-09-07 judge replacement; the previously reported ~20% was deflated by unjudged paths), blending on **abstraction** (41% of frontier blends die at the generic-space gate), analogy invention on **fidelity** (~19% relabel the target or import an outside concept instead of projecting the mapping).
+- **The blend bottleneck is finding a real shared abstraction, not elaborating it.** Every blend claims a shared slot, but only 57% survive verification; 94% of the failures are a **one-sided schema forced onto the other input**. Past the gate, 99% are coherent and 94% fully double-scope. The genuine-fusion rate spans 36–86% across models and does not track raw capability, and every anchor pair yields both a real fusion and a fake, so it measures model skill, not pair difficulty.
+- **An artificial hivemind, on a ladder.** Inter-model convergence rises monotonically across each task's characteristic product — association bridge 0.21 → analogy invention 0.24 → blend `c′` 0.48 (excess over a cross-item null +0.12 → +0.14 → +0.34). Blending homogenizes even on its creative leap; analogy stays divergent. Blends carry a provider **house style**; bridges and analogy inventions do not.
+- **Inventive multiples, and an operator asymmetry.** Two independent models invent the same entity *by the same abstraction* in 2.3% of co-response pairs; **blending produces ~7× more than analogy** (p = 1.4e-5) and same-provider pairs 3.2× cross-provider (p = 5e-4). More **distant** anchors *raise* the blend convergence rate but leave analogy flat — **blending funnels, analogy fans**, a quantitative signature of Fauconnier–Turner integration vs Gentner projection.
+- **Analogy beats blending on utility by 10 points, and item difficulty does not explain it.** Over 1020 matched model×item cells, analogy 54.3% vs blending 44.3% (McNemar exact p = 2.9e-6, OR 1.55 [1.29, 1.88]). **No item is impossible** — every one of the 30 anchor pairs had at least one model produce both a valid analogy and a valid blend. The gap is concentrated on items that are hard *overall* (hardest tercile +27.0 pts; on the easiest third blending is **ahead** by 12.2), and per-item difficulty is essentially **uncorrelated across the two tasks** (r = +0.14) — a pair that is hard to analogise is not the pair that is hard to blend.
+- **Thinking effort buys more output, not better output.** Two models × low/medium/high: the overall composite is flat (paired high−low −0.43 and −0.38, both CIs spanning zero) even though mean reasoning tokens rise **7.3×** and **14.6×**. The one apparent decline — association utility under high effort — is a **path-length artifact**: effort lengthens chains and a path counts as factual only if every triple does, while per-triple factuality stays near-flat.
+- **The scoring dimensions are not redundant.** Task, not dimension, is the organizing axis; within a task utility trades off against surprise and originality (r ≈ −0.4 to −0.6). Only **emergent** originality transfers across tasks (0.46 vs 0.18 for base), and it is **orthogonal to capability** (r = −0.13 with the leaderboard) — the most inventive models are mid-tier, not the leaders.
 
 Re-purposes the **comb_eval / Comb-Creat** task setup (constrained labeled-
 graph pathfinding with novelty×utility scoring) into a **test-time creativity
@@ -144,7 +144,7 @@ two parallel structures emanating outward) and smoke-tested; it has not been run
 at scale. The earlier analogy result stands (~26% best-model success on 200 random
 pairs; `docs/reports/2026-07-20_kg_creat_analogy/`). The blind judge-reliability
 human pass is **still owed**, and is now load-bearing since all five Regime-A
-cells are judged rather than exactly checked. Detailed state in
+cells are judged rather than exactly checked. *(Done 2026-09-01 on the Kombine run — see Current above.)* Detailed state in
 `docs/tracks/kg_creat/progress.md`.
 
 ### plot_twist — TwistBench (SUBMITTED 2026-06-24, Sci-FM @ COLM 2026)

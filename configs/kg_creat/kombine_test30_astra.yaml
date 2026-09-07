@@ -1,0 +1,30 @@
+# POOL ENTRY for gpt-6-astra-flex (2026-09-06), taking the pool from 34 to 35.
+#
+# A NORMAL entry: no effort parameter, so the model runs at its own default, matching how the other
+# pool models were drawn. The separate effort-study runs of this model live in
+# data/kg_creat/effort_study/ under "litellm/..." keys and are NOT pool entries.
+#
+# DEVIATION, same as the four Claude models: the gateway rejects `temperature` outright for this
+# model ("Unsupported value: 'temperature'"), so it cannot be drawn at the pool's T = 0.9. The
+# `temperatures` field below is retained only so the response records keep the same shape.
+#
+# Elicited through the user's LiteLLM gateway, which bills this model at $0. max_tokens is absolute
+# and generous because association at raised effort blew past 16k and returned an EMPTY answer; you
+# are billed for tokens emitted, not the cap.
+upstream_dir: data/kg_creat/kombine_test30/prompts
+output_dir: data/kg_creat/kombine_test30/responses
+modes: [baseline, analogy, blending]
+provider:
+  kind: openai_compatible
+  base_url_env: LITELLM_BASE_URL
+  api_key_env: LITELLM_API_KEY
+  # no `effort`: default behaviour, to match the rest of the pool
+eval:
+  temperatures: [0.9]        # not sent; the endpoint rejects temperature (see above)
+  n_samples: 1
+  max_tokens: 64000
+  max_tokens_absolute: true
+concurrency: 6
+budget_usd: 25.0             # gateway bills this model $0; cap is a guard, not a budget
+models:
+  - openai/gpt-6-astra-flex

@@ -1,0 +1,11 @@
+upstream_dir: data/kg_creat/kombine_v2/grok_redo/prompts
+output_dir: data/kg_creat/kombine_v2/grok_redo/responses
+modes: [baseline, analogy, blending]
+eval:
+  temperatures: [0.9]
+  n_samples: 1
+  max_tokens: 1600
+concurrency: 12
+budget_usd: 5.0
+models:
+  - x-ai/grok-4.6

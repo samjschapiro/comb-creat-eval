@@ -202,9 +202,10 @@ def parse_blend(raw_response: str | None) -> dict | None:
         obj = salv[0] if salv else None
     if not isinstance(obj, dict):
         return None
-    # Schema: structure is a list of {"triple": [h, r, t], "from": "u"|"v"|"emergent"}. Extract the
+    # Schema: structure is a list of {"triple": [h, r, t], "from": "u"|"v"|"uv"|"emergent"}. Extract the
     # triples (one EmittedPath) and keep the per-triple provenance tags -- the "emergent" tags and the
-    # u/v coverage feed the double-scope quality score Q_bl. Tolerates a bare triple with no tag.
+    # u/v/uv coverage feed the double-scope quality score Q_bl ("uv" = one slot both inputs organize, the
+    # genuine fusion). Tolerates a bare triple with no tag.
     raw_struct = obj.get("structure")
     triples: list[tuple[str, str, str]] = []
     tags: list[str] = []
@@ -218,7 +219,7 @@ def parse_blend(raw_response: str | None) -> dict | None:
                 continue
             if isinstance(tr, list) and len(tr) == 3 and all(str(x).strip() for x in tr):
                 triples.append(tuple(str(x).strip() for x in tr))
-                tags.append(tag if tag in ("u", "v", "emergent") else "")
+                tags.append(tag if tag in ("u", "v", "uv", "emergent") else "")
     if not triples:
         return None
     structure = EmittedPath(triples=triples)

@@ -1,0 +1,27 @@
+# Anagram (exploratory-creativity) task, full 15-model suite.
+# One stimulus per anchor; model lists AS MANY distinct anagrams as it can, so the within-response
+# candidate list IS the set -> no M resampling needed. Temperature sweep {0.7,0.9,1.0} instead.
+# 150 anchors x 3 temps x M=1 = 450 draws/model. Judge-free scoring (letters + lexicon/Wikidata).
+upstream_dir: data/kg_creat/prompts_anagram
+output_dir: data/kg_creat/responses_anagram
+eval:
+  temperatures: [0.7, 0.9, 1.0]
+  n_samples: 1
+  max_tokens: 1024
+concurrency: 16
+budget_usd: 20.0
+models:
+  - anthropic/claude-sonnet-4.6
+  - google/gemini-2.5-pro
+  - openai/gpt-4.1
+  - x-ai/grok-4.5
+  - anthropic/claude-haiku-4.5
+  - google/gemini-2.5-flash
+  - openai/gpt-4.1-mini
+  - mistralai/mistral-large-2512
+  - qwen/qwen-2.5-72b-instruct
+  - deepseek/deepseek-chat-v3-0324
+  - meta-llama/llama-3.3-70b-instruct
+  - openai/gpt-4o-mini
+  - google/gemini-2.5-flash-lite
+  - meta-llama/llama-3.1-8b-instruct

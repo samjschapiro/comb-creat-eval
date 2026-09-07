@@ -1,0 +1,19 @@
+# Test30 FRONTIER PANEL scoring: the SUBJECTIVE emergent-creativity verdicts (blend fusion + analogy
+# invention + emergent counts) are a 3-judge majority vote across genuine frontier models, NONE of
+# which are subjects in the 19-model pool (no self-scoring bias). The OBJECTIVE factuality gate stays
+# on a cheap single judge (gpt-oss-120b) so the frontier panel does not inflate the bulk factuality
+# spend. panel_open_ended: true -> analogy invention is paneled too.
+# Run WITHOUT LLM_BASE_URL (paid OpenRouter judges + local MLX embeddings). Re-score ALL: --overwrite.
+upstream_dir: data/kg_creat/kombine_test30/responses
+output_dir: data/kg_creat/kombine_test30/scores
+judge:
+  enabled: true
+  models:                        # SUBJECTIVE panel (blend/analogy emergent creativity) -- frontier, non-subject
+    - anthropic/claude-haiku-4.5
+    - openai/gpt-5.4
+    - openai/o3
+  factuality_model: openai/gpt-oss-120b   # OBJECTIVE per-triple factuality gate -- cheap single judge
+  panel_open_ended: true
+  concurrency: 16
+embedding:
+  model: mlx-community/all-MiniLM-L6-v2-4bit

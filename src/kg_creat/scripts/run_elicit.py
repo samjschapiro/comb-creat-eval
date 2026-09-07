@@ -31,16 +31,24 @@ EST_OUTPUT_TOKENS = 400   # measured: baseline ~400, analogy ~224, blending ~162
 
 REASONING_MODELS = {
     "openai/o3", "openai/o3-mini", "openai/o4-mini",
-    "openai/gpt-5", "openai/gpt-5-mini", "openai/gpt-5-nano",
+    "openai/gpt-5", "openai/gpt-5-mini", "openai/gpt-5-nano", "openai/gpt-5.2",
     "openai/gpt-5.4", "openai/gpt-5.4-mini", "openai/gpt-5.4-nano",
     "deepseek/deepseek-r1", "qwen/qwq-32b",
     # newer reasoning-capable models (over-including is safe: it only raises the token cap and passes a
     # low-effort reasoning param OpenRouter ignores when unsupported).
-    "openai/gpt-5.6-sol", "x-ai/grok-4.6", "google/gemini-3.1-pro-preview", "google/gemini-3.7-flash",
+    "openai/gpt-5.6-sol", "x-ai/grok-4.6", "x-ai/grok-4.5",
+    "google/gemini-3.1-pro-preview", "google/gemini-3.7-flash",
+    "google/gemini-3-flash-preview", "google/gemini-2.5-pro",
     "qwen/qwen3-max", "qwen/qwen3-235b-a22b", "qwen/qwen3-30b-a3b", "z-ai/glm-4.6",
-    # Claude 5 family are extended-thinking by default -> at low max_tokens the thinking consumes the
-    # budget and returns empty ("null content"); they need the 8x bump + a bounded reasoning param.
-    "anthropic/claude-opus-5", "anthropic/claude-sonnet-5", "anthropic/claude-fable-5",
+    # Claude 5 family (and opus-4.6) are extended-thinking by default -> at low max_tokens the thinking
+    # consumes the budget and returns empty ("null content"); they need the 8x bump + a bounded param.
+    "anthropic/claude-opus-5", "anthropic/claude-opus-4.6", "anthropic/claude-opus-4.5",
+    "anthropic/claude-sonnet-5", "anthropic/claude-sonnet-4.6", "anthropic/claude-sonnet-4.5",
+    "anthropic/claude-fable-5",
+    # Added 2026-09-05: both returned "null content" on the spread expansion (glm-4.5-air 48/90,
+    # kimi-k2 12/90) with traces emitted -- the same thinking-eats-the-budget failure, so they need
+    # the same headroom.
+    "z-ai/glm-4.5-air", "moonshotai/kimi-k2",
 }
 
 
@@ -59,7 +67,8 @@ def estimate_model_cost(model_id: str, n_prompts: int) -> float:
     return (n_prompts * EST_INPUT_TOKENS * in_price + n_prompts * EST_OUTPUT_TOKENS * out_price) / 1_000_000
 
 
-async def _run_one(async_client, sem, model_id, spec, max_tokens, temperature, sample_idx, reasoning):
+async def _run_one(async_client, sem, model_id, spec, max_tokens, temperature, sample_idx, reasoning,
+                   provider=None):
     prompt_text = build_prompt(spec)
     messages = [{"role": "user", "content": prompt_text}]
     base = {k: spec.get(k) for k in ("prompt_id", "bundle_id", "regime", "mode",
@@ -70,9 +79,14 @@ async def _run_one(async_client, sem, model_id, spec, max_tokens, temperature, s
     base = {**base, "temperature": temperature, "sample_idx": sample_idx}
     async with sem:
         try:
-            raw, reasoning_trace, usage = await call_llm_async(
-                async_client, messages=messages, model=model_id, temperature=temperature,
-                max_tokens=max_tokens, reasoning=reasoning, capture_reasoning=True, capture_usage=True)
+            if provider is not None:
+                # non-OpenRouter route (LiteLLM gateway / Anthropic direct); see providers.py
+                raw, reasoning_trace, usage = await provider.acall(
+                    messages=messages, model=model_id, temperature=temperature, max_tokens=max_tokens)
+            else:
+                raw, reasoning_trace, usage = await call_llm_async(
+                    async_client, messages=messages, model=model_id, temperature=temperature,
+                    max_tokens=max_tokens, reasoning=reasoning, capture_reasoning=True, capture_usage=True)
             base["reasoning"] = reasoning_trace   # saved for analysis (also present when content is empty)
             base["usage"] = usage                 # actual billed tokens {in, out} -> cost ledger
             if raw is None:
@@ -117,26 +131,34 @@ async def _run_one(async_client, sem, model_id, spec, max_tokens, temperature, s
 
 
 async def run_model(async_client, sem, model_id, specs, max_tokens, temperatures, n_samples,
-                    reasoning, output_dir, config_name=""):
+                    reasoning, output_dir, config_name="", provider=None):
     model_dir = output_dir / model_id_to_key(model_id)
     model_dir.mkdir(parents=True, exist_ok=True)
     responses_path = model_dir / "responses.json"
     if responses_path.exists():
         print(f"  {model_id}: responses.json exists, skipping")
-        return json.loads(responses_path.read_text())
+        return json.loads(responses_path.read_text()), 0.0
 
     draws = [(s, t, i) for s in specs for t in temperatures for i in range(n_samples)]
     print(f"  {model_id}: {len(specs)} prompts x {len(temperatures)} temps x {n_samples} samples "
           f"= {len(draws)} draws, max_tokens={max_tokens}, firing ...")
     t0 = time.time()
     results = await asyncio.gather(*[
-        _run_one(async_client, sem, model_id, s, max_tokens, t, i, reasoning) for s, t, i in draws
+        _run_one(async_client, sem, model_id, s, max_tokens, t, i, reasoning, provider)
+        for s, t, i in draws
     ])
     # default=str so a single unexpected non-serializable value can never discard a whole model's
     # completed draws (a set once slipped through and crashed the write after all draws were spent).
     responses_path.write_text(json.dumps(results, indent=2, default=str))
     n_ok = sum(1 for r in results if r["parse_success"])
     n_api = sum(1 for r in results if r["api_error"])
+    if n_ok == 0 and n_api == len(results):
+        # Every draw failed at the API. Persisting this would make responses.json exist, which the
+        # resume check reads as "already done" -- blocking retries and, in a shared pool directory,
+        # silently adding an empty model to the pool. Fail loudly and write nothing.
+        errs = sorted({str(r["api_error"])[:130] for r in results})
+        raise RuntimeError(f"FATAL: {model_id}: all {len(results)} draws failed at the API; "
+                           f"nothing written. Distinct errors: {errs}")
     # Actual billed tokens (reasoning tokens included in "out") -> persistent cost ledger. Only fresh
     # (non-skipped) runs reach here, so re-running a completed model never double-counts spend.
     in_tok = sum((r.get("usage") or {}).get("in", 0) for r in results)
@@ -147,16 +169,18 @@ async def run_model(async_client, sem, model_id, specs, max_tokens, temperatures
         "n_samples": n_samples, "n_draws": len(draws), "n_parsed": n_ok,
         "n_api_fail": n_api, "in_tokens": in_tok, "out_tokens": out_tok,
         "n_reasoning_traces": n_trace, "elapsed_seconds": round(time.time() - t0, 1)}, indent=2))
+    actual_cost = 0.0
     try:
         from src.kg_creat.cost_ledger import record
         e = record("elicit", model_id, len(results), in_tok, out_tok, config=config_name,
                    note=f"parsed={n_ok}/{len(draws)} api_fail={n_api} traces={n_trace}")
+        actual_cost = e["cost_usd"] or 0.0
         cost_str = f"${e['cost_usd']:.4f}" if e["cost_usd"] is not None else "unpriced"
         print(f"    [ledger] {model_id}: {in_tok:,}+{out_tok:,} tok -> {cost_str}  (traces={n_trace}/{len(draws)})")
     except Exception as ex:  # noqa: BLE001
         print(f"    [ledger] record failed: {ex}")
     print(f"    done in {time.time()-t0:.1f}s — parsed={n_ok}/{len(draws)} api_fail={n_api}")
-    return results
+    return results, actual_cost
 
 
 async def main(config_path, overwrite=False, debug=False):
@@ -201,9 +225,27 @@ async def main(config_path, overwrite=False, debug=False):
     print(f"local_mode={_local_mode()}  models={models}  concurrency={concurrency}  "
           f"budget=${budget_usd:.2f}  temps={temperatures}  M={n_samples}  ({draws_per_prompt}x/prompt)")
 
+    # A `provider:` block routes elicitation off OpenRouter WITHOUT touching LLM_BASE_URL, which would
+    # also drag score.py's judge client along and disable the budget cap (see providers.py).
+    provider_cfg = config.get("provider")
+    provider = None
+    if provider_cfg:
+        from src.kg_creat.providers import build as build_provider
+        provider = build_provider(provider_cfg)
+        print(f"provider: {provider_cfg.get('kind')} "
+              f"(effort={provider_cfg.get('effort')}, "
+              f"thinking_budget={provider_cfg.get('thinking_budget_tokens')})")
+    # reasoning models normally get 8x max_tokens for hidden thinking; an effort sweep needs an
+    # explicit ceiling instead, since high effort blows past any multiple of a 1600-token base.
+    absolute_mt = bool(eval_cfg.get("max_tokens_absolute"))
+
     async_client = get_async_client()
     sem = asyncio.Semaphore(concurrency)
-    cumulative, summaries = 0.0, []
+    # `spent` tracks ACTUAL billed cost of models run this session (from the ledger), not the flat
+    # pre-estimate: reasoning models spend 10-24x EST_OUTPUT_TOKENS on hidden reasoning, so an
+    # estimate-only cap never fires for them. We stop BEFORE a model whose estimate would push actual
+    # spend over budget, bounding any overrun to that one model.
+    spent, summaries = 0.0, []
 
     for model_id in models:
         done = (output_dir / model_id_to_key(model_id) / "responses.json").exists()
@@ -213,19 +255,24 @@ async def main(config_path, overwrite=False, debug=False):
             # Reasoning models spend part of the budget on hidden reasoning that still counts against
             # max_tokens; on the open-ended association task 4x (6400) left some prompts cut off mid-
             # reasoning -> empty content (e.g. gpt-5 returned null on 12/30). 8x gives headroom.
-            mt = max_tokens * 8 if model_id in REASONING_MODELS else max_tokens
-            if budget_usd > 0 and cumulative + est > budget_usd:
-                print(f"\nBUDGET CAP REACHED: next model {model_id} est ${est:.3f} "
-                      f"would exceed ${budget_usd:.2f} (spent ~${cumulative:.3f}). Stopping.")
+            mt = max_tokens if absolute_mt else (max_tokens * 8 if model_id in REASONING_MODELS
+                                                 else max_tokens)
+            if budget_usd > 0 and spent + est > budget_usd:
+                print(f"\nBUDGET CAP REACHED: next model {model_id} est ${est:.3f} on top of "
+                      f"${spent:.3f} actual spent would exceed ${budget_usd:.2f}. Stopping.")
                 break
-            cumulative += est
-            print(f"\n{model_id}  (est ${est:.4f}, cumulative ${cumulative:.4f})")
+            print(f"\n{model_id}  (est ${est:.4f}, actual spent so far ${spent:.4f})")
         else:
             reasoning_here, mt = None, max_tokens
             print(f"\n{model_id}  (already done)")
-        results = await run_model(async_client, sem, model_id, specs, mt, temperatures, n_samples,
-                                  reasoning_here, output_dir, config_name=Path(config_path).stem)
-        summaries.append({"model_id": model_id, "n": len(results)})
+        results, model_cost = await run_model(async_client, sem, model_id, specs, mt, temperatures,
+                                              n_samples, reasoning_here, output_dir, provider=provider,
+                                              config_name=Path(config_path).stem)
+        spent += model_cost
+        summaries.append({"model_id": model_id, "n": len(results), "cost_usd": round(model_cost, 4)})
+        if budget_usd > 0 and spent >= budget_usd:
+            print(f"\nBUDGET CAP REACHED: ${spent:.3f} actual >= ${budget_usd:.2f} after {model_id}. Stopping.")
+            break
 
     (output_dir / "run_summary.json").write_text(json.dumps(summaries, indent=2))
     print(f"\nSaved responses to {output_dir}")

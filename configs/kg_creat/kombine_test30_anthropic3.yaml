@@ -1,0 +1,22 @@
+# Kombine test30 expansion: fable-5 + the two latest opus models (opus-4.6, opus-4.5), appended to the
+# existing test30 responses (resume-safe: skips the 18 already done). Default reasoning effort, traces
+# saved. Actual-cost budget stop at $170 protects the OpenRouter key ($200 headroom). PAID (OpenRouter).
+upstream_dir: data/kg_creat/kombine_test30/prompts
+output_dir: data/kg_creat/kombine_test30/responses
+modes: [baseline, analogy, blending]
+eval:
+  temperatures: [0.9]
+  n_samples: 1
+  max_tokens: 1600
+concurrency: 8
+reasoning:
+  exclude: false             # RETURN + SAVE the trace
+  max_tokens: 8000           # HARD cap on Anthropic extended thinking. With the 8x completion budget
+                             # (12,800) this GUARANTEES >=4,800 tokens of output room, so a call can
+                             # never spend its whole budget on reasoning and return null content
+                             # (which we would still pay for). Prevents wasted-reasoning spend.
+budget_usd: 170.0            # HARD cap (actual-cost stop) -- keeps the run inside the key's headroom
+models:
+  - anthropic/claude-fable-5
+  - anthropic/claude-opus-4.6
+  - anthropic/claude-opus-4.5

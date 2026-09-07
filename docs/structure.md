@@ -37,20 +37,43 @@ src/
 │       ├── run_liveideabench.py     # LiveIdeaBench wrapper runner
 │       ├── run_noveltybench.py      # NoveltyBench wrapper runner
 │       └── run_rat.py               # RAT wrapper runner
-├── kg_creat/                   # active track (test-time Comb-Creat on a real KG); Regime A run at scale 2026-07-21
-│   ├── graph.py                # KG-agnostic KnowledgeGraph (typed path enumeration)
-│   ├── wikidata.py             # REST-BFS builder: freq-derived relation vocab, domain-tagged seeds
-│   ├── sample.py               # matched-bundle (Regime A) + random analogy/blend (Regime B) samplers
-│   ├── prompts.py              # CREATE-aligned, open-vocabulary prompt renderer
-│   ├── judge.py                # gpt-oss-120b factuality + semantic + relation-constraint judges (retrying)
-│   ├── relation_classes.py     # embedding-derived relation CLASSES + per-bundle baseline-derived targets
+├── kg_creat/                   # active track (Kombine: association / analogy / blending over a curated entity pool); 35-model run 2026-09-07
+│   ├── graph.py                # LEGACY (seed-BFS era): KG-agnostic KnowledgeGraph (typed path enumeration)
+│   ├── wikidata.py             # Wikidata REST client: entity grounding for the curated pool (+ legacy BFS builder)
+│   ├── sample.py               # LEGACY: matched-bundle (Regime A) + random analogy/blend (Regime B) samplers
+│   ├── prompts.py              # Kombine prompt renderer (association / analogy / blending; `uv` shared-slot tag)
+│   ├── judge.py                # factuality gate (claude-haiku-4.5 since 09-07) + panel judges: blend generic_ok/coherent/scope + shared_properties, analogy invention
+│   ├── providers.py            # non-OpenRouter elicitation routes (LiteLLM gateway + Anthropic SDK); bypasses LLM_BASE_URL so OpenRouter budget guards stay intact
+│   ├── model_names.py          # single source for LOGO_SLUG / BRAND / DISPLAY (35 entries) / _provider; no matplotlib dependency
+│   ├── relation_classes.py     # LEGACY: embedding-derived relation CLASSES + per-bundle baseline-derived targets
 │   ├── regime_b.py             # shared structure-mapping predicates (analogy + single-anchor blending)
 │   ├── diversity.py            # set-level diversity D over M-resamples (per temperature; all + valid)
 │   ├── embed.py                # local MLX MiniLM embeddings (novelty R)
-│   ├── scoring.py, parse.py (new blend {triple,from} schema + tags), aggregate.py
+│   ├── scoring.py, parse.py ({triple, from} blend schema with u/v/uv/emergent tags), aggregate.py
 │   ├── cost_ledger.py          # persistent per-phase/model USD ledger (data/kg_creat/cost_ledger.jsonl)
+│   ├── anagram.py              # anagram task (exploratory-creativity side probe, judge-free scoring)
 │   ├── vendor/create/          # vendored CREATE scorer (author-cleared)
-│   └── scripts/                # sample_flat (flat curated pool — no BFS; current), build_gc/sample_bundles (legacy seed-BFS), run_elicit, score (+emergent judge), make_pass2, rejudge, compute_diversity, datasheet, plot_*/fig_*, *_review
+│   └── scripts/
+│       ├── sample_pool.py, resolve_pool.py, sample_flat.py   # curated entity pool + per-task item sampling (no graph)
+│       ├── run_elicit.py       # elicitation; resume-safe, saves reasoning traces, actual-cost stop vs budget_usd
+│       ├── score.py            # scoring pass: factuality gate + 3-judge panel (blend/invention), persists per-judge explanations
+│       ├── repair_elicit.py, rejudge_factuality.py           # backfill failed draws; re-judge paths the batched judge truncated
+│       ├── rescore_originality.py, rescore_split_originality.py, rescore_blends.py  # pool-relative rescore; base/emergent split; blend-v3 rescore
+│       ├── build_blind_review.py, blind_review_server.py     # blind human re-rating of panel dimensions (+ hidden key)
+│       ├── build_blend_review.py, blend_review_server.py     # blend-specific review UI (uv shared-slot format)
+│       ├── leaderboard_unanimous.py, leaderboard_single_judge.py  # judge-robustness checks on the leaderboard
+│       ├── shared_property_judge.py, coherence_taxonomy_judge.py  # blend shared-slot + failure-mode probes
+│       ├── analyze_invention_homogeneity.py, analyze_inventive_multiples.py, embed_inventions.py  # cross-model convergence analyses
+│       ├── analyze_failure_modes.py, catalogue_generic_space_failures.py, analyze_blend_integration.py  # what goes wrong, per channel
+│       ├── analyze_facet_correlations.py, analyze_item_effects.py, embedding_robustness.py  # what the dimensions measure; encoder robustness
+│       ├── analyze_task_dissociation.py  # analogy vs blending on the SAME model x pair cells (2x2 + disattenuation)
+│       ├── analyze_blend_difficulty.py   # what makes an anchor pair hard to blend (exploratory, post-hoc coding)
+│       ├── compute_composite.py, make_composite_table.py, make_appendix_tables.py, make_pool_appendix.py, datasheet.py
+│       ├── plot_hivemind.py, plot_invention_landscape.py, plot_creativity_gallery.py, plot_profiles.py, plot_radar.py
+│       ├── plot_multiples_matrix.py, plot_abstraction_failure.py, plot_bars.py, make_multiples_showcase.py
+│       ├── make_paper_multiples_figure.py  # stacks the matrix over the landscape into the paper's single figure
+│       ├── sample_anagram.py, run_anagram.py, score_anagram.py    # anagram side probe
+│       └── build_gc.py, sample_bundles.py, plot_regime_a.py, compute_diversity.py, make_pass2.py  # legacy seed-BFS / Regime-A pipeline
 └── plot_twist/                 # active track (TwistBench: transformational creativity via plot twists)
     ├── llm.py                  # OpenRouter wrapper (+ optional `reasoning` param)
     ├── generate.py             # durable per-story twist generation (multi-temp, resumable)
@@ -82,6 +105,14 @@ configs/
 ├── dat_eval/
 │   ├── run_evals.yaml          # 53 models, temps, sampling, budget
 │   └── score_evals.yaml        # embedding paths, bootstrap iters
+├── kg_creat/                   # Kombine run + scoring configs (pilot / Regime-A configs kept for history)
+│   ├── kombine_test30_run.yaml       # the canonical 30-item/task run (original 6 models)
+│   ├── kombine_test30_frontier.yaml  # +13 frontier flagships, resume-safe, actual-cost stop (budget_usd 75)
+│   ├── kombine_test30_anthropic3.yaml  # +3 legacy-priced Anthropic models -> 21-model pool (now 30 with spread9)
+│   ├── kombine_test30_blendv3{,_gemini}.yaml  # blending-only re-elicitation with the `uv` shared-slot tag
+│   ├── kombine_test30_panel_score.yaml  # 3-judge non-subject panel (subjective) + cheap single factuality judge
+│   ├── kombine_{pilot,v1,v2,blend_v2}_*.yaml  # earlier pilot / polysemy / fusion-blend runs
+│   └── run_anagram.yaml, build_gc.yaml, sample_bundles.yaml, score_regimeA.yaml  # side probe + legacy pipeline
 ├── new_tests/                  # DRAT pilot + ablation grids; benchmark configs
 │   ├── drat_pilot_*.yaml             # DRAT pilot phases (3anchor_v1, phase4{,_3anchor}, phase5_expansion)
 │   ├── drat_ablation_k{2,3,4}_{expert,conceptnet}{,_ext}.yaml
@@ -104,6 +135,7 @@ scripts/
 ├── dat_eval/                   # bash wrappers for dat_eval pipeline
 ├── new_tests/                  # bash wrappers for new_tests runners
 │   ├── run_eqbench_cw.sh, run_hivemind.sh, run_liveideabench.sh, run_noveltybench.sh
+├── kg_creat/                   # deploy_study.sh (jsPsych human-generation study)
 └── safety/
     ├── status.sh               # see what's running, file activity, API conns
     ├── kill_all.sh             # SIGTERM + SIGKILL all eval processes
@@ -114,6 +146,19 @@ data/
 ├── dat_eval/run_v1/
 │   ├── <model_key>/{dat,cdat,pace}_responses_t<temp>.json   # raw outputs
 │   └── downstream/scores_v1/results/                          # scored
+├── kg_creat/                    # Kombine outputs (gitignored)
+│   ├── entities_curated.json, pool_{candidates,reference,wikidata}.json  # the 283-anchor curated pool
+│   ├── cost_ledger.jsonl        # persistent per-phase/model actual USD spend
+│   ├── effort_study/            # thinking-effort study (2 models x low/medium/high)
+│   │   ├── {low,medium,high}/, all/  # per-effort responses; `all/` is the pooled symlink tree used as scoring upstream
+│   │   ├── scores/              # scored in ONE pooled pass so pool-relative originality is comparable across effort levels
+│   │   └── figures/             # fig_effort_{composite,dimensions,delta}.{pdf,png} + effort_composite.json
+│   └── kombine_test30/          # the 35-model run
+│       ├── prompts/, responses/ # items; per-model responses.json (+ reasoning traces)
+│       ├── blends_v3/           # `uv`-tag blend re-elicitation, merged back into responses/
+│       ├── scores/<model>/path_scores.json  # per-artifact scores + per-judge explanations; composite.json
+│       ├── human_review{,_blendv3}/  # blind review items + hidden key + ratings.jsonl
+│       └── analysis/            # invention_homogeneity.json, invention_vectors.npz
 ├── new_tests/                   # DRAT pilots + ablations + RAT runs
 │   ├── drat/{pilot_*, ablation_k*_{expert,conceptnet}{,_ext}}/raw_results.json
 │   └── rat/{pilot_v1, expansion_v1}/summary.json
@@ -145,9 +190,12 @@ docs/
     │   ├── drat_design.md       # DRAT design notes
     │   ├── proposals.md         # candidate-test proposals
     │   └── survey.md            # related-work survey
-    ├── kg_creat/                # active track docs (real-KG Comb-Creat)
+    ├── kg_creat/                # active track docs (Kombine)
     │   ├── progress.md          # goal, status, phased roadmap
     │   ├── design.md            # task/scoring spec + reuse map + risks
+    │   ├── blending_fusion.md   # two-concept fusion reframe of blending
+    │   ├── methods.md, assessment.md, constraints.md  # scoring methods; legacy constraint taxonomy
+    │   ├── literature_map_forms.md, primary_sources_motivations.md, related_work.md
     │   └── novelty_vs_create.md # methodological novelty table vs CREATE
     └── plot_twist/              # active track docs (TwistBench benchmark)
         ├── progress.md          # goal, status, phased roadmap
@@ -165,6 +213,10 @@ papers/                          # gitignored in outer repo (Overleaf-synced sub
 │   └── figures/
 ├── drat-icml-2026/              # standalone DRAT short paper (stub)
 │   └── main.tex
+├── kg_creat-iclr/               # Kombine paper (kg_creat track; ICLR 2027)
+│   ├── main.tex, content/       # benchmark + results; appendices: entity pool, judge reliability + human corroboration
+│   ├── media/                   # leaderboard, per-task tables, invention landscape, profiles
+│   └── prompts/, setup/, build/
 └── pt2cb-iclr-2027/             # plot_twist paper (TwistBench; folder name predates ARR/EACL switch)
     ├── main.tex, sections/      # §3 benchmark, §4 results (scorecard), …
     └── figures/                 # tc_scorecard.png + fig_scorecard.tex

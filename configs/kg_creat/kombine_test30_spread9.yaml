@@ -1,0 +1,35 @@
+# Kombine test30 SPREAD expansion: 9 more models to take the pool from 21 to 30, chosen to fill the
+# MIDDLE of the ability range rather than to be cheap. Adding only weak models would widen the range
+# and inflate every cross-task correlation (a general-competence axis), which is exactly the artifact
+# the associative-hypothesis test has to avoid; these span older frontier (gpt-4.1), mid open-weight
+# (llama-4-maverick, qwen3-235b, kimi-k2, glm-4.5-air), small frontier (gemini-2.5-flash, gpt-4.1-mini)
+# and a deliberate low anchor (gpt-4o-mini, phi-4).
+#
+# The three panel judges (claude-haiku-4.5, gpt-5.4, o3) are NOT eligible as subjects: a judge scoring
+# its own artifact is a self-scoring bias, and the panel is what the emergent dimensions rest on.
+#
+# ELICITATION ONLY. Scoring is a separate, far more expensive pass ($8/model on the 3-judge panel) and
+# is not authorised by this config. Resume-safe: appends to the existing responses dir and skips the
+# 21 models already there. PAID (OpenRouter) -- expected ~$2-4; hard cap $12, well inside the key's
+# remaining $87.
+upstream_dir: data/kg_creat/kombine_test30/prompts
+output_dir: data/kg_creat/kombine_test30/responses
+modes: [baseline, analogy, blending]
+eval:
+  temperatures: [0.9]          # match the original run's single-temp draw
+  n_samples: 1
+  max_tokens: 1600
+concurrency: 8
+reasoning:
+  exclude: false               # default effort; save any trace the model emits
+budget_usd: 12.0               # HARD cap: actual-cost stop halts before the next model once spend >= this
+models:
+  - microsoft/phi-4                    # NEW family (Microsoft); deliberate low anchor
+  - openai/gpt-4o-mini                 # low anchor, prior-generation small
+  - z-ai/glm-4.5-air                   # mid open-weight
+  - meta-llama/llama-4-maverick        # mid open-weight
+  - deepseek/deepseek-chat-v3-0324     # prior-generation DeepSeek, mid
+  - qwen/qwen-2.5-72b-instruct         # prior-generation Qwen, mid
+  - moonshotai/kimi-k2                 # NEW family (Moonshot)
+  - google/gemini-2.5-flash            # small frontier
+  - openai/gpt-4.1                     # prior-generation frontier, upper-middle

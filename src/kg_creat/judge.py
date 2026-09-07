@@ -97,9 +97,12 @@ async def _ask(client, model: str, prompt: str, max_tokens: int = 800, attempts:
     """
     for i in range(attempts):
         try:
+            # Judging is a structured verdict, not open discovery -> LOW reasoning effort. This bounds
+            # the reasoning-token spend of frontier reasoning judges (o3, gpt-5.x): at default effort a
+            # single panel run can overrun its estimate several-fold (cf. grok-4.6 in elicitation).
             content, usage = await call_llm_async(client, messages=[{"role": "user", "content": prompt}],
                                                   model=model, temperature=0.0, max_tokens=max_tokens,
-                                                  capture_usage=True)
+                                                  reasoning={"effort": "low"}, capture_usage=True)
             u = _JUDGE_USAGE[model]
             u["in"] += usage.get("in", 0); u["out"] += usage.get("out", 0); u["calls"] += 1
             return content
@@ -298,18 +301,20 @@ BLEND_FUSION_JUDGE_PROMPT = """You are judging whether a proposed BLEND is a gen
 of two input concepts.
 
 THE FORM OF A GENUINE BLEND (Fauconnier & Turner conceptual integration). A genuine blend fuses two
-inputs into ONE new concept in which BOTH inputs contribute ORGANIZING STRUCTURE -- their relations and
-roles combine, not merely their labels or a property each -- so the blend runs as a single coherent
-concept and has emergent structure true of neither input alone. This is the "double-scope" form.
-  Genuine example -- "computer virus" (biology + software): biology's frame (a self-replicating agent
-  that infects a host and provokes an immune response) AND computing's frame (a program that spreads
-  across machines and networks) BOTH organize the blend; emergent structure belonging to neither input:
-  it can be quarantined; an antivirus behaves like an immune system.
+inputs into ONE new concept in which BOTH inputs contribute ORGANIZING STRUCTURE to the SAME property --
+one slot of the blend is fed by both inputs at once, so their frames combine there rather than sit side
+by side. The canonical case is a "liquid franchise" (democracy + banking): its ONE "allocates" slot
+carries BOTH democracy's "allocates votes" AND banking's "allocates credit", fusing into "allocates
+transferable vote-shares" -- a single property both inputs organize. The blend then runs as one coherent
+concept and can develop emergent structure true of neither input alone.
+  Genuine example -- "computer virus" (biology + software): its ONE "self-replicating agent that infects
+  a host" slot is organized by BOTH biology's infection frame AND software's program-spread frame;
+  emergent structure of neither input: it can be quarantined; an antivirus behaves like an immune system.
 
 It is NOT a genuine blend if it merely:
-  (a) CONJUNCTION -- lists one property from each input joined by "and", a schema that fits neither
-      cleanly (e.g. generic space "harnesses energy AND exhibits therapeutic effects" for
-      photosynthesis + penicillin: energy from one, therapeutic from the other, stapled together); or
+  (a) CONCATENATION -- lists some properties from one input and some from the other under a shared name,
+      but NO single property is organized by both (e.g. a "vote bank" that (elects, leaders) from
+      democracy and (pays interest on, deposits) from banking -- separate slots, never fused); or
   (b) ADJECTIVE -- demotes one input to a modifier on the other, which stays fully itself (e.g. "a
       radioactive solar system" = a solar system that happens to be radioactive).
 
@@ -318,21 +323,22 @@ Input 1 (u): '{u}'
 Input 2 (v): '{v}'
 Blend concept: '{concept}'
 Generic space (claimed shared schema): '{generic_space}'
-Structure (each triple tagged "u", "v", or "emergent"): {structure}
+Structure (each triple tagged "u" = from input 1 only, "v" = from input 2 only, "uv" = a single property BOTH inputs organize, or "emergent" = true of the blend but of neither input alone): {structure}
 
 The blend need NOT be a real/existing thing and MAY assert properties false of either input -- that is allowed. Decide the following independently:
 1. GENERIC SPACE (generic_ok): is '{generic_space}' a REAL, specific schema that BOTH '{u}' and '{v}' genuinely instantiate -- not vacuous ("both exist", "both involve change"), and not a one-from-each conjunction?
-2. COHERENT (coherent): do the triples together describe a single, coherent new concept -- not two lists of properties placed side by side?
-3. TAGS: verify each triple's tag. A "u" triple must be organizing structure genuinely from '{u}'; a "v" triple genuinely from '{v}'; an "emergent" triple must be true of the BLEND but of NEITHER '{u}' alone NOR '{v}' alone (a property already true of one input is inherited, not emergent). Ignore any triple whose tag is wrong.
-4. SCOPE (scope): using only the correctly-tagged structure, classify the fusion: 1 = single-scope (only ONE input contributes organizing structure); 2 = double-scope (BOTH inputs contribute organizing structure); 3 = double-scope emergent (double-scope, AND at least one genuine "emergent" triple).
+2. UTILITY (coherent): are the triples in the blended space feasible or coherent -- each individually plausible or sensible, and together describing a single coherent new concept rather than two lists of properties placed side by side? The blend need not be a real or existing thing.
+3. TAGS: verify each triple's tag against what it actually is, judging by content and not the label. A "u"/"v" triple must be organizing structure genuinely from that ONE input. A "uv" triple must be a SINGLE property that BOTH inputs genuinely organize -- both frames must land on the same slot (like "allocates vote-shares" carrying both votes and credit); if only one input really organizes it, it is NOT a genuine "uv". An "emergent" triple must be true of the BLEND but of NEITHER '{u}' alone NOR '{v}' alone (a property already true of one input is inherited, not emergent). Ignore a triple whose tag is wrong, but credit a genuine shared slot even if the model mis-tagged it.
+4. SCOPE (scope): using only the correctly-tagged structure, classify the fusion: 1 = single-scope (NO genuine shared slot -- no single property is organized by both inputs, whether because only one input contributes or because the two contribute only on SEPARATE slots); 2 = double-scope (at least ONE genuine shared slot -- a property BOTH inputs organize at once, a real "uv"); 3 = double-scope emergent (a genuine shared slot AND at least one genuine "emergent" triple, true of the blend but of neither input alone).
 Return valid JSON only, exactly:
-{{ "explanation": "string", "generic_ok": true or false, "coherent": true or false, "scope": 1 or 2 or 3 }}"""
+{{ "explanation": "string", "generic_ok": true or false, "coherent": true or false, "scope": 1 or 2 or 3, "shared_properties": ["name each property BOTH inputs organize"] }}
+(Make "shared_properties" an empty list if no single property is organized by both inputs.)"""
 
 
 def format_tagged_structure(triples: list, tags: list | None) -> str:
     """Render the blend structure with each triple's provenance tag, as the judge prompt expects
-    (``(head, rel, tail)  [u|v|emergent]``). Without the tags the judge cannot verify them or assign
-    the double-scope score Q_bl."""
+    (``(head, rel, tail)  [u|v|uv|emergent]``). Without the tags the judge cannot verify them or assign
+    the double-scope score Q_bl ("uv" = one slot both inputs organize, the genuine-fusion signal)."""
     tags = tags or []
     lines = []
     for i, tr in enumerate(triples):
@@ -502,7 +508,11 @@ async def panel_analogy(client, models: list, u: str, v: str, p1: list, p2: list
     return _majority([o.get("valid") if o else None for o in outs])
 
 
-# --- Analogy INVENTION judge: emergent creativity (coherence + validity of the invented concept) -----
+# --- Analogy INVENTION judge: emergent creativity (utility + integration quality of the invention) ---
+# Paper names (05_benchmark.tex): emergent utility J^utl_an, integration quality J^qua_an. The judge's
+# wire keys below stay "coherent"/"valid" on purpose -- renaming them would change the model-facing
+# prompt and break comparison with already-scored runs. They are mapped to the paper names in
+# panel_analogy_invention().
 ANALOGY_INVENTION_JUDGE_PROMPT = """You are judging an ANALOGY that invents a new concept by projecting structure across a mapping.
 
 You are given two aligned paths (position i of path_a corresponds to position i of path_b), a "projected" source concept, an "invention" name, and a "projection": a list of (source, image) triple pairs.
@@ -514,8 +524,8 @@ projection:
 {projection}
 
 Decide two things independently:
-1. VALID (valid): is the invention a genuine projection through the mapping? All must hold: (a) each "source" triple is factually true of the "projected" concept in its own domain; (b) each "image" carries its "source" across the mapping -- same relationship, every entity replaced by its counterpart under the path alignment (path_a[i] corresponds to path_b[i]), with any new counterparts used consistently; (c) the invention is NOVEL to the target domain -- not already an established concept there.
-2. COHERENT (coherent): do the "image" triples together describe a single, sensible new concept, not a disjointed list?
+1. INTEGRATION QUALITY (valid): was the mapping ACTUALLY used to invent the concept -- i.e., is the invention the source structure carried faithfully across the mapping? Both must hold: (a) each "source" triple is factually true of the "projected" concept in its own domain, so a real source structure is being projected; (b) each "image" is that "source" carried across the mapping -- same relationship, every entity replaced by its counterpart under the path alignment (path_a[i] corresponds to path_b[i]), with any newly introduced counterparts used consistently. Judge ONLY whether the projection was genuinely applied; do not reward or penalize how novel or unusual the invention is (novelty is scored separately).
+2. UTILITY (coherent): is the invention feasible and coherent -- its "image" triples each individually plausible or sensible, and together describing a single usable concept rather than a disjointed list? The invention need not be a real or existing thing.
 
 Return valid JSON only, exactly:
 {{ "explanation": "string", "valid": true or false, "coherent": true or false }}"""
@@ -530,8 +540,9 @@ def _fmt_projection(projection) -> str:
 
 async def judge_analogy_invention(client, model: str, path_a: list, path_b: list, projected: str,
                                   invention: str, projection: list) -> dict | None:
-    """Emergent-creativity judge for the analogy invention: is it a genuine, novel projection (valid),
-    and does it cohere into one concept (coherent)?"""
+    """Emergent-creativity judge for the analogy invention. Wire key "valid" -> integration quality
+    J^qua_an (was M actually used to invent h? -- faithful projection only, novelty excluded); wire key
+    "coherent" -> emergent utility J^utl_an (is h feasible and coherent as one usable concept?)."""
     prompt = ANALOGY_INVENTION_JUDGE_PROMPT.format(
         path_a=format_path(path_a), path_b=format_path(path_b),
         projected=projected or "(none)", invention=invention or "(unnamed)",
@@ -542,29 +553,43 @@ async def judge_analogy_invention(client, model: str, path_a: list, path_b: list
 
 async def panel_analogy_invention(client, models: list, path_a: list, path_b: list, projected: str,
                                   invention: str, projection: list) -> dict:
-    """Majority-voted invention verdict: valid (J^val), coherent (J^coh), + agreement."""
+    """Majority-voted invention verdict in the paper's names: ``emergent_utility`` (J^utl_an) and
+    ``integration_quality`` (J^qua_an), + agreement. Wire keys "coherent"/"valid" are mapped here."""
     outs = await asyncio.gather(*[
         judge_analogy_invention(client, m, path_a, path_b, projected, invention, projection)
         for m in models])
-    valid, agree = _majority([o.get("valid") if o else None for o in outs])
-    coherent = _majority([o.get("coherent") if o else None for o in outs])[0]
-    return {"valid": valid, "coherent": coherent, "agreement": agree,
+    integration, agree = _majority([o.get("valid") if o else None for o in outs])
+    emergent_utility = _majority([o.get("coherent") if o else None for o in outs])[0]
+    return {"emergent_utility": emergent_utility, "integration_quality": integration,
+            "agreement": agree,
             # per-judge raw output (explanation + verdicts), persisted so nothing is ever re-judged.
             "judges": [{"model": m, **(o or {})} for m, o in zip(models, outs)]}
 
 
 async def panel_blend_fusion(client, models: list, u: str, v: str, concept: str,
                              generic_space: str, structure: list, tags: list | None = None) -> dict:
-    """Majority-voted blend verdict: generic_ok (utility J^gen), coherent (J^coh), scope (Q_bl in {1,2,3}),
-    plus agreement. Backward-compat keys (generic_space_ok / double_scope / valid) are derived from scope
-    so existing score.py reads keep working until they adopt `scope` directly."""
+    """Majority-voted blend verdict: ``generic_ok`` (BASE utility U_bl = J^gen -- distinct from the
+    emergent dimension below), ``emergent_utility`` (J^utl_bl), ``integration_quality`` (J^qua_bl in
+    {1,2,3}), plus agreement. Wire keys "coherent"/"scope" are mapped to the paper names; the older
+    aliases (generic_space_ok / double_scope / valid / coherent / scope) are kept for back-compat."""
     outs = await asyncio.gather(*[judge_blend_fusion(client, m, u, v, concept, generic_space, structure, tags)
                                   for m in models])
     generic_ok, agree = _majority([o.get("generic_ok") if o else None for o in outs])
-    coherent = _majority([o.get("coherent") if o else None for o in outs])[0]
+    emergent_utility = _majority([o.get("coherent") if o else None for o in outs])[0]
     scope = _majority_val([o.get("scope") if o else None for o in outs])[0]
     double = (scope in (2, 3)) if scope is not None else None
-    return {"generic_ok": generic_ok, "coherent": coherent, "scope": scope, "agreement": agree,
+    # Consensus shared slots: union of the named properties from judges that saw one (scope >= 2),
+    # deduped case-insensitively. The per-judge lists are kept in "judges" for the full audit trail.
+    _seen, shared_props = set(), []
+    for o in outs:
+        if o and (o.get("scope") or 0) >= 2:
+            for p in (o.get("shared_properties") or []):
+                key = str(p).strip().lower()
+                if key and key not in _seen:
+                    _seen.add(key); shared_props.append(str(p).strip())
+    return {"generic_ok": generic_ok, "emergent_utility": emergent_utility,
+            "integration_quality": scope, "agreement": agree, "shared_properties": shared_props,
+            "coherent": emergent_utility, "scope": scope,
             "generic_space_ok": generic_ok, "double_scope": double,
             "valid": (bool(generic_ok) and double) if double is not None else None,
             # per-judge raw output (explanation + verdicts), persisted so nothing is ever re-judged.

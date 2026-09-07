@@ -1,0 +1,8 @@
+# Kombine v1 (first full administration): association + analogy + blending, temp 0.9.
+entities: data/kg_creat/entities_curated.json
+output_dir: data/kg_creat/kombine_v1/prompts
+n_association: 30
+n_analogy: 30
+n_blend: 30            # fusion blends -- reuses the analogy pairs
+seed: 0
+k: 5

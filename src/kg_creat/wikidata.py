@@ -51,7 +51,10 @@ _PROPERTY_STOPLIST = frozenset({
 from src.kg_creat.graph import KnowledgeGraph
 
 WIKIDATA_API = "https://www.wikidata.org/w/api.php"
-USER_AGENT = "kg_creat/0.1 (research; combinatorial-creativity benchmark)"
+# Wikimedia's UA policy requires a contact URL; without one the API returns a blanket HTTP 429
+# on every request (silently turning any crawl into a backoff loop). Keep the repo URL here.
+USER_AGENT = ("kg_creat/0.1 (https://github.com/samjschapiro/comb-creat-eval) "
+              "python-urllib/3")
 _MAX_IDS_PER_CALL = 50  # wbgetentities hard limit
 
 # Controlled relation vocabulary Sigma (PID -> English label). BFS follows only these.

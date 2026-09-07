@@ -30,16 +30,11 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from svgpath2mpl import parse_path
 
+# Provider maps and display names live in plot_radar and are imported, not copied: this file used to
+# carry its own stale copies, so new providers were silently drawn grey and unlabelled.
+from src.kg_creat.scripts.plot_radar import BRAND, DISPLAY, LOGO_SLUG, _provider  # noqa: E402
+
 LOGO_DIR = Path(__file__).resolve().parents[3] / "assets" / "logos"
-LOGO_SLUG = {"openai": "openai", "google": "googlegemini", "anthropic": "claude",
-             "qwen": "qwen", "meta": "meta"}
-# approximate brand colors; models sharing a provider get distinct shades of the same hue.
-BRAND = {"openai": "#10A37F", "google": "#4285F4", "anthropic": "#D97757",
-         "qwen": "#615CED", "meta": "#0866FF"}
-
-
-def _provider(model_key):
-    return next((p for p in LOGO_SLUG if model_key.startswith(p)), None)
 
 
 def _shades(base_hex, k):
@@ -84,12 +79,6 @@ def _load_logos():
         out[prov] = _rasterize(p.transformed(t))
     return out
 
-DISPLAY = {
-    "openai_gpt-5": "gpt-5", "openai_gpt-5-6-sol": "gpt-5.6-sol", "openai_gpt-4-1": "gpt-4.1",
-    "openai_gpt-4o-mini": "gpt-4o-mini", "anthropic_claude-sonnet-4-5": "claude-sonnet-4.5",
-    "google_gemini-2-5-flash": "gemini-2.5-flash", "google_gemini-3-1-pro-preview": "gemini-3.1-pro",
-    "google_gemini-3-7-flash": "gemini-3.7-flash", "qwen_qwen3-max": "qwen3-max",
-}
 # (task label, internal key, [row2 dims], [row3 dims])
 TASKS = [
     ("Association", "association", ["utility", "surprise"], ["originality"]),
@@ -102,7 +91,6 @@ DIM_LABEL = {"utility": "Utility", "surprise": "Surprise", "originality": "Origi
 
 def _bars(ax, vals, colors, logos, title, show_y):
     x = np.arange(len(vals))
-    ax.axhline(50, color="#CFCFCF", lw=0.8, ls=(0, (4, 3)), zorder=1)  # median (50th pctile)
     ax.bar(x, vals, 0.72, color=colors, zorder=3)
     ax.set_ylim(0, 100)
     ax.set_xlim(-0.5, len(vals) - 0.5)
@@ -115,7 +103,7 @@ def _bars(ax, vals, colors, logos, title, show_y):
     if show_y:
         ax.set_yticklabels(["0", "25", "50", "75", "100"])
         ax.tick_params(axis="y", labelsize=9, color="#888888")
-        ax.set_ylabel("percentile", fontsize=11)
+        ax.set_ylabel("% of max", fontsize=11)
     else:
         ax.set_yticklabels([])
         ax.tick_params(axis="y", length=0)
@@ -144,9 +132,24 @@ def main(composite_path, out_stem, top_n):
         for m, col in zip(ms, _shades(BRAND.get(prov, "#777777"), len(ms))):
             cmap[m] = col
 
-    raw = {(t[1], d): {m: c["per_model"][m]["raw"].get(t[1], {}).get(d)
-                       for m in models}
+    # "emergent" is a PANEL, not a composite dimension: the composite stores the emergent block as
+    # em_originality / em_utility / em_integration, so the panel is their mean. Reading it as a plain
+    # key silently returned None for every model and drew an empty panel.
+    EMERGENT_PARTS = ("em_originality", "em_utility", "em_integration")
+
+    def _dim(m, task, d):
+        block = c["per_model"][m]["raw"].get(task, {})
+        if d != "emergent":
+            return block.get(d)
+        vals = [block.get(k) for k in EMERGENT_PARTS]
+        vals = [v for v in vals if isinstance(v, (int, float))]
+        return sum(vals) / len(vals) if vals else None
+
+    raw = {(t[1], d): {m: _dim(m, t[1], d) for m in models}
            for t in TASKS for d in t[2] + t[3]}
+    empty = [k for k, v in raw.items() if all(x is None for x in v.values())]
+    if empty:   # an empty panel is a silent lie about the data, so refuse to draw one
+        raise ValueError(f"FATAL: no model has a value for {empty} -- the panel would be blank")
     comp = {t[1]: {m: c["per_model"][m]["per_task"][t[1]] for m in models} for t in TASKS}
     # percentile of each model's raw score among ALL evaluated models, per (task, dimension)
     def pctl(v, arr):
@@ -171,7 +174,7 @@ def main(composite_path, out_stem, top_n):
                 n = (0 if row == 0 else len(r2)) + j + 1
                 ax = sf.add_subplot(gs[row, cs])
                 show_y = (ti == 0 and j == 0)  # leftmost panel of each row (shared 0-100 scale)
-                pairs = sorted(((pct[(key, d)][m], m) for m in top), key=lambda t: -t[0])
+                pairs = sorted(((100.0 * raw[(key, d)][m] if raw[(key, d)][m] is not None else 0.0, m) for m in top), key=lambda t: -t[0])
                 _bars(ax, [p[0] for p in pairs], [cmap[m] for _, m in pairs],
                       [logos.get(_provider(m)) for _, m in pairs],
                       f"({letter}.{n}) {DIM_LABEL[d]}", show_y)

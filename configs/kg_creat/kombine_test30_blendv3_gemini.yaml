@@ -1,0 +1,18 @@
+# Gemini-2.5-pro-only re-elicitation of blends: same as kombine_test30_blendv3 but WITHOUT the
+# reasoning.max_tokens thinking cap. That cap suits the Claude models (which otherwise spend their whole
+# budget on thinking and return null), but it cuts gemini-2.5-pro off mid-reasoning -> "null content".
+# In the original run gemini-2.5-pro was in the frontier config (no thinking cap) and returned 30/30, so
+# this restores its proven-good setting. Writes into the shared blends_v3 dir (resume-safe skip elsewhere).
+upstream_dir: data/kg_creat/kombine_test30/prompts
+output_dir: data/kg_creat/kombine_test30/blends_v3
+modes: [blending]
+eval:
+  temperatures: [0.9]
+  n_samples: 1
+  max_tokens: 1600
+concurrency: 8
+reasoning:
+  exclude: false                     # default effort; RETURN + SAVE the trace; NO thinking cap for gemini
+budget_usd: 15.0
+models:
+  - google/gemini-2.5-pro

@@ -1,0 +1,13 @@
+# Re-elicit ONLY gpt-5 with the higher reasoning token budget (8x), to fix its empty
+# association returns. Same prompts + output dir as the main v1 run (resume-safe).
+upstream_dir: data/kg_creat/kombine_v1/prompts
+output_dir: data/kg_creat/kombine_v1/responses
+modes: [baseline, analogy, blending]
+eval:
+  temperatures: [0.9]
+  n_samples: 1
+  max_tokens: 1600
+concurrency: 12
+budget_usd: 5.0
+models:
+  - openai/gpt-5

@@ -3,7 +3,11 @@
 # Run WITHOUT LLM_BASE_URL; use .venv_mlx (MLX embedder).
 upstream_dir: data/kg_creat/kombine_v2/responses
 output_dir: data/kg_creat/kombine_v2/scores
-exclude_models: []
+exclude_models:                # broken elicitations (null-content / partial)
+  - anthropic/claude-opus-5
+  - anthropic/claude-fable-5
+  - anthropic/claude-sonnet-5
+  - x-ai/grok-4.6
 judge:
   enabled: true
   models:

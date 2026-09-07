@@ -23,6 +23,14 @@ from matplotlib.lines import Line2D
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
+# Nimbus Roman is the URW clone of Adobe Times that the LaTeX times package resolves to, so the
+# figures are set in the same face as the paper's body text.
+plt.rcParams.update({
+    "font.family": "serif",
+    "font.serif": ["Nimbus Roman", "Times New Roman", "DejaVu Serif"],
+    "mathtext.fontset": "stix",
+})
+
 MODES = ["exclusion", "inclusion", "inclusion_rare", "categorical"]
 MODE_LABEL = {"exclusion": "Exclusion", "inclusion": "Inclusion (common class)",
               "inclusion_rare": "Inclusion (rare class)", "ordering": "Ordering",

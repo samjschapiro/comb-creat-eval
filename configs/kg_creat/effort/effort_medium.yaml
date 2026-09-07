@@ -1,0 +1,36 @@
+# THINKING-EFFORT STUDY (2026-09-06) -- reasoning effort = medium
+#
+# Same 90 prompts as the pool, two models, one effort level per config, so effort is the only thing
+# that varies within a model. Elicited through the user's LiteLLM gateway, NOT OpenRouter: the pool's
+# openai/gpt-5.6-sol is priced $2/$10 there but $5/$30 here, which is why the ledger keys are
+# "litellm/..." and not the OpenRouter ids.
+#
+# TOKEN BUDGET. Probing gpt-6-astra-flex on real prompts showed effort scales reasoning tokens ~15x
+# (blending 363 -> 1,344 -> 5,459) and that ASSOCIATION at medium/high blows through a 16,000-token
+# ceiling and returns finish=length with an EMPTY answer. So max_tokens is absolute (no 8x multiplier)
+# and set to 64,000 -- ~4x the worst observed draw. You are billed for tokens emitted, not the cap, so
+# headroom is free; truncation is not.
+#
+# TRACES: the gateway strips reasoning text (merge_reasoning_content_in_choices: false) and returns
+# only token COUNTS, which providers.py records in usage["reasoning"]. There is no trace to save here.
+upstream_dir: data/kg_creat/kombine_test30/prompts
+output_dir: data/kg_creat/effort_study/medium
+modes: [baseline, analogy, blending]
+provider:
+  kind: openai_compatible
+  base_url_env: LITELLM_BASE_URL
+  api_key_env: LITELLM_API_KEY
+  effort: medium
+  # the gateway has not registered astra as reasoning-capable and rejects reasoning_effort outright;
+  # this forces the parameter through (verified: high -> 5,459 reasoning tokens, low -> 363).
+  allowed_openai_params: [reasoning_effort]
+eval:
+  temperatures: [0.9]
+  n_samples: 1
+  max_tokens: 64000
+  max_tokens_absolute: true
+concurrency: 6
+budget_usd: 250.0     # HARD cap on the LiteLLM key, not OpenRouter. astra bills $0; sol is the spend.
+models:
+  - litellm/gpt-5.6-sol
+  - litellm/gpt-6-astra-flex

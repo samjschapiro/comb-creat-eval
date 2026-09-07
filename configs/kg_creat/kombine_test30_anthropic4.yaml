@@ -1,0 +1,39 @@
+# POOL EXPANSION 2026-09-06: four Claude models the benchmark has never scored, taking the pool from
+# 30 to 34. Elicited on the user's DIRECT Anthropic key, not OpenRouter (OpenRouter is reserved for
+# the judge panel), so this run costs nothing against the $70 OpenRouter headroom.
+#
+# TWO DEVIATIONS FROM THE POOL'S ELICITATION, recorded rather than hidden:
+#   1. NO TEMPERATURE. Anthropic SDK 1.4 removed `temperature` from the Messages endpoint entirely and
+#      replaced it with output_config.effort. The other 30 models were drawn at T = 0.9; these four
+#      cannot be, because the parameter no longer exists. The `temperatures` field below is retained
+#      only so the response records carry the same shape.
+#   2. THINKING BUDGET, NOT PROVIDER DEFAULT. Extended thinking is requested explicitly with an
+#      8,000-token budget -- the same cap the pool's blend re-elicitation used (kombine_test30_blendv3
+#      sets reasoning.max_tokens: 8000), so this is the closest available match. It is also what makes
+#      TRACES: probed all four. Only claude-sonnet-4.6 returns thinking blocks; opus-4.7, opus-4.8 and
+#      fable-5.1 withhold them even while thinking hard (fable-5.1 spent 21.7k output tokens per draw
+#      with none returned). So traces are saved where the API provides them and are absent otherwise.
+# Both make these four not-quite-exchangeable with the original 30; any leaderboard claim that turns
+# on them should say so.
+#
+# Appends to the existing responses dir and skips the 30 models already there (resume-safe).
+upstream_dir: data/kg_creat/kombine_test30/prompts
+output_dir: data/kg_creat/kombine_test30/responses
+modes: [baseline, analogy, blending]
+provider:
+  kind: anthropic
+  api_key_env: ANTHROPIC_API_KEY
+  thinking_type: adaptive        # 4.7/4.8/fable-5.1 reject thinking.type.enabled; adaptive is required
+  effort: medium                 # the dial under adaptive thinking
+eval:
+  temperatures: [0.9]        # not sent; the endpoint has no temperature parameter (see above)
+  n_samples: 1
+  max_tokens: 32000          # absolute: thinking counts against this, and 1600x8 truncates to null
+  max_tokens_absolute: true
+concurrency: 4
+budget_usd: 150.0            # HARD cap on the ANTHROPIC key. Est ~$45, of which fable-5.1 is most.
+models:
+  - anthropic/claude-opus-4.8
+  - anthropic/claude-opus-4.7
+  - anthropic/claude-sonnet-4.6
+  - anthropic/claude-fable-5.1

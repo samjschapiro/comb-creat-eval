@@ -1,0 +1,19 @@
+# Kombine v1 elicitation: all three tasks, single temp 0.9. PAID (OpenRouter).
+upstream_dir: data/kg_creat/kombine_v1/prompts
+output_dir: data/kg_creat/kombine_v1/responses
+modes: [baseline, analogy, blending]
+eval:
+  temperatures: [0.9]
+  n_samples: 1
+  max_tokens: 1600
+concurrency: 12
+budget_usd: 5.0
+models:
+  - google/gemma-2-9b-it
+  - meta-llama/llama-3.1-8b-instruct
+  - openai/gpt-4o-mini
+  - google/gemini-2.5-flash
+  - meta-llama/llama-3.3-70b-instruct
+  - qwen/qwen-2.5-72b-instruct
+  - anthropic/claude-sonnet-4.5
+  - openai/gpt-5

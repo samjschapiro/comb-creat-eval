@@ -20,6 +20,27 @@ from collections import defaultdict
 # Rough OpenRouter pricing (input / output per 1M tokens, USD)
 # Update periodically from https://openrouter.ai/models
 PRICING = {
+    # Kombine spread expansion (2026-09-05), the two models the table was missing. The estimator
+    # returns +inf for anything unpriced and the budget cap then refuses to fire it, so a model absent
+    # from this table halts a run mid-way -- add it here first. Prices from OpenRouter /models.
+    "z-ai/glm-4.5-air":                 (0.13, 0.85),
+    "moonshotai/kimi-k2":               (0.57, 2.30),
+    # Pool expansion 2026-09-06, elicited on the user's DIRECT Anthropic key. Anthropic does not
+    # publish these through an API we can query, so the ledger prices them at OpenRouter's public
+    # rate for the same model -- close enough to track spend, but an approximation, not an invoice.
+    "anthropic/claude-opus-4.8":         (5.00, 25.00),
+    "anthropic/claude-opus-4.7":         (5.00, 25.00),
+    "anthropic/claude-sonnet-4.6":       (3.00, 15.00),
+    "anthropic/claude-fable-5.1":        (10.00, 50.00),
+    # Effort study 2026-09-06, elicited through the user's LiteLLM gateway. These are the GATEWAY's
+    # prices (from its /v1/model_info), which differ from OpenRouter's for the same model name --
+    # gpt-5.6-sol is $2/$10 on OpenRouter but $5/$30 here, so the ledger must not use the other entry.
+    "litellm/gpt-5.6-sol":               (5.00, 30.00),
+    "litellm/gpt-6-astra-flex":          (0.00, 0.00),
+    # The POOL entry for the same model is keyed "openai/..." so its directory and provider branding
+    # match the other 30 (plot_radar maps the key prefix to a provider). The "-flex" suffix keeps it
+    # distinct from OpenRouter's openai/gpt-6-astra, which is $10/$50 -- no collision.
+    "openai/gpt-6-astra-flex":           (0.00, 0.00),
     # Anthropic
     "anthropic/claude-opus-4.6":        (15.00, 75.00),
     "anthropic/claude-opus-4.5":        (15.00, 75.00),

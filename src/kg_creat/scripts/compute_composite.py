@@ -9,8 +9,8 @@ e.g. rare-but-malformed elements from a model that mostly fails -- inflating the
 
 Each (task, dimension) is then z-scored across the scored models, and the z-scores are averaged with
 equal weight into a per-task composite and an overall composite. Dimensions with zero variance or any
-undefined value across models are skipped (this drops blending's surprise, which is d_cos(u,v): fixed
-per item, so once gated it is collinear with utility).
+undefined value across models are skipped (in the current scorer nothing is: blend surprise is the mean
+distance from each input to the blend's generic space, which the model writes, so it varies by model).
 
     python src/kg_creat/scripts/compute_composite.py data/kg_creat/kombine_v1/scores
 
@@ -26,10 +26,13 @@ from pathlib import Path
 # (task label, internal mode name). "baseline" is the legacy mode key for association.
 TASKS = [("association", "baseline"), ("analogy", "analogy"), ("blending", "blending")]
 # Dimensions entering the composite per task. Blending surprise is excluded (see module docstring).
+# Emergent creativity is kept as SEPARATE dimensions (paper 05_benchmark.tex): utility (J^utl) and
+# integration quality (J^qua). Emergent originality O(h)/O(c') is not separately scored.
 TASK_DIMS = {
     "association": ["utility", "surprise", "originality"],
-    "analogy": ["utility", "surprise", "originality", "emergent"],
-    "blending": ["utility", "originality", "emergent"],
+    # "originality" is the BASE artifact; "em_originality" is the emergent invention (kept separate).
+    "analogy": ["utility", "surprise", "originality", "em_originality", "em_utility", "em_integration"],
+    "blending": ["utility", "surprise", "originality", "em_originality", "em_utility", "em_integration"],
 }
 
 
@@ -67,13 +70,30 @@ def artifact_dims(recs: list) -> dict:
             arts = [r for r in rs if r.get("triples")]
             passed = [r.get("sat") is True for r in arts]
 
-        def gated(key):
-            return _mean([(r[key] if p else 0.0) for r, p in zip(arts, passed) if _ok(r.get(key))])
+        # Every dimension is a FRACTION OF ITS MAXIMUM in [0,1] (utility-gated), so the score is
+        # STATIONARY -- it does not depend on the pool of models (unlike a z-score).
+        def gated01(key):  # gated mean of a value already bounded in [0,1] (cosine distance)
+            return _mean([(min(1.0, max(0.0, r[key])) if p else 0.0)
+                          for r, p in zip(arts, passed) if _ok(r.get(key))])
 
         d = {"utility": _mean([1.0 if p else 0.0 for p in passed]) if arts else float("nan"),
-             "surprise": gated("R"), "originality": gated("originality")}
-        if label != "association":
-            d["emergent"] = gated("emergent_count")
+             "surprise": gated01("R"), "originality": gated01("originality")}
+        if label in ("analogy", "blending"):
+            # emergent-invention ORIGINALITY O(h)/O(c'), gated -- kept separate from base originality.
+            d["em_originality"] = gated01("em_originality")
+        if label == "analogy":
+            # emergent utility J^utl_an and integration quality J^qua_an of the invention h, gated.
+            d["em_utility"] = _mean([(int(bool(r.get("invention_utility"))) if p else 0.0)
+                                     for r, p in zip(arts, passed) if _ok(r.get("invention_utility"))])
+            d["em_integration"] = _mean([(int(bool(r.get("invention_integration"))) if p else 0.0)
+                                         for r, p in zip(arts, passed) if _ok(r.get("invention_integration"))])
+        elif label == "blending":
+            # emergent utility J^utl_bl and integration quality J^qua_bl (scope in {1,2,3} ->
+            # (scope-1)/2 in {0,.5,1}), gated.
+            d["em_utility"] = _mean([(int(bool(r.get("blend_utility"))) if p else 0.0)
+                                     for r, p in zip(arts, passed) if _ok(r.get("blend_utility"))])
+            d["em_integration"] = _mean([(((r.get("blend_integration") or 1) - 1) / 2 if p else 0.0)
+                                         for r, p in zip(arts, passed) if _ok(r.get("blend_integration"))])
         d["_n_artifacts"] = len(arts)
         out[label] = d
     return out
@@ -85,38 +105,43 @@ def compute(scores_dir: Path) -> dict:
     raw = {m: artifact_dims(json.loads((scores_dir / m / "path_scores.json").read_text()))
            for m in models}
 
-    # z-score each (task, dim) across models; skip constant / any-undefined columns.
-    z = {m: [] for m in models}
-    per_task = {m: {t: [] for t, _ in TASKS} for m in models}
-    skipped = []
-    for task, dims in TASK_DIMS.items():
-        for k in dims:
-            col = [raw[m][task][k] for m in models]
-            if any(not _ok(v) for v in col) or _std(col) == 0:
-                skipped.append(f"{task}.{k}")
-                continue
-            mu, sd = _mean(col), _std(col)
-            for m in models:
-                zz = (raw[m][task][k] - mu) / sd
-                z[m].append(zz)
-                per_task[m][task].append(zz)
-
+    # STATIONARY % score: each task = mean of its [0,1] dimension fractions x 100; overall = mean of
+    # the per-task %s (equal weight per task). No pool-dependent normalisation.
+    skipped = [f"{task}.{k}" for task, dims in TASK_DIMS.items() for k in dims
+               if any(not _ok(raw[m][task].get(k)) for m in models)]
     result = {"scores_dir": str(scores_dir), "models": models, "skipped_dims": skipped,
-              "per_model": {}}
+              "scale": "percent_of_max", "per_model": {}}
     for m in models:
-        result["per_model"][m] = {
-            "raw": raw[m],
-            "per_task": {t: (_mean(v) if v else None) for t, v in per_task[m].items()},
-            "overall": _mean(z[m]) if z[m] else None,
-        }
+        per_task = {}
+        for task, dims in TASK_DIMS.items():
+            vals = [raw[m][task][k] for k in dims if _ok(raw[m][task].get(k))]
+            per_task[task] = 100.0 * _mean(vals) if vals else None
+        overall = _mean([v for v in per_task.values() if _ok(v)])
+        result["per_model"][m] = {"raw": raw[m], "per_task": per_task, "overall": overall}
     result["ranking"] = sorted(models, key=lambda m: result["per_model"][m]["overall"] or -1e9,
                                reverse=True)
     return result
 
 
-def main(scores_dir: str):
+def main(scores_dir: str, allow_dropped_dims: bool = False):
     scores_dir = Path(scores_dir)
     res = compute(scores_dir)
+
+    # A dimension that silently disappears changes what the composite MEANS, and the leaderboard still
+    # prints. This happened for real: `em_originality` is written by rescore_split_originality.py, which
+    # had not been run on newly-scored models, so the composite quietly fell from 6 dimensions to 4 on
+    # two tasks. Compare against the previous run and refuse unless the drop is asked for.
+    prev = scores_dir / "composite.json"
+    if prev.exists() and not allow_dropped_dims:
+        was = set(json.loads(prev.read_text()).get("skipped_dims") or [])
+        newly = sorted(set(res["skipped_dims"]) - was)
+        if newly:
+            raise SystemExit(
+                f"FATAL: {len(newly)} dimension(s) present in the previous composite are now undefined "
+                f"for at least one model: {', '.join(newly)}.\nThe composite would silently change "
+                f"meaning. Usually this means a model was scored without a follow-up scorer having been "
+                f"run over the whole pool (e.g. rescore_split_originality.py for em_originality). Fix "
+                f"that, or pass --allow-dropped-dims if the drop is intended.")
     (scores_dir / "composite.json").write_text(json.dumps(res, indent=2))
 
     if res["skipped_dims"]:
@@ -135,4 +160,7 @@ def main(scores_dir: str):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("scores_dir", type=str, help="e.g. data/kg_creat/kombine_v1/scores")
-    main(ap.parse_args().scores_dir)
+    ap.add_argument("--allow-dropped-dims", action="store_true",
+                    help="permit a dimension the previous composite had to become undefined")
+    a = ap.parse_args()
+    main(a.scores_dir, a.allow_dropped_dims)

@@ -2,7 +2,7 @@
 
 Mirrors the TwistBench ``tab_pctl_top`` format: a Rank column plus one column per view
 (Overall / Association / Analogy / Blending); each cell is ``model~(+z)``, with each column
-independently ranked by that view's utility-gated z-composite. Writes a self-contained,
+independently ranked by that view's z-composite. Writes a self-contained,
 top-aligned ``table[t]`` LaTeX fragment.
 
     python src/kg_creat/scripts/make_composite_table.py \\
@@ -14,26 +14,24 @@ import argparse
 import json
 from pathlib import Path
 
-DISPLAY = {
-    "openai_gpt-5": "gpt-5",
-    "openai_gpt-5-6-sol": "gpt-5.6-sol",
-    "openai_gpt-4-1": "gpt-4.1",
-    "openai_gpt-4o-mini": "gpt-4o-mini",
-    "anthropic_claude-sonnet-4-5": "claude-sonnet-4.5",
-    "google_gemini-2-5-flash": "gemini-2.5-flash",
-    "google_gemini-3-1-pro-preview": "gemini-3.1-pro",
-    "google_gemini-3-7-flash": "gemini-3.7-flash",
-    "qwen_qwen3-max": "qwen3-max",
-    "qwen_qwen-2-5-72b-instruct": "qwen-2.5-72b",
-    "meta-llama_llama-3-3-70b-instruct": "llama-3.3-70b",
-    "meta-llama_llama-3-1-8b-instruct": "llama-3.1-8b",
-}
+# Display names come from the shared map, not a local copy: this file's copy had drifted 9 models
+# behind the pool and printed raw keys for every model added since.
+from src.kg_creat.model_names import DISPLAY  # noqa: E402
 VIEWS = [("Overall", "overall"), ("Association", "association"),
          ("Analogy", "analogy"), ("Blending", "blending")]
 
 
 def _name(key):
     return DISPLAY.get(key, key.replace("_", "/"))
+
+
+# provider -> logo file stem in media/logos/ (rendered from assets/logos by render_logos.py)
+PROV_SLUG = {"openai": "openai", "anthropic": "claude", "google": "googlegemini", "x-ai": "xai",
+             "deepseek": "deepseek", "qwen": "qwen", "z-ai": "zai", "meta-llama": "meta"}
+
+
+def _logo(key):
+    return next((s for p, s in PROV_SLUG.items() if key.startswith(p)), None)
 
 
 def render(composite: dict, top_n: int = 10) -> str:
@@ -56,10 +54,11 @@ def render(composite: dict, top_n: int = 10) -> str:
         "% Fragment (no float wrapper): \\input inside a table float so it stays directly above the",
         "% examples table (\\captionof needs the caption package).",
         "\\captionof{table}{\\textbf{Top systems by combinatorial creativity.} The highest-scoring models on "
-        "\\textit{Overall} and on each task, by the utility-gated, equal-weight per-dimension "
-        "$z$-composite (\\Cref{sec:benchmark}). Each column is ranked independently; parenthetical values "
-        "are that column's $z$-score.}",
+        "\\textit{Overall} and on each task, by the equal-weight per-dimension composite "
+        "(\\Cref{sec:benchmark}), reported as a \\% of the maximum score. Each column is ranked "
+        "independently; parenthetical values are that column's score (\\%).}",
         "\\label{tab:leaderboard}",
+        "\\providecommand{\\provlogo}[1]{\\raisebox{-0.15ex}{\\includegraphics[height=0.85em]{media/logos/#1}}\\,}",
         "{\\footnotesize",
         "\\setlength{\\tabcolsep}{5pt}",
         "\\resizebox{\\textwidth}{!}{%",
@@ -74,7 +73,9 @@ def render(composite: dict, top_n: int = 10) -> str:
             ranked = cols[view]
             if i < len(ranked):
                 m = ranked[i]
-                cells.append(f"{_name(m)}~({score(m, view):+.2f})")
+                lg = _logo(m)
+                pre = f"\\provlogo{{{lg}}}" if lg else ""
+                cells.append(f"{pre}{_name(m)}~({score(m, view):.1f})")
             else:
                 cells.append("")
         lines.append(f"{i + 1} & " + " & ".join(cells) + " \\\\")
