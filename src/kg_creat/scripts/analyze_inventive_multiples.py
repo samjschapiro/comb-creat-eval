@@ -9,15 +9,18 @@ For a pair of inventions (same task, same anchor pair):
 
   SHARED PROPERTIES -- greedily match each triple of one against an unused triple of the other; a pair
                        counts as shared when their "relation object" texts are within COS_SLOT.
-  TAU-INVENTIVE     -- at least TAU shared properties AND the underlying abstraction also aligns
-  MULTIPLE             (the projected source concept for analogy, the generic space for blending, at
-                       cosine >= COS_CON). Both clauses are structure; neither is a label.
+  TAU-INVENTIVE     -- at least TAU shared properties. That is the whole criterion: property overlap
+  MULTIPLE             and nothing else, matching the paper's Definition (tau-Inventive Multiples).
+
+There is deliberately NO abstraction clause. An earlier version also required the underlying concept
+(the projected source for analogy, the generic space for blending) to align at cosine >= COS_CON, but
+conditioning on a shared generic space is a second, different claim; what "inventive multiple" means
+is that two models asserted the same things about their invention. COS_CON is still computed and
+reported as a descriptive diagnostic, never as an input -- exactly like the coined name.
 
 TAU IS THE REPORTED AXIS, not a hidden constant. `tau_curve` gives the multiple rate for every tau the
-data supports, so the blending-vs-analogy gap can be read off at each strictness rather than at one
-chosen bar; the module-level TAU only says which point the prose quotes. The two COSINE bars
-(COS_SLOT for "same property", COS_CON for "same abstraction") are separate and stay fixed --
-they were calibrated from lexically-identical pairs and are not what tau varies.
+data supports; the module-level TAU only says which point the prose quotes. One cosine bar remains,
+COS_SLOT ("same property"), calibrated from lexically-identical pairs; `sensitivity` sweeps it.
 
 NOMINAL -- the coined names matching -- is computed but is NEVER an input. It is the independent check:
 under this definition only ~7% of same-name pairs qualify, so name convergence and structural
@@ -47,7 +50,8 @@ COS_SLOT = 0.58  # "relation object" cosine at which two models count as asserti
 TAU = 2     # the headline tau: a tau-inventive multiple re-uses >= TAU of the other invention's
             # properties. The rate is reported as a FUNCTION of tau (see tau_curve); TAU only picks
             # which point on that curve the prose quotes.
-COS_CON = 0.50   # concept (phi / generic-space) cosine the abstraction clause requires
+COS_CON = 0.50   # NOT part of the criterion. Retained only to report how often multiples also
+                 # happen to share an abstraction -- a descriptive diagnostic, like the coined name.
 _PROV = ["openai", "anthropic", "google", "x-ai", "deepseek", "qwen", "z-ai", "meta-llama"]
 
 
@@ -151,8 +155,8 @@ def tau_curve(pairs_all):
     """The headline as a function of tau: what fraction of co-response pairs are tau-inventive
     multiples, for every tau the data can support.
 
-    A tau-inventive multiple is a pair re-using >= tau of each other's properties AND agreeing on the
-    underlying abstraction (cosine >= COS_CON). tau = 1 is "one property in common"; raising tau makes
+    A tau-inventive multiple is a pair re-using >= tau of each other's properties.
+    tau = 1 is "one property in common"; raising tau makes
     the criterion strictly stricter, so the curve is monotone non-increasing by construction. Reporting
     the curve rather than a single tau is the point: the blending-vs-analogy gap should be visible at
     every tau if it is real, rather than being an artifact of where the bar was placed.
@@ -165,8 +169,7 @@ def tau_curve(pairs_all):
     tau_max = max((p["shared"] for p in pairs_all), default=0)
     rows = []
     for tau in range(1, int(tau_max) + 1):
-        ok = lambda ps: [p for p in ps
-                         if p["shared"] >= tau and np.isfinite(p["cos_con"]) and p["cos_con"] >= COS_CON]
+        ok = lambda ps: [p for p in ps if p["shared"] >= tau]
         hit = ok(pairs_all)
         if not hit:
             break
@@ -175,7 +178,7 @@ def tau_curve(pairs_all):
                      "blending_pct": pct(ok(bl), bl), "analogy_pct": pct(ok(an), an),
                      "same_provider_pct": pct(ok(same), same), "cross_provider_pct": pct(ok(cross), cross)})
     print("\nTAU-INVENTIVE MULTIPLES AS A FUNCTION OF TAU"
-          f"  (abstraction fixed at cosine >= {COS_CON}; properties matched at {COS_SLOT})")
+          f"  (properties matched one-to-one at cosine >= {COS_SLOT})")
     print(f"  {'tau':>4}{'n pairs':>10}{'overall':>10}{'blending':>10}{'analogy':>10}"
           f"{'same-prov':>11}{'cross-prov':>12}{'blend/analogy':>15}")
     print("  " + "-" * 90)
@@ -189,23 +192,29 @@ def tau_curve(pairs_all):
     return rows
 
 
-def sensitivity(pairs_all):
-    print("\nSENSITIVITY (multiple rate % overall / blending / analogy)")
+def sensitivity(pairs_all, smat, groups, names):
+    """Vary the ONE free bar the criterion still has: COS_SLOT, the cosine at which two
+    "relation object" texts count as the same property. tau is reported as a curve, not swept here."""
+    print("\nSENSITIVITY to the property-match cosine (multiple rate % overall / blending / analogy)")
     grid = []
     n = len(pairs_all)
     bl = [p for p in pairs_all if p["task"] == "blending"]
     an = [p for p in pairs_all if p["task"] == "analogy"]
-    for k in (1, 2, 3):
-        row = []
-        for tc in (0.45, 0.50, 0.55):
-            hit = [p for p in pairs_all if p["shared"] >= k and np.isfinite(p["cos_con"]) and p["cos_con"] >= tc]
+    for cs in (0.53, 0.58, 0.63):
+        sh_at = {}
+        for (task, u, v), idx in groups.items():
+            for a, b in itertools.combinations(idx, 2):
+                sh_at[(a, b)] = shared_properties(smat[a], smat[b], tau=cs)
+        for k in (1, 2, 3):
+            hit = [p for p in pairs_all if sh_at[(p["a"], p["b"])] >= k]
             hb = sum(1 for p in hit if p["task"] == "blending")
             ha = sum(1 for p in hit if p["task"] == "analogy")
-            row.append((tc, 100*len(hit)/n, 100*hb/len(bl), 100*ha/len(an)))
-            grid.append({"tau": k, "cos_con": tc, "overall_pct": 100*len(hit)/n,
+            grid.append({"tau": k, "cos_slot": cs, "overall_pct": 100*len(hit)/n,
                          "blending_pct": 100*hb/len(bl), "analogy_pct": 100*ha/len(an)})
-        cells = "  ".join(f"tc={tc:.2f}: {o:.1f}/{b:.1f}/{a:.1f}" for tc, o, b, a in row)
-        print(f"  k>={k}  {cells}")
+        row = [g for g in grid if g["cos_slot"] == cs]
+        cells = "  ".join(f"tau>={g['tau']}: {g['overall_pct']:.1f}/{g['blending_pct']:.1f}/"
+                          f"{g['analogy_pct']:.1f}" for g in row)
+        print(f"  cos>={cs:.2f}  {cells}")
     return grid
 
 
@@ -264,7 +273,7 @@ def prepost():
             for a, b in itertools.combinations(idx, 2):
                 sh = shared_properties(SM[a], SM[b]); cc = float(CV[a] @ CV[b])
                 pairs.append((k, a, b, bool(_nn(names[a]) == _nn(names[b]) and _nn(names[a])),
-                              sh >= 1 and cc >= COS_CON, sh >= TAU and cc >= COS_CON))
+                              sh >= 1, sh >= TAU))
         tot = len(pairs)
         nclust, best = 0, 0
         for k, idx in groups.items():
@@ -366,10 +375,9 @@ def main():
         for a, b in itertools.combinations(idx, 2):
             sh = shared_properties(SMAT[a], SMAT[b])
             cc = float(CV[a] @ CV[b]) if (concept[a] and concept[b]) else float("nan")
-            con = bool(np.isfinite(cc) and cc >= COS_CON)
             pairs.append({"task": task, "item": (u, v), "a": a, "b": b, "shared": sh, "cos_con": cc,
                           "nominal": bool(_nn(names[a]) == _nn(names[b]) and _nn(names[a])),
-                          "one_property": sh >= 1 and con, "structural": sh >= TAU and con,
+                          "one_property": sh >= 1, "structural": sh >= TAU,
                           "same_provider": _provider(mo[a]) == _provider(mo[b])})
 
     tot = len(pairs)
@@ -387,8 +395,8 @@ def main():
     print(f"  (of the {len(named_hit)} pairs that coined the SAME NAME, "
           f"{100*np.mean([p['structural'] for p in named_hit]):.0f}% are multiples -- the name is not "
           f"an input, and it does not stand in for one)")
-    print(f"\nA tau-inventive multiple re-uses >= tau properties (matched at {COS_SLOT}) AND agrees on "
-          f"the abstraction (>= {COS_CON}).\nHeadline tau = {TAU}; the full curve over tau is below. "
+    print(f"\nA tau-inventive multiple re-uses >= tau (relation, object) properties, matched one-to-one "
+          f"at cosine >= {COS_SLOT}.\nHeadline tau = {TAU}; the full curve over tau is below. "
           f"Names are excluded throughout.")
 
     calib = calibrate(pairs, tk)
@@ -459,10 +467,10 @@ def main():
     def outsider_stats(comp, i):
         sh = max(shared_properties(SMAT[i], SMAT[j]) for j in comp)
         abs_ = max(float(CV[i] @ CV[j]) for j in comp) if concept[i] else float("nan")
-        ok_s, ok_a = sh >= TAU, np.isfinite(abs_) and abs_ >= COS_CON
+        # The criterion is property overlap alone, so "blocked" can only ever mean too few shared
+        # properties. The abstraction cosine is still recorded, purely as a descriptive diagnostic.
         return {"shared": sh, "abs_cos": None if not np.isfinite(abs_) else round(abs_, 3),
-                "blocked_by": "abstraction" if ok_s and not ok_a else "properties" if ok_a and not ok_s
-                else "both"}
+                "blocked_by": "properties" if sh < TAU else "none"}
 
     cluster_of = {}                                    # invention -> its cluster's shared name
     for task, (u, v), comp in clusters:
@@ -560,7 +568,7 @@ def main():
           f"(mean {np.mean(jac_lex):.2f}, n={len(jac_lex)}) vs non-matching median {np.median(jac_non):.2f}")
 
     curve = tau_curve(pairs)
-    grid = sensitivity(pairs)
+    grid = sensitivity(pairs, SMAT, groups, names)
 
     print("\nMost-rediscovered inventions (largest structural clusters):")
     for task, (u, v), c in sorted(clusters, key=lambda x: -len(x[2]))[:8]:
