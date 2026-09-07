@@ -19,8 +19,14 @@ is that two models asserted the same things about their invention. COS_CON is st
 reported as a descriptive diagnostic, never as an input -- exactly like the coined name.
 
 TAU IS THE REPORTED AXIS, not a hidden constant. `tau_curve` gives the multiple rate for every tau the
-data supports; the module-level TAU only says which point the prose quotes. One cosine bar remains,
-COS_SLOT ("same property"), calibrated from lexically-identical pairs; `sensitivity` sweeps it.
+data supports; the module-level TAU only says which point the prose quotes.
+
+COS_SLOT ("same property") IS NOT CALIBRATED. 0.58 has no recorded derivation; it sits near the 75th
+percentile of the best-match cosine over co-response pairs, which is a description, not a reason. It
+is not optimal on either natural criterion against the held-out same-name label: Youden's J peaks
+at ~0.45 and falls monotonically, while TPR/FPR lift peaks at ~0.65. ABSOLUTE rates are very
+sensitive to it (the tau=2 rate spans 17.2% at 0.45 to 0.9% at 0.70), so quote the RATIOS, which are
+far steadier. `sensitivity` sweeps it; anything absolute should be read against that sweep.
 
 NOMINAL -- the coined names matching -- is computed but is NEVER an input. It is the independent check:
 under this definition only ~7% of same-name pairs qualify, so name convergence and structural
