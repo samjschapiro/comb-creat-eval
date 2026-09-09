@@ -159,7 +159,12 @@ data/
 │       ├── scores/<model>/path_scores.json  # per-artifact scores + per-judge explanations; composite.json
 │       ├── human_review{,_blendv3}/  # blind review items + hidden key + ratings.jsonl
 │       └── analysis/            # invention_homogeneity.json, invention_vectors.npz
+├── dat_eval/                    # DAT / CDAT / PACE runs
+│   ├── run_v1/                  # canonical pool; backfilled models merged in under canonical
+│   │                            # names (originals kept as *.bak_pre_capfix / *.bak_pre_or)
+│   └── backfill_{anthropic,gateway,openrouter}/  # 2026-09-09 coverage backfill, by API route
 ├── new_tests/                   # DRAT pilots + ablations + RAT runs
+│   ├── rat/backfill_*/, drat/backfill_*/         # same backfill, RAT and DRAT
 │   ├── drat/{pilot_*, ablation_k*_{expert,conceptnet}{,_ext}}/raw_results.json
 │   └── rat/{pilot_v1, expansion_v1}/summary.json
 └── plot_twist/                   # TwistBench outputs

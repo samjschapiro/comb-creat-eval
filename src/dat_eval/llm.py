@@ -30,6 +30,46 @@ def _endpoint() -> tuple[str, str]:
     return "https://openrouter.ai/api/v1", api_key
 
 
+
+def anthropic_compat_endpoint() -> bool:
+    """True when LLM_BASE_URL points at Anthropic's OpenAI-compatibility endpoint.
+
+    That endpoint rejects `temperature` outright on the newer models ("`temperature` is
+    deprecated for this model") and does not understand OpenRouter's `extra_body` extensions
+    (top_k, reasoning). Detecting it from the ENDPOINT rather than the model name means the same
+    config can be pointed at OpenRouter or at Anthropic without editing the model list.
+    """
+    return "api.anthropic.com" in (os.environ.get("LLM_BASE_URL") or "")
+
+
+def strip_unsupported(kwargs: dict) -> dict:
+    """Drop request params the current endpoint will reject. No-op on OpenRouter.
+
+    `extra_body` (top_k, OpenRouter's unified `reasoning` block) is an OpenRouter extension: a
+    LiteLLM gateway 400s on it ("Unknown parameter: 'mode'") and Anthropic's compat endpoint
+    ignores it, so it goes wherever the endpoint is not OpenRouter. Anthropic additionally
+    rejects `temperature` outright on its newer models.
+    """
+    base = os.environ.get("LLM_BASE_URL") or ""
+    if not base or "openrouter.ai" in base:
+        return kwargs
+    kwargs.pop("extra_body", None)
+    if anthropic_compat_endpoint():
+        for k in ("temperature", "top_p", "top_k", "seed"):
+            kwargs.pop(k, None)
+        return kwargs
+    # LiteLLM gateway: some deployments leak their own config keys into the upstream OpenAI request
+    # ("Unknown parameter: 'mode'"). extra_body is merged OVER the deployment config, so nulling
+    # them here suppresses the leak without touching the gateway. Harmless where nothing leaks.
+    kwargs["extra_body"] = {"mode": None, "max_input_tokens": None, "max_output_tokens": None}
+    # newer OpenAI models behind the gateway reject max_tokens and only accept temperature == 1
+    if "max_tokens" in kwargs:
+        kwargs["max_completion_tokens"] = kwargs.pop("max_tokens")
+    if kwargs.get("temperature") not in (None, 1.0):
+        kwargs.pop("temperature")
+    return kwargs
+
+
 def get_client() -> OpenAI:
     """Synchronous client (OpenRouter, or local vLLM via LLM_BASE_URL)."""
     base_url, api_key = _endpoint()
@@ -92,7 +132,7 @@ def call_llm(
         # top_k is non-standard in OpenAI chat completions; pass via extra_body
         # for OpenRouter to forward to providers that support it (Anthropic, most open models)
         kwargs["extra_body"] = {"top_k": top_k}
-    response = client.chat.completions.create(**kwargs)
+    response = client.chat.completions.create(**strip_unsupported(kwargs))
     return response.choices[0].message.content
 
 
@@ -140,7 +180,7 @@ async def call_llm_async(
         kwargs["extra_body"] = extra_body
 
     try:
-        response = await async_client.chat.completions.create(**kwargs)
+        response = await async_client.chat.completions.create(**strip_unsupported(kwargs))
     except Exception as e:
         # Some providers reject the reasoning param (e.g., SiliconFlow for QwQ
         # rejects `enable_thinking`). Retry once without reasoning if that's
@@ -155,7 +195,7 @@ async def call_llm_async(
                 kwargs["extra_body"] = extra_body
             else:
                 kwargs.pop("extra_body", None)
-            response = await async_client.chat.completions.create(**kwargs)
+            response = await async_client.chat.completions.create(**strip_unsupported(kwargs))
         else:
             raise
     # Actual billed usage (reasoning tokens are counted in completion_tokens). Extracted before the

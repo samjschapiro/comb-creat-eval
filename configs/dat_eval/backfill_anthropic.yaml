@@ -1,0 +1,32 @@
+output_dir: data/dat_eval/backfill_anthropic
+budget_usd: 500.0
+concurrency: 8
+reasoning:
+  effort: low
+  exclude: true
+dat_temperatures:
+- 1.0
+- 1.5
+- 2.0
+cdat_temperatures:
+- 1.0
+- 1.5
+- 2.0
+pace_temperatures:
+- 0.0
+dat_top_p: 1.0
+dat_top_k: 0
+cdat_top_p: 1.0
+cdat_top_k: 0
+dat_max_tokens: 4000
+cdat_max_tokens: 4000
+pace_stage1_max_tokens: 400
+pace_stage2_max_tokens: 1200
+reasoning_max_tokens_multiplier: 4
+dat_trials: 40
+evals:
+- dat
+- cdat
+models:
+- claude-opus-4-6
+- claude-sonnet-4-6

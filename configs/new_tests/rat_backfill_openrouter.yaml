@@ -1,0 +1,22 @@
+output_dir: data/new_tests/rat/backfill_openrouter
+models:
+- google/gemini-3.7-flash
+- moonshotai/kimi-k2
+- qwen/qwen3-max
+- x-ai/grok-4.5
+- x-ai/grok-4.6
+- z-ai/glm-4.5-air
+reasoning_models:
+- google/gemini-3.7-flash
+- qwen/qwen3-max
+- x-ai/grok-4.5
+- x-ai/grok-4.6
+reasoning:
+  effort: low
+  exclude: true
+reasoning_max_tokens_multiplier: 4
+temperature: 0.0
+max_tokens: 32
+seed: 42
+concurrency: 8
+max_retries: 4

@@ -1,0 +1,33 @@
+output_dir: data/dat_eval/backfill_openrouter
+budget_usd: 120.0
+concurrency: 12
+reasoning:
+  effort: low
+  exclude: true
+dat_temperatures:
+- 1.0
+- 1.5
+- 2.0
+cdat_temperatures:
+- 1.0
+- 1.5
+- 2.0
+pace_temperatures:
+- 0.0
+dat_top_p: 1.0
+dat_top_k: 0
+cdat_top_p: 1.0
+cdat_top_k: 0
+dat_max_tokens: 1024
+cdat_max_tokens: 1024
+pace_stage1_max_tokens: 400
+pace_stage2_max_tokens: 1200
+reasoning_max_tokens_multiplier: 1
+dat_trials: 40
+evals:
+- dat
+- cdat
+models:
+- z-ai/glm-4.6
+- openai/gpt-5
+max_retries: 1

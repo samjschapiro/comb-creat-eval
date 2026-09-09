@@ -19,6 +19,7 @@ from openai import AsyncOpenAI, OpenAI
 # Re-export the OpenRouter clients from dat_eval so callers don't have to
 # pick a path. Generation pipelines can import these directly.
 from src.dat_eval.llm import (  # noqa: F401
+    strip_unsupported,
     get_client,
     get_async_client,
     call_llm,
@@ -118,14 +119,10 @@ async def generate_many_async(
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
         async with sem:
-            resp = await client.chat.completions.create(
-                model=model,
-                messages=messages,
-                temperature=temperature,
-                top_p=top_p,
-                max_tokens=max_tokens,
-                n=1,
-            )
+            kw = strip_unsupported(dict(
+                model=model, messages=messages, temperature=temperature,
+                top_p=top_p, max_tokens=max_tokens, n=1))
+            resp = await client.chat.completions.create(**kw)
         return resp.choices[0].message.content or ""
 
     tasks: list = []
