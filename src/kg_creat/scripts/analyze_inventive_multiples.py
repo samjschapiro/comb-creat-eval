@@ -864,6 +864,26 @@ def main():
               f"LOO {sum(1 for q in loo if q < 0.05)}/{len(loo)} keep p<0.05 (max p={max(loo):.3f})  "
               f"terciles {terc[0]:.1f}% -> {terc[1]:.1f}% -> {terc[2]:.1f}%")
 
+    # PER-ITEM outcomes, for downstream work that asks what predicts convergence on an item (anchor
+    # distance, item difficulty, ...): every rate the paper quotes, per (task, anchor pair), plus the
+    # anchor-label cosine distance used above. A downstream script must not have to redo the matching.
+    per_item = []
+    for (task, u, v), idx in groups.items():
+        sub = [p for p in pairs if p["task"] == task and p["item"] == (u, v)]
+        comps = [c for t_, it, c in clusters if t_ == task and it == (u, v)]
+        fr = [p["frac"] for p in sub if np.isfinite(p["frac"])]
+        ex = [p["exact_frac"] for p in sub if np.isfinite(p["exact_frac"])]
+        per_item.append({"task": task, "u": u, "v": v, "n_models": len(idx), "n_pairs": len(sub),
+                         "anchor_label_cos_distance": adist[(u, v)],
+                         "rate_tau1_pct": 100 * float(np.mean([p["shared"] >= 1 for p in sub])),
+                         "rate_tau2_pct": 100 * float(np.mean([p["structural"] for p in sub])),
+                         "rate_tau3_pct": 100 * float(np.mean([p["shared"] >= 3 for p in sub])),
+                         "per_property_mean": float(np.mean(fr)) if fr else float("nan"),
+                         "exact_per_property_mean": float(np.mean(ex)) if ex else float("nan"),
+                         "nominal_pct": 100 * float(np.mean([p["nominal"] for p in sub])),
+                         "n_components": len(comps), "largest_component": max([len(c) for c in comps], default=0),
+                         "mean_properties": float(np.mean([len(SLOTS[i]) for i in idx]))})
+
     # relation-label Jaccard: is the agreement visible in the predicates themselves?
     jac_lex, jac_non = [], []
     for p in pairs:
@@ -916,6 +936,7 @@ def main():
         "inventions_in_a_multiple": {"count": len(inm), "pct": inv_rate["all"],
                                      "blending_pct": inv_rate["blending"], "analogy_pct": inv_rate["analogy"]},
         "anchor_distance": dist_out,
+        "per_item": per_item,
         "relation_jaccard": {"lexical_median": float(np.median(jac_lex)), "lexical_mean": float(np.mean(jac_lex)),
                              "nonmatch_median": float(np.median(jac_non)), "n_lexical": len(jac_lex)},
         # Every cluster's OUTSIDERS: the models that answered the same item and did not join it. No

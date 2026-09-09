@@ -77,3 +77,14 @@ same-name shared-count distribution, per-task, per-component distinct-name count
 way). Paper #3d and a report section written. Numbers: P(multiple|same name) 5.6% vs 1.0%; 68% of
 same-name pairs share zero properties; P(same name|multiple) 10.7% (26/30 differ at τ=3); components:
 409 members, 346 names, 83/111 all-distinct, 7 single-name.
+
+## Addendum 4 — exact matching, figure set, anchor distance
+
+- `shared_properties` → exact maximum bipartite matching (2/34,687 pairs differ; τ=2 393→395, fixed-τ
+  ratio 32×→27×). Definition rewritten in words and pushed to Overleaf.
+- Overleaf now has a switchable figure set; `plot_invention_landscape.py` emits single panels and
+  `make_paper_multiples_figure.py` writes old/ png + new/ PDFs (matrix, mds_a, mds_b, 3-page). Cluster
+  labels enlarged to 17.5pt.
+- Analysis JSON gains `per_item`; new `analyze_anchor_distance.py` (4 distances × 4 outcomes × 2 tasks,
+  permutation p, LOO, partial given prominence, figure). Null for the rate; one nominally strong cell
+  (blend largest component vs label cosine) fails to replicate on the description distance.

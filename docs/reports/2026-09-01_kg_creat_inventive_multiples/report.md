@@ -127,14 +127,26 @@ Null correction changes nothing (the null's per-property re-use is 0.001 / 0.000
 
 Same-provider pairs are multiples **2.3%** of the time vs **0.9%** for cross-provider pairs — relative risk 2.5; a permutation test reshuffling the provider label across the 35 models (2,000 relabelings, pair structure preserved) gives **p = 5×10⁻⁴**. The effect holds within blending (4.4% vs 1.8%) and within analogy (0.20% vs 0.05%), and on the per-property route (0.043 vs 0.027, 1.6×, permutation p = 5×10⁻⁴), so it is not a property-count artefact. Multiples are slightly less original than singletons (0.41 vs 0.46): the rediscovered inventions are the more obvious ones.
 
-### Anchor distance: still not a finding
+### Anchor distance: still not a finding, now on four measures and four outcomes
 
-| Operator | Spearman | Pearson | Leave-one-out | Rate by distance tercile (near → far) |
+Redone as its own downstream script (`analyze_anchor_distance.py`, reading the per-item block of the analysis JSON). The unit is the anchor pair (n = 30 per task). Distance is measured four ways, since the label-only cosine the analysis used is a thin measure: **label cosine** (MiniLM on the two anchor labels), **description cosine** (the same encoder on `label: Wikidata description`), and two prominence covariates (min and mean log Wikipedia sitelinks), which are not distances but the obvious confound. The two embedding distances agree only weakly with each other (Spearman +0.31). Outcomes are the τ = 2 rate, the τ = 1 rate, per-property re-use, and the largest component. Each cell: Spearman ρ, a 10,000-shuffle permutation p, leave-one-out, tercile means, and for the embedding distances a partial ρ controlling for mean prominence. The knowledge-graph geodesic was tried and dropped: the archived Wikidata graph connects only 6 of the 30 pairs.
+
+| Task | Outcome | Label cos ρ (p) | Description cos ρ (p) | Min prominence ρ (p) |
 |---|---|---|---|---|
-| Blending | ρ = +0.34 (p = 0.064) | r = +0.38 (p = 0.039) | 7/30 deletions reach p < 0.05 | 1.7% → 1.6% → 3.4% |
-| Analogy | ρ = −0.05 (p = 0.80) | r = +0.01 (p = 0.97) | 0/30 | 0.1% → 0.0% → 0.1% |
+| Blending | τ = 2 rate | +0.34 (0.066) | +0.13 (0.51) | +0.05 (0.79) |
+| Blending | τ = 1 rate | +0.25 (0.17) | +0.10 (0.59) | −0.18 (0.34) |
+| Blending | per-property re-use | +0.28 (0.13) | +0.15 (0.42) | −0.12 (0.51) |
+| Blending | largest component | **+0.53 (0.003)** | +0.09 (0.66) | +0.09 (0.64) |
+| Analogy | τ = 2 rate | −0.00 (1.0) | +0.08 (0.68) | −0.28 (0.13) |
+| Analogy | τ = 1 rate | −0.26 (0.16) | +0.05 (0.79) | +0.17 (0.35) |
+| Analogy | per-property re-use | −0.20 (0.28) | +0.00 (0.99) | +0.08 (0.68) |
+| Analogy | largest component | +0.04 (0.84) | +0.10 (0.59) | −0.32 (0.08) |
 
-The unit is the anchor pair (n = 30), per task. Blends converge most on the farthest third, but the rank correlation does not clear p < 0.05 and fails leave-one-out, so this is reported as a null.
+**Reading.** For the headline outcome, the rate of multiples, anchor distance predicts nothing that survives: the strongest cell is blending's τ = 2 rate against label cosine at ρ = +0.34, permutation p = 0.066, with 7 of 30 leave-one-out deletions keeping p < 0.05, and it vanishes on the description-based distance (ρ = +0.13). One cell is nominally strong: blending's **largest component** grows with label-cosine distance (ρ = +0.53, p = 0.003, all 30 deletions keep p < 0.05, partial ρ = +0.56 given prominence; terciles 5.3 → 6.5 → 9.6 models). But it is one of 32 cells screened, it does not replicate on the description-based distance (ρ = +0.09) or on prominence, and the two distance measures barely agree, so it is a property of the label embedding rather than of anchor distance, and it is not reported as a finding. Analogy is flat on every measure. The earlier "operator asymmetry" (distant anchors funnel blends) remains unsupported on this data.
+
+![Anchor distance vs convergence](figures/fig_anchor_distance.png)
+
+*Figure 4. Per anchor pair (n = 30 per task): the τ = 2 multiple rate (top) and per-property re-use (bottom) against anchor distance measured on labels (left) and on label plus Wikidata description (right). Squares are blending items, circles analogy items; legends carry Spearman ρ and the permutation p.*
 
 ## What the `uv` re-elicitation changed
 
