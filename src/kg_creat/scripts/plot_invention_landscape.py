@@ -86,7 +86,11 @@ def cluster_label(members):
     return Counter(str(m["name"]).lower() for m in members).most_common(1)[0][0]
 
 
-def main():
+def main(draw=None, stem="fig_invention_landscape"):
+    """Draw the panels in PANELS. `draw` selects which (by index) go into this figure -- the paper's
+    switchable figure set wants each panel as its own file -- while the layout, originality and
+    marker-size scales are always computed over ALL panels so a single-panel file matches the pair."""
+    draw = list(range(len(PANELS))) if draw is None else list(draw)
     d = np.load(NPZ, allow_pickle=True)
     vecs, models, tasks, us, vs, names = d["vecs"], d["models"], d["tasks"], d["u"], d["v"], d["names"]
     provs_present = []
@@ -100,8 +104,9 @@ def main():
     provs_present = [p for p in PROV_LABEL if p in provs_present]  # stable order
     logos = _load_logos()
 
-    fig = plt.figure(figsize=(16.4, 6.9))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.42, 6.0, 6.0], wspace=0.20)
+    units = 1.42 + 6.0 * len(draw)                     # 16.4in for the two-panel figure
+    fig = plt.figure(figsize=(16.4 * units / 13.42, 6.9))
+    gs = fig.add_gridspec(1, 1 + len(draw), width_ratios=[1.42] + [6.0] * len(draw), wspace=0.20)
 
     # ---- legend down the left-hand side: providers, then the two tasks, then the cluster mark ----
     lax = fig.add_subplot(gs[0, 0]); lax.axis("off"); lax.set_xlim(0, 1); lax.set_ylim(0, 1)
@@ -184,8 +189,9 @@ def main():
     msize = lambda cc: 16 + 300 * (np.clip((cc - c_lo) / (c_hi - c_lo + 1e-9), 0.0, None) ** GAMMA)
 
     labels = {}                                        # per-axes annotations, to fit the limits around
-    for pi, ((u, v), (Z, mm, nm, tk, rho, ut, ig)) in enumerate(zip(PANELS, coords)):
-        ax = fig.add_subplot(gs[0, pi + 1])      # column 0 is the legend
+    for col, pi in enumerate(draw):
+        (u, v), (Z, mm, nm, tk, rho, ut, ig) = PANELS[pi], coords[pi]
+        ax = fig.add_subplot(gs[0, col + 1])     # column 0 is the legend
         comp = composite(rho, ut, ig)
         cols = np.array([BRAND.get(_provider(m), "#777777") for m in mm])
         cen = Z.mean(0)
@@ -302,9 +308,12 @@ def main():
                 raise RuntimeError(f"FATAL: label {an.get_text()!r} falls outside its panel frame")
 
     for ext in ("png", "pdf"):
-        fig.savefig(OUT / f"fig_invention_landscape.{ext}", dpi=300, bbox_inches="tight")
-    print("saved fig_invention_landscape ->", OUT)
+        fig.savefig(OUT / f"{stem}.{ext}", dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    print(f"saved {stem} ->", OUT)
 
 
 if __name__ == "__main__":
     main()
+    for i, letter in enumerate("ab"[:len(PANELS)]):
+        main(draw=[i], stem=f"fig_invention_landscape_{letter}")

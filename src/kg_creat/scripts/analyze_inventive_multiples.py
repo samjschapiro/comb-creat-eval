@@ -7,9 +7,9 @@ dropped), so what is compared is the properties asserted of the invention, not w
 
 For a pair of inventions (same task, same anchor pair):
 
-  SHARED PROPERTIES -- greedily match each property of one against an unused property of the other,
-                       one-to-one; a pair of properties counts as the same when their "relation
-                       object" texts are within COS_SLOT (theta).
+  SHARED PROPERTIES -- the largest one-to-one pairing of one invention's properties with the
+                       other's (a maximum bipartite matching); a pair of properties counts as the
+                       same when their "relation object" texts are within COS_SLOT (theta).
   TAU-INVENTIVE     -- at least TAU shared properties. That is the whole criterion: property overlap
   MULTIPLE             and nothing else, matching the paper's Definition (tau-Inventive Multiples).
 
@@ -65,6 +65,8 @@ import re
 from collections import Counter, defaultdict
 
 import numpy as np
+from scipy.sparse import csr_matrix
+from scipy.sparse.csgraph import maximum_bipartite_matching
 from scipy.stats import pearsonr, spearmanr, wilcoxon
 
 from src.kg_creat.embed import get_embedder
@@ -510,21 +512,18 @@ def exact_shared(objs_a, objs_b):
 
 
 def shared_properties(A, B, tau=COS_SLOT):
-    """How many properties two inventions re-use, as a greedy one-to-one matching of their triples.
-    One-to-one matters: without it a single generic property of A could match three of B's."""
+    """How many properties two inventions re-use: the size of the largest one-to-one pairing of A's
+    properties with B's in which every paired cosine is >= tau -- a maximum bipartite matching on the
+    threshold graph, exactly what the paper's Definition says ("admit a pairing of size at least tau").
+    One-to-one matters: without it a single generic property of A could match three of B's.
+    (A greedy assignment was used before 2026-09-09; it undercounted on 2 of 34,687 pairs.)"""
     if not len(A) or not len(B):
         return 0
-    M = A @ B.T
-    used, n = set(), 0
-    for ai in np.argsort(-M.max(axis=1)):
-        cand = [(M[ai, j], j) for j in range(M.shape[1]) if j not in used]
-        if not cand:
-            break
-        s, bj = max(cand)
-        if s >= tau:
-            n += 1
-            used.add(bj)
-    return n
+    G = (A @ B.T) >= tau
+    if not G.any():
+        return 0
+    m = maximum_bipartite_matching(csr_matrix(G.astype(np.int8)), perm_type="column")
+    return int((m >= 0).sum())
 
 
 def main():

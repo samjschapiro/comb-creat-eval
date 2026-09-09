@@ -15,15 +15,15 @@ And the pool grew from 30 to 35 models, so every rate is recomputed over 34,687 
 
 ## Claims
 
-1. **One in five inventions is re-invented by another model, and the convergence is shallow.** At τ = 2, 1.1% of co-response pairs are multiples and **20%** of inventions are in at least one (37% of blends, 2% of analogy inventions). Requiring three shared properties leaves 30 pairs in the whole benchmark.
-2. **Blends produce multiples 32× as often as analogies at fixed τ, and 2–3× as often per property.** The fixed-τ ratio is mostly that blends assert twice as many properties. Normalised per property the advantage is **3.4×** (paired Wilcoxon p = 4×10⁻⁸); with verbatim, encoder-free matching **2.0×** (p = 1.5×10⁻³).
+1. **One in five inventions is re-invented by another model, and the convergence is shallow.** At τ = 2, 1.1% of co-response pairs are multiples and **20%** of inventions are in at least one (37% of blends, 3% of analogy inventions). Requiring three shared properties leaves 30 pairs in the whole benchmark.
+2. **Blends produce multiples 27× as often as analogies at fixed τ, and 2–3× as often per property.** The fixed-τ ratio is mostly that blends assert twice as many properties. Normalised per property the advantage is **3.3×** (paired Wilcoxon p = 5×10⁻⁸); with verbatim, encoder-free matching **2.0×** (p = 1.5×10⁻³).
 3. **Models from the same provider form multiples 2.5× as often** as cross-provider pairs (2.3% vs 0.9%, permutation p = 5×10⁻⁴), within each task and on the per-property route too.
-4. **Naming and inventing come apart in both directions.** 68% of the 753 same-name pairs share no property, and only 6% are multiples; 89% of the 393 multiples carry different names, and within components 409 member inventions carry 346 distinct names.
-5. **Clusters are chains, not consensus.** The largest component links 19 of 35 models on *(Opera, Documentary film)*; 42% of its member pairs are multiples themselves, and 17–25% in the next seven (mean over all 111 clusters: 78%).
+4. **Naming and inventing come apart in both directions.** 68% of the 753 same-name pairs share no property, and only 6% are multiples; 89% of the 395 multiples carry different names, and within components 412 member inventions carry 349 distinct names.
+5. **Clusters are chains, not consensus.** The largest component links 19 of 35 models on *(Opera, Documentary film)*; 42% of its member pairs are multiples themselves, and 17–25% in the next seven (mean over all 112 clusters: 78%).
 
 ## What counts as a near-identical invention
 
-The measurement never sees a name. Every triple of an invention is reduced to **"relation object"** — the coined name is the subject of all of them, so dropping it turns the comparison into what a model *says about* its invention rather than what it *calls* it. Two properties are *the same* when the cosine between their `all-MiniLM-L6-v2` embeddings is ≥ θ = 0.674; properties are matched **one-to-one** by greedy assignment, so a single generic property cannot satisfy several; and a pair of inventions (same task, same anchor pair) is a **τ-inventive multiple** when at least τ properties match.
+The measurement never sees a name. Every triple of an invention is reduced to **"relation object"** — the coined name is the subject of all of them, so dropping it turns the comparison into what a model *says about* its invention rather than what it *calls* it. Two properties are *the same* when the cosine between their `all-MiniLM-L6-v2` embeddings is ≥ θ = 0.674; properties are matched **one-to-one** (an exact maximum matching on the threshold graph), so a single generic property cannot satisfy several; and a pair of inventions (same task, same anchor pair) is a **τ-inventive multiple** when at least τ properties match.
 
 **Two exclusions, both because the text is supplied by the item.**
 
@@ -32,7 +32,7 @@ The measurement never sees a name. Every triple of an invention is reduced to **
 
 | Task | Properties per invention (raw → filtered) | Anchor-echo properties | Inventions left with < 2 properties | τ = 2 rate (raw → filtered) |
 |---|---|---|---|---|
-| Analogy | 2.60 → 2.37 | 234 / 2,692 (**8.7%**) | 214 / 1,037 (21%) | 0.24% → **0.07%** |
+| Analogy | 2.60 → 2.37 | 234 / 2,692 (**8.7%**) | 214 / 1,037 (21%) | 0.25% → **0.08%** |
 | Blending | 5.01 → 5.00 | 14 / 5,176 (0.3%) | 0 | 2.21% → 2.21% |
 
 **θ is set where a match means a paraphrase.** Sampling matched property pairs by cosine band: above about 0.65 the two are the same property in other words (`transforms atomic nuclei` / `splits atomic nuclei`, 0.70; `cushions sleeper` / `conforms to sleepers`, 0.674; `projects archival footage` / `includes archival footage`, 0.82). Between 0.50 and 0.60 the encoder is anchored on a single shared noun (`includes innings` / `rotates formation with innings`, 0.57; `has a grammar` / `legislates by revising grammar rules`, 0.55) while missing real paraphrases (`cushions with blubber padding` / `insulated by blubber`, 0.53; `employs suspense techniques` / `creates tension`, 0.39). θ = 0.674 is the bottom of the paraphrase band. What it costs and buys is reported against a cross-item null: two inventions answering *different* anchor pairs cannot share an item-specific property, so their greedy matches are a null (185,480 matched property pairs from 60,000 draws), and **0.03%** of them clear 0.674 — one in roughly 3,000. For reference the null's 99th percentile is 0.450 and its 99.9th is 0.604; the earlier θ = 0.545 (99.75th) admitted the shared-noun matches.
@@ -50,12 +50,12 @@ The measurement never sees a name. Every triple of an invention is reduced to **
 | τ | Pairs | % of pairs | Blending | Analogy | Inventions in ≥ 1 multiple (all / blend / analogy) |
 |--:|--:|--:|--:|--:|---|
 | 1 | 3,621 | 10.4% | 18.6% | 2.35% | 65.4% / 94.7% / 36.3% |
-| **2** | **393** | **1.13%** | **2.21%** | **0.07%** | **19.8% / 37.3% / 2.3%** |
+| **2** | **395** | **1.14%** | **2.21%** | **0.08%** | **19.9% / 37.3% / 2.6%** |
 | 3 | 30 | 0.09% | 0.17% | 0 | 1.9% / 3.8% / 0 |
 
-The cross-item null produces no τ = 2 multiple in 60,000 draws (0.22% / 0.03% at τ = 1), so the multiples are convergence on the item, not generic phrasing. 39 of 60 (task, anchor) settings produced at least one multiple; **111 clusters**.
+The cross-item null produces no τ = 2 multiple in 60,000 draws (0.22% / 0.03% at τ = 1), so the multiples are convergence on the item, not generic phrasing. 40 of 60 (task, anchor) settings produced at least one multiple; **112 clusters**.
 
-**Clusters are components, not cliques (Claim 5).** A cluster is the connected component of multiple-pairs on an item. Within-cluster pair density (share of member pairs that are themselves multiples) averages **0.78** over the 111 clusters, most of which are pairs; for the eight largest it is **0.17–0.42**, so a component of 19 is a chain of pairwise overlap, not 19 models asserting the same thing.
+**Clusters are components, not cliques (Claim 5).** A cluster is the connected component of multiple-pairs on an item. Within-cluster pair density (share of member pairs that are themselves multiples) averages **0.78** over the 112 clusters, most of which are pairs; for the eight largest it is **0.17–0.42**, so a component of 19 is a chain of pairwise overlap, not 19 models asserting the same thing.
 
 | Anchors | Task | Models | Density | Representative names |
 |---|---|--:|--:|---|
@@ -83,7 +83,7 @@ The coined name is held out of the criterion, so name agreement and property agr
 | | Multiple (τ = 2) | Not a multiple | P(multiple) |
 |---|--:|--:|--:|
 | Same name (753) | 42 | 711 | 5.6% |
-| Different name (33,934) | 351 | 33,583 | 1.0% |
+| Different name (33,934) | 353 | 33,581 | 1.0% |
 
 **Same name, different invention.** Of the 753 same-name pairs, **68%** share zero properties at θ, and **30%** have no property pair above cosine 0.5 at all; the shared-property counts are 513 / 198 / 38 / 4 for 0 / 1 / 2 / 3. The name raises the odds of a multiple about fivefold and still predicts little. The clearest cases are analogy inventions whose name is a portmanteau the anchors nearly dictate:
 
@@ -92,7 +92,7 @@ The coined name is held out of the criterion, so name agreement and property agr
 - (Vaccines, Ethics), both **Ethical adjuvant**: `amplifies thought experiment` vs `promotes social norms; reduces moral harm` (0.20).
 - (The blues, The lock and key), both **blues lock** (a blend): `requires recognition of a pattern; evokes emotional tension; involves precise fit between elements; unlocks cathartic release …` vs `follows twelve bar blues; contains pin tumblers; sets key shape pitch bends; releases bolt through harmonic resolution …` (0.25).
 
-**Same invention, different name.** Of the 393 multiples, **89%** (351) carry different names; at τ ≥ 3 it is 26 of 30. Within the 111 components, 409 member inventions carry **346 distinct names** (0.85 per member), 83 components have every member named differently, and 7 share a single name. Examples at τ = 3:
+**Same invention, different name.** Of the 395 multiples, **89%** (353) carry different names; at τ ≥ 3 it is 26 of 30. Within the 112 components, 412 member inventions carry **349 distinct names** (0.85 per member), 84 components have every member named differently, and 7 share a single name. Examples at τ = 3:
 
 - (The Roman Empire, Crystals): **Lattice Imperium** / **imperial lattice** — both grow by replicating a unit, fracture along structural planes, administer provinces, exhibit geometric symmetry.
 - (Photosynthesis, Bread): **sunloaf** / **solar loaf** — both capture sunlight, build an edible crumb from fixed carbon, regrow cut slices.
@@ -106,16 +106,16 @@ The two halves hold within each task (blending: P(multiple | same name) = 5.8%, 
 
 ### Task: the fixed-τ ratio is mostly property count
 
-At τ = 2 blends are multiples **2.21%** of the time and analogy inventions **0.07%** (paired Wilcoxon over 30 anchor pairs, p = 1.7×10⁻⁶); the encoder-free name-match cut agrees on direction (4.1% vs 0.2%, p = 2.9×10⁻⁶). But a fixed τ is not a fair operator comparison: a blend carries 5.0 properties and an analogy invention 2.4, so τ = 2 is a 40% bar for one and an 85% bar for the other, one analogy invention in five carries a single property and cannot qualify at all, and the chance of sharing ≥ 2 grows superlinearly with how many there are to share. Four routes remove the property-count advantage:
+At τ = 2 blends are multiples **2.21%** of the time and analogy inventions **0.08%** (paired Wilcoxon over 30 anchor pairs, p = 1.7×10⁻⁶); the encoder-free name-match cut agrees on direction (4.1% vs 0.2%, p = 2.9×10⁻⁶). But a fixed τ is not a fair operator comparison: a blend carries 5.0 properties and an analogy invention 2.4, so τ = 2 is a 40% bar for one and an 85% bar for the other, one analogy invention in five carries a single property and cannot qualify at all, and the chance of sharing ≥ 2 grows superlinearly with how many there are to share. Four routes remove the property-count advantage:
 
 | Route | Blending | Analogy | Ratio | Test |
 |---|--:|--:|--:|---|
-| τ = 2 multiples, all pairs (% of pairs) | 2.21 | 0.07 | **32×** | Wilcoxon p = 1.7×10⁻⁶ |
-| τ = 2, eligible pairs only (both inventions ≥ 2 properties) | 2.21 | 0.11 | 20× | — |
-| Per-property re-use (share of the smaller invention's properties re-used) | 0.045 | 0.014 | **3.4×** | Wilcoxon p = 3.5×10⁻⁸ |
+| τ = 2 multiples, all pairs (% of pairs) | 2.21 | 0.08 | **27×** | Wilcoxon p = 1.7×10⁻⁶ |
+| τ = 2, eligible pairs only (both inventions ≥ 2 properties) | 2.21 | 0.13 | 17× | — |
+| Per-property re-use (share of the smaller invention's properties re-used) | 0.045 | 0.014 | **3.3×** | Wilcoxon p = 4.7×10⁻⁸ |
 | Exact-match per-property re-use (verbatim objects, no encoder) | 0.022 | 0.011 | **2.0×** | Wilcoxon p = 1.5×10⁻³ |
 
-Null correction changes nothing (the null's per-property re-use is 0.001 / 0.000). Size-matched strata, which gave 4.5–6× at the earlier θ, are too thin to read at 0.674: the only stratum both tasks populate with more than a handful of hits is min(k,k′) = 3 (blending 0.75% of 265 pairs, analogy 0.06% of 3,266, 12×), and at min(k,k′) = 4 analogy has 3 hits in 201 pairs. Eligibility alone barely moves the ratio, because analogy inventions with two or three properties still share fewer of them; the routes that count *per property* put blending's advantage at 2–3×. The honest statement is that blends converge more than analogies by every route, by a factor of two to three per property, and that the 32× a fixed τ reports is mostly how much there is to share. Our reading is unchanged: fusing two fixed inputs admits only a few natural blends, whereas analogy leaves the source domain free, so analogies fan out where blends funnel.
+Null correction changes nothing (the null's per-property re-use is 0.001 / 0.000). Size-matched strata, which gave 4.5–6× at the earlier θ, are too thin to read at 0.674: the only stratum both tasks populate with more than a handful of hits is min(k,k′) = 3 (blending 0.75% of 265 pairs, analogy 0.06% of 3,266, 12×), and at min(k,k′) = 4 analogy has 3 hits in 201 pairs. Eligibility alone barely moves the ratio, because analogy inventions with two or three properties still share fewer of them; the routes that count *per property* put blending's advantage at 2–3×. The honest statement is that blends converge more than analogies by every route, by a factor of two to three per property, and that the 27× a fixed τ reports is mostly how much there is to share. Our reading is unchanged: fusing two fixed inputs admits only a few natural blends, whereas analogy leaves the source domain free, so analogies fan out where blends funnel.
 
 **Sensitivity to θ.** At τ = 2 the overall / blending / analogy rates are 2.2 / 4.3 / 0.1% at θ = 0.62, 1.1 / 2.2 / 0.1% at 0.674 and 0.6 / 1.1 / 0.0% at 0.72. Absolute rates move with θ, as they must; the direction does not, at any τ.
 
@@ -152,14 +152,14 @@ Name agreement is unchanged; property agreement halves, and the number of distin
 Full members of every cluster — each invention with its generic space (blend) or projected source (analogy) and its tagged structure — are generated from the analysis output, not typed:
 
 - [`examples_section.md`](examples_section.md) — the largest cross-family clusters, in markdown.
-- [`multiples_showcase.html`](multiples_showcase.html) — all 111 clusters, browsable, each with the models that answered the same item and built something else.
+- [`multiples_showcase.html`](multiples_showcase.html) — all 112 clusters, browsable, each with the models that answered the same item and built something else.
 
 ## Limitations and red-team
 
 - **Shallow convergence is the load-bearing finding and survives the definition.** At every θ swept, the rate collapses from τ = 2 to τ = 3.
-- **The fixed-τ ratio is not the operator effect.** Anyone quoting 32× is quoting property count; the per-property and exact-match routes (2–3×) are the comparison to cite.
+- **The fixed-τ ratio is not the operator effect.** Anyone quoting 27× is quoting property count; the per-property and exact-match routes (2–3×) are the comparison to cite.
 - **θ is a judgment, documented.** 0.674 is where sampled matches read as paraphrases; it is not derived. The null gives its implied false-positive rate (0.03%) and the sweep shows the findings' direction at 0.62 and 0.72.
-- **σ is a greedy matching.** The shared-property count is a greedy one-to-one assignment, a lower bound on the maximum matching the Definition describes; with at most seven properties per invention an exact matching is cheap and is the next fix.
+- **σ is an exact maximum matching** since 2026-09-09; the greedy assignment it replaced undercounted on 2 of 34,687 pairs (both analogy).
 - **Anchor echo is a filter on objects only.** A property that paraphrases the anchor without naming it (`resembles a mathematical constant`) survives; the exact-match rule was chosen over word overlap because word overlap wrongly drops real properties. The residual echo, if any, inflates analogy, not blending.
 - **Components are not consensus.** A 19-model cluster means 19 models are chained by pairwise overlap; the density column says how far from a clique each one is.
 - **Single encoder.** Property matching rests on `all-MiniLM-L6-v2` (local); the exact-match route is encoder-free and agrees on direction.

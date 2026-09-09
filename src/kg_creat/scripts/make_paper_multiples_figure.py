@@ -1,39 +1,66 @@
-"""Stack the two multiples figures into the single image the paper includes.
+"""Assemble the paper's inventive-multiples figure assets from the report figures.
 
-`media/figures/old/inventive_multiples.png` is one figure in the paper (Fig. \\ref{fig:profiles}) but two figures
-on disk: the model x property matrix on top, the MDS invention landscape below. That stacking used to
-be a manual step outside the repo, so the paper's copy silently went stale whenever either half was
-regenerated. This does it reproducibly: both halves are scaled to a common width and stacked.
+The paper switches between two figure sets (setup/figures.tex, `\\figureversion`):
+
+  media/figures/old/inventive_multiples.png      one stacked image: the model x property matrix
+                                                 over the two-panel MDS landscape
+  media/figures/new/inventive_multiples_matrix.pdf   panel (a) the matrix
+  media/figures/new/inventive_multiples_mds_a.pdf    panel (b) the first landscape item
+  media/figures/new/inventive_multiples_mds_b.pdf    panel (c) the second landscape item
+  media/figures/new/inventive_multiples.pdf          the three panels as one three-page PDF
+
+Stacking used to be a manual step outside the repo, so the paper's copy silently went stale whenever
+a half was regenerated. This does all of it reproducibly from the report's figure directory.
 
     .venv/bin/python -m src.kg_creat.scripts.make_paper_multiples_figure
 """
+import shutil
 from pathlib import Path
 
 from PIL import Image
 
 FIGS = Path("docs/reports/2026-09-01_kg_creat_inventive_multiples/figures")
-TOP, BOTTOM = FIGS / "fig_multiples_matrix.png", FIGS / "fig_invention_landscape.png"
-OUT = Path("papers/kg_creat-iclr/media/figures/old/inventive_multiples.png")   # the paper's \paperfigure{inventive_multiples} with figureversion=old
-GAP = 40          # white gutter between the halves, in px at the common width
+MEDIA = Path("papers/kg_creat-iclr/media/figures")
+MATRIX, LAND = FIGS / "fig_multiples_matrix", FIGS / "fig_invention_landscape"
+GAP = 40          # white gutter between the stacked halves, in px at the common width
 BG = (255, 255, 255)
 
 
-def main():
-    for f in (TOP, BOTTOM):
-        if not f.exists():
-            raise FileNotFoundError(f"FATAL: {f} is missing -- regenerate it before stacking")
-    ims = [Image.open(f).convert("RGB") for f in (TOP, BOTTOM)]
+def stack(tops, out):
+    ims = [Image.open(f).convert("RGB") for f in tops]
     w = max(im.width for im in ims)
-    ims = [im if im.width == w else
-           im.resize((w, round(im.height * w / im.width)), Image.LANCZOS) for im in ims]
-    out = Image.new("RGB", (w, sum(im.height for im in ims) + GAP), BG)
+    ims = [im if im.width == w else im.resize((w, round(im.height * w / im.width)), Image.LANCZOS)
+           for im in ims]
+    canvas = Image.new("RGB", (w, sum(im.height for im in ims) + GAP * (len(ims) - 1)), BG)
     y = 0
     for im in ims:
-        out.paste(im, (0, y)); y += im.height + GAP
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    out.save(OUT, dpi=(300, 300))
-    print(f"wrote {OUT}  ({out.width} x {out.height}) "
-          f"= {TOP.name} over {BOTTOM.name}")
+        canvas.paste(im, (0, y)); y += im.height + GAP
+    canvas.save(out, dpi=(300, 300))
+    return canvas.size
+
+
+def main():
+    need = [MATRIX.with_suffix(".png"), LAND.with_suffix(".png"), MATRIX.with_suffix(".pdf"),
+            Path(f"{LAND}_a.pdf"), Path(f"{LAND}_b.pdf"), Path(f"{LAND}_a.png"), Path(f"{LAND}_b.png")]
+    for f in need:
+        if not f.exists():
+            raise FileNotFoundError(f"FATAL: {f} is missing -- regenerate it before assembling")
+    (MEDIA / "old").mkdir(parents=True, exist_ok=True); (MEDIA / "new").mkdir(parents=True, exist_ok=True)
+
+    old = MEDIA / "old/inventive_multiples.png"
+    size = stack([MATRIX.with_suffix(".png"), LAND.with_suffix(".png")], old)
+    print(f"wrote {old}  ({size[0]} x {size[1]})")
+
+    for src, dst in ((MATRIX.with_suffix(".pdf"), "inventive_multiples_matrix.pdf"),
+                     (Path(f"{LAND}_a.pdf"), "inventive_multiples_mds_a.pdf"),
+                     (Path(f"{LAND}_b.pdf"), "inventive_multiples_mds_b.pdf")):
+        shutil.copyfile(src, MEDIA / "new" / dst)
+        print(f"wrote {MEDIA / 'new' / dst}")
+    pages = [Image.open(f).convert("RGB") for f in
+             (MATRIX.with_suffix(".png"), Path(f"{LAND}_a.png"), Path(f"{LAND}_b.png"))]
+    combined = MEDIA / "new/inventive_multiples.pdf"
+    pages[0].save(combined, save_all=True, append_images=pages[1:], resolution=300)
+    print(f"wrote {combined}  ({len(pages)} pages)")
 
 
 if __name__ == "__main__":
