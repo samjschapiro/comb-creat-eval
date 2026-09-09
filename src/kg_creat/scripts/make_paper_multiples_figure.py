@@ -1,6 +1,6 @@
 """Stack the two multiples figures into the single image the paper includes.
 
-`media/inventive_multiples.png` is one figure in the paper (Fig. \\ref{fig:profiles}) but two figures
+`media/figures/old/inventive_multiples.png` is one figure in the paper (Fig. \\ref{fig:profiles}) but two figures
 on disk: the model x property matrix on top, the MDS invention landscape below. That stacking used to
 be a manual step outside the repo, so the paper's copy silently went stale whenever either half was
 regenerated. This does it reproducibly: both halves are scaled to a common width and stacked.
@@ -13,7 +13,7 @@ from PIL import Image
 
 FIGS = Path("docs/reports/2026-09-01_kg_creat_inventive_multiples/figures")
 TOP, BOTTOM = FIGS / "fig_multiples_matrix.png", FIGS / "fig_invention_landscape.png"
-OUT = Path("papers/kg_creat-iclr/media/inventive_multiples.png")
+OUT = Path("papers/kg_creat-iclr/media/figures/old/inventive_multiples.png")   # the paper's \paperfigure{inventive_multiples} with figureversion=old
 GAP = 40          # white gutter between the halves, in px at the common width
 BG = (255, 255, 255)
 
