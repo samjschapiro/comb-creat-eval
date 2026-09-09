@@ -38,7 +38,8 @@ def load():
     un = lambda x: x / (np.linalg.norm(x) + 1e-9)
     slot_vec, SLOTS = {}, {}
     for i in range(len(names)):
-        st = M.slot_texts(str(tk[i]), struct.get((str(tk[i]), str(us[i]), str(vs[i]), str(mo[i])), []))
+        st = M.slot_texts(str(tk[i]), struct.get((str(tk[i]), str(us[i]), str(vs[i]), str(mo[i])), []),
+                          str(us[i]), str(vs[i]))
         for t, _ in st:
             if t not in slot_vec:
                 slot_vec[t] = un(np.asarray(embed(t), float))
@@ -143,7 +144,7 @@ def main():
               f"{(r_s / r_c if r_c else float('nan')):>11.1f}x{100 * tpr:>14.1f}%"
               f"{(tpr / fpr if fpr else float('nan')):>6.1f}x")
 
-    cur = 0.58
+    cur = M.COS_SLOT
     sh = np.array([sum(1 for s in m if s >= cur) for m in matches])
     al_cur = float((null >= cur).mean())
     print(f"\ncurrent theta = {cur}: implied alpha = {100 * al_cur:.2f}% "

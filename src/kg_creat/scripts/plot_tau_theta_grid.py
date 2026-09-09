@@ -83,7 +83,8 @@ def build():
     un = lambda x: x / (np.linalg.norm(x) + 1e-9)
     slot_vec, SLOTS = {}, {}
     for i in range(len(names)):
-        st = M.slot_texts(str(tk[i]), struct.get((str(tk[i]), str(us[i]), str(vs[i]), str(mo[i])), []))
+        st = M.slot_texts(str(tk[i]), struct.get((str(tk[i]), str(us[i]), str(vs[i]), str(mo[i])), []),
+                          str(us[i]), str(vs[i]))
         for t, _ in st:
             if t not in slot_vec:
                 slot_vec[t] = un(np.asarray(embed(t), float))

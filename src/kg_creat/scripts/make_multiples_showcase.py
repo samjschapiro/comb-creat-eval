@@ -67,8 +67,8 @@ def markdown(clusters):
     L = ["## Cross-family worked examples", ""]
     L.append(f"Of the {sum(1 for c in clusters if len(c['providers']) >= 2)} structural clusters that span two or "
              f"more provider families, the {len(xf)} largest are shown in full: every member's invention, with its "
-             f"generic space (blend) or projected source (analogy) and its structure. The agreement is not only the "
-             f"coined name but the shared abstraction, and repeatedly the same emergent mapping.")
+             f"generic space (blend) or projected source (analogy) and its structure. The agreement is in the "
+             f"properties asserted of the invention, which the criterion measures; the coined names often differ.")
     L.append("")
     for c in xf:
         fams = ", ".join(PROV_LABEL[p] for p in c["providers"] if p in PROV_LABEL)
@@ -269,19 +269,20 @@ def catalogue(d):
          f'Leibniz. Every one found in the benchmark is catalogued below, and under each one, the models '
          f'that saw the same two concepts and invented something else &mdash; no cluster ever takes the '
          f'whole pool. Often those models share the cluster\'s abstraction and still build something '
-         f'different on it: the anchors can force the schema, the invention stays the model\'s.</p>',
+         f'different on it: the anchors can force the schema, the invention stays the model\'s. The '
+         f'abstraction is shown for reading; it plays no part in the criterion.</p>',
          f'<p class="crit">Each cluster leads with what its models actually <em>say</em> about the '
          f'invention &mdash; the (relation, object) slots that recur across them, counted over all '
          f'{max(c["size"] + len(c.get("outsiders", [])) for c in d["clusters"])} models that answered '
          f'the item, however each one worded it. The coined names differ far more than the properties '
          f'do. Individual inventions, in full, are one click away.</p>',
          f'<p class="crit">A pair qualifies when the two inventions <strong>re-use at least '
-         f'{d["k_shared"]} of the same properties</strong> &mdash; every triple reduced to its '
-         f'&ldquo;relation object&rdquo;, the coined name dropped, matched one-to-one at cosine '
-         f'<code>&ge; {d["tau_slot"]}</code> &mdash; <em>and</em> their underlying abstractions align '
-         f'(<code>&ge; {d["tau_con"]}</code>). The name is never an input: of the '
-         f'{d["same_name_pairs"]["n"]} pairs that coined the identical name, only '
-         f'{d["same_name_pairs"]["pct_that_are_multiples"]:.0f}% qualify.</p>',
+         f'&tau; = {d["tau"]} of the same properties</strong> &mdash; every triple reduced to its '
+         f'&ldquo;relation object&rdquo;, the coined name dropped, any property whose object is one of '
+         f'the anchors dropped, matched one-to-one at cosine <code>&ge; {d["cos_slot"]}</code> '
+         f'(calibrated so that one property pair in 400 from unrelated inventions clears it). '
+         f'The name is never an input: of the {d["same_name_pairs"]["n"]} pairs that coined the '
+         f'identical name, {d["same_name_pairs"]["pct_that_are_multiples"]:.0f}% qualify.</p>',
          '<div class="stats">',
          f'<div class="stat"><b>{d["n_clusters"]}</b><span>clusters of rediscovery</span></div>',
          f'<div class="stat"><b>{im["pct"]:.0f}%</b><span>of inventions are in one</span></div>',
@@ -367,32 +368,29 @@ def catalogue(d):
         if outs:
             total = len(outs) + c["size"]
             shares = sum(1 for o in outs if o.get("blocked_by") == "properties")
-            if shares == len(outs):
+            close = sum(1 for o in outs if (o.get("abs_cos") or 0) >= d["cos_con"])
+            if close == len(outs):
                 note = ("Every one of them writes an abstraction close to the cluster's and still "
                         "re-uses too few of its properties: on this pair the schema is close to forced "
                         "by the anchors, and the models part company over what they build on it.")
-            elif shares:
-                note = (f"{shares} of {len(outs)} share the cluster's abstraction and diverge in the "
-                        f"invention; the rest reached for a different schema altogether.")
+            elif close:
+                note = (f"{close} of {len(outs)} write an abstraction close to the cluster's and diverge "
+                        f"in the invention; the rest reached for a different schema altogether.")
             else:
                 note = "None of them organizes the two inputs the way the cluster does."
             P.append(f'<details class="outs"><summary>Same anchors, another invention &middot; '
                      f'{len(outs)} models</summary><p class="outs-h">'
                      f'<b>{len(outs)} of {total} models</b></p>'
-                     f'<p class="outs-note">{note} Each row is tagged with the clause that keeps it '
-                     f'out, and its best cosine to a cluster member on the other one.</p><ul>')
+                     f'<p class="outs-note">{note} Each row shows how many of the cluster\'s properties '
+                     f'it re-uses (fewer than {d["tau"]} keeps it out) and, for reading only, its best '
+                     f'abstraction cosine to a member.</p><ul>')
             for o in outs:
                 pv = _prov(o["model"])
                 other = (f'<b>&nbsp;&middot; joined &ldquo;{html.escape(o["other_cluster"])}&rdquo;</b>'
                          if o["other_cluster"] else "")
-                blocked, sh, ac = o.get("blocked_by"), o.get("shared", 0), o.get("abs_cos")
-                if blocked == "properties":
-                    why = (f'<span class="why inv">{sh} shared propert{"y" if sh == 1 else "ies"}'
-                           f'<span> schema {ac:.2f}</span></span>')
-                elif blocked == "abstraction":
-                    why = f'<span class="why abs">different schema <span>{sh} shared</span></span>'
-                else:
-                    why = f'<span class="why both">{sh} shared, different schema</span>'
+                sh, ac = o.get("shared", 0), o.get("abs_cos")
+                schema = f'<span> schema {ac:.2f}</span>' if ac is not None else ""
+                why = f'<span class="why inv">{sh} shared propert{"y" if sh == 1 else "ies"}{schema}</span>'
                 other += why
                 P.append('<li>'
                          f'<span class="dot" style="background:{_brand(pv)}"></span>'

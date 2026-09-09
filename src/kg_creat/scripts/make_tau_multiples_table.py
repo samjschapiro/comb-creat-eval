@@ -1,12 +1,17 @@
-"""Emit the tau-inventive-multiples table for the paper.
+"""Emit the tau-inventive-multiples tables for the paper.
 
-Reads the `tau_curve` block written by analyze_inventive_multiples.py and renders it as a LaTeX
-table: the multiple rate at each tau, split by task and by whether the two models come from the same
-provider, with both ratios that Findings #3b and #3c quote.
+Reads `tau_curve` and `task_routes` written by analyze_inventive_multiples.py and renders two LaTeX
+tables:
+
+  04_tau_multiples.tex  the multiple rate at each tau, split by task and by whether the two models
+                        come from the same provider, with the fixed-tau ratios Findings #3b and #3c
+                        quote, the eligible-pair ratio beside it, and the share of inventions touched;
+  07_task_routes.tex    blend vs analogy by every route that does not depend on property count.
 
     .venv/bin/python -m src.kg_creat.scripts.make_tau_multiples_table \
         data/kg_creat/kombine_test30/analysis/inventive_multiples.json \
-        papers/kg_creat-iclr/media/04_tau_multiples.tex
+        papers/kg_creat-iclr/media/04_tau_multiples.tex \
+        papers/kg_creat-iclr/media/07_task_routes.tex
 """
 import argparse
 import json
@@ -27,31 +32,39 @@ def render(d) -> str:
     cos_slot = d["cos_slot"]
     n_pairs = d["n_pairs"]
     n_inv = d["n_inventions"]
+    echo = d["anchor_echo"]
+    kb, ka = echo["blending"]["mean_properties"], echo["analogy"]["mean_properties"]
     out = [
         HEADER,
         r"\begin{table}[t]",
         r"\centering",
-        r"\small",
+        r"\scriptsize",
+        r"\setlength{\tabcolsep}{3pt}",
         # caption text is machine-authored, so it ships inside \ai{} for the author to review
         r"\caption{\ai{\textbf{$\tau$-inventive multiples.} The share of co-response model pairs whose "
         r"inventions re-use at least $\tau$ of each other's (relation, object) properties, over "
-        f"{n_pairs:,} pairs of the {n_inv:,} inventions. "
+        f"{n_pairs:,} pairs of the {n_inv:,} inventions, and the share of inventions in at least one "
+        r"multiple (\emph{Inv.}). "
         r"\emph{Same} and \emph{cross} are pairs of models from the same and different providers. "
         f"Properties are matched one-to-one at cosine $\\ge {cos_slot}$; the invented concept's own "
-        r"name is excluded throughout. Blends carry more properties than analogy inventions "
-        r"(mean $5.0$ vs $2.6$), so a fixed $\tau$ is a stricter bar for analogy.}}",
+        r"name and any property whose object is an anchor are excluded throughout. Blends carry more "
+        f"properties than analogy inventions (mean ${kb:.1f}$ vs ${ka:.1f}$), so a fixed $\\tau$ is a "
+        r"stricter bar for analogy; \emph{elig.} restricts the ratio to pairs in which both inventions "
+        r"carry at least $\tau$ properties.}}",
         r"\label{tab:tau_multiples}",
-        r"\begin{tabular}{ccccccccc}",
+        r"\begin{tabular}{ccccccccccc}",
         r"\toprule",
-        r" & & \multicolumn{3}{c}{Rate by task} & & \multicolumn{2}{c}{Rate by provider} & \\",
-        r"\cmidrule(lr){3-5}\cmidrule(lr){7-8}",
-        r"$\tau$ & Pairs & Overall & Blending & Analogy & Blend/An. & Same & Cross & Same/Cross \\",
+        r" & & & \multicolumn{5}{c}{Rate by task} & \multicolumn{3}{c}{Rate by provider} \\",
+        r"\cmidrule(lr){4-8}\cmidrule(lr){9-11}",
+        r"$\tau$ & Pairs & Inv. & Overall & Blending & Analogy & Bl./An. & Bl./An. (elig.) & Same & Cross & Same/Cross \\",
         r"\midrule",
     ]
     for r in rows:
         out.append(
-            f"{r['tau']} & {r['n']:,} & {r['overall_pct']:.2f}\\% & {r['blending_pct']:.2f}\\% & "
-            f"{r['analogy_pct']:.2f}\\% & {ratio(r['blending_pct'], r['analogy_pct'])} & "
+            f"{r['tau']} & {r['n']:,} & {r['inventions_pct']:.1f}\\% & {r['overall_pct']:.2f}\\% & "
+            f"{r['blending_pct']:.2f}\\% & {r['analogy_pct']:.2f}\\% & "
+            f"{ratio(r['blending_pct'], r['analogy_pct'])} & "
+            f"{ratio(r['blending_eligible_pct'], r['analogy_eligible_pct'])} & "
             f"{r['same_provider_pct']:.2f}\\% & {r['cross_provider_pct']:.2f}\\% & "
             f"{ratio(r['same_provider_pct'], r['cross_provider_pct'])} \\\\"
         )
@@ -64,16 +77,83 @@ def render(d) -> str:
     return "\n".join(out)
 
 
+def _p(x):
+    if x is None:
+        return "--"
+    if x < 1e-4:
+        e = int(f"{x:.0e}".split("e")[1])
+        return f"$<10^{{{e + 1}}}$"
+    return f"${x:.3f}$"
+
+
+def render_routes(d) -> str:
+    """Blend vs analogy by route. The fixed-tau row is the one the main table shows; every row below it
+    removes the property-count advantage in a different way."""
+    R = d["task_routes"]
+    tau = d["tau"]
+    rows = [
+        (f"$\\tau = {tau}$ multiples, all pairs (\\% of pairs)",
+         f"{R['fixed_tau']['blending']:.2f}", f"{R['fixed_tau']['analogy']:.2f}", R["fixed_tau"]["ratio"],
+         d["task"]["wilcoxon_p"]),
+        (f"$\\tau = {tau}$ multiples, eligible pairs (\\% of pairs)",
+         f"{R['eligible']['blending']:.2f}", f"{R['eligible']['analogy']:.2f}", R["eligible"]["ratio"], None),
+        (f"$\\tau = {tau}$ multiples, excess over cross-item null (\\% of pairs)",
+         f"{R['null_corrected_fixed_tau']['blending']:.2f}", f"{R['null_corrected_fixed_tau']['analogy']:.2f}",
+         R["null_corrected_fixed_tau"]["ratio"], None),
+        ("Per-property re-use (share of the smaller invention)",
+         f"{R['per_property']['blending']:.3f}", f"{R['per_property']['analogy']:.3f}",
+         R["per_property"]["ratio"], R["per_property"]["wilcoxon_p"]),
+        ("\\quad excess over cross-item null",
+         f"{R['per_property']['excess_blending']:.3f}", f"{R['per_property']['excess_analogy']:.3f}",
+         R["per_property"]["excess_ratio"], None),
+        ("Exact-match per-property re-use (encoder-free)",
+         f"{R['exact_per_property']['blending']:.4f}", f"{R['exact_per_property']['analogy']:.4f}",
+         R["exact_per_property"]["ratio"], R["exact_per_property"]["wilcoxon_p"]),
+        ("\\quad excess over cross-item null",
+         f"{R['exact_per_property']['excess_blending']:.4f}", f"{R['exact_per_property']['excess_analogy']:.4f}",
+         R["exact_per_property"]["excess_ratio"], None),
+    ]
+    n_items = R["per_property"]["n_items"]
+    out = [
+        HEADER,
+        r"\begin{table}[t]",
+        r"\centering",
+        r"\footnotesize",
+        r"\setlength{\tabcolsep}{4pt}",
+        r"\caption{\ai{\textbf{Blending versus analogy by route.} The first row is the fixed-$\tau$ "
+        r"comparison of \Cref{tab:tau_multiples}; each row below removes the property-count advantage "
+        r"of blends in a different way. \emph{Eligible} pairs are those in which both inventions carry "
+        r"at least $\tau$ properties; the \emph{cross-item null} is the same statistic over pairs of "
+        r"inventions answering different anchor pairs, which cannot share an item-specific property; "
+        r"\emph{per-property re-use} is the share of the smaller invention's properties the other "
+        f"invention also asserts. $p$ is a paired Wilcoxon test over the {n_items} anchor pairs.}}}}",
+        r"\label{tab:task_routes}",
+        r"\begin{tabular}{lcccc}",
+        r"\toprule",
+        r"Route & Blending & Analogy & Ratio & $p$ \\",
+        r"\midrule",
+    ]
+    for label, b, a, rt, pv in rows:
+        rs = f"{rt:.1f}$\\times$" if rt == rt else "--"
+        out.append(f"{label} & {b} & {a} & {rs} & {_p(pv)} \\\\")
+    out += [r"\bottomrule", r"\end{tabular}", r"\end{table}", ""]
+    return "\n".join(out)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("src", type=Path, help="inventive_multiples.json")
-    ap.add_argument("dst", type=Path, help="output .tex")
+    ap.add_argument("dst", type=Path, help="output .tex for the tau table")
+    ap.add_argument("routes_dst", type=Path, help="output .tex for the blend-vs-analogy routes table")
     a = ap.parse_args()
     d = json.loads(a.src.read_text())
-    if "tau_curve" not in d:
-        raise SystemExit(f"{a.src} has no `tau_curve` block -- re-run analyze_inventive_multiples.py")
+    for key in ("tau_curve", "task_routes", "anchor_echo"):
+        if key not in d:
+            raise SystemExit(f"{a.src} has no `{key}` block -- re-run analyze_inventive_multiples.py")
     a.dst.write_text(render(d))
     print(f"wrote {a.dst} ({len(d['tau_curve'])} rows)")
+    a.routes_dst.write_text(render_routes(d))
+    print(f"wrote {a.routes_dst}")
 
 
 if __name__ == "__main__":

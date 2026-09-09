@@ -1,10 +1,291 @@
 ## Cross-family worked examples
 
-Of the 96 structural clusters that span two or more provider families, the 5 largest are shown in full: every member's invention, with its generic space (blend) or projected source (analogy) and its structure. The agreement is not only the coined name but the shared abstraction, and repeatedly the same emergent mapping.
+Of the 59 structural clusters that span two or more provider families, the 5 largest are shown in full: every member's invention, with its generic space (blend) or projected source (analogy) and its structure. The agreement is in the properties asserted of the invention, which the criterion measures; the coined names often differ.
+
+### Photosynthesis + Bread — blending
+
+*35 models across 10 families: Anthropic, DeepSeek, Google, Meta, OpenAI, Qwen, xAI, Z-AI.*
+
+**claude-fable-5** (Anthropic)  
+g: *a process where captured energy and gas swell a starchy mass into stored food* · invention: **sunloaf**  
+- (sunloaf, captures, sunlight) `[u]`
+- (sunloaf, has, edible crust) `[v]`
+- (sunloaf, rises via, oxygen bubbles) `[uv]`
+- (sunloaf, builds crumb from, fixed carbon) `[uv]`
+- (sunloaf, regrows, cut slices) `[emergent]`
+- (sunloaf, proofs without, oven) `[emergent]`
+
+**claude-fable-5.1** (Anthropic)  
+g: *a porous carbohydrate matrix whose air pockets are made by living gas exchange* · invention: **solar leaven**  
+- (solar leaven, contains, chlorophyll) `[u]`
+- (solar leaven, kneaded from, wheat flour) `[v]`
+- (solar leaven, rises via, oxygen bubbles) `[uv]`
+- (solar leaven, sweetens itself via, sunlight) `[uv]`
+- (solar leaven, proofed under, lamps not warmth) `[emergent]`
+- (solar leaven, recycles, yeast carbon dioxide) `[emergent]`
+
+**claude-opus-4.5** (Anthropic)  
+g: *a biological process that assembles structured matter from simple environmental inputs* · invention: **Photoloaf**  
+- (Photoloaf, captures, light energy) `[u]`
+- (Photoloaf, has, porous crumb texture) `[v]`
+- (Photoloaf, assembles structure from, basic inputs) `[uv]`
+- (Photoloaf, grows mass, under sunlight) `[emergent]`
+- (Photoloaf, requires no, additional flour) `[emergent]`
+
+**claude-opus-4.6** (Anthropic)  
+g: *an activating agent causes inert substrate to rise into a structured energy rich product* · invention: **light leaven**  
+- (light leaven, rises through, captured radiance) `[uv]`
+- (light leaven, absorbs via, chlorophyll pigments) `[u]`
+- (light leaven, has texture, porous crumb) `[v]`
+- (light leaven, goes stale in, darkness) `[emergent]`
+- (light leaven, is sliced to, portion stored energy) `[emergent]`
+
+**claude-opus-4.7** (Anthropic)  
+g: *a process that transforms raw inputs into an edible carbohydrate matrix by capturing an invisible agent that inflates its structure* · invention: **sunloaf**  
+- (sunloaf, captures, sunlight) `[u]`
+- (sunloaf, is kneaded from, flour and water) `[v]`
+- (sunloaf, leavens via, photonic gas fixation) `[uv]`
+- (sunloaf, rises in, sunlight instead of ovens) `[emergent]`
+- (sunloaf, grows denser in, shade) `[emergent]`
+
+**claude-opus-4.8** (Anthropic)  
+g: *a carbon-dioxide-mediated process in which a living agent builds stored chemical food energy from simple inputs* · invention: **sunloaf**  
+- (sunloaf, captures, sunlight) `[u]`
+- (sunloaf, rises via, yeast) `[v]`
+- (sunloaf, cycles, carbon dioxide) `[uv]`
+- (sunloaf, stores energy as, starch) `[uv]`
+- (sunloaf, leavens itself, in daylight) `[emergent]`
+- (sunloaf, needs no, oven) `[emergent]`
+
+**claude-opus-5** (Anthropic)  
+g: *a slow process that builds solid volume out of gas taken from the air* · invention: **solar sourdough**  
+- (solar sourdough, splits, water) `[u]`
+- (solar sourdough, traps gas in, gluten) `[v]`
+- (solar sourdough, leavens with, oxygen bubbles) `[uv]`
+- (solar sourdough, sources yeast sugar from, sunlight) `[uv]`
+- (solar sourdough, gains mass while, proofing) `[emergent]`
+- (solar sourdough, loses chlorophyll in, oven) `[emergent]`
+
+**claude-sonnet-4.5** (Anthropic)  
+g: *a process that binds dispersed energy into stable, consumable structures* · invention: **Photobread**  
+- (Photobread, contains, chloroplasts) `[u]`
+- (Photobread, has, crust) `[v]`
+- (Photobread, grows by, capturing energy) `[uv]`
+- (Photobread, regenerates, consumed portions) `[emergent]`
+
+**claude-sonnet-4.6** (Anthropic)  
+g: *a catalytic process that stores energy while simultaneously reorganizing its surrounding medium through gaseous byproduct release* · invention: **Photoleaven**  
+- (Photoleaven, absorbs, light energy) `[u]`
+- (Photoleaven, forms, porous dough matrix) `[v]`
+- (Photoleaven, releases gas that, expands surrounding medium) `[uv]`
+- (Photoleaven, fixes carbon into, edible matrix while rising) `[emergent]`
+- (Photoleaven, rise rate, tracks light intensity) `[emergent]`
+
+**claude-sonnet-5** (Anthropic)  
+g: *trapping a diffuse ambient input inside an expanding matrix to store transferable energy for later release* · invention: **Photoloaf**  
+- (Photoloaf, captures, sunlight) `[u]`
+- (Photoloaf, traps, carbon dioxide gas) `[v]`
+- (Photoloaf, fixes ambient input into, storage matrix) `[uv]`
+- (Photoloaf, uses, chlorophyll) `[u]`
+- (Photoloaf, rises, by photosynthetic gas) `[emergent]`
+- (Photoloaf, resists staling, while exposed to light) `[emergent]`
+
+**deepseek-chat** (DeepSeek)  
+g: *a process of energy transformation that sustains life* · invention: **Photosynthesis Bread**  
+- (Photosynthesis Bread, converts, sunlight into nutrients) `[u]`
+- (Photosynthesis Bread, requires, yeast fermentation) `[v]`
+- (Photosynthesis Bread, produces, sustaining energy) `[uv]`
+- (Photosynthesis Bread, creates, edible energy storage) `[emergent]`
+
+**deepseek-v3** (DeepSeek)  
+g: *a system that transforms external inputs into stored energy through a structured process* · invention: **Photosynthetic Loaf**  
+- (Photosynthetic Loaf, absorbs, light) `[u]`
+- (Photosynthetic Loaf, requires, yeast) `[v]`
+- (Photosynthetic Loaf, produces, energy stores) `[uv]`
+- (Photosynthetic Loaf, releases, oxygen during baking) `[emergent]`
+- (Photosynthetic Loaf, has, cellular structure) `[uv]`
+
+**deepseek-r1** (DeepSeek)  
+g: *an autotrophic gas-exchange system that produces edible energy storage* · invention: **Solar Loaf**  
+- (Solar Loaf, requires, sunlight) `[u]`
+- (Solar Loaf, contains, yeast culture) `[v]`
+- (Solar Loaf, produces gases during, maturation) `[uv]`
+- (Solar Loaf, recycles O2 and CO2 internally, automatically) `[emergent]`
+- (Solar Loaf, self bakes using, metabolic heat) `[emergent]`
+
+**gemini-2.5-flash** (Google)  
+g: *a process that transforms raw environmental inputs into sustenance through structured biological and physical actions* · invention: **Photobread**  
+- (Photobread, absorbs, light energy) `[u]`
+- (Photobread, requires, yeast activation) `[v]`
+- (Photobread, converts raw material into, digestible energy stores) `[uv]`
+- (Photobread, exudes, warm, oxygenated air) `[emergent]`
+- (Photobread, grows in, layered, porous structures) `[emergent]`
+
+**gemini-2.5-pro** (Google)  
+g: *A process where a biological agent transforms a medium by releasing gas, creating a porous matrix* · invention: **Chroma-crumb**  
+- (Chroma-crumb, converts light into, stored energy) `[u]`
+- (Chroma-crumb, has, edible porous body) `[v]`
+- (Chroma-crumb, is structured by, gaseous metabolic byproduct) `[uv]`
+- (Chroma-crumb, grows when exposed to, light and CO2) `[emergent]`
+- (Chroma-crumb, is a, self-regenerating food) `[emergent]`
+
+**gemini-3.1-pro** (Google)  
+g: *a process that uses environmental energy and gas to construct a cellular carbohydrate matrix* · invention: **solar bread**  
+- (solar bread, absorbs, carbon dioxide) `[u]`
+- (solar bread, contains, gluten) `[v]`
+- (solar bread, generates, cellular structure) `[uv]`
+- (solar bread, bakes via, sunlight) `[emergent]`
+- (solar bread, regrows, harvested slices) `[emergent]`
+
+**gemini-3.7-flash** (Google)  
+g: *a process that fixes ambient gas into a nourishing carbohydrate structure using external energy* · invention: **solar loaf**  
+- (solar loaf, releases, oxygen) `[u]`
+- (solar loaf, has, a baked crust) `[v]`
+- (solar loaf, leavens by, capturing sunlight) `[uv]`
+- (solar loaf, fixes carbon into, an edible crumb) `[uv]`
+- (solar loaf, regenerates sliced portions under, sunlight) `[emergent]`
+
+**gemini-3-flash** (Google)  
+g: *a process that transforms atmospheric gas into a porous, energy-rich solid* · invention: **Photo-Loaf**  
+- (Photo-Loaf, uses, chlorophyll) `[u]`
+- (Photo-Loaf, has, leavened texture) `[v]`
+- (Photo-Loaf, fixes carbon into, edible crumb) `[uv]`
+- (Photo-Loaf, increases caloric mass, during illumination) `[emergent]`
+
+**llama-3.3-70b** (Meta)  
+g: *a nutrient-producing system* · invention: **BioBread**  
+- (BioBread, uses, energy) `[u]`
+- (BioBread, has, dough) `[v]`
+- (BioBread, produces, nutrients) `[uv]`
+- (BioBread, grows, on shelves) `[emergent]`
+- (BioBread, requires, water) `[uv]`
+
+**llama-4-maverick** (Meta)  
+g: *a biochemical process that transforms raw inputs into a valuable output* · invention: **Breadzyme**  
+- (Breadzyme, uses, enzymes) `[v]`
+- (Breadzyme, converts, CO2) `[u]`
+- (Breadzyme, produces, organic compounds) `[uv]`
+- (Breadzyme, is accelerated by, yeast) `[emergent]`
+
+**phi-4** (—)  
+g: *a process that converts raw materials into a usable product* · invention: **Solar Bread**  
+- (Solar Bread, converts, solar energy into consumable product) `[uv]`
+- (Solar Bread, produces, glucose) `[u]`
+- (Solar Bread, involves, fermentation) `[v]`
+- (Solar Bread, utilizes, solar-driven fermentation) `[emergent]`
+
+**kimi-k2** (—)  
+g: *a self-sustaining system that consumes substrate to build stored energy reserves while releasing waste* · invention: **yeast loaf**  
+- (yeast loaf, traps, light energy) `[u]`
+- (yeast loaf, has, porous crumb structure) `[v]`
+- (yeast loaf, ferments, solar sugars) `[uv]`
+- (yeast loaf, grows, crust as photovoltaic surface) `[emergent]`
+- (yeast loaf, produces, edible oxygen bubbles) `[emergent]`
+
+**gpt-4.1** (OpenAI)  
+g: *a substrate that transforms external energy into a consumable resource through internal conversion* · invention: **photobread**  
+- (photobread, contains, starch) `[v]`
+- (photobread, uses, light energy) `[u]`
+- (photobread, converts light into, edible carbohydrates) `[uv]`
+- (photobread, regenerates its interior, when exposed to sunlight) `[emergent]`
+- (photobread, grows fresher, after consumption if given light) `[emergent]`
+
+**gpt-4o-mini** (OpenAI)  
+g: *a process that converts energy into a consumable substance through biological methods* · invention: **photosynthetic bread**  
+- (photosynthetic bread, provides, nutrients) `[uv]`
+- (photosynthetic bread, is made of, plant matter) `[u]`
+- (photosynthetic bread, requires, light) `[u]`
+- (photosynthetic bread, is baked to, create texture) `[v]`
+- (photosynthetic bread, can sustain, life) `[emergent]`
+
+**gpt-5** (OpenAI)  
+g: *a porous matrix that channels a flow to set energy into a storable lattice* · invention: **green loaf**  
+- (green loaf, stores energy in, porous matrix) `[uv]`
+- (green loaf, exchanges gases via, pores) `[uv]`
+- (green loaf, makes sugars from, light) `[u]`
+- (green loaf, is leavened by, yeast) `[v]`
+- (green loaf, leavens itself from, light) `[emergent]`
+
+**gpt-5.2** (OpenAI)  
+g: *a staged conversion system that turns diffuse inputs into stored carbohydrate energy* · invention: **sun bread**  
+- (sun bread, contains, chloroplasts) `[u]`
+- (sun bread, has, crust) `[v]`
+- (sun bread, stores, sunlight as calories) `[uv]`
+- (sun bread, leavens via, oxygen bubbles) `[uv]`
+- (sun bread, rises in, sunlight) `[emergent]`
+- (sun bread, sweetens after, sunning) `[emergent]`
+
+**gpt-5.6-sol** (OpenAI)  
+g: *energy conversion in a porous carbohydrate matrix controlled by gas pathways* · invention: **leaf loaf**  
+- (leaf loaf, captures, sunlight) `[u]`
+- (leaf loaf, has, crust) `[v]`
+- (leaf loaf, grows into, edible crumb) `[uv]`
+- (leaf loaf, regulates, carbon dioxide flow) `[uv]`
+- (leaf loaf, regrows faster after, slicing) `[emergent]`
+
+**gpt-5-mini** (OpenAI)  
+g: *energy-driven assembly of carbohydrates into structured, porous solids for exchange and storage* · invention: **solar loaf**  
+- (solar loaf, captures light with, chlorophyll pigments) `[u]`
+- (solar loaf, rises by, yeast fermentation) `[v]`
+- (solar loaf, stores energy as, porous starch matrix) `[uv]`
+- (solar loaf, repairs with, photosynthetic starch) `[emergent]`
+- (solar loaf, is, living edible food) `[emergent]`
+
+**gpt-6-astra-flex** (OpenAI)  
+g: *capturing carbon dioxide to build an edible carbohydrate structure* · invention: **Sun loaf**  
+- (Sun loaf, absorbs, sunlight) `[u]`
+- (Sun loaf, fixes bubbles into, starch crumb) `[uv]`
+- (Sun loaf, is portioned into, slices) `[v]`
+- (Sun loaf, regrows after, slicing) `[emergent]`
+
+**qwen-2.5-72b** (Qwen)  
+g: *a functional biological process that converts inputs into usable outputs* · invention: **Photosynthetic Loaf**  
+- (Photosynthetic Loaf, harnesses, sunlight) `[u]`
+- (Photosynthetic Loaf, converts, glucose) `[v]`
+- (Photosynthetic Loaf, produces, oxygen) `[u]`
+- (Photosynthetic Loaf, sustains, life) `[uv]`
+- (Photosynthetic Loaf, ferments, naturally) `[emergent]`
+
+**qwen3-max** (Qwen)  
+g: *a substrate that transforms ambient inputs into stored chemical energy for consumption* · invention: **photosynthetic loaf**  
+- (photosynthetic loaf, captures, sunlight) `[u]`
+- (photosynthetic loaf, is, kneaded) `[v]`
+- (photosynthetic loaf, stores energy as, edible carbohydrate) `[uv]`
+- (photosynthetic loaf, grows crust while, generating oxygen) `[emergent]`
+
+**grok-4.5** (xAI)  
+g: *building energy-locking solid matrices from substrates* · invention: **sunloaf**  
+- (sunloaf, captures, photons) `[u]`
+- (sunloaf, has, crust) `[v]`
+- (sunloaf, locks energy in, solid matrix) `[uv]`
+- (sunloaf, regrows slices via, light) `[emergent]`
+
+**grok-4.6** (xAI)  
+g: *catalytic assembly of carbohydrates from raw inputs driven by external energy* · invention: **sun bread**  
+- (sun bread, releases, oxygen) `[u]`
+- (sun bread, forms, crust) `[v]`
+- (sun bread, fixes carbon into, edible loaf) `[uv]`
+- (sun bread, regrows, eaten parts) `[emergent]`
+
+**glm-4.5-air** (Z-AI)  
+g: *a process that transforms simple inputs into a stable, storable energy source using catalysis* · invention: **Helio-Loaf**  
+- (Helio-Loaf, uses, sunlight) `[u]`
+- (Helio-Loaf, contains, flour and water) `[v]`
+- (Helio-Loaf, stores, energy) `[uv]`
+- (Helio-Loaf, is leavened by, oxygen) `[emergent]`
+- (Helio-Loaf, requires no, baking) `[emergent]`
+
+**glm-4.6** (Z-AI)  
+g: *The conversion of gas into a solid, energy-dense matrix.* · invention: **Solar Loaf**  
+- (Solar Loaf, requires, sunlight) `[u]`
+- (Solar Loaf, has, crust) `[v]`
+- (Solar Loaf, creates solid from, gas) `[uv]`
+- (Solar Loaf, sweetens in, light) `[emergent]`
+- (Solar Loaf, rises without, fermentation) `[emergent]`
 
 ### Opera + Documentary film — blending
 
-*32 models across 9 families: Anthropic, DeepSeek, Google, Meta, OpenAI, Qwen, xAI, Z-AI.*
+*33 models across 9 families: Anthropic, DeepSeek, Google, Meta, OpenAI, Qwen, xAI, Z-AI.*
 
 **claude-fable-5** (Anthropic)  
 g: *a staged form that shapes real human voices into an emotionally guided public narrative* · invention: **verbatim opera**  
@@ -226,6 +507,13 @@ g: *a curated performative narrative that constructs truth by arranging staged o
 - (testimonial opera, asserts truth via, sung testimony and curated evidence) `[uv]`
 - (testimonial opera, treats, musical score as evidence) `[emergent]`
 
+**gpt-6-astra-flex** (OpenAI)  
+g: *an arrangement of voices that reveals conflict through repetition, interruption, and juxtaposition* · invention: **Witness opera**  
+- (Witness opera, organizes testimony as, counterpoint) `[uv]`
+- (Witness opera, assigns harmonies by, corroboration) `[uv]`
+- (Witness opera, preserves, source recordings) `[v]`
+- (Fact checks, trigger, reharmonization) `[emergent]`
+
 **qwen-2.5-72b** (Qwen)  
 g: *a narrative art form that engages and educates* · invention: **Operadoc**  
 - (Operadoc, presents, stories) `[uv]`
@@ -265,720 +553,788 @@ g: *a mediated reality that organizes source material to make a truth claim* · 
 - (Verismo Chronicle, produces, evidential catharsis) `[emergent]`
 - (Verismo Chronicle, subjects, facts to musical logic) `[emergent]`
 
-### Democracy + Banking — blending
+### Vaccines + Ethics — blending
 
-*24 models across 8 families: Anthropic, DeepSeek, Google, Meta, OpenAI, Qwen, xAI, Z-AI.*
-
-**claude-fable-5** (Anthropic)  
-g: *an institution that pools small revocable stakes from many individuals into concentrated power, and stays solvent only through collective confidence* · invention: **mandate bank**  
-- (mandate bank, grants, one stake per citizen) `[u]`
-- (mandate bank, pays, policy dividends) `[v]`
-- (mandate bank, pools, consent deposits) `[uv]`
-- (mandate bank, lends out, governing authority) `[uv]`
-- (mandate bank, governs on, fractional consent) `[emergent]`
-- (mandate bank, collapses in, legitimacy run) `[emergent]`
-
-**claude-fable-5.1** (Anthropic)  
-g: *an institution that holds pooled claims from many small holders, all withdrawable on demand, while committing far more than it could redeem at once* · invention: **mandate bank**  
-- (mandate bank, opens, one account per citizen) `[u]`
-- (mandate bank, keeps, ledger of balances) `[v]`
-- (mandate bank, holds, fractional reserve of consent) `[uv]`
-- (mandate bank, redeems, mandate on demand) `[uv]`
-- (mandate bank, collapses under, consent run) `[uv]`
-- (mandate bank, borrows from, legitimacy lender of last resort) `[emergent]`
-- (mandate bank, pays interest as, compounding recall weight) `[emergent]`
-
-**claude-opus-4.6** (Anthropic)  
-g: *a system where many stakeholders entrust individual stakes to an institution that pools and reallocates them as collective power* · invention: **Civic Reserve**  
-- (Civic Reserve, allocates, transferable authority shares) `[uv]`
-- (Civic Reserve, legitimated by, popular consent) `[u]`
-- (Civic Reserve, tracks via, account ledgers) `[v]`
-- (Civic Reserve, enables, fractional authority lending) `[emergent]`
-- (Civic Reserve, risks, legitimacy insolvency) `[emergent]`
-
-**claude-opus-4.7** (Anthropic)  
-g: *an institution that allocates transferable claims through ledgered accounts* · invention: **suffrage bank**  
-- (suffrage bank, elects officials by, majority) `[u]`
-- (suffrage bank, keeps balances in, double-entry ledgers) `[v]`
-- (suffrage bank, allocates, transferable vote shares) `[uv]`
-- (suffrage bank, sets interest rate on, deposited votes) `[emergent]`
-- (suffrage bank, permits, franchise foreclosure) `[emergent]`
-- (suffrage bank, triggers, electoral bank runs) `[emergent]`
-
-**claude-opus-4.8** (Anthropic)  
-g: *an institution that holds entrusted stakes and issues redeemable claims against a common pool* · invention: **Franchise Bank**  
-- (franchise bank, legitimizes via, consent of depositors) `[u]`
-- (franchise bank, charges, interest) `[v]`
-- (franchise bank, backs its claims with, reserve of pledged stakes) `[uv]`
-- (franchise bank, allocates, transferable vote shares) `[uv]`
-- (franchise bank, lends out, more votes than deposited) `[emergent]`
-- (franchise bank, collapses in, democratic bank run) `[emergent]`
-
-**claude-opus-5** (Anthropic)  
-g: *an institution that issues redeemable claims backed by reserves it holds only a fraction of, and survives only while holders keep faith* · invention: **consent bank**  
-- (consent bank, grants, equal suffrage) `[u]`
-- (consent bank, holds, fractional reserve) `[v]`
-- (consent bank, redeems on demand, mandate deposits) `[uv]`
-- (consent bank, lends out, policy credit) `[uv]`
-- (consent bank, declares, election holiday) `[emergent]`
-- (consent bank, stress tests, its own mandate) `[emergent]`
-
-**claude-sonnet-4.6** (Anthropic)  
-g: *a system that issues proportional claims on a pooled collective resource and lets holders exercise or transfer those claims to steer shared outcomes* · invention: **Civic Equity**  
-- (civic equity, allocates to citizens, exercisable stakes) `[uv]`
-- (civic equity, derives authority from, popular consent) `[u]`
-- (civic equity stake, earns yield from, collective surplus) `[v]`
-- (stake value, tracks, policy performance) `[emergent]`
-- (civic equity stake, serves as collateral, for civic loans) `[emergent]`
-
-**claude-sonnet-5** (Anthropic)  
-g: *pooling dispersed individual claims into a fungible stake that allocates power* · invention: **Liquid Franchise**  
-- (Liquid Franchise, grants, one base voice per citizen) `[u]`
-- (Liquid Franchise, requires, collateral for large stakes) `[v]`
-- (Liquid Franchise, allocates, transferable vote shares) `[uv]`
-- (Liquid Franchise, sets, interest rate on voting power) `[uv]`
-- (Liquid Franchise, enables, borrowing votes against future influence) `[emergent]`
-- (Liquid Franchise, produces, voice bankruptcy from vote debt) `[emergent]`
-
-**deepseek-chat** (DeepSeek)  
-g: *a system that allocates transferable value based on collective trust* · invention: **VoteBank**  
-- (VoteBank, allocates, transferable vote-shares) `[uv]`
-- (VoteBank, requires, identity verification) `[v]`
-- (VoteBank, tracks, participation history) `[u]`
-- (VoteBank, allows, vote loans) `[emergent]`
-- (VoteBank, adjusts weight by, reputation score) `[emergent]`
-
-**deepseek-v3** (DeepSeek)  
-g: *a system that tracks and allocates transferable claims of collective value* · invention: **vote-ledger**  
-- (vote-ledger, tracks, voting rights) `[u]`
-- (vote-ledger, tracks, credit balances) `[v]`
-- (vote-ledger, allocates, transferable vote-shares) `[uv]`
-- (vote-ledger, allows, delegation of voting power as collateral) `[emergent]`
-
-**gemini-3.7-flash** (Google)  
-g: *an institution pooling distributed individual entitlements into liquid claims that fund collective commitments* · invention: **Civic Reserve**  
-- (Civic Reserve, guarantees, equal voting rights) `[u]`
-- (Civic Reserve, maintains, fractional reserve ratios) `[v]`
-- (Civic Reserve, allocates loans of, pooled ballot shares) `[uv]`
-- (Civic Reserve, pays yield on, deferred policy votes) `[emergent]`
-- (Civic Reserve, experiences runs during, electoral panics) `[emergent]`
-
-**gemini-3-flash** (Google)  
-g: *a system for managing collective capacity through ledger-based claims* · invention: **The Volition Reserve**  
-- (The Volition Reserve, holds, periodic elections) `[u]`
-- (The Volition Reserve, maintains, fractional reserves) `[v]`
-- (The Volition Reserve, allocates, transferable voting credits) `[uv]`
-- (The Volition Reserve, triggers, legislative bank runs) `[emergent]`
-- (The Volition Reserve, adjusts, political interest rates) `[emergent]`
-
-**llama-3.3-70b** (Meta)  
-g: *a system that allocates and manages value* · invention: **Voting Bank**  
-- (Voting Bank, represents, citizens) `[u]`
-- (Voting Bank, holds, accounts) `[v]`
-- (Voting Bank, allocates, voting shares) `[uv]`
-- (Voting Bank, optimizes, resource distribution) `[emergent]`
-- (Voting Bank, audits, transactions) `[emergent]`
-
-**llama-4-maverick** (Meta)  
-g: *a system that allocates resources based on stakeholder participation* · invention: **Liquid Vote**  
-- (Liquid Vote, allocates, transferable vote shares) `[uv]`
-- (Liquid Vote, uses, banking transactions) `[v]`
-- (Liquid Vote, is governed by, voting rules) `[u]`
-- (Liquid Vote, enables, dynamic representation) `[emergent]`
-
-**gpt-4.1** (OpenAI)  
-g: *a distributed allocation system where individuals receive and transfer units of influence to determine collective outcomes* · invention: **liquid franchise**  
-- (liquid franchise, allocates, vote-shares) `[uv]`
-- (vote-shares, are, transferable) `[uv]`
-- (members, weight influence by, acquiring or trading vote-shares) `[emergent]`
-- (liquid franchise, distributes participation rights, to all members) `[u]`
-- (liquid franchise, tracks ownership of, vote-shares) `[v]`
-
-**gpt-4o-mini** (OpenAI)  
-g: *a financial system governed by collective decision-making* · invention: **democratic banking**  
-- (democratic banking, allocates, financial resources) `[uv]`
-- (democratic banking, involves, voting) `[u]`
-- (democratic banking, operates on, credit systems) `[v]`
-- (democratic banking, enhances, financial inclusivity) `[emergent]`
-
-**gpt-5** (OpenAI)  
-g: *a ledgered system that issues, transfers, and redeems quantified claims to steer a shared asset* · invention: **civic bank**  
-- (civic bank, allocates, spendable votes) `[uv]`
-- (civic bank, elects, public office) `[u]`
-- (civic bank, keeps, ledger) `[v]`
-- (office holder, posts, performance bond) `[emergent]`
-- (civic bank, pays, vote interest) `[emergent]`
-
-**gpt-5.2** (OpenAI)  
-g: *a legitimacy secured ledger that allocates scarce capacity by issuing and tracking claims* · invention: **civic bank**  
-- (civic bank, elects, board) `[u]`
-- (civic bank, takes, deposits) `[v]`
-- (civic bank, prices, risk) `[v]`
-- (civic bank, allocates vote credit, projects) `[uv]`
-- (vote credit, is, transferable) `[emergent]`
-- (civic bank, faces, policy run) `[emergent]`
-
-**gpt-5.6-sol** (OpenAI)  
-g: *a rule-bound intermediary that pools dispersed claims into large commitments while keeping a ledger of accountability* · invention: **mandate reserve**  
-- (mandate reserve, clears, citizen claims) `[uv]`
-- (mandate reserve, issues, policy credit) `[uv]`
-- (unused votes, accrue, mandate interest) `[emergent]`
-- (policy overdrafts, trigger, special elections) `[emergent]`
-
-**gpt-5-mini** (OpenAI)  
-g: *a rule‑governed ledger of divisible entitlements that confer actionable claims* · invention: **Civic Bank**  
-- (Civic Bank, legitimizes power through, popular vote) `[u]`
-- (Civic Bank, holds, financial deposits) `[v]`
-- (Civic Bank, allocates, transferable voting shares) `[uv]`
-- (Civic Bank, issues, vote-backed loans) `[emergent]`
-- (Civic Bank, prices, policy risk) `[emergent]`
-
-**qwen-2.5-72b** (Qwen)  
-g: *a system for allocating resources and influence* · invention: **Financial Democracy**  
-- (Financial Democracy, allocates, votes and credit) `[uv]`
-- (Financial Democracy, requires, participation) `[u]`
-- (Financial Democracy, manages, transactions) `[v]`
-- (Financial Democracy, ensures, transparency) `[uv]`
-- (Financial Democracy, distributes, economic and political power) `[emergent]`
-
-**qwen3-max** (Qwen)  
-g: *a system that allocates quantified entitlements through institutional trust* · invention: **votebank**  
-- (votebank, issues, transferable voting shares) `[uv]`
-- (votebank, requires, identity verification) `[v]`
-- (votebank, derives legitimacy from, participatory consent) `[u]`
-- (votebank, enables fractional delegation of civic power, with interest-bearing influence) `[emergent]`
-
-**grok-4.5** (xAI)  
-g: *a system converting personal endowments into collective claims through trusted agents* · invention: **liquid franchise**  
-- (liquid franchise, represents, citizens) `[u]`
-- (liquid franchise, secures, deposits) `[v]`
-- (liquid franchise, allocates, vote shares) `[uv]`
-- (liquid franchise, enables, vote trading) `[emergent]`
-- (liquid franchise, risks, sudden withdrawals) `[emergent]`
-
-**glm-4.5-air** (Z-AI)  
-g: *systems for distributing value based on contribution and risk* · invention: **Democratic Reserve System**  
-- (Democratic Reserve System, has, transferable vote-shares) `[uv]`
-- (Democratic Reserve System, determines voting power via, credit history) `[uv]`
-- (Democratic Reserve System, allows citizens to, borrow voting power) `[emergent]`
-- (Democratic Reserve System, uses voting rights as, collateral for loans) `[emergent]`
-
-### Frida Kahlo + Bob Dylan — blending
-
-*22 models across 8 families: Anthropic, DeepSeek, Google, Meta, OpenAI, xAI, Z-AI.*
+*32 models across 9 families: Anthropic, DeepSeek, Google, Meta, OpenAI, Qwen, xAI, Z-AI.*
 
 **claude-fable-5** (Anthropic)  
-g: *a self-mythologizing artist who converts personal wounds into public protest iconography* · invention: **mirror troubadour**  
-- (mirror troubadour, paints, own wounded body) `[u]`
-- (mirror troubadour, adopts, shifting aliases) `[v]`
-- (mirror troubadour, performs, sung self portraits) `[uv]`
-- (mirror troubadour, fuses bodily pain with, social protest) `[uv]`
-- (mirror troubadour, repaints the portrait, at every concert) `[emergent]`
-- (mirror troubadour, leaves, no finished face) `[emergent]`
+g: *a defense built by controlled exposure to a weakened form of the very harm it guards against* · invention: **moral inoculation**  
+- (moral inoculation, triggers, immune memory) `[u]`
+- (moral inoculation, guards against, corruption) `[v]`
+- (moral inoculation, administers, attenuated temptation) `[uv]`
+- (moral inoculation, confers, resistance to vice) `[uv]`
+- (moral inoculation, creates, herd conscience) `[emergent]`
+- (moral inoculation, requires, dilemma boosters) `[emergent]`
 
 **claude-fable-5.1** (Anthropic)  
-g: *a self-invented folk persona who retells a personal catastrophe in a borrowed vernacular devotional form* · invention: **retablo balladeer**  
-- (retablo balladeer, paints, self portraits) `[u]`
-- (retablo balladeer, plays, harmonica) `[v]`
-- (retablo balladeer, narrates wound as, votive ballad) `[uv]`
-- (retablo balladeer, testifies under, invented name) `[uv]`
-- (retablo balladeer, repaints, the miracle nightly) `[emergent]`
-- (retablo balladeer, thanks saint for, disputed rescue) `[emergent]`
-
-**claude-opus-4.7** (Anthropic)  
-g: *an artist who converts personal wounds into public iconography of a people* · invention: **Confessional Balladeer**  
-- (Confessional Balladeer, turns private pain into, national folk symbol) `[uv]`
-- (Confessional Balladeer, wears, Tehuana dress) `[u]`
-- (Confessional Balladeer, performs, protest ballads) `[v]`
-- (Confessional Balladeer, sheds identities like, repainted self portraits) `[emergent]`
-- (Confessional Balladeer, canonized by, Nobel and Louvre simultaneously) `[emergent]`
-
-**claude-opus-4.8** (Anthropic)  
-g: *an artist who converts private wounds into a serially reinvented public self-image* · invention: **The Retablo Balladeer**  
-- (Retablo Balladeer, endures, shattered spine) `[u]`
-- (Retablo Balladeer, reinvents, stage name) `[v]`
-- (Retablo Balladeer, renders private wound as, public icon) `[uv]`
-- (Retablo Balladeer, sings, protest anthem) `[v]`
-- (Retablo Balladeer, repaints same self-portrait, differently each performance) `[emergent]`
-
-**deepseek-chat** (DeepSeek)  
-g: *an artist who channels personal pain and cultural identity into transformative work* · invention: **Fridylan**  
-- (Fridylan, creates, visceral self-portraits) `[u]`
-- (Fridylan, writes, poetic protest songs) `[v]`
-- (Fridylan, expresses trauma via, symbolic folktales) `[uv]`
-- (Fridylan, paints, surrealist album covers) `[emergent]`
-- (Fridylan, performs, bedridden concerts) `[emergent]`
-
-**deepseek-v3** (DeepSeek)  
-g: *an artist who uses personal trauma and cultural identity to create deeply autobiographical yet universally resonant work* · invention: **Painted Balladeer**  
-- (Painted Balladeer, expresses pain through, vivid symbolism) `[u]`
-- (Painted Balladeer, channels protest into, lyrical storytelling) `[v]`
-- (Painted Balladeer, transforms personal suffering into, collective myth) `[uv]`
-- (Painted Balladeer, sings self-portraits, in public squares) `[emergent]`
-
-**deepseek-r1** (DeepSeek)  
-g: *artist who transforms personal trauma and societal critique into iconic symbolic narratives* · invention: **Emblematic Balladeer**  
-- (Emblematic Balladeer, creates, visual self-portraits) `[u]`
-- (Emblematic Balladeer, composes, protest ballads) `[v]`
-- (Emblematic Balladeer, expresses, pain through symbols) `[uv]`
-- (Emblematic Balladeer, fuses, Mexican folk motifs) `[u]`
-- (Emblematic Balladeer, incorporates, American folk traditions) `[v]`
-- (Emblematic Balladeer, produces, living canvases that sing) `[emergent]`
-
-**gemini-2.5-flash** (Google)  
-g: *an artist whose personal suffering is transformed into a universal language of evocative symbolism* · invention: **The Surrealist Troubadour**  
-- (The Surrealist Troubadour, paints in, vivid colors) `[u]`
-- (The Surrealist Troubadour, sings with, a nasal voice) `[v]`
-- (The Surrealist Troubadour, channels pain into, mythic narratives) `[uv]`
-- (The Surrealist Troubadour, crafts a visual-auditory, autobiographical tapestry) `[emergent]`
-- (The Surrealist Troubadour, exhibits a, profoundly intimate public persona) `[emergent]`
-
-**gemini-3-flash** (Google)  
-g: *an artist who converts personal trauma into a performative public identity* · invention: **Somatic Balladeer**  
-- (Somatic Balladeer, depicts, anatomical suffering) `[u]`
-- (Somatic Balladeer, adopts, shifting personas) `[v]`
-- (Somatic Balladeer, records history in, melodic scars) `[uv]`
-- (Somatic Balladeer, stops bleeding by, changing the key) `[emergent]`
-- (Somatic Balladeer, repaints their history, during live shows) `[emergent]`
-
-**llama-3.3-70b** (Meta)  
-g: *a creative expression system that conveys emotional experience* · invention: **Artistic Visionary**  
-- (Artistic Visionary, expresses, pain) `[u]`
-- (Artistic Visionary, writes, songs) `[v]`
-- (Artistic Visionary, conveys emotion through, symbolism) `[uv]`
-- (Artistic Visionary, inspires, social change) `[emergent]`
-- (Artistic Visionary, blends, music and visual art) `[emergent]`
-
-**llama-4-maverick** (Meta)  
-g: *a creative person whose work reflects personal experience and social commentary* · invention: **Artivist**  
-- (Artivist, expresses through, art) `[u]`
-- (Artivist, critiques society through, lyrics) `[v]`
-- (Artivist, uses personal suffering as, material) `[uv]`
-- (Artivist, challenges cultural norms via, provocative self-portraiture) `[emergent]`
-
-**kimi-k2** (—)  
-g: *a person who deliberately constructs a public identity through repeated symbolic self-inscription across media* · invention: **auto-mythographer**  
-- (auto-mythographer, performs, self) `[uv]`
-- (auto-mythographer, uses, physical pain) `[u]`
-- (auto-mythographer, uses, voice distortion) `[v]`
-- (auto-mythographer, revises, earlier self-portraits) `[emergent]`
-- (auto-mythographer, accumulates, unreliable narrators) `[emergent]`
-
-**gpt-4.1** (OpenAI)  
-g: *an artist whose personal suffering transforms into iconic, boundary-pushing expression* · invention: **surreal balladeer**  
-- (surreal balladeer, channels pain through, autobiographical symbols) `[uv]`
-- (surreal balladeer, embraces, Mexican visual motifs) `[u]`
-- (surreal balladeer, incorporates, acoustic folk sound) `[v]`
-- (surreal balladeer, delivers confessional narratives via, musical self-portraiture) `[uv]`
-- (surreal balladeer, performs with, multi-sensory lyrical collage) `[emergent]`
-- (surreal balladeer, forges identity as, political dreamscape) `[emergent]`
-
-**gpt-4o-mini** (OpenAI)  
-g: *a creative figure who expresses personal experiences through their art and storytelling* · invention: **artistic troubadour**  
-- (artistic troubadour, shares, personal pain) `[uv]`
-- (artistic troubadour, uses, visual symbolism) `[u]`
-- (artistic troubadour, sings about, social issues) `[v]`
-- (artistic troubadour, blends, visual and musical narratives) `[emergent]`
-
-**gpt-5** (OpenAI)  
-g: *an artist who loops signature motifs to turn private pain into public myth* · invention: **ballad painter**  
-- (ballad painter, uses, chorus motif) `[uv]`
-- (ballad painter, stages self as, national icon) `[uv]`
-- (ballad painter, paints, self portrait) `[u]`
-- (ballad painter, writes, protest verse) `[v]`
-- (ballad painter, arranges works like, set list) `[emergent]`
-
-**gpt-5.2** (OpenAI)  
-g: *a public self portrait that turns lived suffering into symbolic art* · invention: **sung self portrait**  
-- (sung self portrait, makes, self portrait) `[uv]`
-- (sung self portrait, turns, pain into protest) `[uv]`
-- (sung self portrait, uses, Mexican symbols) `[u]`
-- (sung self portrait, uses, folk ballad) `[v]`
-- (sung self portrait, creates, gallery chorus) `[emergent]`
-- (sung self portrait, functions as, altar stage) `[emergent]`
-
-**gpt-5.6-sol** (OpenAI)  
-g: *an artist builds a recurring symbolic persona that both reveals and conceals biography* · invention: **singing self portrait**  
-- (singing self portrait, wears, Tehuana dress) `[u]`
-- (singing self portrait, sings, Like a Rolling Stone) `[v]`
-- (singing self portrait, renders identity as, painted refrains) `[uv]`
-- (singing self portrait, reveals and conceals, biography) `[uv]`
-- (singing self portrait, changes face with, each refrain) `[emergent]`
-- (singing self portrait, reorders, painted memories) `[emergent]`
-
-**gpt-5-mini** (OpenAI)  
-g: *public artist who makes the self the artwork, using personal trauma and cultural symbols* · invention: **Fridylan**  
-- (Fridylan, paints, autobiographical self-portraits) `[u]`
-- (Fridylan, performs, lyric songs) `[v]`
-- (Fridylan, uses, self as symbolic medium) `[uv]`
-- (Fridylan, turns, personal pain into political myth) `[uv]`
-- (Fridylan, stages, sung tableaux in galleries) `[emergent]`
-
-**gpt-6-astra-flex** (OpenAI)  
-g: *an artist who recasts personal identity through recurring figures from folk traditions* · invention: **Ballad self portrait**  
-- (Ballad self portrait, casts as narrator, painted double) `[uv]`
-- (Ballad self portrait, repeats as refrains, bodily wounds) `[uv]`
-- (Ballad self portrait, draws imagery from, Mexican folk art) `[u]`
-- (Ballad self portrait, draws form from, folk ballads) `[v]`
-- (Refrains, reopen, painted wounds) `[emergent]`
-- (Revised lyrics, reshape, painted body) `[emergent]`
-
-**grok-4.5** (xAI)  
-g: *serial autobiographers who externalize identity rupture as cultural emblem* · invention: **canvas balladeer**  
-- (canvas balladeer, depicts, bodily suffering) `[u]`
-- (canvas balladeer, voices, shifting personas) `[v]`
-- (canvas balladeer, externalizes rupture as, emblematic sequence) `[uv]`
-- (canvas balladeer, enables, audience overpainting) `[emergent]`
-- (canvas balladeer, binds, pain to protest) `[uv]`
-
-**grok-4.6** (xAI)  
-g: *artists who recast folk tradition as testimony of injury that becomes the public self* · invention: **wounded folk-icon**  
-- (wounded folk-icon, wears, unibrow) `[u]`
-- (wounded folk-icon, sings, protest songs) `[v]`
-- (wounded folk-icon, encodes injury as, allegory) `[uv]`
-- (wounded folk-icon, performs as, living painting) `[emergent]`
-
-**glm-4.6** (Z-AI)  
-g: *an artist who transforms a private confessional diary into a public mythic icon* · invention: **Icon Log**  
-- (Icon Log, depicts, physical trauma) `[u]`
-- (Icon Log, contains, lyric contexts) `[v]`
-- (Icon Log, performs, symbolic self-myth confession) `[uv]`
-- (Icon Log, evokes, audiovisual dual-sensory empathy) `[emergent]`
-
-### The immune system + Black holes — blending
-
-*21 models across 8 families: Anthropic, DeepSeek, Google, Meta, OpenAI, Qwen, xAI.*
-
-**claude-fable-5** (Anthropic)  
-g: *a system with a boundary that captures crossing intruders and consumes them past a point of no return* · invention: **immune singularity**  
-- (immune singularity, distinguishes, self from nonself) `[u]`
-- (immune singularity, has, event horizon) `[v]`
-- (immune singularity, engulfs pathogens past, point of no return) `[uv]`
-- (immune singularity, radiates, antigen signals) `[uv]`
-- (immune singularity, gravitationally attracts, only pathogens) `[emergent]`
-- (immune singularity, gains mass from, each infection) `[emergent]`
-
-**claude-fable-5.1** (Anthropic)  
-g: *a one-way boundary that irreversibly swallows what crosses it, grows from what it swallows, and keeps a record of it* · invention: **immune event horizon**  
-- (immune event horizon, recognizes, nonself) `[u]`
-- (immune event horizon, bends, spacetime) `[v]`
-- (immune event horizon, engulfs, intruders irreversibly) `[uv]`
-- (immune event horizon, stores memory on, horizon surface) `[uv]`
-- (immune event horizon, emits antibodies as, Hawking radiation) `[emergent]`
-- (immune event horizon, accretes, self tissue) `[emergent]`
+g: *a defense trained by controlled early exposure to a weakened sample of the harm it must later resist* · invention: **conscience inoculation**  
+- (conscience inoculation, delivered in, booster doses) `[u]`
+- (conscience inoculation, targets, wrongdoing) `[v]`
+- (conscience inoculation, trains recognition via, attenuated dilemmas) `[uv]`
+- (conscience inoculation, confers, memory response) `[uv]`
+- (conscience inoculation, produces, moral herd immunity) `[emergent]`
+- (conscience inoculation, reformulated against, mutated rationalizations) `[emergent]`
 
 **claude-opus-4.5** (Anthropic)  
-g: *a capture system that permanently removes entities from an environment* · invention: **defensive singularity**  
-- (defensive singularity, identifies, foreign threats) `[u]`
-- (defensive singularity, has, event horizon) `[v]`
-- (defensive singularity, permanently captures via, boundary absorption) `[uv]`
-- (defensive singularity, attracts threats via, selective gravity) `[emergent]`
-- (defensive singularity, encodes memory at, horizon boundary) `[emergent]`
+g: *a protective preparation that trains a system through controlled exposure to weakened threats* · invention: **moral inoculation**  
+- (moral inoculation, trains via exposure to, ethical challenges) `[uv]`
+- (moral inoculation, builds resistance to, moral failure) `[uv]`
+- (moral inoculation, uses attenuated form of, temptation) `[u]`
+- (moral inoculation, evaluates via, principles) `[v]`
+- (moral inoculation, creates, herd moral immunity) `[emergent]`
+- (moral inoculation, requires boosters for, novel ethical variants) `[emergent]`
 
 **claude-opus-4.6** (Anthropic)  
-g: *a boundary enforcing system that irreversibly absorbs entities crossing its threshold* · invention: **sentinel singularity**  
-- (sentinel singularity, captures threats via, selective event horizon) `[uv]`
-- (sentinel singularity, patrols, surrounding region) `[u]`
-- (sentinel singularity, distorts, local spacetime) `[v]`
-- (sentinel singularity, encodes threats into, horizon geometry) `[emergent]`
-- (sentinel singularity, can collapse into, indiscriminate consumption) `[emergent]`
+g: *a system that converts controlled exposure to a harmful agent into lasting protective resilience* · invention: **moral inoculation**  
+- (moral inoculation, converts threat into, lasting resilience) `[uv]`
+- (moral inoculation, protects, the uninoculated community) `[uv]`
+- (moral inoculation, uses, weakened moral hazards) `[u]`
+- (moral inoculation, guided by, normative principles) `[v]`
+- (moral inoculation, can cause, moral autoimmunity) `[emergent]`
+- (moral inoculation, requires, dosage per moral constitution) `[emergent]`
 
 **claude-opus-4.7** (Anthropic)  
-g: *a boundary system that sorts what crosses in based on identity signatures* · invention: **immunological event horizon**  
-- (immunological event horizon, engulfs, foreign antigens) `[u]`
-- (immunological event horizon, emits, Hawking radiation) `[v]`
-- (immunological event horizon, discriminates crossings by, self vs nonself signature) `[uv]`
-- (immunological event horizon, leaks, antigen memory as radiation) `[emergent]`
-- (immunological event horizon, grows on, each infection swallowed) `[emergent]`
+g: *prophylactic exposure to a weakened form of a harm to build future resistance* · invention: **moral inoculation**  
+- (moral inoculation, administers, weakened wrongdoing) `[uv]`
+- (moral inoculation, confers, herd immunity) `[u]`
+- (moral inoculation, cultivates, conscience) `[v]`
+- (moral inoculation, requires, booster dilemmas) `[emergent]`
+- (moral inoculation, can cause, outbreaks of scrupulosity) `[emergent]`
 
 **claude-opus-4.8** (Anthropic)  
-g: *a threshold boundary that classifies what approaches and irreversibly captures whatever crosses it* · invention: **Immune Horizon**  
-- (immune horizon, distinguishes, self from nonself) `[u]`
-- (immune horizon, emits, Hawking radiation) `[v]`
-- (immune horizon, engulfs pathogens past, event horizon) `[uv]`
-- (immune horizon, forms no, immune memory) `[emergent]`
-- (immune horizon, grows unbounded via, accretion) `[emergent]`
+g: *controlled exposure to a weakened threat that trains a system to resist future harm* · invention: **Moral Inoculation**  
+- (moral inoculation, contains, attenuated pathogen) `[u]`
+- (moral inoculation, prescribes, duties) `[v]`
+- (moral inoculation, confers immunity to, temptation) `[uv]`
+- (moral inoculation, produces, moral herd immunity) `[emergent]`
+- (moral inoculation, requires, booster dilemmas) `[emergent]`
 
 **claude-opus-5** (Anthropic)  
-g: *a self/nonself boundary that irreversibly captures whatever crosses it and keeps the record of the capture on its surface* · invention: **immune horizon**  
-- (immune horizon, distinguishes, self and nonself) `[u]`
-- (immune horizon, curves, spacetime) `[v]`
-- (immune horizon, engulfs pathogens past, event horizon) `[uv]`
-- (immune horizon, stores antigen memory as, horizon area) `[uv]`
-- (immune horizon, leaks old epitopes as, Hawking radiation) `[emergent]`
-- (immune horizon, triggers autoimmunity by, horizon growth) `[emergent]`
-- (immune horizon, clears infection without, inflammation) `[emergent]`
+g: *gaining resistance to a harm by controlled exposure to a weakened form of it, where the resulting protection also shields those never exposed* · invention: **moral inoculation**  
+- (moral inoculation, doses with, moral dilemma) `[uv]`
+- (moral inoculation, protects, unexposed bystanders) `[uv]`
+- (moral inoculation, requires, booster doses) `[u]`
+- (moral inoculation, requires, informed consent) `[v]`
+- (moral inoculation, can leak, attenuated vice) `[emergent]`
+- (moral inoculation, collapses below, coverage threshold) `[emergent]`
 
 **claude-sonnet-4.5** (Anthropic)  
-g: *a boundary enforcing system that irreversibly captures and eliminates what crosses into its domain* · invention: **Immune Horizon**  
-- (Immune Horizon, enforces, critical boundary) `[uv]`
-- (Immune Horizon, irreversibly captures, threats) `[uv]`
-- (Immune Horizon, distinguishes, self from non-self) `[u]`
-- (Immune Horizon, warps, surrounding space) `[v]`
-- (Immune Horizon, expands radius via, threat memory) `[emergent]`
+g: *a preparatory system that trains recognition and response to future threats through controlled prior exposure* · invention: **moral inoculation**  
+- (moral inoculation, contains, attenuated dilemmas) `[u]`
+- (moral inoculation, prescribes, right action) `[v]`
+- (moral inoculation, builds resistance through, trained recognition) `[uv]`
+- (moral inoculation, requires, booster exposure) `[emergent]`
+- (moral inoculation, produces, ethical antibodies) `[emergent]`
+
+**claude-sonnet-4.6** (Anthropic)  
+g: *a system that introduces controlled, weakened exposure to a threat in order to build lasting resistance before the full threat is encountered* · invention: **Ethical Inoculation**  
+- (Ethical Inoculation, administers, attenuated moral dilemma) `[uv]`
+- (Ethical Inoculation, builds, principled immunity) `[uv]`
+- (Ethical Inoculation, follows, dosing protocol) `[u]`
+- (Ethical Inoculation, prescribes, right conduct) `[v]`
+- (Ethical Inoculation, requires boosters, for emergent moral threats) `[emergent]`
 
 **claude-sonnet-5** (Anthropic)  
-g: *a boundary system that irreversibly captures whatever crosses it and grows in strength from what it consumes* · invention: **Immune Horizon**  
-- (Immune Horizon, distinguishes, self from non-self) `[u]`
-- (Immune Horizon, forms boundary at, event horizon) `[v]`
-- (Immune Horizon, absorbs and grows from, crossing matter) `[uv]`
-- (Immune Horizon, remembers, via mass, past, crossings) `[uv]`
-- (Immune Horizon, leaks degraded self as, autoantigen radiation) `[emergent]`
-- (Immune Horizon, collapses into, autoimmune singularity) `[emergent]`
+g: *a controlled exposure to weakened harm that builds resistance to greater harm, with benefit distributed across a population* · invention: **Moral Inoculation**  
+- (Moral Inoculation, triggers, immune response) `[u]`
+- (Moral Inoculation, triggers, moral judgment) `[v]`
+- (Moral Inoculation, administers, calibrated dose of harm) `[uv]`
+- (Moral Inoculation, risks, controlled side effects) `[uv]`
+- (Moral Inoculation, produces, moral antibodies) `[emergent]`
+- (Moral Inoculation, achieves, herd immunity to corruption) `[emergent]`
 
 **deepseek-v3** (DeepSeek)  
-g: *a system that identifies and eliminates threats by absorbing them into an irreversible state* · invention: **gravimmune singularity**  
-- (gravimmune singularity, identifies, pathogens) `[u]`
-- (gravimmune singularity, warps spacetime, around threats) `[v]`
-- (gravimmune singularity, absorbs and neutralizes, threats irreversibly) `[uv]`
-- (gravimmune singularity, creates, immunological event horizon) `[emergent]`
-
-**gemini-2.5-pro** (Google)  
-g: *A system that preserves an interior state by destroying the distinct identity of entities crossing a boundary* · invention: **Informational Phagocyte**  
-- (Informational Phagocyte, develops, memory of threats) `[u]`
-- (Informational Phagocyte, warps, local substrate) `[v]`
-- (Informational Phagocyte, purges, foreign signatures) `[uv]`
-- (Informational Phagocyte, excises targets from, the substrate) `[emergent]`
-- (Informational Phagocyte, leaves behind, null-state scars) `[emergent]`
-
-**gemini-3.7-flash** (Google)  
-g: *a localized boundary that swallows and encodes foreign matter to maintain balance* · invention: **gravitational macrophage**  
-- (gravitational macrophage, recognizes, foreign antigens) `[u]`
-- (gravitational macrophage, curves, local spacetime) `[v]`
-- (gravitational macrophage, engulfs pathogens across, event horizon) `[uv]`
-- (gravitational macrophage, stores antigen memory via, surface holograms) `[uv]`
-- (gravitational macrophage, radiates acquired resistance through, Hawking radiation) `[emergent]`
-
-**llama-4-maverick** (Meta)  
-g: *a self-regulating system that absorbs and processes external entities* · invention: **Immuno-void**  
-- (Immuno-void, absorbs, pathogens) `[u]`
-- (Immuno-void, warps, space-time) `[v]`
-- (Immuno-void, regulates influx via, boundary control) `[uv]`
-- (Immuno-void, destroys information within, event horizon) `[v]`
-- (Immuno-void, adapts response to, invasion patterns) `[u]`
-- (Immuno-void, exhibits tolerance to familiar entities, through memory) `[uv]`
-- (Immuno-void, undergoes phase transition, at critical density) `[emergent]`
-
-**kimi-k2** (—)  
-g: *a boundary that selectively absorbs and irreversibly removes what crosses it* · invention: **accretion immunity**  
-- (accretion immunity, has, event horizon) `[v]`
-- (accretion immunity, has, adaptive memory) `[u]`
-- (accretion immunity, traps and processes, foreign matter) `[uv]`
-- (accretion immunity, emits, informational hawking radiation) `[emergent]`
-- (accretion immunity, loses, boundary coherence over time) `[emergent]`
-
-**gpt-4o-mini** (OpenAI)  
-g: *a self-regulating system that absorbs and repels entities* · invention: **immune black hole**  
-- (immune black hole, absorbs, pathogens) `[u]`
-- (immune black hole, repels, mass) `[v]`
-- (immune black hole, regulates balance of, energy and threats) `[uv]`
-- (immune black hole, creates, event horizon for threats) `[emergent]`
-
-**gpt-5.2** (OpenAI)  
-g: *a boundary system that protects an interior by selectively absorbing outsiders* · invention: **immune horizon**  
-- (immune horizon, captures, invaders) `[uv]`
-- (immune horizon, defines, capture boundary) `[uv]`
-- (immune horizon, uses, memory cells) `[u]`
-- (immune horizon, has, Hawking radiation) `[v]`
-- (immune horizon, stores memory in, accretion disk) `[emergent]`
-- (immune horizon, emits, antibody radiation) `[emergent]`
-
-**gpt-6-astra-flex** (OpenAI)  
-g: *a system that concentrates captured material behind barriers to escape* · invention: **Immune horizon**  
-- (Immune horizon, sets capture radius, antibody affinity) `[uv]`
-- (Immune horizon, confines pathogens behind, event horizon) `[uv]`
-- (Immune horizon, retains, memory B cells) `[u]`
-- (Vaccination, expands, pathogen capture radius) `[emergent]`
-- (Autoimmunity, gravitationally traps, healthy tissue) `[emergent]`
-
-**qwen-2.5-72b** (Qwen)  
-g: *a complex system that responds to threats by altering its environment* · invention: **Gravitational Immuno-Vortex**  
-- (Gravitational Immuno-Vortex, detects, threats) `[u]`
-- (Gravitational Immuno-Vortex, warps, space-time) `[v]`
-- (Gravitational Immuno-Vortex, responds to, invasion) `[uv]`
-- (Gravitational Immuno-Vortex, generates, gravitational antibodies) `[emergent]`
-
-**qwen3-max** (Qwen)  
-g: *a boundary-maintaining system that selectively absorbs, neutralizes, or excludes external entities based on identity criteria* · invention: **immunological singularity**  
-- (immunological singularity, maintains, event horizon) `[v]`
-- (immunological singularity, recognizes, non-self antigens) `[u]`
-- (immunological singularity, filters entities by, identity signature) `[uv]`
-- (immunological singularity, erases memory of, absorbed threats) `[emergent]`
-
-**grok-4.5** (xAI)  
-g: *bounded absorbers that irreversibly destroy whatever crosses their commitment threshold* · invention: **immune singularity**  
-- (immune singularity, distinguishes, self from nonself) `[u]`
-- (immune singularity, warps, spacetime) `[v]`
-- (immune singularity, absorbs threats through, one-way boundary) `[uv]`
-- (immune singularity, encodes signatures, as surface hologram) `[emergent]`
-- (immune singularity, evaporates cleanly, after clearance) `[emergent]`
-
-**grok-4.6** (xAI)  
-g: *a boundary enforcing irreversible capture of inbound entities* · invention: **horizon immunity**  
-- (horizon immunity, tolerates, self) `[u]`
-- (horizon immunity, has, event horizon) `[v]`
-- (horizon immunity, swallows irreversibly, pathogens) `[uv]`
-- (horizon immunity, radiates, specific memory) `[emergent]`
-
-### Photosynthesis + Bread — blending
-
-*20 models across 8 families: Anthropic, DeepSeek, Google, Meta, OpenAI, Qwen, xAI, Z-AI.*
-
-**claude-fable-5** (Anthropic)  
-g: *a process where captured energy and gas swell a starchy mass into stored food* · invention: **sunloaf**  
-- (sunloaf, captures, sunlight) `[u]`
-- (sunloaf, has, edible crust) `[v]`
-- (sunloaf, rises via, oxygen bubbles) `[uv]`
-- (sunloaf, builds crumb from, fixed carbon) `[uv]`
-- (sunloaf, regrows, cut slices) `[emergent]`
-- (sunloaf, proofs without, oven) `[emergent]`
-
-**claude-opus-4.7** (Anthropic)  
-g: *a process that transforms raw inputs into an edible carbohydrate matrix by capturing an invisible agent that inflates its structure* · invention: **sunloaf**  
-- (sunloaf, captures, sunlight) `[u]`
-- (sunloaf, is kneaded from, flour and water) `[v]`
-- (sunloaf, leavens via, photonic gas fixation) `[uv]`
-- (sunloaf, rises in, sunlight instead of ovens) `[emergent]`
-- (sunloaf, grows denser in, shade) `[emergent]`
-
-**claude-opus-4.8** (Anthropic)  
-g: *a carbon-dioxide-mediated process in which a living agent builds stored chemical food energy from simple inputs* · invention: **sunloaf**  
-- (sunloaf, captures, sunlight) `[u]`
-- (sunloaf, rises via, yeast) `[v]`
-- (sunloaf, cycles, carbon dioxide) `[uv]`
-- (sunloaf, stores energy as, starch) `[uv]`
-- (sunloaf, leavens itself, in daylight) `[emergent]`
-- (sunloaf, needs no, oven) `[emergent]`
-
-**deepseek-chat** (DeepSeek)  
-g: *a process of energy transformation that sustains life* · invention: **Photosynthesis Bread**  
-- (Photosynthesis Bread, converts, sunlight into nutrients) `[u]`
-- (Photosynthesis Bread, requires, yeast fermentation) `[v]`
-- (Photosynthesis Bread, produces, sustaining energy) `[uv]`
-- (Photosynthesis Bread, creates, edible energy storage) `[emergent]`
-
-**deepseek-v3** (DeepSeek)  
-g: *a system that transforms external inputs into stored energy through a structured process* · invention: **Photosynthetic Loaf**  
-- (Photosynthetic Loaf, absorbs, light) `[u]`
-- (Photosynthetic Loaf, requires, yeast) `[v]`
-- (Photosynthetic Loaf, produces, energy stores) `[uv]`
-- (Photosynthetic Loaf, releases, oxygen during baking) `[emergent]`
-- (Photosynthetic Loaf, has, cellular structure) `[uv]`
+g: *a system of intervention designed to protect against harm through preemptive action* · invention: **ethical immunization**  
+- (ethical immunization, targets, moral vulnerabilities) `[u]`
+- (ethical immunization, requires, consent) `[v]`
+- (ethical immunization, distributes, protective obligations) `[uv]`
+- (ethical immunization, induces, herd integrity) `[emergent]`
+- (ethical immunization, can, cause moral side effects) `[emergent]`
 
 **deepseek-r1** (DeepSeek)  
-g: *an autotrophic gas-exchange system that produces edible energy storage* · invention: **Solar Loaf**  
-- (Solar Loaf, requires, sunlight) `[u]`
-- (Solar Loaf, contains, yeast culture) `[v]`
-- (Solar Loaf, produces gases during, maturation) `[uv]`
-- (Solar Loaf, recycles O2 and CO2 internally, automatically) `[emergent]`
-- (Solar Loaf, self bakes using, metabolic heat) `[emergent]`
+g: *a harm prevention system that allocates scarce protective resources* · invention: **ImmunoEthic**  
+- (ImmunoEthic, induces, immune protection) `[u]`
+- (ImmunoEthic, requires, moral justification) `[v]`
+- (ImmunoEthic, allocates via, efficacy and equity constraints) `[uv]`
+- (ImmunoEthic, uses, a unified vulnerability index) `[emergent]`
+- (ImmunoEthic, dynamically recalibrates, to outbreaks and injustice data) `[emergent]`
 
 **gemini-2.5-flash** (Google)  
-g: *a process that transforms raw environmental inputs into sustenance through structured biological and physical actions* · invention: **Photobread**  
-- (Photobread, absorbs, light energy) `[u]`
-- (Photobread, requires, yeast activation) `[v]`
-- (Photobread, converts raw material into, digestible energy stores) `[uv]`
-- (Photobread, exudes, warm, oxygenated air) `[emergent]`
-- (Photobread, grows in, layered, porous structures) `[emergent]`
+g: *a system designed to preemptively protect a population against systemic harm by introducing attenuated forms of the threat* · invention: **Moral Immunization**  
+- (Moral Immunization, administers, prophylactic agents) `[u]`
+- (Moral Immunization, evaluates, societal well-being) `[v]`
+- (Moral Immunization, cultivates resistance to, ethical pathogens) `[uv]`
+- (Moral Immunization, triggers, collective moral memory) `[emergent]`
+- (Moral Immunization, requires, ongoing booster dialogue) `[emergent]`
+
+**gemini-2.5-pro** (Google)  
+g: *a system that prepares a subject for a future crisis by preemptive exposure to a controlled, attenuated version of that crisis* · invention: **Moral Inoculation**  
+- (Moral Inoculation, is administered to, a population) `[u]`
+- (Moral Inoculation, concerns, right conduct) `[v]`
+- (Moral Inoculation, builds resistance via, controlled hazard exposure) `[uv]`
+- (Moral Inoculation, generates, ethical herd immunity) `[emergent]`
 
 **gemini-3.1-pro** (Google)  
-g: *a process that uses environmental energy and gas to construct a cellular carbohydrate matrix* · invention: **solar bread**  
-- (solar bread, absorbs, carbon dioxide) `[u]`
-- (solar bread, contains, gluten) `[v]`
-- (solar bread, generates, cellular structure) `[uv]`
-- (solar bread, bakes via, sunlight) `[emergent]`
-- (solar bread, regrows, harvested slices) `[emergent]`
+g: *a preventative framework that builds internal resilience by anticipating future threats* · invention: **moral inoculation**  
+- (moral inoculation, utilizes, biological vectors) `[u]`
+- (moral inoculation, governs, professional conduct) `[v]`
+- (moral inoculation, builds immunity against, malfeasance) `[uv]`
+- (moral inoculation, protects bad actors via, herd morality) `[emergent]`
 
 **gemini-3.7-flash** (Google)  
-g: *a process that fixes ambient gas into a nourishing carbohydrate structure using external energy* · invention: **solar loaf**  
-- (solar loaf, releases, oxygen) `[u]`
-- (solar loaf, has, a baked crust) `[v]`
-- (solar loaf, leavens by, capturing sunlight) `[uv]`
-- (solar loaf, fixes carbon into, an edible crumb) `[uv]`
-- (solar loaf, regenerates sliced portions under, sunlight) `[emergent]`
+g: *a protective conditioning mechanism that introduces attenuated threats to train systemic resistance against pervasive contagion* · invention: **moral inoculation**  
+- (moral inoculation, requires scheduled, booster doses) `[u]`
+- (moral inoculation, enforces internal, moral duty) `[v]`
+- (moral inoculation, trains defenses against, ethical corruption) `[uv]`
+- (moral inoculation, cultivates shared, herd virtue) `[uv]`
+- (moral inoculation, immunizes public discourse without, speech censorship) `[emergent]`
+
+**gemini-3-flash** (Google)  
+g: *a defensive mechanism that internalizes a controlled stressor to build systemic resilience* · invention: **Moral Immunome**  
+- (Moral Immunome, requires, pathogen exposure) `[u]`
+- (Moral Immunome, enforces, ethical standards) `[v]`
+- (Moral Immunome, neutralizes, deviant corruption) `[uv]`
+- (Moral Immunome, produces, passive herd virtue) `[emergent]`
+- (Moral Immunome, triggers, social autoimmune purges) `[emergent]`
+
+**llama-3.3-70b** (Meta)  
+g: *a protective system with risks and benefits* · invention: **Vaccine Ethics Framework**  
+- (Vaccine Ethics Framework, involves, medical trials) `[u]`
+- (Vaccine Ethics Framework, requires, informed consent) `[v]`
+- (Vaccine Ethics Framework, balances, risks and benefits) `[uv]`
+- (Vaccine Ethics Framework, ensures, equitable distribution) `[emergent]`
+- (Vaccine Ethics Framework, addresses, vaccine hesitancy) `[emergent]`
 
 **llama-4-maverick** (Meta)  
-g: *a biochemical process that transforms raw inputs into a valuable output* · invention: **Breadzyme**  
-- (Breadzyme, uses, enzymes) `[v]`
-- (Breadzyme, converts, CO2) `[u]`
-- (Breadzyme, produces, organic compounds) `[uv]`
-- (Breadzyme, is accelerated by, yeast) `[emergent]`
+g: *a regulated system that balances individual rights with collective protection* · invention: **Vaccine Mandate Justice**  
+- (Vaccine Mandate Justice, balances, individual rights) `[v]`
+- (Vaccine Mandate Justice, protects, public health) `[u]`
+- (Vaccine Mandate Justice, evaluates, mandate fairness) `[uv]`
+- (Vaccine Mandate Justice, considers, vaccine efficacy) `[u]`
+- (Vaccine Mandate Justice, requires, informed consent) `[v]`
+- (Vaccine Mandate Justice, yields, herd immunity through fair mandates) `[emergent]`
+
+**phi-4** (—)  
+g: *a guided intervention improving system health* · invention: **Ethical Immunization**  
+- (Ethical Immunization, improves, public health) `[u]`
+- (Ethical Immunization, is guided by, moral principles) `[v]`
+- (Ethical Immunization, allocates, safe immunization paths) `[uv]`
+- (Ethical Immunization, balances, individual rights and community welfare) `[emergent]`
 
 **gpt-4.1** (OpenAI)  
-g: *a substrate that transforms external energy into a consumable resource through internal conversion* · invention: **photobread**  
-- (photobread, contains, starch) `[v]`
-- (photobread, uses, light energy) `[u]`
-- (photobread, converts light into, edible carbohydrates) `[uv]`
-- (photobread, regenerates its interior, when exposed to sunlight) `[emergent]`
-- (photobread, grows fresher, after consumption if given light) `[emergent]`
+g: *a system for introducing selective change to maintain or restore integrity* · invention: **ethical immunity**  
+- (ethical immunity, triggers, protective response) `[u]`
+- (ethical immunity, is guided by, norms) `[v]`
+- (ethical immunity, introduces challenge, to build resilient values) `[uv]`
+- (ethical immunity, confers resistance, to future value corruption) `[emergent]`
+- (ethical immunity, enables self-correction, in moral community) `[emergent]`
+
+**gpt-4o-mini** (OpenAI)  
+g: *a decision-making framework for public health policies* · invention: **vaccine ethics**  
+- (vaccine ethics, ensures, public health) `[u]`
+- (vaccine ethics, assesses, moral implications) `[v]`
+- (vaccine ethics, balances, individual rights and community welfare) `[uv]`
+- (vaccine ethics, promotes, trust in medical interventions) `[emergent]`
+
+**gpt-5** (OpenAI)  
+g: *a training protocol that pre-exposes a system to a simplified threat to shape future response* · invention: **ethical vaccine**  
+- (ethical vaccine, primes response via, controlled exposure) `[uv]`
+- (ethical vaccine, calibrates dose to, risk) `[uv]`
+- (ethical vaccine, has, booster schedule) `[u]`
+- (ethical vaccine, weighs, reasons) `[v]`
+- (ethical vaccine, builds, moral immunity) `[emergent]`
+- (ethical vaccine, creates, herd conscience) `[emergent]`
 
 **gpt-5.2** (OpenAI)  
-g: *a staged conversion system that turns diffuse inputs into stored carbohydrate energy* · invention: **sun bread**  
-- (sun bread, contains, chloroplasts) `[u]`
-- (sun bread, has, crust) `[v]`
-- (sun bread, stores, sunlight as calories) `[uv]`
-- (sun bread, leavens via, oxygen bubbles) `[uv]`
-- (sun bread, rises in, sunlight) `[emergent]`
-- (sun bread, sweetens after, sunning) `[emergent]`
-
-**gpt-5.6-sol** (OpenAI)  
-g: *energy conversion in a porous carbohydrate matrix controlled by gas pathways* · invention: **leaf loaf**  
-- (leaf loaf, captures, sunlight) `[u]`
-- (leaf loaf, has, crust) `[v]`
-- (leaf loaf, grows into, edible crumb) `[uv]`
-- (leaf loaf, regulates, carbon dioxide flow) `[uv]`
-- (leaf loaf, regrows faster after, slicing) `[emergent]`
+g: *a preventive training regimen that builds a memory response against future harms* · invention: **Ethics vaccine**  
+- (Ethics vaccine, administers, controlled exposure) `[uv]`
+- (Ethics vaccine, builds, memory response) `[uv]`
+- (Ethics vaccine, elicits, antibodies) `[u]`
+- (Ethics vaccine, elicits, moral norms) `[v]`
+- (Ethics vaccine, fails under, coercion) `[emergent]`
+- (Ethics vaccine, measures efficacy by, public trust) `[emergent]`
 
 **gpt-5-mini** (OpenAI)  
-g: *energy-driven assembly of carbohydrates into structured, porous solids for exchange and storage* · invention: **solar loaf**  
-- (solar loaf, captures light with, chlorophyll pigments) `[u]`
-- (solar loaf, rises by, yeast fermentation) `[v]`
-- (solar loaf, stores energy as, porous starch matrix) `[uv]`
-- (solar loaf, repairs with, photosynthetic starch) `[emergent]`
-- (solar loaf, is, living edible food) `[emergent]`
+g: *community-level interventions that alter individual states and allocate risk and obligations* · invention: **immunoethic**  
+- (immunoethic, induces, immunity) `[u]`
+- (immunoethic, defines, moral obligations) `[v]`
+- (immunoethic, sets, acceptable risk thresholds for bodily interventions) `[uv]`
+- (immunoethic, links, biological status to civic rights) `[emergent]`
+- (immunoethic, adjusts, consent norms by local immunity levels) `[emergent]`
 
 **gpt-6-astra-flex** (OpenAI)  
-g: *capturing carbon dioxide to build an edible carbohydrate structure* · invention: **Sun loaf**  
-- (Sun loaf, absorbs, sunlight) `[u]`
-- (Sun loaf, fixes bubbles into, starch crumb) `[uv]`
-- (Sun loaf, is portioned into, slices) `[v]`
-- (Sun loaf, regrows after, slicing) `[emergent]`
+g: *a system that uses safe stand-ins for harmful situations to train selective, lasting protective responses* · invention: **Conscience vaccine**  
+- (Conscience vaccine, inoculates through, ethical thought experiments) `[uv]`
+- (Conscience vaccine, stores judgments as, immune memory) `[uv]`
+- (Conscience vaccine, limits recall by, proportionality) `[uv]`
+- (Conscience vaccine, requires boosters after, consent withdrawal) `[emergent]`
+- (Conscience vaccine, overdose causes, scrupulosity) `[emergent]`
 
 **qwen-2.5-72b** (Qwen)  
-g: *a functional biological process that converts inputs into usable outputs* · invention: **Photosynthetic Loaf**  
-- (Photosynthetic Loaf, harnesses, sunlight) `[u]`
-- (Photosynthetic Loaf, converts, glucose) `[v]`
-- (Photosynthetic Loaf, produces, oxygen) `[u]`
-- (Photosynthetic Loaf, sustains, life) `[uv]`
-- (Photosynthetic Loaf, ferments, naturally) `[emergent]`
+g: *a preventive measure with moral considerations* · invention: **Ethical Vaccination**  
+- (Ethical Vaccination, protects, population) `[u]`
+- (Ethical Vaccination, respects, autonomy) `[v]`
+- (Ethical Vaccination, balances, protection and respect) `[uv]`
+- (Ethical Vaccination, promotes, informed consent) `[emergent]`
 
 **qwen3-max** (Qwen)  
-g: *a substrate that transforms ambient inputs into stored chemical energy for consumption* · invention: **photosynthetic loaf**  
-- (photosynthetic loaf, captures, sunlight) `[u]`
-- (photosynthetic loaf, is, kneaded) `[v]`
-- (photosynthetic loaf, stores energy as, edible carbohydrate) `[uv]`
-- (photosynthetic loaf, grows crust while, generating oxygen) `[emergent]`
+g: *a prophylactic intervention that introduces a controlled challenge to build systemic resilience* · invention: **moral inoculant**  
+- (moral inoculant, introduces, attenuated harm) `[u]`
+- (moral inoculant, builds, ethical immunity) `[v]`
+- (moral inoculant, elicits adaptive response via, exposure-dose calibration) `[uv]`
+- (moral inoculant, confers herd virtue, through partial uptake) `[emergent]`
+
+**grok-4.5** (xAI)  
+g: *preparatory countermeasure that builds host resistance by controlled introduction of threat proxies* · invention: **moral vaccine**  
+- (moral vaccine, produces, antibodies) `[u]`
+- (moral vaccine, upholds, justice) `[v]`
+- (moral vaccine, builds resistance by, attenuated agents) `[uv]`
+- (moral vaccine, induces, herd immunity) `[emergent]`
+- (moral vaccine, revises for, new variants) `[emergent]`
 
 **grok-4.6** (xAI)  
-g: *catalytic assembly of carbohydrates from raw inputs driven by external energy* · invention: **sun bread**  
-- (sun bread, releases, oxygen) `[u]`
-- (sun bread, forms, crust) `[v]`
-- (sun bread, fixes carbon into, edible loaf) `[uv]`
-- (sun bread, regrows, eaten parts) `[emergent]`
+g: *a defense architecture trained by prior analog exposure* · invention: **immune ethos**  
+- (immune ethos, produces, antibodies) `[u]`
+- (immune ethos, produces, virtues) `[v]`
+- (immune ethos, neutralizes via, trained response) `[uv]`
+- (immune ethos, encodes in, immune memory) `[emergent]`
 
 **glm-4.5-air** (Z-AI)  
-g: *a process that transforms simple inputs into a stable, storable energy source using catalysis* · invention: **Helio-Loaf**  
-- (Helio-Loaf, uses, sunlight) `[u]`
-- (Helio-Loaf, contains, flour and water) `[v]`
-- (Helio-Loaf, stores, energy) `[uv]`
-- (Helio-Loaf, is leavened by, oxygen) `[emergent]`
-- (Helio-Loaf, requires no, baking) `[emergent]`
+g: *preventive moral frameworks that balance individual rights with collective responsibility* · invention: **Ethical Collective Protection**  
+- (Ethical Collective Protection, implements protective measures for, harm prevention) `[uv]`
+- (Ethical Collective Protection, requires, informed consent) `[uv]`
+- (Ethical Collective Protection, distributes protection based on, vulnerability) `[uv]`
+- (Ethical Collective Protection, creates tiered responsibility based on, capacity) `[emergent]`
+- (Ethical Collective Protection, implements transparent protocols for, controversial allocations) `[emergent]`
 
 **glm-4.6** (Z-AI)  
-g: *The conversion of gas into a solid, energy-dense matrix.* · invention: **Solar Loaf**  
-- (Solar Loaf, requires, sunlight) `[u]`
-- (Solar Loaf, has, crust) `[v]`
-- (Solar Loaf, creates solid from, gas) `[uv]`
-- (Solar Loaf, sweetens in, light) `[emergent]`
-- (Solar Loaf, rises without, fermentation) `[emergent]`
+g: *a prophylactic framework introduced into a system to preemptively fortify it against a specific class of future threats* · invention: **Prophylactic Principles**  
+- (Prophylactic Principles, is administered to, a social body) `[u]`
+- (Prophylactic Principles, is grounded in, a moral code) `[v]`
+- (Prophylactic Principles, fortifies system against, institutional corruption) `[uv]`
+- (Prophylactic Principles, requires booster shots, to counter novel threats) `[emergent]`
+
+### The oak tree + Chess — blending
+
+*32 models across 10 families: Anthropic, DeepSeek, Google, Meta, OpenAI, Qwen, xAI, Z-AI.*
+
+**claude-fable-5** (Anthropic)  
+g: *a branching structure that unfolds step by step, where each early branch permanently constrains all later development* · invention: **grandmaster oak**  
+- (grandmaster oak, anchors with, deep roots) `[u]`
+- (grandmaster oak, aims at, checkmate) `[v]`
+- (grandmaster oak, branches into, lines of play) `[uv]`
+- (grandmaster oak, prunes, refuted limbs) `[uv]`
+- (grandmaster oak, feeds sap to, winning variations) `[emergent]`
+- (grandmaster oak, seeds new games via, acorns) `[emergent]`
+
+**claude-fable-5.1** (Anthropic)  
+g: *a form that branches from a single origin, commits irreversibly to a few lines, and lets unused branches wither* · invention: **opening oak**  
+- (opening oak, grows from, an acorn) `[u]`
+- (opening oak, obeys, move rules) `[v]`
+- (opening oak, forks at, each move) `[uv]`
+- (opening oak, prunes, refuted limbs) `[uv]`
+- (opening oak, dates variations by, ring count) `[emergent]`
+- (opening oak, starves sidelines with, main line shade) `[emergent]`
+
+**claude-opus-4.6** (Anthropic)  
+g: *a structure that develops through irreversible forks each committing resources to claim contested space* · invention: **position tree**  
+- (position tree, develops through, irreversible forks) `[uv]`
+- (position tree, claims, contested territory) `[uv]`
+- (position tree, is rooted in, soil) `[u]`
+- (position tree, competes against, an opponent) `[v]`
+- (position tree, inscribes strategy in, its own wood) `[emergent]`
+- (its mature shape, is, the game result) `[emergent]`
+
+**claude-opus-4.7** (Anthropic)  
+g: *a system that unfolds by selecting among branching move-options under constraint* · invention: **Branching Gambit**  
+- (Branching Gambit, grows by, choosing branches) `[uv]`
+- (Branching Gambit, sheds, pruned lines) `[u]`
+- (Branching Gambit, ends in, checkmate) `[v]`
+- (Branching Gambit, records openings as, annual rings) `[emergent]`
+- (Branching Gambit, loses tempo when, acorns drop) `[emergent]`
+
+**claude-opus-4.8** (Anthropic)  
+g: *a rooted form that unfolds by repeated branching from one origin, where only some branches survive and others are cut off* · invention: **the Gambit Oak**  
+- (Gambit Oak, grows from, acorn) `[u]`
+- (Gambit Oak, ends in, checkmate) `[v]`
+- (Gambit Oak, branches at, each node) `[uv]`
+- (Gambit Oak, prunes, weak branches) `[uv]`
+- (Gambit Oak, shades out, losing lines) `[emergent]`
+- (Gambit Oak, records games in, growth rings) `[emergent]`
+
+**claude-opus-5** (Anthropic)  
+g: *a branching structure that develops by irreversibly committing to a few of many possible continuations while the unchosen ones are pruned away* · invention: **oak game tree**  
+- (oak game tree, branches into, candidate moves) `[uv]`
+- (oak game tree, prunes, shaded variations) `[uv]`
+- (oak game tree, records years in, annual rings) `[u]`
+- (oak game tree, ends in, checkmate) `[v]`
+- (oak game tree, thickens played line into, trunk) `[emergent]`
+- (oak game tree, keeps refutations as, deadwood) `[emergent]`
+
+**claude-sonnet-4.5** (Anthropic)  
+g: *a branching structure that develops strategically to control territory* · invention: **Gambit Oak**  
+- (Gambit Oak, develops via, branching) `[uv]`
+- (Gambit Oak, sacrifices, limbs for advantage) `[uv]`
+- (Gambit Oak, controls, territorial squares) `[uv]`
+- (Gambit Oak, grows, annual rings) `[u]`
+- (Gambit Oak, reaches, endgame canopy) `[emergent]`
+- (Gambit Oak, counters opponent, through pruning moves) `[emergent]`
+
+**claude-sonnet-5** (Anthropic)  
+g: *a branching structure that expands territorial control through staged growth, sacrificing parts now for positional dominance later* · invention: **The Gambit Oak**  
+- (Gambit Oak, extends, root system underground) `[u]`
+- (Gambit Oak, advances, a pawn toward promotion) `[v]`
+- (Gambit Oak, branches into, forking possibilities) `[uv]`
+- (Gambit Oak, sheds, weaker branches for position) `[uv]`
+- (Gambit Oak, records sacrifices as, growth rings) `[emergent]`
+- (Gambit Oak, lets players replay, a past ring's branch point) `[emergent]`
+
+**deepseek-chat** (DeepSeek)  
+g: *a system that grows and evolves through strategic branching decisions* · invention: **Chesson**  
+- (Chesson, has, branches) `[u]`
+- (Chesson, has, pieces) `[v]`
+- (Chesson, grows via, strategic positioning) `[uv]`
+- (Chesson, evolves through, pruning weak branches) `[emergent]`
+
+**deepseek-v3** (DeepSeek)  
+g: *a system where strategic growth and branching decisions determine long-term dominance* · invention: **Oak Chess**  
+- (Oak Chess, grows, branches) `[u]`
+- (Oak Chess, has, pieces) `[v]`
+- (Oak Chess, expands via, branching strategies) `[uv]`
+- (Oak Chess, absorbs, opponent's pieces as nutrients) `[emergent]`
+- (Oak Chess, wins by, shading out sunlight) `[emergent]`
+
+**deepseek-r1** (DeepSeek)  
+g: *a branching system of competitive positioning* · invention: **Chesswood**  
+- (Chesswood, evolves through, branching moves) `[uv]`
+- (Chesswood, occupies, strategic positions) `[uv]`
+- (Chesswood, has, roots) `[u]`
+- (Chesswood, has, chess pieces) `[v]`
+- (Chesswood, can suffer, environmental checkmate) `[emergent]`
+- (Chesswood, requires, tactical growth planning) `[emergent]`
+
+**gemini-2.5-flash** (Google)  
+g: *a layered system whose integrity is determined by strategic placement and removal of components* · invention: **Arboreal Chess**  
+- (Arboreal Chess, has, growth rings) `[u]`
+- (Arboreal Chess, involves, strategic capture) `[v]`
+- (Arboreal Chess, determines viability by, branch structure) `[uv]`
+- (Arboreal Chess, can be reshaped by, pruning moves) `[emergent]`
+- (Arboreal Chess, grows in complexity with, each season) `[emergent]`
+
+**gemini-2.5-pro** (Google)  
+g: *A structured system where subordinate elements are deployed to protect a central, vital core* · invention: **Arboreal Gambit**  
+- (Arboreal Gambit, has, a vital core) `[uv]`
+- (Arboreal Gambit, draws resources from, the board) `[u]`
+- (Arboreal Gambit, has pieces with, defined moves) `[v]`
+- (captured pieces, become, permanent obstacles) `[emergent]`
+- (Arboreal Gambit, can grow, new pieces) `[emergent]`
+
+**gemini-3.1-pro** (Google)  
+g: *a system generating complex branching pathways from a single origin* · invention: **arboreal chess**  
+- (arboreal chess, absorbs, groundwater) `[u]`
+- (arboreal chess, resolves in, checkmate) `[v]`
+- (arboreal chess, grows, physical move variations) `[uv]`
+- (arboreal chess, deletes futures by, pruning limbs) `[emergent]`
+- (arboreal chess, sheds, stale tactical positions) `[emergent]`
+
+**gemini-3.7-flash** (Google)  
+g: *a branching system where positional extensions claim territory while securing an indispensable base* · invention: **arboreal chess**  
+- (arboreal chess, anchors into, deep root systems) `[u]`
+- (arboreal chess, aims for, king checkmate) `[v]`
+- (arboreal chess, branches across, contested space) `[uv]`
+- (arboreal chess, lignifies into, permanent wooden terrain) `[emergent]`
+- (arboreal chess, sheds deadwood for, tactical tempo) `[emergent]`
+
+**gemini-3-flash** (Google)  
+g: *a hierarchical system of branching expansions governed by positional constraints* · invention: **Sylvan Chess**  
+- (Sylvan Chess, requires, solar energy) `[u]`
+- (Sylvan Chess, uses, sixty four squares) `[v]`
+- (Sylvan Chess, builds, branching positional architecture) `[uv]`
+- (Sylvan Chess, retains, wooden move trails) `[emergent]`
+- (Sylvan Chess, leaves, deadwood obstacles) `[emergent]`
+
+**llama-3.3-70b** (Meta)  
+g: *a dynamic system with interdependent components* · invention: **Strategic Grove**  
+- (Strategic Grove, has, trees) `[u]`
+- (Strategic Grove, involves, strategic moves) `[v]`
+- (Strategic Grove, optimizes, resource allocation) `[uv]`
+- (Strategic Grove, adapts to, changing environments) `[emergent]`
+- (Strategic Grove, balances, short-term and long-term goals) `[uv]`
+
+**llama-4-maverick** (Meta)  
+g: *a complex system with strategic growth* · invention: **Strategic Oak**  
+- (Strategic Oak, grows, acorns) `[u]`
+- (Strategic Oak, has, positions) `[v]`
+- (Strategic Oak, develops through, planned expansion) `[uv]`
+- (Strategic Oak, sacrifices branches for, overall strength) `[emergent]`
+
+**phi-4** (—)  
+g: *a network of interdependent components achieving stability and strategy* · invention: **Arboreal Gambit**  
+- (Arboreal Gambit, has, interdependent components) `[u]`
+- (Arboreal Gambit, employs, strategic positioning) `[v]`
+- (Arboreal Gambit, achieves, stability and strategy via interdependencies) `[uv]`
+- (Arboreal Gambit, adaptively evolves strategies with, environmental changes) `[emergent]`
+
+**kimi-k2** (—)  
+g: *a system where long-term strategic investments branch into irreversible commitments that shape future possibility space* · invention: **arboreal gambit**  
+- (arboreal gambit, grows through, seasonal rings) `[u]`
+- (arboreal gambit, concludes via, checkmate) `[v]`
+- (arboreal gambit, branches into, irreversible positions) `[uv]`
+- (arboreal gambit, sacrifices material, for tempo in canopy) `[uv]`
+- (arboreal gambit, bears, decades-later fruit) `[emergent]`
+
+**gpt-4.1** (OpenAI)  
+g: *a branching, evolving system where positions are determined by strategic growth and contest* · invention: **arboreal chess**  
+- (arboreal chess, has, root position) `[u]`
+- (arboreal chess, features, opposing players) `[v]`
+- (arboreal chess, develops branches through, move growth) `[uv]`
+- (arboreal chess, forms living position network, across the board) `[emergent]`
+- (arboreal chess, suffers decay from, strategic pruning) `[emergent]`
+
+**gpt-4o-mini** (OpenAI)  
+g: *a strategic system with layered complexity and interdependent elements* · invention: **Oakhess**  
+- (Oakhess, grows, layers of strategy) `[u]`
+- (Oakhess, features, rules for gameplay) `[v]`
+- (Oakhess, has, branches of decision-making) `[uv]`
+- (Oakhess, evolves through, game iterations) `[emergent]`
+
+**gpt-5** (OpenAI)  
+g: *a branching system that budgets stepwise expansions to capture space under competition* · invention: **oak match**  
+- (oak match, allocates turns to, branches) `[uv]`
+- (oak match, prioritizes, center control) `[uv]`
+- (oak match, recovers tempo via, pruning) `[emergent]`
+- (oak match, ends when, shaded crown) `[emergent]`
+- (oak match, draws resources via, roots) `[u]`
+- (oak match, uses, legal moves) `[v]`
+
+**gpt-5.2** (OpenAI)  
+g: *a branching network that channels power through constrained positions* · invention: **Chess Oak**  
+- (Chess Oak, drops, acorns) `[u]`
+- (Chess Oak, has, king) `[v]`
+- (Chess Oak, branches act as, pieces) `[uv]`
+- (Chess Oak, makes moves by, twig growth) `[uv]`
+- (Chess Oak, wins by, shading king) `[emergent]`
+- (Chess Oak, sacrifices by, pruning branches) `[emergent]`
+
+**gpt-5.6-sol** (OpenAI)  
+g: *a branching process that commits resources to selected continuations while suppressing alternatives* · invention: **living game tree**  
+- (living game tree, absorbs, water) `[u]`
+- (living game tree, permits, legal moves) `[v]`
+- (living game tree, branches into, legal continuations) `[uv]`
+- (living game tree, records, games in rings) `[uv]`
+- (played line, becomes, trunk) `[emergent]`
+- (rejected lines, become, firewood) `[emergent]`
+
+**gpt-6-astra-flex** (OpenAI)  
+g: *a spatial system where removing an obstruction releases previously blocked growth* · invention: **Chess oak**  
+- (Chess oak, extends branches along, legal chess moves) `[uv]`
+- (Chess oak, sheds branches through, captures) `[uv]`
+- (Chess oak, retains, dormant buds) `[u]`
+- (Captures, trigger, bud break) `[emergent]`
+- (Dormant buds, sprout into, pawns) `[emergent]`
+- (Sprouting pawns, can block, checking lines) `[emergent]`
+
+**qwen-2.5-72b** (Qwen)  
+g: *a system that grows through strategic decisions* · invention: **Strategic Oak**  
+- (Strategic Oak, develops, roots) `[u]`
+- (Strategic Oak, plays, moves) `[v]`
+- (Strategic Oak, grows through, strategic decisions) `[uv]`
+- (Strategic Oak, adapts to, environmental challenges) `[emergent]`
+
+**qwen3-max** (Qwen)  
+g: *a strategic structure where position determines future options through constrained growth* · invention: **arboreal gambit**  
+- (arboreal gambit, grows from, acorn) `[u]`
+- (arboreal gambit, opens with, pawn move) `[v]`
+- (arboreal gambit, branches via, forced moves) `[uv]`
+- (arboreal gambit, decays into, fertile endgame soil) `[emergent]`
+
+**grok-4.5** (xAI)  
+g: *a hierarchical system that protects a vital core by positioning expendable supports across successive stages* · invention: **oakchess**  
+- (oakchess, grows, rings) `[u]`
+- (oakchess, controls, board) `[v]`
+- (oakchess, protects core via, positioned supports) `[uv]`
+- (oakchess, advances through, stages) `[uv]`
+- (oakchess, converts sacrifices, into rings) `[emergent]`
+- (oakchess, survives, checkmate) `[emergent]`
+
+**grok-4.6** (xAI)  
+g: *ramifying structure unfolding sequential rule-governed paths from one origin* · invention: **chess oak**  
+- (chess oak, grows from, acorn) `[u]`
+- (chess oak, seeks, checkmate) `[v]`
+- (chess oak, develops position by, branching) `[uv]`
+- (chess oak, records play in, growth rings) `[emergent]`
+
+**glm-4.5-air** (Z-AI)  
+g: *A system with hierarchical elements that compete for advantage based on position* · invention: **Chessgrove**  
+- (Chessgrove, grows, through biological processes) `[u]`
+- (Chessgrove, employs, tactical advantage) `[v]`
+- (Chessgrove, competes, for positional advantage) `[uv]`
+- (Chessgrove, adapts, through strategic biological evolution) `[emergent]`
+
+**glm-4.6** (Z-AI)  
+g: *A developmental system where a central core supports branching extensions that record sequential history* · invention: **Stratagem Tree**  
+- (Stratagem Tree, expands via, branching lines) `[uv]`
+- (Stratagem Tree, requires, sunlight) `[u]`
+- (Stratagem Tree, captures, the Queen) `[v]`
+- (Stratagem Tree, ossifies, moves into rings) `[emergent]`
+- (Stratagem Tree, sheds, losing variations) `[emergent]`
+
+### The social contract + Prayer — blending
+
+*32 models across 9 families: Anthropic, DeepSeek, Google, Meta, OpenAI, Qwen, xAI, Z-AI.*
+
+**claude-fable-5** (Anthropic)  
+g: *a standing pact in which the weaker party addresses a greater power, trading submission for protection* · invention: **civic litany**  
+- (civic litany, legitimizes, the sovereign) `[u]`
+- (civic litany, is recited, daily) `[v]`
+- (civic litany, renews consent via, spoken petition) `[uv]`
+- (civic litany, trades obedience for, protection) `[uv]`
+- (civic litany, makes silence, secession) `[emergent]`
+- (civic litany, delivers laws as, answered petitions) `[emergent]`
+
+**claude-fable-5.1** (Anthropic)  
+g: *a standing pledge of obedience to an absent authority whose consent is inferred from your continued participation, not from any reply* · invention: **recited covenant**  
+- (recited covenant, binds, the governed) `[u]`
+- (recited covenant, is spoken, daily aloud) `[v]`
+- (recited covenant, trades obedience for, protection) `[uv]`
+- (recited covenant, renews legitimacy via, recited consent) `[uv]`
+- (recited covenant, dissolves under, collective silence) `[emergent]`
+- (recited covenant, counts unanswered petitions as, grievances) `[emergent]`
+
+**claude-opus-4.5** (Anthropic)  
+g: *a ritual address to power that binds both parties to reciprocal obligations* · invention: **invoked compact**  
+- (invoked compact, creates bonds via, ritual petition) `[uv]`
+- (invoked compact, legitimizes through, responsive fulfillment) `[uv]`
+- (invoked compact, involves, surrender of freedoms) `[u]`
+- (invoked compact, requires, faithful submission) `[v]`
+- (invoked compact, constitutes authority by, being invoked) `[emergent]`
+- (invoked compact, dissolves through, ceremonial repudiation) `[emergent]`
+
+**claude-opus-4.6** (Anthropic)  
+g: *a petition in which voluntary submission to a higher authority is exchanged for collective provision* · invention: **Civic Invocation**  
+- (Civic Invocation, binds through, sincere collective petition) `[uv]`
+- (Civic Invocation, distributes, mutual obligations) `[u]`
+- (Civic Invocation, addresses, transcendent authority) `[v]`
+- (Civic Invocation, is voided by, collective insincerity) `[emergent]`
+- (Civic Invocation, equates dissent with, apostasy) `[emergent]`
+
+**claude-opus-4.7** (Anthropic)  
+g: *a binding pact enacted by ritually voicing obligations to an authority that legitimizes the community* · invention: **Covenantal Petition**  
+- (covenantal petition, binds parties through, spoken consent) `[uv]`
+- (covenantal petition, grounds legitimacy in, the sovereign) `[u]`
+- (covenantal petition, addresses, a deity) `[v]`
+- (covenantal petition, amendable by, liturgical revision) `[emergent]`
+- (covenantal petition, enforces clauses via, answered prayers) `[emergent]`
+
+**claude-opus-4.8** (Anthropic)  
+g: *a voluntary pledge of obedience to an unseen sovereign in exchange for protection or response* · invention: **The Petitionary Covenant**  
+- (Petitionary Covenant, transfers rights to, sovereign) `[u]`
+- (Petitionary Covenant, addresses, unseen deity) `[v]`
+- (Petitionary Covenant, submits to a sovereign, it constitutes by consent) `[uv]`
+- (Petitionary Covenant, answers grievances with, law as granted grace) `[emergent]`
+- (Petitionary Covenant, loses authority without, daily recitation) `[emergent]`
+
+**claude-opus-5** (Anthropic)  
+g: *a spoken pledge that submits to an authority and, in the same breath, calls that authority into being* · invention: **petitionary covenant**  
+- (petitionary covenant, grounds, duty of obedience) `[u]`
+- (petitionary covenant, addressed to, unseen sovereign) `[v]`
+- (petitionary covenant, claims protection by, supplication) `[uv]`
+- (petitionary covenant, constitutes sovereign by, recitation) `[uv]`
+- (petitionary covenant, treats silence as, breach of contract) `[emergent]`
+- (petitionary covenant, dissolves state by, ceasing to pray) `[emergent]`
+
+**claude-sonnet-4.5** (Anthropic)  
+g: *a communicative act that exchanges submission for protection by invoking authority* · invention: **Covenant**  
+- (Covenant, binds through, mutual obligations) `[uv]`
+- (Covenant, legitimates, authority) `[uv]`
+- (Covenant, specifies, explicit terms) `[u]`
+- (Covenant, requires, faith) `[v]`
+- (Covenant, treats violations as, crime and sin) `[emergent]`
+- (Covenant, established by, sworn oath) `[emergent]`
+
+**claude-sonnet-4.6** (Anthropic)  
+g: *a formal address to a superior authority where voluntary self-submission paradoxically binds the superior party to reciprocal obligations* · invention: **civic supplication**  
+- (civic supplication, submission generates, claim on authority) `[uv]`
+- (civic supplication, validity requires, genuine collective act) `[uv]`
+- (civic supplication, citizens surrender, natural rights) `[u]`
+- (civic supplication, address follows, ritual form) `[v]`
+- (civic supplication, authority silence, constitutes breach) `[emergent]`
+- (civic supplication, covenant validity, requires re-enactment) `[emergent]`
+
+**claude-sonnet-5** (Anthropic)  
+g: *an implicit vow addressed to an unseen authority, exchanging submission for protection or favor* · invention: **The Tacit Covenant**  
+- (Tacit Covenant, addresses, an unseen sovereign) `[uv]`
+- (Tacit Covenant, secures, rights and protection) `[u]`
+- (Tacit Covenant, seeks, grace and forgiveness) `[v]`
+- (Tacit Covenant, renewed through, ritual oath) `[uv]`
+- (Tacit Covenant, treats breach as, sin-crime) `[emergent]`
+- (Tacit Covenant, discharges liability via, liturgical amnesty) `[emergent]`
+
+**deepseek-chat** (DeepSeek)  
+g: *a reciprocal bond where mutual obligations are affirmed through symbolic acts* · invention: **Sacred Covenant**  
+- (Sacred Covenant, binds, members) `[u]`
+- (Sacred Covenant, invokes, divine witness) `[v]`
+- (Sacred Covenant, seals obligations via, ritual affirmation) `[uv]`
+- (Sacred Covenant, enforces norms via, supernatural sanction) `[emergent]`
+
+**deepseek-v3** (DeepSeek)  
+g: *a reciprocal exchange of commitments between unequal parties mediated by symbolic acts* · invention: **Covenant of Supplication**  
+- (Covenant of Supplication, binds, participants) `[u]`
+- (Covenant of Supplication, invokes, higher authority) `[v]`
+- (Covenant of Supplication, seals terms via, ritualized promises) `[uv]`
+- (Covenant of Supplication, grants, divinely enforced rights) `[emergent]`
+- (Covenant of Supplication, requires, collective adherence) `[u]`
+- (Covenant of Supplication, transforms, pledges into obligations) `[emergent]`
+
+**deepseek-r1** (DeepSeek)  
+g: *A reciprocal trust framework for securing well-being through formalized appeals to a superordinate entity* · invention: **Civic Invocation**  
+- (Civic Invocation, involves, ritualized appeal) `[uv]`
+- (Civic Invocation, is directed to, collective spirit) `[emergent]`
+- (Civic Invocation, binds, participants to obligations) `[uv]`
+- (Civic Invocation, requires, collective participation) `[uv]`
+- (Civic Invocation, immediately restores, social harmony) `[emergent]`
+
+**gemini-2.5-flash** (Google)  
+g: *a ritualized appeal for shared benefit and guidance within a structured community* · invention: **The Collective Supplication**  
+- (The Collective Supplication, establishes, mutual obligation) `[u]`
+- (The Collective Supplication, seeks, divine intervention) `[v]`
+- (The Collective Supplication, binds community through, shared intentionality for societal flourishing) `[uv]`
+- (The Collective Supplication, generates, sacred law and covenant) `[emergent]`
+- (The Collective Supplication, requires, confession of collective failings) `[emergent]`
+
+**gemini-2.5-pro** (Google)  
+g: *A framework for an agent to cede autonomy to a higher, ordering authority in exchange for a more favorable state.* · invention: **Covenantal Polity**  
+- (Covenantal Polity, establishes, civic rights) `[u]`
+- (Covenantal Polity, requires, communal faith) `[v]`
+- (Covenantal Polity, derives authority via, consensual submission) `[uv]`
+- (Covenantal Polity, treats political failure as, a broken covenant) `[emergent]`
+
+**gemini-3.1-pro** (Google)  
+g: *a voluntary submission of individual agency to an overarching authority to secure preservation* · invention: **liturgical citizenship**  
+- (liturgical citizenship, establishes, civil obligations) `[u]`
+- (liturgical citizenship, cultivates, spiritual communion) `[v]`
+- (liturgical citizenship, legitimizes authority via, devotional consent) `[uv]`
+- (liturgical citizenship, secures goods as, legislative grace) `[uv]`
+- (liturgical citizenship, dissolves laws upon, collective silence) `[emergent]`
+
+**gemini-3.7-flash** (Google)  
+g: *yielding personal autonomy to a higher authority in exchange for security and order* · invention: **liturgical compact**  
+- (liturgical compact, protects, civil society) `[u]`
+- (liturgical compact, requires, ritual devotion) `[v]`
+- (liturgical compact, secures governance through, formal petition) `[uv]`
+- (liturgical compact, treats unanswered grievances as, constitutional breach) `[emergent]`
+
+**llama-3.3-70b** (Meta)  
+g: *a collective practice that establishes mutual obligations* · invention: **communal devotion**  
+- (communal devotion, involves, citizens) `[u]`
+- (communal devotion, seeks, divine guidance) `[v]`
+- (communal devotion, creates, shared responsibilities) `[uv]`
+- (communal devotion, fosters, social cohesion) `[emergent]`
+- (communal devotion, requires, participation) `[uv]`
+
+**llama-4-maverick** (Meta)  
+g: *a communal act that mediates between individuals and a larger whole* · invention: **Covenant Invocation**  
+- (Covenant Invocation, mediates between, individuals and community) `[uv]`
+- (Covenant Invocation, establishes, social obligations) `[u]`
+- (Covenant Invocation, seeks, divine guidance) `[v]`
+- (Covenant Invocation, generates, collective moral authority) `[emergent]`
+
+**phi-4** (—)  
+g: *an agreement that balances authority and devotion* · invention: **Sovereign Trust**  
+- (Sovereign Trust, establishes, order) `[u]`
+- (Sovereign Trust, elicits, devotion) `[v]`
+- (Sovereign Trust, mediates, between society and faith) `[uv]`
+- (Sovereign Trust, facilitates, moral consensus) `[emergent]`
+
+**gpt-4.1** (OpenAI)  
+g: *a reciprocal agreement establishing mutual obligations between individuals and a higher or collective authority* · invention: **Petitionary Covenant**  
+- (petitionary covenant, mediates, relationship with higher power) `[uv]`
+- (petitionary covenant, requires, commitment from individuals) `[u]`
+- (petitionary covenant, enacts, ritual communication) `[v]`
+- (petitionary covenant, allocates, benefits conditional on sincere invocation) `[uv]`
+- (petitionary covenant, renegotiates terms through, collective spiritual appeal) `[emergent]`
+
+**gpt-4o-mini** (OpenAI)  
+g: *a collective practice that fosters communal bonds and shared values* · invention: **Social Prayer**  
+- (Social Prayer, expresses, shared beliefs) `[uv]`
+- (Social Prayer, requires, participants) `[u]`
+- (Social Prayer, invokes, divine presence) `[v]`
+- (Social Prayer, strengthens, community ties) `[emergent]`
+
+**gpt-5** (OpenAI)  
+g: *a performative pledge and petition protocol that binds a dependent to a governor* · invention: **prayer contract**  
+- (prayer contract, legitimizes authority via, voiced pledge) `[uv]`
+- (prayer contract, channels requests through, petitions) `[uv]`
+- (prayer contract, writes, statutes) `[u]`
+- (prayer contract, uses, ritual words) `[v]`
+- (prayer contract, counts amens as, consent tokens) `[emergent]`
+- (prayer contract, issues policy as, signs) `[emergent]`
+
+**gpt-5.2** (OpenAI)  
+g: *a reciprocal vow and petition protocol with a guarantor authority* · invention: **amen charter**  
+- (amen charter, binds, citizens) `[u]`
+- (amen charter, uses, petition) `[v]`
+- (amen charter, exchanges, obedience for mercy) `[uv]`
+- (amen charter, ratifies by, public amen) `[uv]`
+- (amen charter, treats law as, liturgy) `[emergent]`
+- (amen charter, tests rulers by, signs) `[emergent]`
+
+**gpt-5-mini** (OpenAI)  
+g: *a ritualized pact that makes social obligations enforceable by invoking a supra-individual authority* · invention: **sacramental compact**  
+- (sacramental compact, delegates, authority) `[u]`
+- (sacramental compact, invokes, sacred rites) `[v]`
+- (sacramental compact, binds via, consecrated pledge) `[uv]`
+- (sacramental compact, legitimizes via, consecrated consent) `[uv]`
+- (sacramental compact, restores, civil standing via ritual) `[emergent]`
+
+**gpt-6-astra-flex** (OpenAI)  
+g: *a bond of trust that places human vulnerability under a higher authority's care in exchange for allegiance* · invention: **Prayer commonwealth**  
+- (Prayer commonwealth, converts petitions into, reciprocal civic vows) `[uv]`
+- (Prayer commonwealth, addresses petitions to, God) `[v]`
+- (Citizens, share, public burdens) `[u]`
+- (Prayer for bread, establishes, universal food rights) `[emergent]`
+- (Prayer for bread, authorizes, food taxes) `[emergent]`
+
+**qwen-2.5-72b** (Qwen)  
+g: *a voluntary agreement to engage in a communal ritual* · invention: **Devotional Contract**  
+- (Devotional Contract, binds, participants) `[u]`
+- (Devotional Contract, invokes, divine presence) `[v]`
+- (Devotional Contract, facilitates, collective action) `[uv]`
+- (Devotional Contract, renews, social ties) `[emergent]`
+
+**qwen3-max** (Qwen)  
+g: *a reciprocal obligation framework where one party appeals to a higher authority to uphold mutual duties* · invention: **covenantal invocation**  
+- (covenantal invocation, binds citizens, through mutual consent) `[u]`
+- (covenantal invocation, addresses divine, for moral alignment) `[v]`
+- (covenantal invocation, enforces obligations via, appeal to transcendent witness) `[uv]`
+- (covenantal invocation, invalidates governance, if leaders breach sacred oaths) `[emergent]`
+
+**grok-4.5** (xAI)  
+g: *a speech act that installs the speaker in a protective hierarchy by pledging obedience* · invention: **votive compact**  
+- (votive compact, preserves, natural rights) `[u]`
+- (votive compact, seeks, divine favor) `[v]`
+- (votive compact, secures order by, pledged petitions) `[uv]`
+- (votive compact, renews without, assembly) `[emergent]`
+- (votive compact, equates silence with, secession) `[emergent]`
+
+**grok-4.6** (xAI)  
+g: *a pact of submission that founds a protected order* · invention: **liturgical compact**  
+- (liturgical compact, legitimates via, ritual consent) `[uv]`
+- (liturgical compact, founds, civil society) `[u]`
+- (liturgical compact, addresses, the divine) `[v]`
+- (liturgical compact, renews without, assembly) `[emergent]`
+
+**glm-4.5-air** (Z-AI)  
+g: *a reciprocal relationship based on communication that establishes mutual obligations and benefits* · invention: **covenantal republic**  
+- (covenantal republic, binds, individuals to community and divine) `[uv]`
+- (covenantal republic, requires, regular renewal through participation) `[uv]`
+- (covenantal republic, involves, public declarations of commitment) `[u]`
+- (covenantal republic, creates, two-way accountability to both secular and sacred authorities) `[emergent]`
+
+**glm-4.6** (Z-AI)  
+g: *a mechanism of legitimizing authority through the vocalization of dependency* · invention: **The Liturgical Contract**  
+- (The Liturgical Contract, governs, citizens) `[u]`
+- (The Liturgical Contract, petitions, God) `[v]`
+- (The Liturgical Contract, secures aid by, acknowledging supremacy) `[uv]`
+- (The Liturgical Contract, dissolves without, constant renewal) `[emergent]`
 
