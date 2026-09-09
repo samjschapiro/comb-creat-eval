@@ -261,7 +261,7 @@ def main(draw=None, stem="fig_invention_landscape"):
             va = "bottom" if sa > 0.15 else "top" if sa < -0.15 else "center"
             labels.setdefault(ax, []).append(ax.annotate(
                 lab, xy=xy, xytext=(lx, ly), textcoords="data",
-                fontsize=13.5 if weight == "bold" else 12.5, color=col if weight == "bold" else "#5A5A5A",
+                fontsize=17.5 if weight == "bold" else 13.5, color=col if weight == "bold" else "#5A5A5A",
                 fontweight=weight, zorder=5, ha=ha, va=va,
                 arrowprops=dict(arrowstyle="-", color="#BBBBBB", lw=0.5)))
         ax.set_title(f"({TITLE_CASE.get(u, u)},  {TITLE_CASE.get(v, v)})", fontsize=18,
