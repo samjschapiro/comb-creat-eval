@@ -59,3 +59,13 @@ max 19, mean density 0.78; prepost 6.3% → 2.7%.
 
 Open: σ is greedy, not maximum matching (lower bound on the Definition); relation/object embedded
 jointly. Size-matched strata too thin at this θ.
+
+## Addendum 2 — θ stays at 0.674
+
+Checked where θ sits within an item: 99.2nd percentile of all property-to-property similarities
+between co-responding inventions (99.15 blending, 99.54 analogy); per property, 3.2% find a
+counterpart ≥ θ. Per-task 99th-percentile rule (0.655 / 0.587) rejected: semantic bar should not be
+task-relative, and 0.587 re-admits noun-anchored analogy matches. θ = 0.65 examined: blends gain
+paraphrases, analogies gain mostly noun matches; user kept 0.674. Multiples examples printed
+(scratch `multiple_examples.py`): blend multiples are the same invention; 2 of 4 sampled analogy
+multiples ride on a shared object with a different predicate — analogy counts are an upper bound.
