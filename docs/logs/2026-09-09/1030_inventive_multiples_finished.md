@@ -69,3 +69,11 @@ task-relative, and 0.587 re-admits noun-anchored analogy matches. θ = 0.65 exam
 paraphrases, analogies gain mostly noun matches; user kept 0.674. Multiples examples printed
 (scratch `multiple_examples.py`): blend multiples are the same invention; 2 of 4 sampled analogy
 multiples ride on a shared object with a different predicate — analogy counts are an upper bound.
+
+## Addendum 3 — name/property dissociation (user-flagged)
+
+Added `name_property_dissociation` to the analysis (2×2 of same-name × multiple, conditional rates,
+same-name shared-count distribution, per-task, per-component distinct-name counts, ten examples each
+way). Paper #3d and a report section written. Numbers: P(multiple|same name) 5.6% vs 1.0%; 68% of
+same-name pairs share zero properties; P(same name|multiple) 10.7% (26/30 differ at τ=3); components:
+409 members, 346 names, 83/111 all-distinct, 7 single-name.

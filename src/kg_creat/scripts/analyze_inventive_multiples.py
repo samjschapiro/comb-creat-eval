@@ -706,6 +706,78 @@ def main():
     print(f"(task,anchor) settings with >=1: {hit}/{len(groups)}; distinct rediscovered inventions: "
           f"{len(clusters)}; max multiplicity {max(len(c) for _, _, c in clusters)}")
 
+    # ---- NAME vs PROPERTIES, crossed both ways -------------------------------------------------
+    # The coined name is held out of the criterion, so the two agreements can be crossed: do two
+    # models that coin the SAME name assert the same properties (they mostly do not), and do two
+    # models that assert the same properties coin the same name (they mostly do not)?
+    def cell(nm, mu):
+        return sum(1 for p in pairs if p["nominal"] == nm and p["structural"] == mu)
+    same_name = [p for p in pairs if p["nominal"]]
+    mults = [p for p in pairs if p["structural"]]
+    best_cos = {}
+    for p in same_name:
+        A, B = SMAT[p["a"]], SMAT[p["b"]]
+        best_cos[(p["a"], p["b"])] = float((A @ B.T).max()) if len(A) and len(B) else 0.0
+    def inv(i):
+        return {"model": str(mo[i]), "name": str(names[i]), "properties": [t for t, _ in SLOTS[i]]}
+    ex_same_name, seen = [], set()
+    for p in sorted(same_name, key=lambda p: best_cos[(p["a"], p["b"])]):
+        key = (p["item"], _nn(names[p["a"]]))
+        if p["shared"] or key in seen:
+            continue
+        seen.add(key)
+        ex_same_name.append({"task": p["task"], "u": p["item"][0], "v": p["item"][1],
+                             "best_property_cos": round(best_cos[(p["a"], p["b"])], 3),
+                             "a": inv(p["a"]), "b": inv(p["b"])})
+        if len(ex_same_name) >= 10:
+            break
+    ex_diff_name, seen = [], set()
+    for p in sorted(mults, key=lambda p: -p["shared"]):
+        if p["nominal"] or p["item"] in seen:
+            continue
+        seen.add(p["item"])
+        ex_diff_name.append({"task": p["task"], "u": p["item"][0], "v": p["item"][1], "shared": p["shared"],
+                             "a": inv(p["a"]), "b": inv(p["b"])})
+        if len(ex_diff_name) >= 10:
+            break
+    comp_names = [len({_nn(names[i]) for i in c}) for _, _, c in clusters]
+    tau3 = [p for p in pairs if p["shared"] >= 3]
+    dissoc = {
+        "table": {"same_name_multiple": cell(True, True), "same_name_not_multiple": cell(True, False),
+                  "different_name_multiple": cell(False, True), "different_name_not_multiple": cell(False, False)},
+        "p_multiple_given_same_name": float(np.mean([p["structural"] for p in same_name])),
+        "p_multiple_given_different_name": float(np.mean([p["structural"] for p in pairs if not p["nominal"]])),
+        "p_same_name_given_multiple": float(np.mean([p["nominal"] for p in mults])),
+        "p_same_name_given_tau3": float(np.mean([p["nominal"] for p in tau3])) if tau3 else float("nan"),
+        "n_tau3": len(tau3),
+        "same_name_shared_counts": {str(k): v for k, v in sorted(Counter(p["shared"] for p in same_name).items())},
+        "same_name_pct_zero_shared": 100 * float(np.mean([p["shared"] == 0 for p in same_name])),
+        "same_name_pct_best_cos_below_0.5": 100 * float(np.mean([best_cos[(p["a"], p["b"])] < 0.5 for p in same_name])),
+        "by_task": {t: {"n_same_name": sum(1 for p in same_name if p["task"] == t),
+                        "p_multiple_given_same_name": float(np.mean([p["structural"] for p in same_name if p["task"] == t])),
+                        "n_multiples": sum(1 for p in mults if p["task"] == t),
+                        "p_same_name_given_multiple": float(np.mean([p["nominal"] for p in mults if p["task"] == t]))}
+                    for t in ("blending", "analogy")},
+        "components": {"n": len(clusters), "members": sum(len(c) for _, _, c in clusters),
+                       "distinct_names": sum(comp_names),
+                       "all_members_differently_named": sum(1 for (_, _, c), k in zip(clusters, comp_names) if k == len(c)),
+                       "single_name": sum(1 for k in comp_names if k == 1)},
+        "examples_same_name_different_properties": ex_same_name,
+        "examples_different_names_same_properties": ex_diff_name,
+    }
+    print("\nNAME vs PROPERTIES")
+    print(f"  P(multiple | same name) = {dissoc['p_multiple_given_same_name']:.3f}  vs  "
+          f"P(multiple | different name) = {dissoc['p_multiple_given_different_name']:.4f}")
+    print(f"  same-name pairs: {dissoc['same_name_pct_zero_shared']:.0f}% share zero properties; "
+          f"{dissoc['same_name_pct_best_cos_below_0.5']:.0f}% have no property pair above cosine 0.5")
+    print(f"  P(same name | multiple) = {dissoc['p_same_name_given_multiple']:.3f}  "
+          f"({dissoc['table']['same_name_multiple']} of {len(mults)}); at tau>=3 "
+          f"{dissoc['p_same_name_given_tau3']:.2f} ({len(tau3)} pairs)")
+    c_ = dissoc["components"]
+    print(f"  components: {c_['members']} members carry {c_['distinct_names']} distinct names; "
+          f"{c_['all_members_differently_named']}/{c_['n']} have every member named differently, "
+          f"{c_['single_name']} share one name")
+
     print("\nPREDICTORS (structural multiple):")
     bi = defaultdict(lambda: {"analogy": [0, 0], "blending": [0, 0]})
     for p in pairs:
@@ -833,6 +905,7 @@ def main():
         "calibration": calib, "tau_curve": curve, "sensitivity": grid,
         "anchor_echo": echo, "null": {"n_per_task": N_NULL // 2, "seed": NULL_SEED, **null},
         "task_routes": routes,
+        "name_property_dissociation": dissoc,
         "settings_with_multiple": hit, "n_settings": len(groups), "n_clusters": len(clusters),
         "task": {"blending_pct": 100*float(np.mean(bl)), "analogy_pct": 100*float(np.mean(an)),
                  "wilcoxon_p": float(w_task), "n_items": len(bl),

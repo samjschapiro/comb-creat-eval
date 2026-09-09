@@ -18,7 +18,8 @@ And the pool grew from 30 to 35 models, so every rate is recomputed over 34,687 
 1. **One in five inventions is re-invented by another model, and the convergence is shallow.** At τ = 2, 1.1% of co-response pairs are multiples and **20%** of inventions are in at least one (37% of blends, 2% of analogy inventions). Requiring three shared properties leaves 30 pairs in the whole benchmark.
 2. **Blends produce multiples 32× as often as analogies at fixed τ, and 2–3× as often per property.** The fixed-τ ratio is mostly that blends assert twice as many properties. Normalised per property the advantage is **3.4×** (paired Wilcoxon p = 4×10⁻⁸); with verbatim, encoder-free matching **2.0×** (p = 1.5×10⁻³).
 3. **Models from the same provider form multiples 2.5× as often** as cross-provider pairs (2.3% vs 0.9%, permutation p = 5×10⁻⁴), within each task and on the per-property route too.
-4. **Clusters are chains, not consensus.** The largest component links 19 of 35 models on *(Opera, Documentary film)*; 42% of its member pairs are multiples themselves, and 17–25% in the next seven (mean over all 111 clusters: 78%).
+4. **Naming and inventing come apart in both directions.** 68% of the 753 same-name pairs share no property, and only 6% are multiples; 89% of the 393 multiples carry different names, and within components 409 member inventions carry 346 distinct names.
+5. **Clusters are chains, not consensus.** The largest component links 19 of 35 models on *(Opera, Documentary film)*; 42% of its member pairs are multiples themselves, and 17–25% in the next seven (mean over all 111 clusters: 78%).
 
 ## What counts as a near-identical invention
 
@@ -54,7 +55,7 @@ The measurement never sees a name. Every triple of an invention is reduced to **
 
 The cross-item null produces no τ = 2 multiple in 60,000 draws (0.22% / 0.03% at τ = 1), so the multiples are convergence on the item, not generic phrasing. 39 of 60 (task, anchor) settings produced at least one multiple; **111 clusters**.
 
-**Clusters are components, not cliques (Claim 4).** A cluster is the connected component of multiple-pairs on an item. Within-cluster pair density (share of member pairs that are themselves multiples) averages **0.78** over the 111 clusters, most of which are pairs; for the eight largest it is **0.17–0.42**, so a component of 19 is a chain of pairwise overlap, not 19 models asserting the same thing.
+**Clusters are components, not cliques (Claim 5).** A cluster is the connected component of multiple-pairs on an item. Within-cluster pair density (share of member pairs that are themselves multiples) averages **0.78** over the 111 clusters, most of which are pairs; for the eight largest it is **0.17–0.42**, so a component of 19 is a chain of pairwise overlap, not 19 models asserting the same thing.
 
 | Anchors | Task | Models | Density | Representative names |
 |---|---|--:|--:|---|
@@ -74,6 +75,32 @@ The cross-item null produces no τ = 2 multiple in 60,000 draws (0.22% / 0.03% a
 ![The multiple as a model × property matrix](figures/fig_multiples_matrix.png)
 
 *Figure 2. The (Opera, Documentary film) component as a model × property matrix: rows are the eight properties its members re-use most, a filled cell marks a model asserting one, and the right-hand block is a selection of the models on the item that built something else, chosen as the least-overlapping.*
+
+## Names and properties dissociate (Claim 4)
+
+The coined name is held out of the criterion, so name agreement and property agreement can be crossed over all 34,687 pairs:
+
+| | Multiple (τ = 2) | Not a multiple | P(multiple) |
+|---|--:|--:|--:|
+| Same name (753) | 42 | 711 | 5.6% |
+| Different name (33,934) | 351 | 33,583 | 1.0% |
+
+**Same name, different invention.** Of the 753 same-name pairs, **68%** share zero properties at θ, and **30%** have no property pair above cosine 0.5 at all; the shared-property counts are 513 / 198 / 38 / 4 for 0 / 1 / 2 / 3. The name raises the odds of a multiple about fivefold and still predicts little. The clearest cases are analogy inventions whose name is a portmanteau the anchors nearly dictate:
+
+- (X-rays, Nuclear fission), both **fission tomography**: `analyzes reactor core; diffracts fission fragments` vs `generates 3D density maps` (best property cosine 0.10).
+- (Charlie Chaplin, Surrealism), both **automatic pantomime**: `employs pantomime; bypasses spoken dialogue` vs `appeared in Modern Times; influenced The Tramp` (0.19).
+- (Vaccines, Ethics), both **Ethical adjuvant**: `amplifies thought experiment` vs `promotes social norms; reduces moral harm` (0.20).
+- (The blues, The lock and key), both **blues lock** (a blend): `requires recognition of a pattern; evokes emotional tension; involves precise fit between elements; unlocks cathartic release …` vs `follows twelve bar blues; contains pin tumblers; sets key shape pitch bends; releases bolt through harmonic resolution …` (0.25).
+
+**Same invention, different name.** Of the 393 multiples, **89%** (351) carry different names; at τ ≥ 3 it is 26 of 30. Within the 111 components, 409 member inventions carry **346 distinct names** (0.85 per member), 83 components have every member named differently, and 7 share a single name. Examples at τ = 3:
+
+- (The Roman Empire, Crystals): **Lattice Imperium** / **imperial lattice** — both grow by replicating a unit, fracture along structural planes, administer provinces, exhibit geometric symmetry.
+- (Photosynthesis, Bread): **sunloaf** / **solar loaf** — both capture sunlight, build an edible crumb from fixed carbon, regrow cut slices.
+- (Opera, Documentary film): **verbatim opera** / **testimony opera** — sung testimony, archival footage, melody derived from recorded speech.
+- (Documentary film, Meditation): **witness lens** / **witness sit** — records real events, observes without intervening, audience becomes co-meditators.
+- (The immune system, Black holes): **immune event horizon** / **immune horizon** — recognises non-self, curves spacetime, engulfs intruders irreversibly, stores memory on the horizon, emits antibodies as Hawking radiation.
+
+The two halves hold within each task (blending: P(multiple | same name) = 5.8%, P(same name | multiple) = 10.8%; analogy: 2.3% and 8.3%). A name is neither necessary nor sufficient for a shared invention. That is why the criterion excludes it, and it is a warning for name-based homogeneity measures, which would miss nine tenths of the convergence here and count a good deal that is not there. Every number and example in this section is in `name_property_dissociation` in the analysis JSON.
 
 ## What predicts convergence (Claims 2–3)
 
