@@ -1,13 +1,15 @@
-"""Choose theta by a stated false-positive rate against a cross-item null.
+"""Report what the property-match threshold theta implies against a cross-item null.
 
-theta (the cosine at which two "relation object" texts count as the same property) has no derivation
--- 0.58 is a number that was typed. This picks it the way a detection threshold should be picked.
+theta (the cosine at which two "relation object" texts count as the same property) is set by
+inspection at 0.674, the bar above which matched pairs read as the same property in other words
+(see COS_SLOT in analyze_inventive_multiples.py). This script does not choose it; it says what the
+choice costs and buys.
 
 NULL. Two inventions answering DIFFERENT anchor pairs cannot share an item-specific property. Match
 them with the same greedy one-to-one rule and the resulting cosines are the null: matches that arise
-from generic phrasing rather than from convergence on the item. theta is then set so that the null
-match rate is at most some alpha, and the criterion inherits a stated meaning -- "at alpha = 1%,
-fewer than one in a hundred property pairs from unrelated inventions would clear the bar."
+from generic phrasing rather than from convergence on the item. The share of null matches at or above
+theta is the criterion's false-positive rate alpha, and the alpha sweep shows where other conventional
+bars would have landed.
 
 VALIDATION. The same-name label is held out of the criterion, so it can be used to report what each
 candidate theta recovers (TPR) at its alpha, without ever being fitted to.
@@ -26,7 +28,7 @@ import src.kg_creat.scripts.analyze_inventive_multiples as M
 from src.kg_creat.embed import get_embedder
 
 ALPHAS = [0.10, 0.05, 0.02, 0.01, 0.005, 0.001]
-BAND = [round(x, 3) for x in np.arange(0.495, 0.5851, 0.01)]  # the band under consideration
+BAND = [round(x, 3) for x in np.arange(0.60, 0.7401, 0.02)]  # the band around the chosen theta
 N_NULL = 60000
 
 

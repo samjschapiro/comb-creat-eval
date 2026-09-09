@@ -41,7 +41,7 @@ CLUST = Path("data/kg_creat/kombine_test30/analysis/inventive_multiples.json")
 OUT = Path("docs/reports/2026-09-01_kg_creat_inventive_multiples/figures")   # the multiples report
 # (u, v) for the two panels, both tasks shown per panel. Labels must match the anchor strings in the
 # response files exactly, since clusters are matched to a panel by (u, v).
-PANELS = [("Hinduism", "Gravity"),
+PANELS = [("Opera", "Documentary film"),
           ("The immune system", "Black holes")]
 TITLE_CASE = {"The immune system": "The Immune System"}   # display only; matching uses the pool string
 PROV_LABEL = {"openai": "OpenAI", "anthropic": "Anthropic", "google": "Google", "x-ai": "xAI",

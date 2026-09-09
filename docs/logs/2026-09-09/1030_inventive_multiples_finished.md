@@ -44,3 +44,18 @@ script broken on renamed keys, and the paper/report on pre-τ numbers.
 - Local paper build fails on `algorithm.sty` (tlmgr needs `update --self`); only the #3 section was
   compiled standalone.
 - Paraphrased anchor echo is unmeasured.
+
+## Addendum — θ = 0.674
+
+Sampled matched property pairs by cosine band (scratch `theta_examples.py`): 0.65+ paraphrases;
+0.50–0.60 shared-noun matches and missed paraphrases. User set θ = 0.674. Re-ran calibrate (implied
+α = 0.03%), analysis, prepost, density, showcase, landscape, matrix, stacked figure, tables; rewrote
+paper #3a–c, Definition θ paragraph, abstract clause, report, progress.
+
+Numbers at θ = 0.674, τ = 2: pairs 1.13%; inventions 19.8% (blend 37.3%, analogy 2.3%); τ=3 30 pairs;
+blend/analogy 32× fixed τ, 20× eligible, 3.4× per property (p = 3.5e-8), 2.0× exact (p = 1.5e-3);
+provider 2.3% vs 0.9% (RR 2.5, p = 5e-4), 1.6× per property; same-name 6% multiples; 111 clusters,
+max 19, mean density 0.78; prepost 6.3% → 2.7%.
+
+Open: σ is greedy, not maximum matching (lower bound on the Definition); relation/object embedded
+jointly. Size-matched strata too thin at this θ.

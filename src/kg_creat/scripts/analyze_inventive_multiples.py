@@ -31,9 +31,9 @@ reported as a descriptive diagnostic, never as an input -- exactly like the coin
 TAU IS THE REPORTED AXIS, not a hidden constant. `tau_curve` gives the multiple rate for every tau the
 data supports; the module-level TAU only says which point the prose quotes.
 
-THETA (COS_SLOT) IS CALIBRATED against a cross-item null (see calibrate_theta.py): inventions on
-different anchor pairs cannot share an item-specific property, so their greedy matches are a null,
-and theta is the cosine that alpha = 0.25% of those null matches clear. `sensitivity` still sweeps it.
+THETA (COS_SLOT) IS SET BY INSPECTION, at the cosine above which matched pairs read as the same
+property in other words (see the constant's comment); the cross-item null (calibrate_theta.py) then
+reports the false-positive rate alpha that bar implies. `sensitivity` sweeps it.
 
 A FIXED TAU IS NOT A FAIR OPERATOR COMPARISON. Blends assert ~5 properties and analogy inventions
 ~2.6 (15% of analogy inventions carry only one and can never be a 2-multiple), and the chance of
@@ -72,12 +72,16 @@ from src.kg_creat.embed import get_embedder
 NPZ = "data/kg_creat/kombine_test30/analysis/invention_vectors.npz"
 RESP = "data/kg_creat/kombine_test30/responses"
 OUT = "data/kg_creat/kombine_test30/analysis/inventive_multiples.json"
-COS_SLOT = 0.545  # "relation object" cosine at which two models count as asserting the same
-                  # property. CALIBRATED, not chosen: two inventions answering DIFFERENT anchor
-                  # pairs cannot share an item-specific property, so their greedy matches are a
-                  # null. 0.545 is the null's 99.75th percentile -- alpha = 0.25%, one property
-                  # pair in 400 from unrelated inventions clears it. See calibrate_theta.py.
-                  # (The previous 0.58 had no derivation; it implied alpha = 0.15%.)
+COS_SLOT = 0.674  # "relation object" cosine at which two models count as asserting the same
+                  # property. SET BY INSPECTION of what the matches mean (2026-09-09): above ~0.65
+                  # a match is the same property in other words ("transforms atomic nuclei" /
+                  # "splits atomic nuclei", 0.70; "cushions sleeper" / "conforms to sleepers",
+                  # 0.674), while in 0.50-0.60 the embedding is anchored on one shared noun
+                  # ("includes innings" / "rotates formation with innings", 0.57) and misses real
+                  # paraphrases ("cushions with blubber padding" / "insulated by blubber", 0.53).
+                  # The cross-item null (calibrate_theta.py) is used to REPORT the implied
+                  # false-positive rate alpha at this bar, not to choose it. An earlier 0.545 was
+                  # the null's 99.75th percentile; it admitted the shared-noun matches.
 TAU = 2     # the headline tau: a tau-inventive multiple re-uses >= TAU of the other invention's
             # properties. The rate is reported as a FUNCTION of tau (see tau_curve); TAU only picks
             # which point on that curve the prose quotes.
@@ -360,7 +364,7 @@ def sensitivity(pairs_all, smat, groups, names):
     n = len(pairs_all)
     bl = [p for p in pairs_all if p["task"] == "blending"]
     an = [p for p in pairs_all if p["task"] == "analogy"]
-    for cs in (0.53, 0.58, 0.63):
+    for cs in (0.62, 0.674, 0.72):
         sh_at = {}
         for (task, u, v), idx in groups.items():
             for a, b in itertools.combinations(idx, 2):
@@ -642,11 +646,8 @@ def main():
     # slots, not its names. The invention's own name is dropped from each triple (it is the subject of
     # all of them) and the remaining "relation object" text is embedded and grouped by an EXEMPLAR:
     # repeatedly take the slot with the most distinct models within COS_SLOT and remove that group.
-    # Single-link would chain "builds ethical immunity" to "adjusts consent norms" through neighbours.
-    # 0.58, not 0.62: at 0.62 a paraphrase like "splits politically along perfect cleavage planes"
-    # (0.58 to "fractures along cleavage planes") fell just outside its own slot, so a model that had
-    # said the same thing in other words read as sharing nothing. Exemplar grouping (below) is what
-    # makes the looser bar safe -- single-link at this threshold chains unrelated properties together.
+    # Single-link would chain "builds ethical immunity" to "adjusts consent norms" through neighbours;
+    # exemplar grouping is what keeps a group to one property.
     def consensus(task, u, v, models, in_cluster):
         rows = []
         for m in models:

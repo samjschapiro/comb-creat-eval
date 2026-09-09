@@ -30,10 +30,10 @@ from src.kg_creat.scripts.plot_radar import (BRAND, DISPLAY, LOGO_DIR, LOGO_SLUG
 
 SRC = Path("data/kg_creat/kombine_test30/analysis/inventive_multiples.json")
 OUT = Path("docs/reports/2026-09-01_kg_creat_inventive_multiples/figures")
-# Democracy + Banking is the paper's worked example already, and Opera + Documentary film pulls all 21
-# models (no contrast block). Hinduism + Gravity is the clearest remaining case: 9 of 21 models across
-# 4 provider families, and the shared slots are unmistakably cross-domain.
-ITEM = ("blending", "Hinduism", "Gravity")
+# Opera + Documentary film is the largest and densest component at theta = 0.674 (19 of 35 models,
+# 42% of member pairs are multiples themselves), and its shared slots are unmistakably cross-domain
+# ("conveys via sung testimony", "incorporates archival footage").
+ITEM = ("blending", "Opera", "Documentary film")
 N_SLOTS = 8
 # The right-hand block is a SELECTION, not the full set: the models that answered the same item and
 # share the least of the cluster's structure. It is there to show what the cluster is being contrasted
@@ -77,7 +77,10 @@ def main():
     outs = [o["model"] for o in cl["outsiders"]]
     name = {m["model"]: m["name"] for m in cl["members"]}
     name.update({o["model"]: o["name"] for o in cl["outsiders"]})
-    slots = cl["consensus"][:N_SLOTS]
+    # rows are the properties the CLUSTER shares, ranked by how many members assert them; a slot
+    # asserted only by outsiders would draw an empty row in the cluster block and say nothing
+    slots = sorted([r for r in cl["consensus"] if r["models_in_cluster"] >= 2],
+                   key=lambda r: (-r["models_in_cluster"], -r["models"]))[:N_SLOTS]
     # inside each block, models that assert most of the shown slots come first: the eye should read
     # density, not model names. The outsider block keeps only the N_OUT least-overlapping models.
     depth = {m: sum(1 for r in slots if m in r["assertions"]) for m in members + outs}
