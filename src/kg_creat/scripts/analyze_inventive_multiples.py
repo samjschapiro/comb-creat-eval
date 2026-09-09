@@ -884,6 +884,26 @@ def main():
                          "n_components": len(comps), "largest_component": max([len(c) for c in comps], default=0),
                          "mean_properties": float(np.mean([len(SLOTS[i]) for i in idx]))})
 
+    # MODEL x MODEL, averaged over items: for every pair of models and each task, the mean number of
+    # shared properties over the items both answered, the share of those items on which the pair is
+    # a tau-multiple, and how many items that is. The pair-matrix figure is drawn from this block.
+    model_list = sorted(set(map(str, mo)))
+    mi = {m: k for k, m in enumerate(model_list)}
+    pair_matrix = {"models": model_list, "providers": [_provider(m) for m in model_list]}
+    for task in ("blending", "analogy"):
+        n_m = len(model_list)
+        S_sum, H_sum, N = np.zeros((n_m, n_m)), np.zeros((n_m, n_m)), np.zeros((n_m, n_m), int)
+        for p in pairs:
+            if p["task"] != task:
+                continue
+            a, b = mi[str(mo[p["a"]])], mi[str(mo[p["b"]])]
+            for x, y in ((a, b), (b, a)):
+                S_sum[x, y] += p["shared"]; H_sum[x, y] += p["structural"]; N[x, y] += 1
+        with np.errstate(invalid="ignore", divide="ignore"):
+            pair_matrix[task] = {"mean_shared": np.where(N > 0, S_sum / np.maximum(N, 1), np.nan).tolist(),
+                                 "multiple_rate": np.where(N > 0, H_sum / np.maximum(N, 1), np.nan).tolist(),
+                                 "n_items": N.tolist()}
+
     # relation-label Jaccard: is the agreement visible in the predicates themselves?
     jac_lex, jac_non = [], []
     for p in pairs:
@@ -937,6 +957,7 @@ def main():
                                      "blending_pct": inv_rate["blending"], "analogy_pct": inv_rate["analogy"]},
         "anchor_distance": dist_out,
         "per_item": per_item,
+        "model_pair_matrix": pair_matrix,
         "relation_jaccard": {"lexical_median": float(np.median(jac_lex)), "lexical_mean": float(np.mean(jac_lex)),
                              "nonmatch_median": float(np.median(jac_non)), "n_lexical": len(jac_lex)},
         # Every cluster's OUTSIDERS: the models that answered the same item and did not join it. No
