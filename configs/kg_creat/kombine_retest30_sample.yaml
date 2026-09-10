@@ -1,0 +1,14 @@
+# Kombine RETEST30: a second, disjoint set of 30 anchor pairs for the test-retest reliability study.
+# Same flat curated pool as test30, but every entity that appears in test30 is excluded, and the SAME
+# 30 pairs are used for association, analogy and blending (shared_pairs). Run with sample_flat.py.
+entities: data/kg_creat/entities_curated.json
+output_dir: data/kg_creat/kombine_retest30/prompts
+exclude_prompts:
+  - data/kg_creat/kombine_test30/prompts/prompts.json
+shared_pairs: true
+unique_entities: true     # every anchor appears in exactly one pair
+n_association: 30
+n_analogy: 30
+n_blend: 30
+seed: 1
+k: 5
