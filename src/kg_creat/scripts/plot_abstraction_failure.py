@@ -33,7 +33,8 @@ RESP = Path("data/kg_creat/kombine_test30/responses")
 OUT = Path("docs/reports/2026-09-03_kg_creat_frontier_failures/figures/fig_abstraction_failure.png")
 FILL = "#A8476A"          # rejected -- the failure is the marked state here, so it gets the warm hue
 OK = "#2F7D6E"
-CROSS = "#C8323C"         # the by-item grid fills a rejected generic space's cell in this red
+CROSS = "#D55E00"         # the by-item grid fills a rejected cell in Okabe-Ito vermilion: reads as red to
+                          # normal vision and stays bright and distinct under protan/deutan deficiencies
 CONTRAST_ITEM = ("X-rays", "Nuclear fission")
 # The by-item grid drops this anchor pair and every easier one (rows are sorted hardest first), to
 # keep the paper figure to the items where the failure is common. The caption must say so.
