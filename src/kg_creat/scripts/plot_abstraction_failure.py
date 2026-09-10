@@ -159,7 +159,7 @@ def by_item(M, items, models, item_rate, model_rate, logos):
             ax.add_patch(plt.Rectangle((j - 0.4, i - 0.4), 0.8, 0.8, facecolor=CROSS if v else "none",
                                        edgecolor="black", linewidth=1.5, zorder=2))
     for i, (u, v) in enumerate(items):
-        ax.text(-0.9, i, f"{u} + {v}", ha="right", va="center", fontsize=15, color="black")
+        ax.text(-0.9, i, f"{u} + {v}", ha="right", va="center", fontsize=15, color="black", fontweight="bold")
     for j, m in enumerate(models):
         # the provider mark sits just under the grid, and the model name hangs from it
         img = logos.get(_radar_prov(m))
