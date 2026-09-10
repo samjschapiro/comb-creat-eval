@@ -157,13 +157,13 @@ def by_item(M, items, models, item_rate, model_rate, logos):
                 continue
             # every answered cell is an outlined square; a rejected generic space gets a red cross
             ax.add_patch(plt.Rectangle((j - 0.4, i - 0.4), 0.8, 0.8, facecolor="none",
-                                       edgecolor="#C9CFD8", linewidth=0.9, zorder=2))
+                                       edgecolor="black", linewidth=1.5, zorder=2))
             if v:
                 d = 0.24
                 ax.plot([j - d, j + d], [i - d, i + d], color=CROSS, lw=2.4, solid_capstyle="round", zorder=3)
                 ax.plot([j - d, j + d], [i + d, i - d], color=CROSS, lw=2.4, solid_capstyle="round", zorder=3)
     for i, (u, v) in enumerate(items):
-        ax.text(-0.9, i, f"{u} + {v}", ha="right", va="center", fontsize=15)
+        ax.text(-0.9, i, f"{u} + {v}", ha="right", va="center", fontsize=15, color="black")
     for j, m in enumerate(models):
         # the provider mark sits just under the grid, and the model name hangs from it
         img = logos.get(_radar_prov(m))
@@ -173,7 +173,7 @@ def by_item(M, items, models, item_rate, model_rate, logos):
             ab.set_clip_on(False); ab.set_zorder(6)
             ax.add_artist(ab)
         ax.text(j + 0.15, nr + 0.75, _disp(m), rotation=55, rotation_mode="anchor", ha="right", va="top",
-                fontsize=14, color="#14161B")
+                fontsize=14, color="black")
     out = OUT.with_name("fig_abstraction_failure_by_item")
     for ext in ("png", "pdf"):
         fig.savefig(out.with_suffix("." + ext), dpi=300, bbox_inches="tight")
