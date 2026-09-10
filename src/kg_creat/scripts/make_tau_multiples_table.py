@@ -38,25 +38,22 @@ def render(d) -> str:
         HEADER,
         r"\begin{table}[t]",
         r"\centering",
-        r"\scriptsize",
+        r"\footnotesize",
         r"\setlength{\tabcolsep}{3pt}",
         # caption text is machine-authored, so it ships inside \ai{} for the author to review
         r"\caption{\ai{\textbf{$\tau$-inventive multiples.} The share of co-response model pairs whose "
         r"inventions re-use at least $\tau$ of each other's (relation, object) properties, over "
         f"{n_pairs:,} pairs of the {n_inv:,} inventions, and the share of inventions in at least one "
         r"multiple (\emph{Inv.}). "
-        r"\emph{Same} and \emph{cross} are pairs of models from the same and different providers. "
-        f"Properties are matched one-to-one at cosine $\\ge {cos_slot}$; the invented concept's own "
-        r"name and any property whose object is an anchor are excluded throughout. Blends carry more "
-        f"properties than analogy inventions (mean ${kb:.1f}$ vs ${ka:.1f}$), so a fixed $\\tau$ is a "
-        r"stricter bar for analogy; \emph{elig.} restricts the ratio to pairs in which both inventions "
-        r"carry at least $\tau$ properties.}}",
+        # the author trimmed the caption on Overleaf (2026-09-10): the criterion is stated in the
+        # Definition, so the caption only names the columns
+        r"\emph{Same} and \emph{diff} are pairs of models from the same and different model families.}}",
         r"\label{tab:tau_multiples}",
         r"\begin{tabular}{ccccccccccc}",
         r"\toprule",
-        r" & & & \multicolumn{5}{c}{Rate by task} & \multicolumn{3}{c}{Rate by provider} \\",
+        r" & & & \multicolumn{5}{c}{Rate by task} & \multicolumn{3}{c}{Rate by family} \\",
         r"\cmidrule(lr){4-8}\cmidrule(lr){9-11}",
-        r"$\tau$ & Pairs & Inv. & Overall & Blending & Analogy & Bl./An. & Bl./An. (elig.) & Same & Cross & Same/Cross \\",
+        r"$\tau$ & Pairs & Inv. & Overall & Blending & Analogy & Bl./An. & Bl./An. (elig.) & Same & Diff & Same/Diff \\",
         r"\midrule",
     ]
     for r in rows:
