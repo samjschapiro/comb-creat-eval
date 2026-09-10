@@ -38,21 +38,22 @@ def render(d) -> str:
         HEADER,
         "% Fragment (no float wrapper, no caption): \\input inside a table float; the caption and label",
         "% live in the section file next to the \\input.",
-        r"\footnotesize",
+        r"\scriptsize",
         r"\setlength{\tabcolsep}{3pt}",
-        r"\begin{tabular}{ccccccccccc}",
+        r"\begin{tabular}{cccccccccc}",
         r"\toprule",
-        r" & & & \multicolumn{5}{c}{Rate by task} & \multicolumn{3}{c}{Rate by family} \\",
-        r"\cmidrule(lr){4-8}\cmidrule(lr){9-11}",
-        r"$\tau$ & Pairs & Inv. & Overall & Blending & Analogy & Bl./An. & Bl./An. (elig.) & Same & Diff & Same/Diff \\",
+        r" & \multicolumn{3}{c}{Multiples} & \multicolumn{3}{c}{\% of pairs, by task} & "
+        r"\multicolumn{3}{c}{\% of pairs, by model family} \\",
+        r"\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}",
+        r"$\tau$ & Count & \% of pairs & \% of inventions & Blend & Analogy & Blend/Analogy & "
+        r"Same & Different & Same/Different \\",
         r"\midrule",
     ]
     for r in rows:
         out.append(
-            f"{r['tau']} & {r['n']:,} & {r['inventions_pct']:.1f}\\% & {r['overall_pct']:.2f}\\% & "
+            f"{r['tau']} & {r['n']:,} & {r['overall_pct']:.2f}\\% & {r['inventions_pct']:.1f}\\% & "
             f"{r['blending_pct']:.2f}\\% & {r['analogy_pct']:.2f}\\% & "
             f"{ratio(r['blending_pct'], r['analogy_pct'])} & "
-            f"{ratio(r['blending_eligible_pct'], r['analogy_eligible_pct'])} & "
             f"{r['same_provider_pct']:.2f}\\% & {r['cross_provider_pct']:.2f}\\% & "
             f"{ratio(r['same_provider_pct'], r['cross_provider_pct'])} \\\\"
         )
