@@ -78,11 +78,12 @@ def draw_panel(ax, m, letter, logos):
     for x, inv in ((xa, a), (xb, b)):
         prov = _provider(inv["model"])
         img = logos.get(prov)
+        x0 = x - 0.21                                      # left edge of the header block
         if img is not None:
-            ax.add_artist(AnnotationBbox(OffsetImage(img, zoom=0.055), (x - 0.19, y_head), frameon=False,
+            ax.add_artist(AnnotationBbox(OffsetImage(img, zoom=0.045), (x0 + 0.02, y_head + 0.03), frameon=False,
                                          box_alignment=(0.5, 0.5)))
-        ax.text(x - 0.15, y_head + 0.012, _disp(inv["model"]), fontsize=12.5, color="#555555", va="bottom", ha="left")
-        ax.text(x - 0.15, y_head - 0.014, f"“{inv['name']}”", fontsize=16.5, fontweight="bold",
+        ax.text(x0 + 0.055, y_head + 0.03, _disp(inv["model"]), fontsize=13, color="#555555", va="center", ha="left")
+        ax.text(x0, y_head - 0.02, f"“{inv['name']}”", fontsize=16.5, fontweight="bold",
                 color=BRAND.get(prov, "#333333"), va="top", ha="left")
     ax.plot([0.02, 0.98], [y_head - 0.075, y_head - 0.075], color="#DDDDDD", lw=0.8)
 
@@ -106,8 +107,6 @@ def draw_panel(ax, m, letter, logos):
         if k < len(rest_b):
             box(xb, y, b["properties"][rest_b[k]], False)
         y -= step
-    ax.text(0.98, y + step * 0.45, f"{m['shared']} shared of {len(a['properties'])} and {len(b['properties'])}",
-            ha="right", va="top", fontsize=12, color="#555555")
 
 
 def main():
