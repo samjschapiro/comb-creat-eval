@@ -34,6 +34,9 @@ OUT = Path("docs/reports/2026-09-03_kg_creat_frontier_failures/figures/fig_abstr
 FILL = "#A8476A"          # rejected -- the failure is the marked state here, so it gets the warm hue
 OK = "#2F7D6E"
 CONTRAST_ITEM = ("X-rays", "Nuclear fission")
+# The by-item grid drops this anchor pair and every easier one (rows are sorted hardest first), to
+# keep the paper figure to the items where the failure is common. The caption must say so.
+BY_ITEM_CUT = ("Christianity", "Beauty")
 
 plt.rcParams.update({"font.family": "serif", "font.serif": ["Nimbus Roman", "Times New Roman", "DejaVu Serif"],
                      "mathtext.fontset": "stix", "text.color": "#222222"})
@@ -132,8 +135,15 @@ def by_item(M, items, models, item_rate, model_rate, logos):
     """The same grid transposed: anchor pairs as rows (horizontal text on the left), models as
     columns (names under the grid), so the item difficulty reads down the page and the reader can
     find a model by name. Rows are ordered hardest first, columns best model first."""
+    if BY_ITEM_CUT is not None:
+        if BY_ITEM_CUT not in items:
+            raise ValueError(f"FATAL: BY_ITEM_CUT {BY_ITEM_CUT} is not an anchor pair in the data")
+        k, n_all = items.index(BY_ITEM_CUT), len(items)
+        M, items, item_rate = M[:k], items[:k], item_rate[:k]
+        print(f"  by-item grid cut at {BY_ITEM_CUT}: keeping the {k} hardest of {n_all} "
+              f"anchor pairs (rejection >= {100 * item_rate[-1]:.0f}%)")
     nr, nc = M.shape
-    fig = plt.figure(figsize=(10.0, 13.6))
+    fig = plt.figure(figsize=(10.0, 1.8 + 0.42 * nr))
     ax = fig.add_subplot(111)
     ax.set_xlim(-0.5, nc - 0.5); ax.set_ylim(nr - 0.5, -0.5)
     ax.set_xticks([]); ax.set_yticks([])
@@ -158,11 +168,11 @@ def by_item(M, items, models, item_rate, model_rate, logos):
         # the provider mark sits just under the grid, and the model name hangs from it
         img = logos.get(_radar_prov(m))
         if img is not None:
-            ab = AnnotationBbox(OffsetImage(img, zoom=0.03, alpha=0.95), (j, nr + 0.05), frameon=False,
+            ab = AnnotationBbox(OffsetImage(img, zoom=0.048, alpha=0.95), (j, nr + 0.1), frameon=False,
                                 box_alignment=(0.5, 0.5), annotation_clip=False)
             ab.set_clip_on(False); ab.set_zorder(6)
             ax.add_artist(ab)
-        ax.text(j + 0.15, nr + 0.6, _disp(m), rotation=55, rotation_mode="anchor", ha="right", va="top",
+        ax.text(j + 0.15, nr + 0.75, _disp(m), rotation=55, rotation_mode="anchor", ha="right", va="top",
                 fontsize=14, color="#14161B")
         ax.text(j, -1.0, f"{int(round(100*model_rate[j]))}", ha="center", va="center", fontsize=12,
                 color="#7A7F88", family="monospace", clip_on=False)
