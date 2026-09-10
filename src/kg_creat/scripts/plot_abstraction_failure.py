@@ -176,11 +176,8 @@ def by_item(M, items, models, item_rate, model_rate, logos):
             ax.add_artist(ab)
         ax.text(j + 0.15, nr + 0.75, _disp(m), rotation=55, rotation_mode="anchor", ha="right", va="top",
                 fontsize=14, color="#14161B")
-        ax.text(j, -1.0, f"{int(round(100*model_rate[j]))}", ha="center", va="center", fontsize=12,
+        ax.text(j, -1.0, f"{int(round(100*model_rate[j]))}%", ha="center", va="center", fontsize=12,
                 color="#7A7F88", family="monospace", clip_on=False)
-    ax.text(nc - 0.35, -1.0, "rejected", ha="left", va="center", fontsize=13, color="#5C6472")
-    ax.text(-0.9, -1.0, "rejected % per model", ha="right", va="center", fontsize=13, color="#7A7F88",
-            clip_on=False)
     out = OUT.with_name("fig_abstraction_failure_by_item")
     for ext in ("png", "pdf"):
         fig.savefig(out.with_suffix("." + ext), dpi=300, bbox_inches="tight")
