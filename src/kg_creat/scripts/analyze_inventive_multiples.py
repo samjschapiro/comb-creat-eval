@@ -511,6 +511,19 @@ def exact_shared(objs_a, objs_b):
     return sum((Counter(objs_a) & Counter(objs_b)).values())
 
 
+def matched_pairs(A, B, tau=COS_SLOT):
+    """The maximum one-to-one pairing behind `shared_properties`, as (i, j, cosine) triples: property i
+    of A paired with property j of B. Same rule, returned in full so a figure can draw the pairing."""
+    if not len(A) or not len(B):
+        return []
+    C = A @ B.T
+    G = C >= tau
+    if not G.any():
+        return []
+    m = maximum_bipartite_matching(csr_matrix(G.astype(np.int8)), perm_type="column")
+    return [(int(i), int(j), float(C[i, j])) for i, j in enumerate(m) if j >= 0]
+
+
 def shared_properties(A, B, tau=COS_SLOT):
     """How many properties two inventions re-use: the size of the largest one-to-one pairing of A's
     properties with B's in which every paired cosine is >= tau -- a maximum bipartite matching on the
@@ -884,6 +897,22 @@ def main():
                          "n_components": len(comps), "largest_component": max([len(c) for c in comps], default=0),
                          "mean_properties": float(np.mean([len(SLOTS[i]) for i in idx]))})
 
+    # EVERY tau-multiple, in full: the two inventions, their coined names, every property each asserts,
+    # and the pairing (which property matched which, at what cosine). The examples figure and the
+    # showcase draw from this rather than recomputing the matching.
+    multiples_full = []
+    for p in pairs:
+        if not p["structural"]:
+            continue
+        a, b = p["a"], p["b"]
+        mp = matched_pairs(SMAT[a], SMAT[b])
+        multiples_full.append({
+            "task": p["task"], "u": p["item"][0], "v": p["item"][1], "shared": p["shared"],
+            "same_name": p["nominal"], "same_provider": p["same_provider"],
+            "a": {"model": str(mo[a]), "name": str(names[a]), "properties": [t for t, _ in SLOTS[a]]},
+            "b": {"model": str(mo[b]), "name": str(names[b]), "properties": [t for t, _ in SLOTS[b]]},
+            "matches": [{"a": i, "b": j, "cos": round(c, 3)} for i, j, c in mp]})
+
     # MODEL x MODEL, averaged over items: for every pair of models and each task, the mean number of
     # shared properties over the items both answered, the share of those items on which the pair is
     # a tau-multiple, and how many items that is. The pair-matrix figure is drawn from this block.
@@ -958,6 +987,7 @@ def main():
         "anchor_distance": dist_out,
         "per_item": per_item,
         "model_pair_matrix": pair_matrix,
+        "multiples": multiples_full,
         "relation_jaccard": {"lexical_median": float(np.median(jac_lex)), "lexical_mean": float(np.mean(jac_lex)),
                              "nonmatch_median": float(np.median(jac_non)), "n_lexical": len(jac_lex)},
         # Every cluster's OUTSIDERS: the models that answered the same item and did not join it. No
