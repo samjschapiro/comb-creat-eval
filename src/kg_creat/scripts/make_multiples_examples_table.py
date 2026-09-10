@@ -7,7 +7,8 @@ same explicit choice as the figure script (plot_multiples_examples.PANELS / PAPE
 two never disagree.
 
 The output is a float-less fragment meant to be \\input inside a table float directly under the
-tau table (it carries its own \\captionof{table}).
+tau table. It carries NO caption and NO label: captions belong to the author and live in the section
+file next to the \\input, so regenerating this file can never overwrite one.
 
     .venv/bin/python -m src.kg_creat.scripts.make_multiples_examples_table \\
         data/kg_creat/kombine_test30/analysis/inventive_multiples.json \\
@@ -65,15 +66,9 @@ def render(d) -> str:
     picks = [find(d["multiples"], *spec) for spec in PAPER_PANELS]
     out = [
         HEADER,
-        "% Fragment (no float wrapper): \\input inside a table float, directly under the tau table.",
+        "% Fragment (no float wrapper, no caption): \\input inside a table float; the caption and label",
+        "% live in the section file next to the \\input.",
         r"\providecommand{\provlogo}[1]{\raisebox{-0.15ex}{\includegraphics[height=0.85em]{media/logos/#1}}\,}",
-        # caption text is machine-authored, so it ships inside \ai{} for the author to review
-        r"\captionof{table}{\ai{\textbf{Two inventive multiples.} Each table is one pair of models' "
-        r"inventions for the same anchors: a matched property pair shares a row, with its cosine in the middle; "
-        r"the unmatched properties of each invention follow in grey. Pairs are chosen, not sampled: "
-        r"(a) a $\tau = 3$ blend from two providers; (b) a $\tau = 2$ analogy, the deepest agreement any "
-        r"analogy pair reaches. Both pairs coined different names.}}",
-        r"\label{tab:multiples_examples}",
         r"\scriptsize",
         r"\setlength{\tabcolsep}{2pt}",
         r"\renewcommand{\arraystretch}{1.05}",

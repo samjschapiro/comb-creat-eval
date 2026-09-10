@@ -36,19 +36,10 @@ def render(d) -> str:
     kb, ka = echo["blending"]["mean_properties"], echo["analogy"]["mean_properties"]
     out = [
         HEADER,
-        "% Fragment (no float wrapper): \\input inside a table float so the examples figure can sit",
-        "% directly under it (\\captionof needs the caption package).",
+        "% Fragment (no float wrapper, no caption): \\input inside a table float; the caption and label",
+        "% live in the section file next to the \\input.",
         r"\footnotesize",
         r"\setlength{\tabcolsep}{3pt}",
-        # caption text is machine-authored, so it ships inside \ai{} for the author to review
-        r"\captionof{table}{\ai{\textbf{$\tau$-inventive multiples.} The share of co-response model pairs whose "
-        r"inventions re-use at least $\tau$ of each other's (relation, object) properties, over "
-        f"{n_pairs:,} pairs of the {n_inv:,} inventions, and the share of inventions in at least one "
-        r"multiple (\emph{Inv.}). "
-        # the author trimmed the caption on Overleaf (2026-09-10): the criterion is stated in the
-        # Definition, so the caption only names the columns
-        r"\emph{Same} and \emph{diff} are pairs of models from the same and different model families.}}",
-        r"\label{tab:tau_multiples}",
         r"\begin{tabular}{ccccccccccc}",
         r"\toprule",
         r" & & & \multicolumn{5}{c}{Rate by task} & \multicolumn{3}{c}{Rate by family} \\",
@@ -116,14 +107,6 @@ def render_routes(d) -> str:
         r"\centering",
         r"\footnotesize",
         r"\setlength{\tabcolsep}{4pt}",
-        r"\caption{\ai{\textbf{Blending versus analogy by route.} The first row is the fixed-$\tau$ "
-        r"comparison of \Cref{tab:tau_multiples}; each row below removes the property-count advantage "
-        r"of blends in a different way. \emph{Eligible} pairs are those in which both inventions carry "
-        r"at least $\tau$ properties; the \emph{cross-item null} is the same statistic over pairs of "
-        r"inventions answering different anchor pairs, which cannot share an item-specific property; "
-        r"\emph{per-property re-use} is the share of the smaller invention's properties the other "
-        f"invention also asserts. $p$ is a paired Wilcoxon test over the {n_items} anchor pairs.}}}}",
-        r"\label{tab:task_routes}",
         r"\begin{tabular}{lcccc}",
         r"\toprule",
         r"Route & Blending & Analogy & Ratio & $p$ \\",
