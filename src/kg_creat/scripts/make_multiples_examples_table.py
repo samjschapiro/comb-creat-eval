@@ -43,7 +43,8 @@ def one_table(m, letter) -> str:
     op = "+" if m["task"] == "blending" else "::"
     L = [f"\\begin{{minipage}}[t]{{0.49\\linewidth}}\\centering",
          f"\\textbf{{({letter}) {tex(m['u'])} {op} {tex(m['v'])}}}\\\\[3pt]",
-         r"\begin{tabular}{@{}p{0.43\linewidth}@{\hspace{4pt}}c@{\hspace{4pt}}p{0.43\linewidth}@{}}",
+         r"\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.43\linewidth}@{\hspace{4pt}}c@{\hspace{4pt}}"
+         r">{\raggedright\arraybackslash}p{0.43\linewidth}@{}}",
          r"\toprule",
          f"{model_cell(a['model'])} & & {model_cell(b['model'])} \\\\",
          f"\\textbf{{``{tex(a['name'])}''}} & {{\\scriptsize cos}} & \\textbf{{``{tex(b['name'])}''}} \\\\",
