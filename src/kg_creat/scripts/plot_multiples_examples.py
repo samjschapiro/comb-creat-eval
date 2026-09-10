@@ -89,12 +89,12 @@ def draw_panel(ax, m, letter, logos):
     ax.plot([0.02, 0.98], [y_head - 0.075, y_head - 0.075], color="#DDDDDD", lw=0.8)
 
     # property rows: a fixed pitch, so panels with fewer properties simply end higher
-    y0, step = y_head - 0.13, 0.128
+    y0, step = y_head - 0.15, 0.134
     def box(x, y, text, matched):
         t = "\n".join(textwrap.wrap(text, WRAP))
         ax.text(x, y, t, ha="center", va="center", fontsize=13.5,
                 color="#111111" if matched else GREY,
-                bbox=dict(boxstyle="round,pad=0.35", facecolor="#EAF1F7" if matched else "#F6F6F6",
+                bbox=dict(boxstyle="round,pad=0.28", facecolor="#EAF1F7" if matched else "#F6F6F6",
                           edgecolor=MATCH_COL if matched else "#E0E0E0", linewidth=1.2 if matched else 0.8))
     y = y0
     for i, j, c in rows:
@@ -120,7 +120,7 @@ def main():
     rows_max = max(len(m["matches"]) + max(len(m["a"]["properties"]) - len(m["matches"]),
                                           len(m["b"]["properties"]) - len(m["matches"])) for m in picks)
     nrow = -(-n // COLS)
-    fig, axes = plt.subplots(nrow, COLS, figsize=(6.6 * COLS, (1.1 + 0.86 * rows_max) * nrow))
+    fig, axes = plt.subplots(nrow, COLS, figsize=(6.6 * COLS, (0.9 + 0.68 * rows_max) * nrow))
     axes = axes.ravel()
     for ax, m, letter in zip(axes, picks, "abcdefgh"):
         draw_panel(ax, m, letter, logos)
