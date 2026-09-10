@@ -155,18 +155,19 @@ def by_item(M, items, models, item_rate, model_rate, logos):
         ax.text(nc - 0.35, i, f"{100*item_rate[i]:.0f}%", ha="left", va="center", fontsize=13,
                 color="#5C6472", family="monospace")
     for j, m in enumerate(models):
-        ax.text(j + 0.15, nr - 0.25, _disp(m), rotation=55, rotation_mode="anchor", ha="right", va="top",
-                fontsize=14, color="#14161B")
+        # the provider mark sits just under the grid, and the model name hangs from it
         img = logos.get(_radar_prov(m))
         if img is not None:
-            ab = AnnotationBbox(OffsetImage(img, zoom=0.03, alpha=0.95), (j, -1.05), frameon=False,
+            ab = AnnotationBbox(OffsetImage(img, zoom=0.03, alpha=0.95), (j, nr + 0.05), frameon=False,
                                 box_alignment=(0.5, 0.5), annotation_clip=False)
             ab.set_clip_on(False); ab.set_zorder(6)
             ax.add_artist(ab)
-        ax.text(j, -1.75, f"{int(round(100*model_rate[j]))}", ha="center", va="center", fontsize=12,
+        ax.text(j + 0.15, nr + 0.6, _disp(m), rotation=55, rotation_mode="anchor", ha="right", va="top",
+                fontsize=14, color="#14161B")
+        ax.text(j, -1.0, f"{int(round(100*model_rate[j]))}", ha="center", va="center", fontsize=12,
                 color="#7A7F88", family="monospace", clip_on=False)
-    ax.text(nc - 0.35, -1.05, "rejected", ha="left", va="center", fontsize=13, color="#5C6472")
-    ax.text(-0.9, -1.75, "rejected % per model", ha="right", va="center", fontsize=13, color="#7A7F88",
+    ax.text(nc - 0.35, -1.0, "rejected", ha="left", va="center", fontsize=13, color="#5C6472")
+    ax.text(-0.9, -1.0, "rejected % per model", ha="right", va="center", fontsize=13, color="#7A7F88",
             clip_on=False)
     out = OUT.with_name("fig_abstraction_failure_by_item")
     for ext in ("png", "pdf"):
