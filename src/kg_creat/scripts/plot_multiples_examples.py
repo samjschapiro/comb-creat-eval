@@ -8,8 +8,8 @@ reader sees both what the two models agreed on and how much they did not. The co
 shown because they are the point of Finding #3d: often different for the same invention.
 
 Panels are chosen by an explicit list (below), not sampled, so the caption must say so. They are
-picked to span the range the paper discusses: the deepest blends (tau = 3), a tau = 2 blend, an
-analogy, and different-name / same-name cases.
+picked as tau = 3 pairs on four different items -- three cross-provider, one same-family -- with
+different coined names throughout.
 
     .venv/bin/python -m src.kg_creat.scripts.plot_multiples_examples
 """
@@ -29,11 +29,11 @@ OUT = Path("docs/reports/2026-09-01_kg_creat_inventive_multiples/figures")
 
 # (task, u, v, model a, model b): which multiples to show, in panel order. Each must be a tau-multiple
 # in the JSON or the script fails.
-PANELS = [
-    ("blending", "Opera", "Documentary film", "google_gemini-3-1-pro-preview", "google_gemini-3-7-flash"),
-    ("blending", "Don Quixote", "Pi", "anthropic_claude-fable-5", "x-ai_grok-4-5"),
+PANELS = [   # all tau = 3 (the deepest agreement in the benchmark; no analogy pair reaches it), four items
+    ("blending", "Opera", "Documentary film", "anthropic_claude-fable-5-1", "google_gemini-3-7-flash"),
+    ("blending", "The immune system", "Black holes", "anthropic_claude-opus-5", "google_gemini-3-7-flash"),
+    ("blending", "Photosynthesis", "Bread", "anthropic_claude-fable-5", "openai_gpt-5-6-sol"),
     ("blending", "The Roman Empire", "Crystals", "anthropic_claude-opus-4-5", "anthropic_claude-opus-4-6"),
-    ("analogy", "Democracy", "Banking", "anthropic_claude-fable-5", "anthropic_claude-fable-5-1"),
 ]
 WRAP = 30           # characters per line inside a property box
 COLS = 2            # panels per row; 2 x 2 keeps the type legible at text width
