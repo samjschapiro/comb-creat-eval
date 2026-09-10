@@ -41,8 +41,12 @@ def one_table(m, letter) -> str:
     a, b = m["a"], m["b"]
     matched = sorted(m["matches"], key=lambda x: -x["cos"])
     ma, mb = {x["a"] for x in matched}, {x["b"] for x in matched}
-    rest_a = [p for i, p in enumerate(a["properties"]) if i not in ma]
-    rest_b = [p for j, p in enumerate(b["properties"]) if j not in mb]
+    # properties keep their index in the invention's own list (P = {p_1..p_k}, P' = {p'_1..p'_k'}),
+    # so a matched row shows WHICH property paired with which, not a positional alignment
+    pa = lambda i: f"$p_{{{i + 1}}}$: {tex(a['properties'][i])}"
+    pb = lambda j: f"$p'_{{{j + 1}}}$: {tex(b['properties'][j])}"
+    rest_a = [i for i in range(len(a["properties"])) if i not in ma]
+    rest_b = [j for j in range(len(b["properties"])) if j not in mb]
     op = "+" if m["task"] == "blending" else "::"
     L = [f"\\begin{{minipage}}[t]{{0.49\\linewidth}}\\centering",
          f"\\textbf{{({letter}) {tex(m['u'])} {op} {tex(m['v'])}}}\\\\[3pt]",
@@ -58,13 +62,12 @@ def one_table(m, letter) -> str:
     for x in matched:
         t = max(0.0, min(1.0, (x["cos"] - THETA) / (1.0 - THETA)))
         pct = int(round(MIN_TINT + (MAX_TINT - MIN_TINT) * t))
-        L.append(f"\\rowcolor{{multgreen!{pct}}} {tex(a['properties'][x['a']])} & ${x['cos']:.2f}$ & "
-                 f"{tex(b['properties'][x['b']])} \\\\")
+        L.append(f"\\rowcolor{{multgreen!{pct}}} {pa(x['a'])} & ${x['cos']:.2f}$ & {pb(x['b'])} \\\\")
     if rest_a or rest_b:
         L.append(r"\midrule")
         for k in range(max(len(rest_a), len(rest_b))):
-            ra = f"\\textcolor{{gray}}{{{tex(rest_a[k])}}}" if k < len(rest_a) else ""
-            rb = f"\\textcolor{{gray}}{{{tex(rest_b[k])}}}" if k < len(rest_b) else ""
+            ra = f"\\textcolor{{gray}}{{{pa(rest_a[k])}}}" if k < len(rest_a) else ""
+            rb = f"\\textcolor{{gray}}{{{pb(rest_b[k])}}}" if k < len(rest_b) else ""
             L.append(f"{ra} & & {rb} \\\\")
     L += [r"\bottomrule", r"\end{tabular}", r"\end{minipage}"]
     return "\n".join(L)
