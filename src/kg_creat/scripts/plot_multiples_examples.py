@@ -70,8 +70,9 @@ def draw_panel(ax, m, letter, logos):
     n_rows = len(rows) + max(len(rest_a), len(rest_b))
     xa, xb = 0.24, 0.76                                    # column centres (axes fraction)
     ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
-    ax.set_title(f"({letter}) {m['u']} + {m['v']}  ·  {'blend' if m['task'] == 'blending' else 'analogy'}",
-                 fontsize=16, loc="left", pad=6)
+    # the operator is the notation: u + v for a blend, u :: v for an analogy
+    op = "+" if m["task"] == "blending" else "::"
+    ax.set_title(f"({letter}) {m['u']} {op} {m['v']}", fontsize=20, loc="left", pad=8)
 
     # header: logo, model, coined name
     y_head = 0.93
