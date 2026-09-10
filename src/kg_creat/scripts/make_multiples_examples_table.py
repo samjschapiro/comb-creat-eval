@@ -50,14 +50,18 @@ def one_table(m, letter) -> str:
          f"{model_cell(a['model'])} & & {model_cell(b['model'])} \\\\",
          f"\\textbf{{``{tex(a['name'])}''}} & {{\\scriptsize cos}} & \\textbf{{``{tex(b['name'])}''}} \\\\",
          r"\midrule"]
+    # matched rows are tinted green (they ARE the multiple); the unmatched rows alternate a light
+    # grey and white so the eye can track a row across the three columns
     for x in matched:
-        L.append(f"{tex(a['properties'][x['a']])} & ${x['cos']:.2f}$ & {tex(b['properties'][x['b']])} \\\\")
+        L.append(f"\\rowcolor{{multgreen}} {tex(a['properties'][x['a']])} & ${x['cos']:.2f}$ & "
+                 f"{tex(b['properties'][x['b']])} \\\\")
     if rest_a or rest_b:
         L.append(r"\midrule")
         for k in range(max(len(rest_a), len(rest_b))):
             ra = f"\\textcolor{{gray}}{{{tex(rest_a[k])}}}" if k < len(rest_a) else ""
             rb = f"\\textcolor{{gray}}{{{tex(rest_b[k])}}}" if k < len(rest_b) else ""
-            L.append(f"{ra} & & {rb} \\\\")
+            shade = r"\rowcolor{rowgrey} " if k % 2 == 0 else ""
+            L.append(f"{shade}{ra} & & {rb} \\\\")
     L += [r"\bottomrule", r"\end{tabular}", r"\end{minipage}"]
     return "\n".join(L)
 
@@ -69,6 +73,8 @@ def render(d) -> str:
         "% Fragment (no float wrapper, no caption): \\input inside a table float; the caption and label",
         "% live in the section file next to the \\input.",
         r"\providecommand{\provlogo}[1]{\raisebox{-0.15ex}{\includegraphics[height=0.85em]{media/logos/#1}}\,}",
+        r"\definecolor{multgreen}{HTML}{DDEFDB}",   # matched rows (needs xcolor + colortbl, both in the preamble)
+        r"\definecolor{rowgrey}{HTML}{F2F2F2}",
         r"\scriptsize",
         r"\setlength{\tabcolsep}{2pt}",
         r"\renewcommand{\arraystretch}{1.05}",
