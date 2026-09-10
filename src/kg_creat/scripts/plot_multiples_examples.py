@@ -35,7 +35,11 @@ PANELS = [   # all tau = 3 (the deepest agreement in the benchmark; no analogy p
     ("blending", "Photosynthesis", "Bread", "anthropic_claude-fable-5", "openai_gpt-5-6-sol"),
     ("blending", "The Roman Empire", "Crystals", "anthropic_claude-opus-4-5", "anthropic_claude-opus-4-6"),
 ]
-PAPER_PANELS = [0, 3]   # indices into PANELS for the one-row paper version: cross-provider (a), same-family (d)
+# The paper's two: a cross-provider tau = 3 blend, and an analogy (tau = 2 is the deepest analogy reaches)
+PAPER_PANELS = [
+    ("blending", "Opera", "Documentary film", "anthropic_claude-fable-5-1", "google_gemini-3-7-flash"),
+    ("analogy", "Democracy", "Banking", "anthropic_claude-fable-5", "anthropic_claude-fable-5-1"),
+]
 WRAP = 30           # characters per line inside a property box
 COLS = 2            # panels per row; 2 x 2 keeps the type legible at text width
 MATCH_COL = "#2F6B8E"
@@ -137,7 +141,8 @@ def main():
     logos = _load_logos()
     picks = [find(d["multiples"], *spec) for spec in PANELS]
     render(picks, logos, "fig_multiples_examples", COLS)                       # the report: 2 x 2
-    render([picks[i] for i in PAPER_PANELS], logos, "fig_multiples_examples_row", len(PAPER_PANELS))  # the paper: one row
+    paper = [find(d["multiples"], *spec) for spec in PAPER_PANELS]
+    render(paper, logos, "fig_multiples_examples_row", len(PAPER_PANELS))          # the paper: one row
 
 
 if __name__ == "__main__":
