@@ -73,9 +73,9 @@ def render(d) -> str:
         r"the unmatched properties of each invention follow in grey. Pairs are chosen, not sampled: a "
         r"cross-provider pair (a) and a same-family pair (b), both with different coined names.}}",
         r"\label{tab:multiples_examples}",
-        r"\footnotesize",
+        r"\scriptsize",
         r"\setlength{\tabcolsep}{2pt}",
-        r"\renewcommand{\arraystretch}{1.08}",
+        r"\renewcommand{\arraystretch}{1.05}",
     ]
     tables = [one_table(m, letter) for m, letter in zip(picks, "abcdefgh")]
     out.append("\\hfill\n".join(tables))
