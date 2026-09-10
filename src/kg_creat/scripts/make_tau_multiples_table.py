@@ -36,12 +36,12 @@ def render(d) -> str:
     kb, ka = echo["blending"]["mean_properties"], echo["analogy"]["mean_properties"]
     out = [
         HEADER,
-        r"\begin{table}[t]",
-        r"\centering",
+        "% Fragment (no float wrapper): \\input inside a table float so the examples figure can sit",
+        "% directly under it (\\captionof needs the caption package).",
         r"\footnotesize",
         r"\setlength{\tabcolsep}{3pt}",
         # caption text is machine-authored, so it ships inside \ai{} for the author to review
-        r"\caption{\ai{\textbf{$\tau$-inventive multiples.} The share of co-response model pairs whose "
+        r"\captionof{table}{\ai{\textbf{$\tau$-inventive multiples.} The share of co-response model pairs whose "
         r"inventions re-use at least $\tau$ of each other's (relation, object) properties, over "
         f"{n_pairs:,} pairs of the {n_inv:,} inventions, and the share of inventions in at least one "
         r"multiple (\emph{Inv.}). "
@@ -68,7 +68,6 @@ def render(d) -> str:
     out += [
         r"\bottomrule",
         r"\end{tabular}",
-        r"\end{table}",
         "",
     ]
     return "\n".join(out)

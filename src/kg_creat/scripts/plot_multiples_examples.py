@@ -35,6 +35,7 @@ PANELS = [   # all tau = 3 (the deepest agreement in the benchmark; no analogy p
     ("blending", "Photosynthesis", "Bread", "anthropic_claude-fable-5", "openai_gpt-5-6-sol"),
     ("blending", "The Roman Empire", "Crystals", "anthropic_claude-opus-4-5", "anthropic_claude-opus-4-6"),
 ]
+PAPER_PANELS = [0, 3]   # indices into PANELS for the one-row paper version: cross-provider (a), same-family (d)
 WRAP = 30           # characters per line inside a property box
 COLS = 2            # panels per row; 2 x 2 keeps the type legible at text width
 MATCH_COL = "#2F6B8E"
@@ -89,7 +90,7 @@ def draw_panel(ax, m, letter, logos):
     ax.plot([0.02, 0.98], [y_head - 0.075, y_head - 0.075], color="#DDDDDD", lw=0.8)
 
     # property rows: a fixed pitch, so panels with fewer properties simply end higher
-    y0, step = y_head - 0.15, 0.134
+    y0, step = y_head - 0.15, 0.142
     def box(x, y, text, matched):
         t = "\n".join(textwrap.wrap(text, WRAP))
         ax.text(x, y, t, ha="center", va="center", fontsize=13.5,
@@ -110,17 +111,12 @@ def draw_panel(ax, m, letter, logos):
         y -= step
 
 
-def main():
-    d = json.loads(SRC.read_text())
-    if "multiples" not in d:
-        raise SystemExit(f"{SRC} has no `multiples` block -- re-run analyze_inventive_multiples.py")
-    logos = _load_logos()
-    picks = [find(d["multiples"], *spec) for spec in PANELS]
+def render(picks, logos, stem, cols):
     n = len(picks)
     rows_max = max(len(m["matches"]) + max(len(m["a"]["properties"]) - len(m["matches"]),
                                           len(m["b"]["properties"]) - len(m["matches"])) for m in picks)
-    nrow = -(-n // COLS)
-    fig, axes = plt.subplots(nrow, COLS, figsize=(6.6 * COLS, (0.9 + 0.68 * rows_max) * nrow))
+    nrow = -(-n // cols)
+    fig, axes = plt.subplots(nrow, cols, figsize=(6.6 * cols, (0.9 + 0.72 * rows_max) * nrow))
     axes = axes.ravel()
     for ax, m, letter in zip(axes, picks, "abcdefgh"):
         draw_panel(ax, m, letter, logos)
@@ -129,9 +125,19 @@ def main():
     fig.tight_layout(w_pad=1.2, h_pad=1.0)
     OUT.mkdir(parents=True, exist_ok=True)
     for ext in ("png", "pdf"):
-        fig.savefig(OUT / f"fig_multiples_examples.{ext}", dpi=200, bbox_inches="tight")
+        fig.savefig(OUT / f"{stem}.{ext}", dpi=200, bbox_inches="tight")
     plt.close(fig)
-    print(f"saved fig_multiples_examples -> {OUT}  ({n} panels)")
+    print(f"saved {stem} -> {OUT}  ({n} panels)")
+
+
+def main():
+    d = json.loads(SRC.read_text())
+    if "multiples" not in d:
+        raise SystemExit(f"{SRC} has no `multiples` block -- re-run analyze_inventive_multiples.py")
+    logos = _load_logos()
+    picks = [find(d["multiples"], *spec) for spec in PANELS]
+    render(picks, logos, "fig_multiples_examples", COLS)                       # the report: 2 x 2
+    render([picks[i] for i in PAPER_PANELS], logos, "fig_multiples_examples_row", len(PAPER_PANELS))  # the paper: one row
 
 
 if __name__ == "__main__":

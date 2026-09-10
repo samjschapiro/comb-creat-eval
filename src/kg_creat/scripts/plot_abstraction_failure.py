@@ -124,6 +124,55 @@ def main():
         fig.savefig(OUT.with_suffix("." + ext), dpi=300, bbox_inches="tight")
     print(f"saved {OUT}  ({nr} models x {nc} anchor pairs; "
           f"columns fully rejected: {int((col_rate == 1).sum())})")
+    plt.close(fig)
+    by_item(M.T, items, models, col_rate, row_rate, logos)
+
+
+def by_item(M, items, models, item_rate, model_rate, logos):
+    """The same grid transposed: anchor pairs as rows (horizontal text on the left), models as
+    columns (names under the grid), so the item difficulty reads down the page and the reader can
+    find a model by name. Rows are ordered hardest first, columns best model first."""
+    nr, nc = M.shape
+    fig = plt.figure(figsize=(10.0, 13.6))
+    ax = fig.add_subplot(111)
+    ax.set_xlim(-0.5, nc - 0.5); ax.set_ylim(nr - 0.5, -0.5)
+    ax.set_xticks([]); ax.set_yticks([])
+    for s in ax.spines.values():
+        s.set_visible(False)
+    for i in range(nr):
+        for j in range(nc):
+            v = M[i, j]
+            if np.isnan(v):
+                continue
+            if v:
+                ax.add_patch(plt.Rectangle((j - 0.4, i - 0.4), 0.8, 0.8, facecolor=to_rgba(FILL, .9),
+                                           edgecolor="white", linewidth=0.7, zorder=3))
+            else:
+                ax.add_patch(plt.Rectangle((j - 0.4, i - 0.4), 0.8, 0.8, facecolor="none",
+                                           edgecolor=to_rgba(OK, .55), linewidth=1.1, zorder=2))
+    for i, (u, v) in enumerate(items):
+        ax.text(-0.9, i, f"{u} + {v}", ha="right", va="center", fontsize=15)
+        ax.text(nc - 0.35, i, f"{100*item_rate[i]:.0f}%", ha="left", va="center", fontsize=13,
+                color="#5C6472", family="monospace")
+    for j, m in enumerate(models):
+        ax.text(j + 0.15, nr - 0.25, _disp(m), rotation=55, rotation_mode="anchor", ha="right", va="top",
+                fontsize=14, color="#14161B")
+        img = logos.get(_radar_prov(m))
+        if img is not None:
+            ab = AnnotationBbox(OffsetImage(img, zoom=0.03, alpha=0.95), (j, -1.05), frameon=False,
+                                box_alignment=(0.5, 0.5), annotation_clip=False)
+            ab.set_clip_on(False); ab.set_zorder(6)
+            ax.add_artist(ab)
+        ax.text(j, -1.75, f"{int(round(100*model_rate[j]))}", ha="center", va="center", fontsize=12,
+                color="#7A7F88", family="monospace", clip_on=False)
+    ax.text(nc - 0.35, -1.05, "rejected", ha="left", va="center", fontsize=13, color="#5C6472")
+    ax.text(-0.9, -1.75, "rejected % per model", ha="right", va="center", fontsize=13, color="#7A7F88",
+            clip_on=False)
+    out = OUT.with_name("fig_abstraction_failure_by_item")
+    for ext in ("png", "pdf"):
+        fig.savefig(out.with_suffix("." + ext), dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    print(f"saved {out}  ({nr} anchor pairs x {nc} models)")
 
 
 if __name__ == "__main__":
