@@ -33,7 +33,7 @@ RESP = Path("data/kg_creat/kombine_test30/responses")
 OUT = Path("docs/reports/2026-09-03_kg_creat_frontier_failures/figures/fig_abstraction_failure.png")
 FILL = "#A8476A"          # rejected -- the failure is the marked state here, so it gets the warm hue
 OK = "#2F7D6E"
-CROSS = "#C8323C"         # the by-item grid marks a rejected generic space with a red cross
+CROSS = "#C8323C"         # the by-item grid fills a rejected generic space's cell in this red
 CONTRAST_ITEM = ("X-rays", "Nuclear fission")
 # The by-item grid drops this anchor pair and every easier one (rows are sorted hardest first), to
 # keep the paper figure to the items where the failure is common. The caption must say so.
@@ -155,13 +155,9 @@ def by_item(M, items, models, item_rate, model_rate, logos):
             v = M[i, j]
             if np.isnan(v):
                 continue
-            # every answered cell is an outlined square; a rejected generic space gets a red cross
-            ax.add_patch(plt.Rectangle((j - 0.4, i - 0.4), 0.8, 0.8, facecolor="none",
+            # every answered cell is a black-outlined square; a rejected generic space is filled red
+            ax.add_patch(plt.Rectangle((j - 0.4, i - 0.4), 0.8, 0.8, facecolor=CROSS if v else "none",
                                        edgecolor="black", linewidth=1.5, zorder=2))
-            if v:
-                d = 0.24
-                ax.plot([j - d, j + d], [i - d, i + d], color=CROSS, lw=2.4, solid_capstyle="round", zorder=3)
-                ax.plot([j - d, j + d], [i + d, i - d], color=CROSS, lw=2.4, solid_capstyle="round", zorder=3)
     for i, (u, v) in enumerate(items):
         ax.text(-0.9, i, f"{u} + {v}", ha="right", va="center", fontsize=15, color="black")
     for j, m in enumerate(models):
