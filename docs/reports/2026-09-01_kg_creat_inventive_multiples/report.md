@@ -192,7 +192,7 @@ Full members of every cluster — each invention with its generic space (blend) 
 .venv/bin/python -m src.kg_creat.scripts.make_paper_multiples_figure       # the stacked figure the paper includes
 .venv/bin/python -m src.kg_creat.scripts.make_tau_multiples_table \
     data/kg_creat/kombine_test30/analysis/inventive_multiples.json \
-    papers/kg_creat-iclr/media/04_tau_multiples.tex papers/kg_creat-iclr/media/07_task_routes.tex
+    papers/kg_creat-iclr/media/tab_tau_multiples.tex papers/kg_creat-iclr/media/tab_task_routes.tex
 ```
 
 The analysis reads `data/kg_creat/kombine_test30/analysis/invention_vectors.npz` and the response files, and writes every number quoted here to `data/kg_creat/kombine_test30/analysis/inventive_multiples.json` (`tau_curve`, `task_routes`, `anchor_echo`, `null`, `provider`, `clusters` with `density`); θ's derivation is in `theta_calibration.json`.

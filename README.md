@@ -64,7 +64,7 @@ uv run python src/kg_creat/scripts/sample_flat.py configs/kg_creat/kombine_retes
 uv run python src/kg_creat/scripts/run_elicit.py configs/kg_creat/kombine_test30_run.yaml
 uv run python src/kg_creat/scripts/score.py configs/kg_creat/kombine_test30_panel_score.yaml
 .venv_mlx/bin/python -m src.kg_creat.scripts.analyze_inventive_multiples
-uv run python -m src.kg_creat.scripts.make_tau_multiples_table data/kg_creat/kombine_test30/analysis/inventive_multiples.json papers/kg_creat-iclr/media/04_tau_multiples.tex papers/kg_creat-iclr/media/07_task_routes.tex
+uv run python -m src.kg_creat.scripts.make_tau_multiples_table data/kg_creat/kombine_test30/analysis/inventive_multiples.json papers/kg_creat-iclr/media/tab_tau_multiples.tex papers/kg_creat-iclr/media/tab_task_routes.tex
 ```
 
 ## Safety

@@ -1,16 +1,17 @@
 """Assemble the paper's inventive-multiples figure assets from the report figures.
 
-The paper switches between two figure sets (setup/figures.tex, `\\figureversion`):
+The paper keeps one flat image folder, media/figures/ (the old/new figure switch was removed on
+2026-09-11). This writes the inventive-multiples assets there:
 
-  media/figures/old/inventive_multiples.png      one stacked image: the model x property matrix
+  media/figures/inventive_multiples.png          one stacked image: the model x property matrix
                                                  over the two-panel MDS landscape
-  media/figures/new/inventive_multiples_matrix.pdf   panel (a) the matrix
-  media/figures/new/inventive_multiples_mds_a.pdf    panel (b) the first landscape item
-  media/figures/new/inventive_multiples_mds_b.pdf    panel (c) the second landscape item
-  media/figures/new/inventive_multiples.pdf          the three panels as one three-page PDF
+  media/figures/inventive_multiples_matrix.pdf   panel (a) the matrix
+  media/figures/inventive_multiples_mds_a.pdf    panel (b) the first landscape item
+  media/figures/inventive_multiples_mds_b.pdf    panel (c) the second landscape item
+  media/figures/multiples_examples.pdf           the one-row examples figure
 
-Stacking used to be a manual step outside the repo, so the paper's copy silently went stale whenever
-a half was regenerated. This does all of it reproducibly from the report's figure directory.
+None of these is referenced by the paper at the moment (the multiples figure was replaced by the
+examples tables and the by-item failures grid); they are kept current so they can be re-included.
 
     .venv/bin/python -m src.kg_creat.scripts.make_paper_multiples_figure
 """
@@ -41,26 +42,20 @@ def stack(tops, out):
 
 def main():
     need = [MATRIX.with_suffix(".png"), LAND.with_suffix(".png"), MATRIX.with_suffix(".pdf"),
-            Path(f"{LAND}_a.pdf"), Path(f"{LAND}_b.pdf"), Path(f"{LAND}_a.png"), Path(f"{LAND}_b.png")]
+            Path(f"{LAND}_a.pdf"), Path(f"{LAND}_b.pdf"), FIGS / "fig_multiples_examples_row.pdf"]
     for f in need:
         if not f.exists():
             raise FileNotFoundError(f"FATAL: {f} is missing -- regenerate it before assembling")
-    (MEDIA / "old").mkdir(parents=True, exist_ok=True); (MEDIA / "new").mkdir(parents=True, exist_ok=True)
-
-    old = MEDIA / "old/inventive_multiples.png"
-    size = stack([MATRIX.with_suffix(".png"), LAND.with_suffix(".png")], old)
-    print(f"wrote {old}  ({size[0]} x {size[1]})")
-
+    MEDIA.mkdir(parents=True, exist_ok=True)
+    stacked = MEDIA / "inventive_multiples.png"
+    size = stack([MATRIX.with_suffix(".png"), LAND.with_suffix(".png")], stacked)
+    print(f"wrote {stacked}  ({size[0]} x {size[1]})")
     for src, dst in ((MATRIX.with_suffix(".pdf"), "inventive_multiples_matrix.pdf"),
                      (Path(f"{LAND}_a.pdf"), "inventive_multiples_mds_a.pdf"),
-                     (Path(f"{LAND}_b.pdf"), "inventive_multiples_mds_b.pdf")):
-        shutil.copyfile(src, MEDIA / "new" / dst)
-        print(f"wrote {MEDIA / 'new' / dst}")
-    pages = [Image.open(f).convert("RGB") for f in
-             (MATRIX.with_suffix(".png"), Path(f"{LAND}_a.png"), Path(f"{LAND}_b.png"))]
-    combined = MEDIA / "new/inventive_multiples.pdf"
-    pages[0].save(combined, save_all=True, append_images=pages[1:], resolution=300)
-    print(f"wrote {combined}  ({len(pages)} pages)")
+                     (Path(f"{LAND}_b.pdf"), "inventive_multiples_mds_b.pdf"),
+                     (Path(FIGS / "fig_multiples_examples_row.pdf"), "multiples_examples.pdf")):
+        shutil.copyfile(src, MEDIA / dst)
+        print(f"wrote {MEDIA / dst}")
 
 
 if __name__ == "__main__":

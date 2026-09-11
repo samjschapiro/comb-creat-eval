@@ -4,7 +4,7 @@ leaderboard, \\Cref{tab:leaderboard}):
   (2) three per-task tables -- every model x that task's scoring dimensions.
 
     python src/kg_creat/scripts/make_appendix_tables.py \\
-        data/kg_creat/kombine_test30/scores/composite.json papers/kg_creat-iclr/media/03_per_task_full.tex
+        data/kg_creat/kombine_test30/scores/composite.json papers/kg_creat-iclr/media/tab_per_task_full.tex
 """
 import argparse
 import json

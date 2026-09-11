@@ -12,7 +12,7 @@ file next to the \\input, so regenerating this file can never overwrite one.
 
     .venv/bin/python -m src.kg_creat.scripts.make_multiples_examples_table \\
         data/kg_creat/kombine_test30/analysis/inventive_multiples.json \\
-        papers/kg_creat-iclr/media/08_multiples_examples.tex
+        papers/kg_creat-iclr/media/tab_multiples_examples.tex
 """
 import argparse
 import json

@@ -3,15 +3,15 @@
 Reads `tau_curve` and `task_routes` written by analyze_inventive_multiples.py and renders two LaTeX
 tables:
 
-  04_tau_multiples.tex  the multiple rate at each tau, split by task and by whether the two models
+  tab_tau_multiples.tex  the multiple rate at each tau, split by task and by whether the two models
                         come from the same provider, with the fixed-tau ratios Findings #3b and #3c
                         quote, the eligible-pair ratio beside it, and the share of inventions touched;
-  07_task_routes.tex    blend vs analogy by every route that does not depend on property count.
+  tab_task_routes.tex    blend vs analogy by every route that does not depend on property count.
 
     .venv/bin/python -m src.kg_creat.scripts.make_tau_multiples_table \
         data/kg_creat/kombine_test30/analysis/inventive_multiples.json \
-        papers/kg_creat-iclr/media/04_tau_multiples.tex \
-        papers/kg_creat-iclr/media/07_task_routes.tex
+        papers/kg_creat-iclr/media/tab_tau_multiples.tex \
+        papers/kg_creat-iclr/media/tab_task_routes.tex
 """
 import argparse
 import json

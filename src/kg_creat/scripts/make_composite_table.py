@@ -7,7 +7,7 @@ top-aligned ``table[t]`` LaTeX fragment.
 
     python src/kg_creat/scripts/make_composite_table.py \\
         data/kg_creat/kombine_v1/scores/composite.json \\
-        papers/kg_creat-iclr/media/02_leaderboard.tex
+        papers/kg_creat-iclr/media/tab_leaderboard.tex
 """
 
 import argparse
