@@ -49,6 +49,12 @@ GitHub repo for a collaborator.
   replacing the multiples figure; author block left-aligned with tighter rows; τ-table caption
   rewritten on request. The Findings #3 prose drafts (#3a–#3d) exist only locally — the author is
   writing #3 on Overleaf.
+- Overleaf repo consolidated (approved proposal): `main.tex` inputs only `setup/` and `sections/00`–`18`
+  (reproducibility statement input as `08_`, acknowledgements/contributions renumbered); figures are
+  `media/fig_NN_*.tex` fragments over `media/figures/NN_*` images numbered in reading order; the
+  figure-version switch, `archive/`, `FIGURES.md`, `media/figures/{old,new}` and unused packages
+  removed; a broken `\textbf{(\}` heading closed as `(\#3b)`, a dangling `subsec:` reference fixed;
+  ICLR 2027 style files swapped in (author-block tweak carried over). Compiles: 0 errors, 29 pages.
 - Two incidents, both fixed and both now guarded by memory rules: a whole-file push overwrote a float
   the author had moved (restored; pushes are now hunk patches), and a regenerated fragment overwrote
   the author's caption (restored; generators no longer emit captions).
