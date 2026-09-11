@@ -352,3 +352,12 @@ experiment scaffolds in [experiments.md](experiments.md):
 - **Expert-writer recruitment** for human eval (cost/scale vs construct validity).
 - Whether to add a **validity/specificity leg** (per-model CSAM-twist score vs creative-
   writing benchmarks, capability-controlled) as a secondary result reusing `dat_eval`.
+
+## 2026-09-10 — code shared as a standalone repo
+
+The track's code (`src/plot_twist/`, `src/utils.py`, `scripts/plot_twist/`, `configs/plot_twist/`,
+`docs/tracks/plot_twist/`, the two shipping session logs, and `website/twistbench/` source) was
+extracted into a private GitHub repo, **`samjschapiro/twistbench-code`** (local clone at
+`~/Desktop/twistbench-code`), with its own trimmed `pyproject.toml`, README, `.env.example` and lock;
+`sumukshashidhar` was invited with write access. Data (`data/plot_twist/`, ~180 MB) and the paper
+source are not in it. The public project page remains the separate `samjschapiro/twistbench` repo.

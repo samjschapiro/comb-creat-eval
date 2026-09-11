@@ -58,13 +58,13 @@ uv run python src/plot_twist/scripts/run_generate.py configs/plot_twist/generate
 uv run python src/plot_twist/scripts/run_realism.py configs/plot_twist/realism.yaml
 uv run python src/plot_twist/scripts/make_tc_barplot.py configs/plot_twist/tc.yaml
 
-# 6. kg_creat: build a Wikidata graph, sample prompts, elicit, judge, plot
-#    (on macOS, torch is unavailable — use a torch-free venv; see docs/tracks/kg_creat/progress.md)
-uv run python src/kg_creat/scripts/build_gc.py configs/kg_creat/build_gc.yaml --overwrite
-uv run python src/kg_creat/scripts/sample_bundles.py configs/kg_creat/sample_bundles.yaml --overwrite
-uv run python src/kg_creat/scripts/run_elicit.py configs/kg_creat/run_elicit.yaml
-uv run python src/kg_creat/scripts/score.py configs/kg_creat/score.yaml
-uv run python src/kg_creat/scripts/plot_analogy_suite.py data/kg_creat/scores_analogy_v2
+# 6. kg_creat (Kombine): sample items from the curated pool, elicit, judge, analyse
+#    (embeddings run in a torch-free MLX venv; see docs/tracks/kg_creat/progress.md)
+uv run python src/kg_creat/scripts/sample_flat.py configs/kg_creat/kombine_retest30_sample.yaml --overwrite
+uv run python src/kg_creat/scripts/run_elicit.py configs/kg_creat/kombine_test30_run.yaml
+uv run python src/kg_creat/scripts/score.py configs/kg_creat/kombine_test30_panel_score.yaml
+.venv_mlx/bin/python -m src.kg_creat.scripts.analyze_inventive_multiples
+uv run python -m src.kg_creat.scripts.make_tau_multiples_table data/kg_creat/kombine_test30/analysis/inventive_multiples.json papers/kg_creat-iclr/media/04_tau_multiples.tex papers/kg_creat-iclr/media/07_task_routes.tex
 ```
 
 ## Safety

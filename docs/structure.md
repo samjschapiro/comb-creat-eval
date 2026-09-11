@@ -70,11 +70,14 @@ src/
 │       ├── analyze_blend_difficulty.py   # what makes an anchor pair hard to blend (exploratory, post-hoc coding)
 │       ├── compute_composite.py, make_composite_table.py, make_appendix_tables.py, make_pool_appendix.py, datasheet.py
 │       ├── plot_hivemind.py, plot_invention_landscape.py, plot_creativity_gallery.py, plot_profiles.py, plot_radar.py
-│       ├── plot_multiples_matrix.py, plot_abstraction_failure.py, plot_bars.py, make_multiples_showcase.py
-│       ├── make_paper_multiples_figure.py  # stacks the matrix over the landscape into the paper's single figure
+│       ├── plot_multiples_matrix.py, plot_abstraction_failure.py (+ by-item grid), plot_bars.py, make_multiples_showcase.py
+│       ├── calibrate_theta.py, plot_tau_theta_grid.py, analyze_anchor_distance.py  # theta's implied alpha; (tau, theta) density; anchor distance (null)
+│       ├── plot_pair_matrix.py, plot_multiples_examples.py   # model x model shared-property heatmap; side-by-side multiples (report)
+│       ├── make_tau_multiples_table.py, make_multiples_examples_table.py  # caption-free LaTeX fragments for the paper (tau table, examples tables)
+│       ├── make_paper_multiples_figure.py  # assembles the paper's old/new figure assets from the report figures
 │       ├── sample_anagram.py, run_anagram.py, score_anagram.py    # anagram side probe
 │       └── build_gc.py, sample_bundles.py, plot_regime_a.py, compute_diversity.py, make_pass2.py  # legacy seed-BFS / Regime-A pipeline
-└── plot_twist/                 # active track (TwistBench: transformational creativity via plot twists)
+└── plot_twist/                 # active track (TwistBench: transformational creativity via plot twists); mirrored in the private repo samjschapiro/twistbench-code
     ├── llm.py                  # OpenRouter wrapper (+ optional `reasoning` param)
     ├── generate.py             # durable per-story twist generation (multi-temp, resumable)
     ├── annotate.py             # setup/reveal/why annotation
@@ -108,6 +111,7 @@ configs/
 ├── kg_creat/                   # Kombine run + scoring configs (pilot / Regime-A configs kept for history)
 │   ├── kombine_test30_run.yaml       # the canonical 30-item/task run (original 6 models)
 │   ├── kombine_test30_frontier.yaml  # +13 frontier flagships, resume-safe, actual-cost stop (budget_usd 75)
+│   ├── kombine_retest30_sample.yaml  # second, disjoint 30-item set (same pairs for all three tasks) for the test-retest study
 │   ├── kombine_test30_anthropic3.yaml  # +3 legacy-priced Anthropic models -> 21-model pool (now 30 with spread9)
 │   ├── kombine_test30_blendv3{,_gemini}.yaml  # blending-only re-elicitation with the `uv` shared-slot tag
 │   ├── kombine_test30_panel_score.yaml  # 3-judge non-subject panel (subjective) + cheap single factuality judge
