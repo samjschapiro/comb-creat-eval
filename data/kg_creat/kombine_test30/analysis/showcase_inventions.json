@@ -67,7 +67,17 @@
      "blocked coolant channel"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "attenuates",
+   "attenuates",
+   "fission",
+   "barium",
+   "gadolinium",
+   "coolant"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 3.946
  },
  {
   "model": "anthropic_claude-fable-5",
@@ -137,7 +147,23 @@
      "summit"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "dimmer",
+   "dimmer",
+   "climbers",
+   "dimmer",
+   "tungsten",
+   "filament",
+   "dimmer",
+   "overheating",
+   "overcrowding",
+   "dimmer",
+   "tungsten",
+   "filament"
+  ],
+  "n_rare": 12,
+  "mean_zipf": 3.773
  },
  {
   "model": "anthropic_claude-fable-5",
@@ -195,7 +221,16 @@
      "multinational corporations"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "anoxic",
+   "anoxic",
+   "anoxic",
+   "anoxic",
+   "multicellular"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.08
  },
  {
   "model": "anthropic_claude-fable-5",
@@ -265,7 +300,24 @@
      "gratitude"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "votive",
+   "retablo",
+   "retablo",
+   "commemorates",
+   "votive",
+   "commemorates",
+   "retablo",
+   "votive",
+   "retablo",
+   "Azul",
+   "votive",
+   "retablo",
+   "votive"
+  ],
+  "n_rare": 13,
+  "mean_zipf": 3.503
  },
  {
   "model": "anthropic_claude-fable-5",
@@ -335,7 +387,18 @@
      "radical transparency"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "superconductor",
+   "superconductor",
+   "superconductor",
+   "superconductor",
+   "grievance",
+   "superconductor",
+   "cryogenic"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 3.875
  },
  {
   "model": "anthropic_claude-fable-5",
@@ -405,7 +468,16 @@
      "violent outburst"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "complements",
+   "centrifugal",
+   "complements",
+   "pent-up",
+   "outburst"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.227
  },
  {
   "model": "anthropic_claude-fable-5",
@@ -475,7 +547,17 @@
      "machine age"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Surrealism",
+   "Chaplin",
+   "automatism",
+   "Tramp",
+   "subverts",
+   "subverts"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 3.895
  },
  {
   "model": "anthropic_claude-fable-5",
@@ -521,7 +603,13 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "reproduces",
+   "speciates"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.26
  },
  {
   "model": "anthropic_claude-fable-5",
@@ -562,7 +650,20 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "discharges",
+   "grievance",
+   "verdicts",
+   "transmits",
+   "conductive",
+   "arcs",
+   "fuses",
+   "grievance",
+   "surges"
+  ],
+  "n_rare": 9,
+  "mean_zipf": 4.142
  },
  {
   "model": "anthropic_claude-fable-5",
@@ -608,7 +709,19 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "oneiric",
+   "tramp",
+   "derails",
+   "pantomime",
+   "obeys",
+   "reanimates",
+   "gags",
+   "pratfall"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 4.096
  },
  {
   "model": "anthropic_claude-fable-5",
@@ -654,7 +767,17 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "errant",
+   "tilts",
+   "windmills",
+   "quests",
+   "misadventure",
+   "asymptotically"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 4.261
  },
  {
   "model": "anthropic_claude-fable-5",
@@ -700,7 +823,17 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "beatific",
+   "unearned",
+   "rapture",
+   "ugliness",
+   "penance",
+   "retraining"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 4.266
  },
  {
   "model": "anthropic_claude-fable-5",
@@ -746,7 +879,19 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "grandmaster",
+   "branching",
+   "unfolds",
+   "constrains",
+   "checkmate",
+   "prunes",
+   "refuted",
+   "acorns"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 4.389
  },
  {
   "model": "anthropic_claude-fable-5-1",
@@ -816,7 +961,31 @@
      "Crust drying"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Crumb",
+   "sealant",
+   "Abscisic",
+   "Abscisic",
+   "Stoma",
+   "Crumb",
+   "sealant",
+   "Crumb",
+   "pore",
+   "Abscisic",
+   "inhibits",
+   "Crumb",
+   "sealant",
+   "inhibits",
+   "Abscisic",
+   "Crumb",
+   "sealant",
+   "Abscisic",
+   "Crumb",
+   "sealant"
+  ],
+  "n_rare": 20,
+  "mean_zipf": 3.422
  },
  {
   "model": "anthropic_claude-fable-5-1",
@@ -873,7 +1042,21 @@
      "power surge"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "filament",
+   "Qomolangma",
+   "filament",
+   "tungsten",
+   "filament",
+   "bottleneck",
+   "climbers",
+   "filament",
+   "bottleneck",
+   "filament"
+  ],
+  "n_rare": 10,
+  "mean_zipf": 4.158
  },
  {
   "model": "anthropic_claude-fable-5-1",
@@ -955,7 +1138,28 @@
      "Justice"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "backlog",
+   "superconductor",
+   "superconductor",
+   "backlog",
+   "tribunals",
+   "superconductor",
+   "backlog",
+   "backlog",
+   "superconductor",
+   "Joule",
+   "backlog",
+   "superconductor",
+   "cryogenic",
+   "backlog",
+   "caseload",
+   "superconductor",
+   "backlog"
+  ],
+  "n_rare": 17,
+  "mean_zipf": 3.911
  },
  {
   "model": "anthropic_claude-fable-5-1",
@@ -1025,7 +1229,16 @@
      "ethics training coverage"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "halts",
+   "diphtheria",
+   "halts",
+   "unvaccinated",
+   "untrained"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 3.98
  },
  {
   "model": "anthropic_claude-fable-5-1",
@@ -1094,7 +1307,29 @@
      "Defence of True Liberty"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "necessitarian",
+   "Marcionite",
+   "Marcionite",
+   "Marcion",
+   "necessitarian",
+   "Hobbes",
+   "Marcionite",
+   "excises",
+   "necessitarian",
+   "excises",
+   "Marcionite",
+   "Tertullian",
+   "necessitarian",
+   "Bramhall",
+   "Marcionite",
+   "Adversus",
+   "Marcionem",
+   "necessitarian"
+  ],
+  "n_rare": 18,
+  "mean_zipf": 3.05
  },
  {
   "model": "anthropic_claude-fable-5-1",
@@ -1140,7 +1375,16 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "impersonal",
+   "dharma",
+   "weakens",
+   "moksha",
+   "ascetics"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 3.996
  },
  {
   "model": "anthropic_claude-fable-5-1",
@@ -1186,7 +1430,16 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "finito",
+   "pre-visualizes",
+   "straining",
+   "irreversible",
+   "chisel"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.291
  },
  {
   "model": "anthropic_claude-fable-5-1",
@@ -1232,7 +1485,18 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "restitution",
+   "dissipates",
+   "adjudicated",
+   "discharges",
+   "grievance",
+   "arcs",
+   "vigilantes"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 4.474
  },
  {
   "model": "anthropic_claude-fable-5-1",
@@ -1278,7 +1542,15 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "unstaged",
+   "unstaged",
+   "breaths",
+   "lapses"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.317
  },
  {
   "model": "anthropic_claude-fable-5-1",
@@ -1324,7 +1596,19 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "Lucidity",
+   "dismisses",
+   "confronts",
+   "absurdity",
+   "legislates",
+   "maxims",
+   "immaturity",
+   "re-ratifies"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 4.318
  },
  {
   "model": "anthropic_claude-opus-4-5",
@@ -1381,7 +1665,15 @@
      "Power abuse"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "secures",
+   "secures",
+   "forfeited",
+   "forfeited"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.319
  },
  {
   "model": "anthropic_claude-opus-4-5",
@@ -1425,7 +1717,16 @@
      "emotional release"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "forgery",
+   "bypasses",
+   "forgery",
+   "bypasses",
+   "forgery"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.047
  },
  {
   "model": "anthropic_claude-opus-4-5",
@@ -1482,7 +1783,15 @@
      "Ideological revival movements"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Adherents",
+   "endangerment",
+   "endangerment",
+   "Revitalization"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.343
  },
  {
   "model": "anthropic_claude-opus-4-5",
@@ -1539,7 +1848,23 @@
      "modern films"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "vestigial",
+   "tropes",
+   "vestigial",
+   "vestigial",
+   "vestigial",
+   "tropes",
+   "vestigial",
+   "vestigial",
+   "tropes",
+   "vestigial",
+   "vestigial",
+   "tropes"
+  ],
+  "n_rare": 12,
+  "mean_zipf": 3.685
  },
  {
   "model": "anthropic_claude-opus-4-5",
@@ -1595,7 +1920,13 @@
      "Preemptive compliance"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Preemptive",
+   "Preemptive"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.246
  },
  {
   "model": "anthropic_claude-opus-4-5",
@@ -1651,7 +1982,13 @@
      "conscious intent"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "bypasses",
+   "bypasses"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 3.857
  },
  {
   "model": "anthropic_claude-opus-4-5",
@@ -1707,7 +2044,14 @@
      "Existentialism"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "codifies",
+   "codifies",
+   "Existentialism"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.298
  },
  {
   "model": "anthropic_claude-opus-4-5",
@@ -1751,7 +2095,19 @@
      "Moral reasoning"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "adjuvant",
+   "Adjuvant",
+   "Adjuvant",
+   "adjuvant",
+   "Adjuvant",
+   "amplifies",
+   "adjuvant",
+   "amplifies"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.637
  },
  {
   "model": "anthropic_claude-opus-4-5",
@@ -1807,7 +2163,22 @@
      "philistine"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "sacrament",
+   "sacrament",
+   "sacrament",
+   "sacrament",
+   "sacrament",
+   "transmits",
+   "sacrament",
+   "transmits",
+   "sacrament",
+   "sacrament",
+   "philistine"
+  ],
+  "n_rare": 11,
+  "mean_zipf": 3.65
  },
  {
   "model": "anthropic_claude-opus-4-5",
@@ -1851,7 +2222,20 @@
      "positional foundation"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "heartwood",
+   "heartwood",
+   "heartwood",
+   "xylem",
+   "heartwood",
+   "refuted",
+   "heartwood",
+   "heartwood",
+   "positional"
+  ],
+  "n_rare": 9,
+  "mean_zipf": 3.654
  },
  {
   "model": "anthropic_claude-opus-4-5",
@@ -1908,7 +2292,17 @@
      "civic peace"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "restores",
+   "restores",
+   "transgression",
+   "transgression",
+   "precondition",
+   "precondition"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 4.082
  },
  {
   "model": "anthropic_claude-opus-4-5",
@@ -1954,7 +2348,14 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "mythic",
+   "alters",
+   "composes"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.339
  },
  {
   "model": "anthropic_claude-opus-4-5",
@@ -1995,7 +2396,14 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "personas",
+   "voicing",
+   "transmits"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.327
  },
  {
   "model": "anthropic_claude-opus-4-5",
@@ -2036,7 +2444,14 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "corrective",
+   "deliberation",
+   "capacitors"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.42
  },
  {
   "model": "anthropic_claude-opus-4-5",
@@ -2077,7 +2492,17 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "pantomime",
+   "misusing",
+   "unreason",
+   "communicates",
+   "manifests",
+   "uncanniness"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 3.86
  },
  {
   "model": "anthropic_claude-opus-4-5",
@@ -2118,7 +2543,15 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "reflexive",
+   "relocates",
+   "revisable",
+   "sustains"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.138
  },
  {
   "model": "anthropic_claude-opus-4-5",
@@ -2164,7 +2597,16 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "branching",
+   "positional",
+   "encodes",
+   "outmaneuvers",
+   "gambits"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.323
  },
  {
   "model": "anthropic_claude-opus-4-5",
@@ -2205,7 +2647,13 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "singularity",
+   "encodes"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.238
  },
  {
   "model": "anthropic_claude-opus-4-5",
@@ -2251,7 +2699,15 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "emergent",
+   "adapts",
+   "evolves",
+   "contagiously"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.392
  },
  {
   "model": "anthropic_claude-opus-4-6",
@@ -2308,7 +2764,17 @@
      "oven temperature"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "aroma",
+   "stomata",
+   "aroma",
+   "aroma",
+   "aroma",
+   "aroma"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 4.288
  },
  {
   "model": "anthropic_claude-opus-4-6",
@@ -2365,7 +2831,19 @@
      "controlled gas stream"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "inoculation",
+   "primes",
+   "inoculation",
+   "primes",
+   "uncontrolled",
+   "inoculation",
+   "pathogen",
+   "inoculation"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.797
  },
  {
   "model": "anthropic_claude-opus-4-6",
@@ -2409,7 +2887,18 @@
      "quorum sensing"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "quorum",
+   "distorts",
+   "quorum",
+   "distorts",
+   "biofilm",
+   "quorum",
+   "quorum"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 3.715
  },
  {
   "model": "anthropic_claude-opus-4-6",
@@ -2466,7 +2955,23 @@
      "network crystallization"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "crystallization",
+   "crystallization",
+   "crystallization",
+   "organizes",
+   "crystallization",
+   "organizes",
+   "crystallization",
+   "crystallization",
+   "topology",
+   "supersaturation",
+   "crystallization",
+   "crystallization"
+  ],
+  "n_rare": 12,
+  "mean_zipf": 3.563
  },
  {
   "model": "anthropic_claude-opus-4-6",
@@ -2522,7 +3027,21 @@
      "conventional amendment process"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "easing",
+   "easing",
+   "easing",
+   "easing",
+   "easing",
+   "easing",
+   "easing",
+   "bypasses",
+   "easing",
+   "bypasses"
+  ],
+  "n_rare": 10,
+  "mean_zipf": 4.129
  },
  {
   "model": "anthropic_claude-opus-4-6",
@@ -2579,7 +3098,18 @@
      "Nagarjuna"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "condenser",
+   "condenser",
+   "condenser",
+   "latent",
+   "sunyata",
+   "condenser",
+   "Nagarjuna"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 4.187
  },
  {
   "model": "anthropic_claude-opus-4-6",
@@ -2623,7 +3153,23 @@
      "Psychoanalysis"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Automatist",
+   "Tramp",
+   "Tramp",
+   "Chaplin",
+   "Automatist",
+   "Surrealism",
+   "Tramp",
+   "embodies",
+   "Slapstick",
+   "Automatist",
+   "embodies",
+   "Psychoanalysis"
+  ],
+  "n_rare": 12,
+  "mean_zipf": 3.297
  },
  {
   "model": "anthropic_claude-opus-4-6",
@@ -2680,7 +3226,23 @@
      "Absurdity"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Encyclop",
+   "Encyclop",
+   "systematizes",
+   "systematizes",
+   "Encyclop",
+   "empowers",
+   "empowers",
+   "Encyclop",
+   "undermines",
+   "Superstition",
+   "undermines",
+   "Absurdity"
+  ],
+  "n_rare": 12,
+  "mean_zipf": 3.3
  },
  {
   "model": "anthropic_claude-opus-4-6",
@@ -2725,7 +3287,21 @@
      "Ethics"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Adjuvant",
+   "Adjuvant",
+   "Adjuvant",
+   "amplifies",
+   "Attenuated",
+   "Pathogen",
+   "Adjuvant",
+   "amplifies",
+   "Adjuvant",
+   "Adjuvant"
+  ],
+  "n_rare": 10,
+  "mean_zipf": 3.53
  },
  {
   "model": "anthropic_claude-opus-4-6",
@@ -2769,7 +3345,19 @@
      "Sancho Panza"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "convergent",
+   "approximates",
+   "convergent",
+   "approximates",
+   "Quixote",
+   "convergent",
+   "Sancho",
+   "Panza"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.67
  },
  {
   "model": "anthropic_claude-opus-4-6",
@@ -2826,7 +3414,14 @@
      "Audience saturation"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "diversifies",
+   "diversifies",
+   "depletion"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.103
  },
  {
   "model": "anthropic_claude-opus-4-6",
@@ -2870,7 +3465,18 @@
      "legitimate authority"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "polity",
+   "erodes",
+   "polity",
+   "erodes",
+   "deepens",
+   "polity",
+   "deepens"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 4.396
  },
  {
   "model": "anthropic_claude-opus-4-6",
@@ -2916,7 +3522,12 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 3
+  "emergent_count": 3,
+  "rare_words": [
+   "improvisation"
+  ],
+  "n_rare": 1,
+  "mean_zipf": 4.912
  },
  {
   "model": "anthropic_claude-opus-4-6",
@@ -2957,7 +3568,18 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "transcendent",
+   "perceiver",
+   "distinguishes",
+   "perceiver",
+   "manifests",
+   "salvific",
+   "kitsch"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 3.936
  },
  {
   "model": "anthropic_claude-opus-4-6",
@@ -3003,7 +3625,15 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "irreversible",
+   "irreversible",
+   "competes",
+   "inscribes"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.472
  },
  {
   "model": "anthropic_claude-opus-4-6",
@@ -3044,7 +3674,15 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "karmic",
+   "accumulates",
+   "diminishes",
+   "trajectories"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.224
  },
  {
   "model": "anthropic_claude-opus-4-6",
@@ -3085,7 +3723,14 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "allocates",
+   "celled",
+   "specializations"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.402
  },
  {
   "model": "anthropic_claude-opus-4-7",
@@ -3142,7 +3787,20 @@
      "electrolytic membrane"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "subdermal",
+   "filament",
+   "subdermal",
+   "outperforms",
+   "filament",
+   "subdermal",
+   "outperforms",
+   "subdermal",
+   "electrolytic"
+  ],
+  "n_rare": 9,
+  "mean_zipf": 3.801
  },
  {
   "model": "anthropic_claude-opus-4-7",
@@ -3199,7 +3857,18 @@
      "provincial fault line"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "dislocation",
+   "dislocation",
+   "dislocation",
+   "displaces",
+   "displaces",
+   "accretion",
+   "dislocation"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 4.252
  },
  {
   "model": "anthropic_claude-opus-4-7",
@@ -3255,7 +3924,25 @@
      "President"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Prerogative",
+   "Indexation",
+   "Indexation",
+   "Indexation",
+   "offsets",
+   "Prerogative",
+   "Indexation",
+   "offsets",
+   "Indexation",
+   "Prerogative",
+   "Indexation",
+   "Indexation",
+   "Prerogative",
+   "Indexation"
+  ],
+  "n_rare": 14,
+  "mean_zipf": 3.508
  },
  {
   "model": "anthropic_claude-opus-4-7",
@@ -3300,7 +3987,16 @@
      "primal freedom"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Alienation",
+   "Rousseau",
+   "Sartre",
+   "Alienation",
+   "Alienation"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 3.769
  },
  {
   "model": "anthropic_claude-opus-4-7",
@@ -3341,7 +4037,17 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "Fresco",
+   "choreographs",
+   "viewer's",
+   "cameos",
+   "withholds",
+   "nave"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 4.098
  },
  {
   "model": "anthropic_claude-opus-4-7",
@@ -3387,7 +4093,18 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "Tramp",
+   "wordless",
+   "metamorphosis",
+   "obeys",
+   "elicits",
+   "unease",
+   "automatism"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 3.802
  },
  {
   "model": "anthropic_claude-opus-4-7",
@@ -3428,7 +4145,16 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "Sapere",
+   "Aude",
+   "self-authorship",
+   "groundless",
+   "encyclopedias"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.35
  },
  {
   "model": "anthropic_claude-opus-4-8",
@@ -3474,7 +4200,15 @@
      "Photolysis"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "scaffold",
+   "scaffold",
+   "scaffold",
+   "Photolysis"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 3.613
  },
  {
   "model": "anthropic_claude-opus-4-8",
@@ -3519,7 +4253,15 @@
      "charge"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Sherpa",
+   "Sherpa",
+   "climber",
+   "Sherpa"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.144
  },
  {
   "model": "anthropic_claude-opus-4-8",
@@ -3565,7 +4307,18 @@
      "province network"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "annealing",
+   "annealing",
+   "annealing",
+   "dislocation",
+   "annealing",
+   "annealing",
+   "annealing"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 3.552
  },
  {
   "model": "anthropic_claude-opus-4-8",
@@ -3610,7 +4363,15 @@
      "pigment"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "reinterprets",
+   "reinterprets",
+   "reuses",
+   "reuses"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.192
  },
  {
   "model": "anthropic_claude-opus-4-8",
@@ -3655,7 +4416,16 @@
      "Insight"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Voiceover",
+   "Voiceover",
+   "overlays",
+   "overlays",
+   "Voiceover"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 3.695
  },
  {
   "model": "anthropic_claude-opus-4-8",
@@ -3701,7 +4471,16 @@
      "Zealotry"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Equanimity",
+   "Equanimity",
+   "Overspeed",
+   "Equanimity",
+   "Zealotry"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 3.659
  },
  {
   "model": "anthropic_claude-opus-4-8",
@@ -3758,7 +4537,25 @@
      "unconscious"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Sleepwalker",
+   "Tramp",
+   "Tramp",
+   "Chaplin",
+   "Sleepwalker",
+   "Surrealism",
+   "Tramp",
+   "pantomime",
+   "Sleepwalker",
+   "automatism",
+   "Tramp",
+   "conveys",
+   "Sleepwalker",
+   "conveys"
+  ],
+  "n_rare": 14,
+  "mean_zipf": 3.369
  },
  {
   "model": "anthropic_claude-opus-4-8",
@@ -3815,7 +4612,19 @@
      "Radical Authenticity"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Categorical",
+   "Categorical",
+   "Immanuel",
+   "Kant",
+   "Sartre",
+   "Categorical",
+   "Existentialism",
+   "Categorical"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.55
  },
  {
   "model": "anthropic_claude-opus-4-8",
@@ -3862,7 +4671,10 @@
      "Corruption"
     ]
    }
-  ]
+  ],
+  "rare_words": [],
+  "n_rare": 0,
+  "mean_zipf": 4.06
  },
  {
   "model": "anthropic_claude-opus-4-8",
@@ -3919,7 +4731,17 @@
      "Proportion"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Blemish",
+   "Blemish",
+   "Blemish",
+   "remedied",
+   "Blemish",
+   "remedied"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 4.129
  },
  {
   "model": "anthropic_claude-opus-4-8",
@@ -3976,7 +4798,19 @@
      "Divine neglect"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "unworship",
+   "revokes",
+   "unworship",
+   "revokes",
+   "deposes",
+   "unworship",
+   "deposes",
+   "unworship"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.747
  },
  {
   "model": "anthropic_claude-opus-4-8",
@@ -4022,7 +4856,17 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "expanse",
+   "arranges",
+   "cordon",
+   "reshapes",
+   "constellations",
+   "relearned"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 4.285
  },
  {
   "model": "anthropic_claude-opus-4-8",
@@ -4063,7 +4907,17 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "drifts",
+   "circulates",
+   "reapplied",
+   "erodes",
+   "dilutes",
+   "minting"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 4.469
  },
  {
   "model": "anthropic_claude-opus-4-8",
@@ -4109,7 +4963,17 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "Gambit",
+   "unfolds",
+   "branching",
+   "acorn",
+   "checkmate",
+   "prunes"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 4.626
  },
  {
   "model": "anthropic_claude-opus-5",
@@ -4192,7 +5056,20 @@
      "catharsis"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "bitting",
+   "flatted",
+   "attains",
+   "attains",
+   "unlocks",
+   "unlocks",
+   "cadence",
+   "deadbolt",
+   "catharsis"
+  ],
+  "n_rare": 9,
+  "mean_zipf": 4.255
  },
  {
   "model": "anthropic_claude-opus-5",
@@ -4263,7 +5140,27 @@
      "Testimony Fach"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Fach",
+   "Fach",
+   "Fach",
+   "classifies",
+   "Fach",
+   "classifies",
+   "Interviewee",
+   "Fach",
+   "restricts",
+   "Fach",
+   "restricts",
+   "Fach",
+   "Fach",
+   "Interviewee",
+   "Fach",
+   "Fach"
+  ],
+  "n_rare": 16,
+  "mean_zipf": 3.055
  },
  {
   "model": "anthropic_claude-opus-5",
@@ -4333,7 +5230,19 @@
      "Frida Kahlo"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "bootlegged",
+   "bootlegged",
+   "corset",
+   "Azul",
+   "Seclusion",
+   "Convalescence",
+   "Frida",
+   "Kahlo"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 4.584
  },
  {
   "model": "anthropic_claude-opus-5",
@@ -4415,7 +5324,29 @@
      "Buddhism"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "zeal",
+   "overspeed",
+   "overspeed",
+   "zeal",
+   "asceticism",
+   "overspeed",
+   "flywheel",
+   "zeal",
+   "overspeed",
+   "complements",
+   "centrifugal",
+   "zeal",
+   "complements",
+   "overspeed",
+   "zeal",
+   "ascetic",
+   "overspeed",
+   "zeal"
+  ],
+  "n_rare": 18,
+  "mean_zipf": 3.912
  },
  {
   "model": "anthropic_claude-opus-5",
@@ -4485,7 +5416,26 @@
      "Gustave Courbet"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Purgatory",
+   "Purgatory",
+   "Purgatory",
+   "Purgatory",
+   "Purgatory",
+   "Purgatory",
+   "Academie",
+   "Beaux-Arts",
+   "Purgatory",
+   "Lutheranism",
+   "Purgatory",
+   "Purgatory",
+   "Purgatory",
+   "Gustave",
+   "Courbet"
+  ],
+  "n_rare": 15,
+  "mean_zipf": 3.798
  },
  {
   "model": "anthropic_claude-opus-5",
@@ -4536,7 +5486,18 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 3
+  "emergent_count": 3,
+  "rare_words": [
+   "overthrown",
+   "assigns",
+   "legitimates",
+   "abolishes",
+   "Thermidor",
+   "counterrevolutionaries",
+   "enfranchises"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 4.374
  },
  {
   "model": "anthropic_claude-opus-5",
@@ -4582,7 +5543,18 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "grievance",
+   "discharges",
+   "discharges",
+   "restores",
+   "assigns",
+   "arcs",
+   "scapegoat"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 4.256
  },
  {
   "model": "anthropic_claude-sonnet-4-5",
@@ -4639,7 +5611,17 @@
      "unexpected continuity"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Sequential",
+   "Sequential",
+   "conceals",
+   "Sequential",
+   "conceals",
+   "Sequential"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 3.948
  },
  {
   "model": "anthropic_claude-sonnet-4-5",
@@ -4696,7 +5678,12 @@
      "Critical Mass"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Ethically"
+  ],
+  "n_rare": 1,
+  "mean_zipf": 4.074
  },
  {
   "model": "anthropic_claude-sonnet-4-5",
@@ -4732,7 +5719,13 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "Contemplative",
+   "sustains"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.436
  },
  {
   "model": "anthropic_claude-sonnet-4-5",
@@ -4773,7 +5766,19 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "transformative",
+   "transcendence",
+   "contemplatable",
+   "consecration",
+   "compositional",
+   "beholders",
+   "accrues",
+   "sanctity"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.795
  },
  {
   "model": "anthropic_claude-sonnet-4-6",
@@ -4817,7 +5822,15 @@
      "Consciousness"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Karmic",
+   "Karmic",
+   "Jiva",
+   "Karmic"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.013
  },
  {
   "model": "anthropic_claude-sonnet-4-6",
@@ -4862,7 +5875,19 @@
      "relativistic jets"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "primordial",
+   "antigenic",
+   "antigenic",
+   "primordial",
+   "infalling",
+   "antigenic",
+   "primordial",
+   "relativistic"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.913
  },
  {
   "model": "anthropic_claude-sonnet-4-6",
@@ -4906,7 +5931,15 @@
      "filament burnout"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "compaction",
+   "electromigration",
+   "filament",
+   "burnout"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 3.764
  },
  {
   "model": "anthropic_claude-sonnet-4-6",
@@ -4950,7 +5983,15 @@
      "Cinematographer"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Cadenza",
+   "Cadenza",
+   "Cadenza",
+   "Cinematographer"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 3.901
  },
  {
   "model": "anthropic_claude-sonnet-4-6",
@@ -4994,7 +6035,19 @@
      "Currency Debasement"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Debasement",
+   "Lindemann",
+   "Lindemann",
+   "Debasement",
+   "Hyperinflation",
+   "Lindemann",
+   "Debasement",
+   "Debasement"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.267
  },
  {
   "model": "anthropic_claude-sonnet-4-6",
@@ -5050,7 +6103,24 @@
      "thermal cycle"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "altruistic",
+   "bodhisattva",
+   "bodhisattva",
+   "postpones",
+   "altruistic",
+   "postpones",
+   "bodhisattva",
+   "alleviates",
+   "altruistic",
+   "alleviates",
+   "bodhisattva",
+   "samsara",
+   "altruistic"
+  ],
+  "n_rare": 13,
+  "mean_zipf": 3.779
  },
  {
   "model": "anthropic_claude-sonnet-4-6",
@@ -5106,7 +6176,14 @@
      "shared project"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "governs",
+   "governs",
+   "self-acknowledgment"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.366
  },
  {
   "model": "anthropic_claude-sonnet-4-6",
@@ -5151,7 +6228,18 @@
      "Practical Wisdom"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Imprinting",
+   "Antigenic",
+   "Antigenic",
+   "Lymphocytes",
+   "Imprinting",
+   "Antigenic",
+   "Imprinting"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 3.749
  },
  {
   "model": "anthropic_claude-sonnet-4-6",
@@ -5207,7 +6295,21 @@
      "multiple game positions"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "stratigraphy",
+   "dendrochronology",
+   "dendrochronology",
+   "stratigraphy",
+   "dendrochronology",
+   "reconstructs",
+   "stratigraphy",
+   "reconstructs",
+   "dendrochronology",
+   "stratigraphy"
+  ],
+  "n_rare": 10,
+  "mean_zipf": 3.625
  },
  {
   "model": "anthropic_claude-sonnet-4-6",
@@ -5264,7 +6366,25 @@
      "renewed faith"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "covenantal",
+   "disobedience",
+   "disobedience",
+   "defies",
+   "covenantal",
+   "defies",
+   "disobedience",
+   "bypasses",
+   "covenantal",
+   "bypasses",
+   "disobedience",
+   "upholds",
+   "covenantal",
+   "upholds"
+  ],
+  "n_rare": 14,
+  "mean_zipf": 3.832
  },
  {
   "model": "anthropic_claude-sonnet-4-6",
@@ -5310,7 +6430,21 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "salvific",
+   "inexhaustible",
+   "restructures",
+   "perceiver's",
+   "inexhaustible",
+   "restructures",
+   "perceiver's",
+   "incompletion",
+   "salvific",
+   "ugliness"
+  ],
+  "n_rare": 10,
+  "mean_zipf": 3.834
  },
  {
   "model": "anthropic_claude-sonnet-4-6",
@@ -5356,7 +6490,17 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "irreversibly",
+   "positional",
+   "foreclosing",
+   "accumulates",
+   "constrains",
+   "encodes"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 4.497
  },
  {
   "model": "anthropic_claude-sonnet-5",
@@ -5414,7 +6558,16 @@
      "Bank Executive"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Depositor",
+   "Depositor",
+   "Depositors",
+   "Depositor",
+   "Depositor"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.04
  },
  {
   "model": "anthropic_claude-sonnet-5",
@@ -5460,7 +6613,21 @@
      "Online audience reviews"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "claque",
+   "Claque",
+   "Claque",
+   "impresario",
+   "claque",
+   "publicist",
+   "Claque",
+   "manipulates",
+   "claque",
+   "manipulates"
+  ],
+  "n_rare": 10,
+  "mean_zipf": 3.421
  },
  {
   "model": "anthropic_claude-sonnet-5",
@@ -5518,7 +6685,25 @@
      "Direct perception"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Koan",
+   "Koan",
+   "Koan",
+   "Koan",
+   "Cin",
+   "rit",
+   "Koan",
+   "resists",
+   "Koan",
+   "resists",
+   "Koan",
+   "induces",
+   "Koan",
+   "induces"
+  ],
+  "n_rare": 14,
+  "mean_zipf": 3.653
  },
  {
   "model": "anthropic_claude-sonnet-5",
@@ -5564,7 +6749,16 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "pooling",
+   "fungible",
+   "allocates",
+   "allocates",
+   "transferable"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.49
  },
  {
   "model": "anthropic_claude-sonnet-5",
@@ -5610,7 +6804,18 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "standardizing",
+   "excommunicates",
+   "purges",
+   "deviants",
+   "outlaws",
+   "patois",
+   "enforces"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 3.868
  },
  {
   "model": "anthropic_claude-sonnet-5",
@@ -5656,7 +6861,16 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "fabricating",
+   "sitter's",
+   "replays",
+   "dissolves",
+   "stillness"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.328
  },
  {
   "model": "anthropic_claude-sonnet-5",
@@ -5702,7 +6916,20 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "Authorship",
+   "self's",
+   "confronts",
+   "absurdity",
+   "pursues",
+   "inescapable",
+   "re-derivation",
+   "anguished",
+   "manifestos"
+  ],
+  "n_rare": 9,
+  "mean_zipf": 4.341
  },
  {
   "model": "deepseek_deepseek-chat",
@@ -5734,7 +6961,10 @@
      "investment"
     ]
    }
-  ]
+  ],
+  "rare_words": [],
+  "n_rare": 0,
+  "mean_zipf": 4.506
  },
  {
   "model": "deepseek_deepseek-chat",
@@ -5766,7 +6996,10 @@
      "mechanical security devices"
     ]
    }
-  ]
+  ],
+  "rare_words": [],
+  "n_rare": 0,
+  "mean_zipf": 4.683
  },
  {
   "model": "deepseek_deepseek-chat",
@@ -5798,7 +7031,10 @@
      "signature element"
     ]
    }
-  ]
+  ],
+  "rare_words": [],
+  "n_rare": 0,
+  "mean_zipf": 4.265
  },
  {
   "model": "deepseek_deepseek-chat",
@@ -5830,7 +7066,12 @@
      "biome"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "biome"
+  ],
+  "n_rare": 1,
+  "mean_zipf": 4.165
  },
  {
   "model": "deepseek_deepseek-chat",
@@ -5862,7 +7103,13 @@
      "ions"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "firewall",
+   "firewall"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.08
  },
  {
   "model": "deepseek_deepseek-chat",
@@ -5894,7 +7141,10 @@
      "awareness"
     ]
    }
-  ]
+  ],
+  "rare_words": [],
+  "n_rare": 0,
+  "mean_zipf": 4.447
  },
  {
   "model": "deepseek_deepseek-chat",
@@ -5926,7 +7176,10 @@
      "Buddhism"
     ]
    }
-  ]
+  ],
+  "rare_words": [],
+  "n_rare": 0,
+  "mean_zipf": 4.223
  },
  {
   "model": "deepseek_deepseek-chat",
@@ -5970,7 +7223,10 @@
      "high ethical adherence"
     ]
    }
-  ]
+  ],
+  "rare_words": [],
+  "n_rare": 0,
+  "mean_zipf": 4.258
  },
  {
   "model": "deepseek_deepseek-chat",
@@ -6002,7 +7258,10 @@
      "individual choice"
     ]
    }
-  ]
+  ],
+  "rare_words": [],
+  "n_rare": 0,
+  "mean_zipf": 4.765
  },
  {
   "model": "deepseek_deepseek-chat",
@@ -6034,7 +7293,12 @@
      "devotees"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "devotees"
+  ],
+  "n_rare": 1,
+  "mean_zipf": 4.627
  },
  {
   "model": "deepseek_deepseek-chat",
@@ -6070,7 +7334,14 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "Meditative",
+   "cultivates",
+   "evokes"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.258
  },
  {
   "model": "deepseek_deepseek-chat",
@@ -6106,7 +7377,19 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "Existentialism",
+   "elevates",
+   "confronts",
+   "absurdity",
+   "rationality",
+   "resolves",
+   "dilemmas",
+   "universalizable"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.865
  },
  {
   "model": "deepseek_deepseek-chat-v3-0324",
@@ -6138,7 +7421,13 @@
      "Water"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Firewalls",
+   "Firewalls"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.128
  },
  {
   "model": "deepseek_deepseek-chat-v3-0324",
@@ -6170,7 +7459,13 @@
      "Documentary film"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "overture",
+   "overture"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.009
  },
  {
   "model": "deepseek_deepseek-chat-v3-0324",
@@ -6202,7 +7497,13 @@
      "mind"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "voiceover",
+   "voiceover"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.091
  },
  {
   "model": "deepseek_deepseek-chat-v3-0324",
@@ -6234,7 +7535,10 @@
      "widespread ethical adherence"
     ]
    }
-  ]
+  ],
+  "rare_words": [],
+  "n_rare": 0,
+  "mean_zipf": 4.272
  },
  {
   "model": "deepseek_deepseek-chat-v3-0324",
@@ -6266,7 +7570,13 @@
      "Harmony"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "transubstantiation",
+   "transubstantiation"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.132
  },
  {
   "model": "deepseek_deepseek-chat-v3-0324",
@@ -6307,7 +7617,15 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "Hitchangelo",
+   "meticulously",
+   "sculptural",
+   "carves"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 3.923
  },
  {
   "model": "deepseek_deepseek-r1",
@@ -6339,7 +7657,17 @@
      "Hawking radiation"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "singularity",
+   "moksha",
+   "moksha",
+   "reincarnation",
+   "singularity",
+   "Hawking"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 3.433
  },
  {
   "model": "deepseek_deepseek-r1",
@@ -6371,7 +7699,13 @@
      "Osmotic Lag"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Osmotic",
+   "Osmotic"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 3.366
  },
  {
   "model": "deepseek_deepseek-r1",
@@ -6403,7 +7737,17 @@
      "New Tense"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Enforcer",
+   "Guillotine",
+   "Guillotine",
+   "symbolizes",
+   "Enforcer",
+   "symbolizes"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 3.708
  },
  {
   "model": "deepseek_deepseek-r1",
@@ -6435,7 +7779,19 @@
      "Evolutionary Timelines"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Chronoskipping",
+   "Nonlinear",
+   "Nonlinear",
+   "rearranges",
+   "Chronology",
+   "Chronoskipping",
+   "rearranges",
+   "Timelines"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 2.925
  },
  {
   "model": "deepseek_deepseek-r1",
@@ -6479,7 +7835,17 @@
      "The Act of Killing"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "testimonial",
+   "soliloquy",
+   "testimonial",
+   "soliloquy",
+   "testimonial",
+   "soliloquy"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 3.913
  },
  {
   "model": "deepseek_deepseek-r1",
@@ -6524,7 +7890,14 @@
      "Present experience"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Archival",
+   "Archival",
+   "Archival"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.252
  },
  {
   "model": "deepseek_deepseek-r1",
@@ -6556,7 +7929,10 @@
      "Free will"
     ]
    }
-  ]
+  ],
+  "rare_words": [],
+  "n_rare": 0,
+  "mean_zipf": 4.271
  },
  {
   "model": "deepseek_deepseek-r1",
@@ -6600,7 +7976,16 @@
      "scavenger insects"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "carcass",
+   "sustains",
+   "decomposer",
+   "sustains",
+   "scavenger"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 3.967
  },
  {
   "model": "deepseek_deepseek-r1",
@@ -6632,7 +8017,10 @@
      "Everyday objects"
     ]
    }
-  ]
+  ],
+  "rare_words": [],
+  "n_rare": 0,
+  "mean_zipf": 3.876
  },
  {
   "model": "deepseek_deepseek-r1",
@@ -6678,7 +8066,18 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "Emblematic",
+   "Balladeer",
+   "composes",
+   "ballads",
+   "fuses",
+   "motifs",
+   "canvases"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 4.063
  },
  {
   "model": "deepseek_deepseek-r1",
@@ -6719,7 +8118,18 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "emancipation",
+   "pursues",
+   "founds",
+   "synthesizes",
+   "contradictions",
+   "coherence",
+   "dialogic"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 4.074
  },
  {
   "model": "deepseek_deepseek-r1",
@@ -6760,7 +8170,15 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "decentralized",
+   "optimizing",
+   "adapts",
+   "symbiotic"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.218
  },
  {
   "model": "google_gemini-2-5-flash",
@@ -6818,7 +8236,28 @@
      "Cosmic Singularity"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Graviton",
+   "Avatara",
+   "Avatara",
+   "embodies",
+   "Dharma",
+   "Graviton",
+   "embodies",
+   "Inertia",
+   "Avatara",
+   "intervenes",
+   "Samsara",
+   "Graviton",
+   "intervenes",
+   "Avatara",
+   "Moksha",
+   "Graviton",
+   "Singularity"
+  ],
+  "n_rare": 17,
+  "mean_zipf": 3.116
  },
  {
   "model": "google_gemini-2-5-flash",
@@ -6876,7 +8315,26 @@
      "luminous efficiency"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "filament",
+   "sherpa",
+   "sherpa",
+   "climbers",
+   "filament",
+   "filament",
+   "sherpa",
+   "Himalayan",
+   "filament",
+   "incandescent",
+   "sherpa",
+   "facilitates",
+   "filament",
+   "facilitates",
+   "luminous"
+  ],
+  "n_rare": 15,
+  "mean_zipf": 3.87
  },
  {
   "model": "google_gemini-2-5-flash",
@@ -6921,7 +8379,10 @@
      "molecular affinity"
     ]
    }
-  ]
+  ],
+  "rare_words": [],
+  "n_rare": 0,
+  "mean_zipf": 4.265
  },
  {
   "model": "google_gemini-2-5-flash",
@@ -6978,7 +8439,16 @@
      "single subject"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Monologue",
+   "Monologue",
+   "Monologue",
+   "soloist",
+   "Monologue"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.152
  },
  {
   "model": "google_gemini-2-5-flash",
@@ -7036,7 +8506,25 @@
      "universal enlightenment"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "dharma",
+   "conveyor",
+   "organizes",
+   "dharma",
+   "conveyor",
+   "organizes",
+   "optimizes",
+   "dharma",
+   "conveyor",
+   "optimizes",
+   "accelerates",
+   "dharma",
+   "conveyor",
+   "accelerates"
+  ],
+  "n_rare": 14,
+  "mean_zipf": 3.993
  },
  {
   "model": "google_gemini-2-5-flash",
@@ -7080,7 +8568,14 @@
      "political participation"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "dissonance",
+   "dissonance",
+   "dissonance"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.356
  },
  {
   "model": "google_gemini-2-5-flash",
@@ -7137,7 +8632,19 @@
      "personal flourishing"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Determinism",
+   "distorts",
+   "Determinism",
+   "distorts",
+   "Israelites",
+   "Determinism",
+   "Determinism",
+   "flourishing"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 4.062
  },
  {
   "model": "google_gemini-2-5-flash",
@@ -7178,7 +8685,18 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "Surrealist",
+   "Troubadour",
+   "evocative",
+   "mythic",
+   "visual-auditory",
+   "autobiographical",
+   "tapestry"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 3.98
  },
  {
   "model": "google_gemini-2-5-pro",
@@ -7235,7 +8753,23 @@
      "Interstellar medium"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Sepsis",
+   "Cytokine",
+   "Cytokine",
+   "Cytokines",
+   "Sepsis",
+   "AGN",
+   "outflows",
+   "Cytokines",
+   "AGN",
+   "outflows",
+   "Cytokine",
+   "Sepsis"
+  ],
+  "n_rare": 12,
+  "mean_zipf": 3.868
  },
  {
   "model": "google_gemini-2-5-pro",
@@ -7306,7 +8840,20 @@
      "Aesthetic Training Set"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Generative",
+   "Generative",
+   "Generative",
+   "Paratextual",
+   "Splicing",
+   "Generative",
+   "Generative",
+   "Adversarial",
+   "Generative"
+  ],
+  "n_rare": 9,
+  "mean_zipf": 3.913
  },
  {
   "model": "google_gemini-2-5-pro",
@@ -7351,7 +8898,18 @@
      "Therapeutic intention"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Samskaric",
+   "Reenactment",
+   "Reenactment",
+   "Archival",
+   "Samskaric",
+   "Reenactment",
+   "Samskaric"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 3.616
  },
  {
   "model": "google_gemini-2-5-pro",
@@ -7409,7 +8967,28 @@
      "Measurement limits"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Observational",
+   "Substratum",
+   "Lifeworld",
+   "Lifeworld",
+   "Observational",
+   "Substratum",
+   "Lifeworld",
+   "tacit",
+   "precondition",
+   "Bracketing",
+   "Observational",
+   "Substratum",
+   "tacit",
+   "precondition",
+   "Lifeworld",
+   "Observational",
+   "Substratum"
+  ],
+  "n_rare": 17,
+  "mean_zipf": 3.553
  },
  {
   "model": "google_gemini-2-5-pro",
@@ -7466,7 +9045,20 @@
      "Moral character"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Sophia-adjuvant",
+   "Adjuvant",
+   "Adjuvant",
+   "Sophia-adjuvant",
+   "Adjuvant",
+   "Sophia-adjuvant",
+   "Adjuvant",
+   "Immunological",
+   "Sophia-adjuvant"
+  ],
+  "n_rare": 9,
+  "mean_zipf": 3.704
  },
  {
   "model": "google_gemini-2-5-pro",
@@ -7511,7 +9103,17 @@
      "Predestining agent"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Transgression",
+   "Transgression",
+   "Counterfactual",
+   "intervener",
+   "Transgression",
+   "Predestining"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 3.741
  },
  {
   "model": "google_gemini-2-5-pro",
@@ -7552,7 +9154,19 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "Pathos",
+   "agent's",
+   "redefines",
+   "critiques",
+   "incongruous",
+   "repurposes",
+   "metaphors",
+   "pathos"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 4.093
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -7610,7 +9224,24 @@
      "Laws"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Fractional",
+   "Fractional",
+   "Fractional",
+   "Parliaments",
+   "Fractional",
+   "Fractional",
+   "leverages",
+   "Fractional",
+   "leverages",
+   "Fractional",
+   "multiplies",
+   "Fractional",
+   "multiplies"
+  ],
+  "n_rare": 13,
+  "mean_zipf": 3.611
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -7668,7 +9299,14 @@
      "The driver pin"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "reintroduces",
+   "tritone",
+   "reintroduces"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 3.907
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -7725,7 +9363,22 @@
      "Black holes"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Inoculations",
+   "harmlessly",
+   "Inoculations",
+   "harmlessly",
+   "Infalling",
+   "Antigenic",
+   "peptides",
+   "Inoculations",
+   "impart",
+   "Inoculations",
+   "impart"
+  ],
+  "n_rare": 11,
+  "mean_zipf": 3.673
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -7770,7 +9423,16 @@
      "Primary Production"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "aligns",
+   "aligns",
+   "Fixation",
+   "underpins",
+   "underpins"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 3.871
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -7816,7 +9478,15 @@
      "Dissolution"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Solvation",
+   "Topologies",
+   "Solvation",
+   "Solvation"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 3.724
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -7861,7 +9531,19 @@
      "Derivative subgenres"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "restricts",
+   "alleles",
+   "restricts",
+   "Foundational",
+   "tropes",
+   "homogenizes",
+   "homogenizes",
+   "subgenres"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.765
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -7919,7 +9601,27 @@
      "Script"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "cadenza",
+   "Cadenza",
+   "Cadenza",
+   "embellishes",
+   "cadenza",
+   "embellishes",
+   "Cadenza",
+   "showcases",
+   "Virtuosity",
+   "cadenza",
+   "showcases",
+   "Eloquence",
+   "Cadenza",
+   "departs",
+   "cadenza",
+   "departs"
+  ],
+  "n_rare": 16,
+  "mean_zipf": 3.251
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -7976,7 +9678,29 @@
      "Crystals"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Tetrarchic",
+   "Partitioning",
+   "Tetrarchy",
+   "Tetrarchy",
+   "mitigates",
+   "Tetrarchic",
+   "Partitioning",
+   "mitigates",
+   "Tetrarchy",
+   "reconquest",
+   "Tetrarchic",
+   "Partitioning",
+   "annealing",
+   "Tetrarchy",
+   "subdivides",
+   "Tetrarchic",
+   "Partitioning",
+   "subdivides"
+  ],
+  "n_rare": 18,
+  "mean_zipf": 2.888
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -8034,7 +9758,20 @@
      "Calculation Methods"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Asterisms",
+   "Asterisms",
+   "Asterisms",
+   "Constellations",
+   "Asterisms",
+   "Asterisms",
+   "Asterisms",
+   "Asterisms",
+   "Asterisms"
+  ],
+  "n_rare": 9,
+  "mean_zipf": 3.729
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -8080,7 +9817,17 @@
      "Judicial Superconductivity"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Superconductivity",
+   "Superconductivity",
+   "Superconductivity",
+   "Superconductivity",
+   "Superconductivity",
+   "Superconductivity"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 3.455
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -8137,7 +9884,28 @@
      "universal spiritual liberation"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "karmic",
+   "flywheel",
+   "flywheel",
+   "flywheel",
+   "augments",
+   "karmic",
+   "flywheel",
+   "augments",
+   "flywheel",
+   "karmic",
+   "flywheel",
+   "karmic",
+   "flywheel",
+   "sustains",
+   "karmic",
+   "flywheel",
+   "sustains"
+  ],
+  "n_rare": 17,
+  "mean_zipf": 3.496
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -8182,7 +9950,20 @@
      "Individual Authorship"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Syntactic",
+   "Tramp",
+   "wields",
+   "wields",
+   "Syntactic",
+   "mocks",
+   "Syntactic",
+   "mocks",
+   "Authorship"
+  ],
+  "n_rare": 9,
+  "mean_zipf": 3.643
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -8241,7 +10022,26 @@
      "Radical Skepticism"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Epistemic",
+   "retreats",
+   "Essentialism",
+   "Epistemic",
+   "retreats",
+   "Scholasticism",
+   "exemplifies",
+   "Epistemic",
+   "exemplifies",
+   "Dogmatic",
+   "Slumber",
+   "alleviates",
+   "Angst",
+   "Epistemic",
+   "alleviates"
+  ],
+  "n_rare": 15,
+  "mean_zipf": 3.591
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -8286,7 +10086,14 @@
      "injustices"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "suppresses",
+   "suppresses",
+   "injustices"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 3.763
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -8344,7 +10151,14 @@
      "Guard Bands"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "coexist",
+   "coexist",
+   "Bunds"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.381
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -8401,7 +10215,15 @@
      "Free will"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Prefrontal",
+   "Cherubim",
+   "conceals",
+   "conceals"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.156
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -8459,7 +10281,25 @@
      "Fianchettoed bishops"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "grafts",
+   "grafts",
+   "grafts",
+   "Xylem",
+   "grafts",
+   "diagonals",
+   "grafts",
+   "circumvent",
+   "Tyloses",
+   "grafts",
+   "circumvent",
+   "grafts",
+   "grafts",
+   "Fianchettoed"
+  ],
+  "n_rare": 14,
+  "mean_zipf": 3.624
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -8516,7 +10356,25 @@
      "Spiritual suffering"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Leviathan",
+   "Leviathan",
+   "Leviathan",
+   "enforces",
+   "Leviathan",
+   "enforces",
+   "Leviathan",
+   "overawes",
+   "Leviathan",
+   "overawes",
+   "Leviathan",
+   "suppresses",
+   "Leviathan",
+   "suppresses"
+  ],
+  "n_rare": 14,
+  "mean_zipf": 3.632
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -8557,7 +10415,15 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "aggregates",
+   "fractional",
+   "enacts",
+   "ledgers"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.2
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -8598,7 +10464,16 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "actuality",
+   "audiovisual",
+   "orchestral",
+   "archival",
+   "synchronizes"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 3.96
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -8634,7 +10509,18 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "Vipassana",
+   "unscripted",
+   "utilizes",
+   "audiovisual",
+   "cultivates",
+   "stillness",
+   "dissolves"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 3.757
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -8675,7 +10561,15 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "dharmic",
+   "cyclic",
+   "karmic",
+   "soot"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 3.807
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -8716,7 +10610,19 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "karmic",
+   "cyclical",
+   "trajectories",
+   "moksha",
+   "warps",
+   "spacetime",
+   "singularities",
+   "karmic"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.843
  },
  {
   "model": "google_gemini-3-1-pro-preview",
@@ -8752,7 +10658,17 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "microbiome",
+   "decentralized",
+   "macroscopic",
+   "gradients",
+   "depressions",
+   "hyperinflation"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 4.047
  },
  {
   "model": "google_gemini-3-7-flash",
@@ -8810,7 +10726,13 @@
      "reactor pressure vessel"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "covalent",
+   "helical"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 3.997
  },
  {
   "model": "google_gemini-3-7-flash",
@@ -8867,7 +10789,27 @@
      "Moksha"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Karmic",
+   "slingshot",
+   "utilizes",
+   "Karmic",
+   "slingshot",
+   "utilizes",
+   "accelerates",
+   "Karmic",
+   "slingshot",
+   "accelerates",
+   "Jiva",
+   "facilitates",
+   "Karmic",
+   "slingshot",
+   "facilitates",
+   "Moksha"
+  ],
+  "n_rare": 16,
+  "mean_zipf": 3.484
  },
  {
   "model": "google_gemini-3-7-flash",
@@ -8912,7 +10854,17 @@
      "Star formation"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Accretion",
+   "Immunological",
+   "Immunological",
+   "Accretion",
+   "Immunological",
+   "Accretion"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 3.97
  },
  {
   "model": "google_gemini-3-7-flash",
@@ -8957,7 +10909,20 @@
      "Combustion"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Pulsed",
+   "oxidizer",
+   "Pulsed",
+   "oxidizer",
+   "sustains",
+   "Aerobic",
+   "Pulsed",
+   "oxidizer",
+   "sustains"
+  ],
+  "n_rare": 9,
+  "mean_zipf": 3.514
  },
  {
   "model": "google_gemini-3-7-flash",
@@ -9002,7 +10967,23 @@
      "Traffic distribution"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Topological",
+   "polymorphism",
+   "Polymorphism",
+   "Polymorphism",
+   "Topological",
+   "polymorphism",
+   "Topology",
+   "Polymorphism",
+   "reorganizes",
+   "Topological",
+   "polymorphism",
+   "reorganizes"
+  ],
+  "n_rare": 12,
+  "mean_zipf": 3.216
  },
  {
   "model": "google_gemini-3-7-flash",
@@ -9060,7 +11041,27 @@
      "linguistic norm"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "thermidor",
+   "Thermidorian",
+   "Thermidorian",
+   "terminates",
+   "thermidor",
+   "terminates",
+   "hypercorrection",
+   "Thermidorian",
+   "repeals",
+   "thermidor",
+   "repeals",
+   "prescriptive",
+   "Thermidorian",
+   "stabilizes",
+   "thermidor",
+   "stabilizes"
+  ],
+  "n_rare": 16,
+  "mean_zipf": 3.049
  },
  {
   "model": "google_gemini-3-7-flash",
@@ -9105,7 +11106,20 @@
      "International Cricket Council"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "asterism",
+   "Asterism",
+   "Asterism",
+   "asterism",
+   "Fielders",
+   "Asterism",
+   "unregulated",
+   "asterism",
+   "unregulated"
+  ],
+  "n_rare": 9,
+  "mean_zipf": 3.554
  },
  {
   "model": "google_gemini-3-7-flash",
@@ -9150,7 +11164,19 @@
      "Statutory Legislation"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Indexation",
+   "mitigates",
+   "Indexation",
+   "mitigates",
+   "Bicameral",
+   "sustains",
+   "Indexation",
+   "sustains"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.907
  },
  {
   "model": "google_gemini-3-7-flash",
@@ -9207,7 +11233,23 @@
      "Human body"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "slapstick",
+   "automatism",
+   "slapstick",
+   "Tramp",
+   "defies",
+   "Cartesian",
+   "rationalism",
+   "slapstick",
+   "defies",
+   "disrupts",
+   "slapstick",
+   "disrupts"
+  ],
+  "n_rare": 12,
+  "mean_zipf": 3.949
  },
  {
   "model": "google_gemini-3-7-flash",
@@ -9253,7 +11295,25 @@
      "Attenuated transgression"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Attenuated",
+   "transgression",
+   "Attenuated",
+   "pathogen",
+   "Attenuated",
+   "pathogen",
+   "Attenuated",
+   "transgression",
+   "neutralize",
+   "Attenuated",
+   "pathogen",
+   "neutralize",
+   "Attenuated",
+   "transgression"
+  ],
+  "n_rare": 14,
+  "mean_zipf": 3.44
  },
  {
   "model": "google_gemini-3-7-flash",
@@ -9298,7 +11358,29 @@
      "Geometric construction"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Euclidean",
+   "windmill",
+   "Tilting",
+   "windmills",
+   "Tilting",
+   "windmills",
+   "exemplifies",
+   "errantry",
+   "Euclidean",
+   "windmill",
+   "exemplifies",
+   "straightedge",
+   "Tilting",
+   "windmills",
+   "pursues",
+   "Euclidean",
+   "windmill",
+   "pursues"
+  ],
+  "n_rare": 18,
+  "mean_zipf": 3.277
  },
  {
   "model": "google_gemini-3-7-flash",
@@ -9355,7 +11437,25 @@
      "Donald Davidson"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "volition",
+   "commandment",
+   "commandment",
+   "delineates",
+   "Covenantal",
+   "volition",
+   "delineates",
+   "commandment",
+   "explicated",
+   "volition",
+   "explicated",
+   "commandment",
+   "Maimonides",
+   "volition"
+  ],
+  "n_rare": 14,
+  "mean_zipf": 3.525
  },
  {
   "model": "google_gemini-3-7-flash",
@@ -9412,7 +11512,22 @@
      "Citizen"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "intercession",
+   "Intercession",
+   "Intercession",
+   "intercession",
+   "Intercession",
+   "upholds",
+   "intercession",
+   "upholds",
+   "Intercession",
+   "Worshipper",
+   "intercession"
+  ],
+  "n_rare": 11,
+  "mean_zipf": 3.681
  },
  {
   "model": "google_gemini-3-7-flash",
@@ -9453,7 +11568,23 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "somatic",
+   "balladeer",
+   "autobiographical",
+   "transfigures",
+   "idioms",
+   "manifests",
+   "anatomical",
+   "mercurial",
+   "archetypes",
+   "auditory",
+   "modulates",
+   "timbre"
+  ],
+  "n_rare": 12,
+  "mean_zipf": 3.931
  },
  {
   "model": "google_gemini-3-7-flash",
@@ -9494,7 +11625,18 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "mindstream",
+   "unscripted",
+   "audiovisual",
+   "cultivates",
+   "non-judgmental",
+   "qualia",
+   "unedited"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 3.772
  },
  {
   "model": "google_gemini-3-7-flash",
@@ -9535,7 +11677,18 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "self-authorship",
+   "discards",
+   "normative",
+   "confronts",
+   "absurdity",
+   "falsifiable",
+   "angst"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 4.096
  },
  {
   "model": "google_gemini-3-7-flash",
@@ -9576,7 +11729,17 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "arboreal",
+   "branching",
+   "positional",
+   "checkmate",
+   "lignifies",
+   "deadwood"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 4.099
  },
  {
   "model": "google_gemini-3-7-flash",
@@ -9617,7 +11780,18 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "auteur",
+   "manipulates",
+   "voyeuristic",
+   "chisels",
+   "coiled",
+   "postures",
+   "inserts"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 3.933
  },
  {
   "model": "google_gemini-3-flash-preview",
@@ -9662,7 +11836,19 @@
      "Conduction"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Dielectric",
+   "Impartiality",
+   "Dielectric",
+   "corrupts",
+   "Adjudication",
+   "Dielectric",
+   "corrupts",
+   "Conduction"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.286
  },
  {
   "model": "google_gemini-3-flash-preview",
@@ -9707,7 +11893,20 @@
      "Calculation"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Abrasion",
+   "Scarification",
+   "Scarification",
+   "weakens",
+   "Acorns",
+   "Abrasion",
+   "weakens",
+   "Scarification",
+   "Abrasion"
+  ],
+  "n_rare": 9,
+  "mean_zipf": 3.407
  },
  {
   "model": "google_gemini-3-flash-preview",
@@ -9752,7 +11951,16 @@
      "Personal desire"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Liturgical",
+   "Liturgical",
+   "overrides",
+   "Liturgical",
+   "overrides"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.542
  },
  {
   "model": "meta-llama_llama-3-3-70b-instruct",
@@ -9796,7 +12004,13 @@
      "Identity Theft"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "verifies",
+   "verifies"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.132
  },
  {
   "model": "meta-llama_llama-3-3-70b-instruct",
@@ -9840,7 +12054,13 @@
      "Workshops"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Climbers",
+   "Inventors"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.682
  },
  {
   "model": "meta-llama_llama-3-3-70b-instruct",
@@ -9897,7 +12117,10 @@
      "Governance"
     ]
    }
-  ]
+  ],
+  "rare_words": [],
+  "n_rare": 0,
+  "mean_zipf": 4.205
  },
  {
   "model": "meta-llama_llama-3-3-70b-instruct",
@@ -9941,7 +12164,22 @@
      "applicability"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Sancho",
+   "Panza",
+   "Sancho",
+   "Panza",
+   "accompanies",
+   "Quixote",
+   "accompanies",
+   "Sancho",
+   "Panza",
+   "practicality",
+   "applicability"
+  ],
+  "n_rare": 11,
+  "mean_zipf": 3.495
  },
  {
   "model": "meta-llama_llama-3-3-70b-instruct",
@@ -9985,7 +12223,16 @@
      "Culture"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Aesthete",
+   "embodies",
+   "Aesthete",
+   "embodies",
+   "Aesthete"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 3.793
  },
  {
   "model": "meta-llama_llama-3-3-70b-instruct",
@@ -10026,7 +12273,13 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "conveys",
+   "conveys"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.479
  },
  {
   "model": "meta-llama_llama-4-maverick",
@@ -10083,7 +12336,14 @@
      "Virgin Mary"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Hitchcock",
+   "Michelangelo",
+   "Piet"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.116
  },
  {
   "model": "meta-llama_llama-4-maverick",
@@ -10116,7 +12376,12 @@
      "Microbiome balance"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Microbiome"
+  ],
+  "n_rare": 1,
+  "mean_zipf": 4.185
  },
  {
   "model": "meta-llama_llama-4-maverick",
@@ -10173,7 +12438,10 @@
      "Evolution Festival"
     ]
    }
-  ]
+  ],
+  "rare_words": [],
+  "n_rare": 0,
+  "mean_zipf": 4.776
  },
  {
   "model": "meta-llama_llama-4-maverick",
@@ -10206,7 +12474,10 @@
      "Coaches"
     ]
    }
-  ]
+  ],
+  "rare_words": [],
+  "n_rare": 0,
+  "mean_zipf": 4.308
  },
  {
   "model": "meta-llama_llama-4-maverick",
@@ -10251,7 +12522,17 @@
      "Meditation"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "mindscaping",
+   "cinematography",
+   "cinematography",
+   "mindscaping",
+   "cinematography",
+   "mindscaping"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 3.464
  },
  {
   "model": "meta-llama_llama-4-maverick",
@@ -10296,7 +12577,12 @@
      "Professionals"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Frameworks"
+  ],
+  "n_rare": 1,
+  "mean_zipf": 4.469
  },
  {
   "model": "meta-llama_llama-4-maverick",
@@ -10341,7 +12627,10 @@
      "Household"
     ]
    }
-  ]
+  ],
+  "rare_words": [],
+  "n_rare": 0,
+  "mean_zipf": 4.397
  },
  {
   "model": "meta-llama_llama-4-maverick",
@@ -10386,7 +12675,14 @@
      "tournament"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "photosynthesis",
+   "photosynthesis",
+   "photosynthesis"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.557
  },
  {
   "model": "microsoft_phi-4",
@@ -10430,7 +12726,10 @@
      "Market Adjustment"
     ]
    }
-  ]
+  ],
+  "rare_words": [],
+  "n_rare": 0,
+  "mean_zipf": 4.417
  },
  {
   "model": "microsoft_phi-4",
@@ -10462,7 +12761,10 @@
      "spiritual connection"
     ]
    }
-  ]
+  ],
+  "rare_words": [],
+  "n_rare": 0,
+  "mean_zipf": 4.22
  },
  {
   "model": "moonshotai_kimi-k2",
@@ -10520,7 +12822,19 @@
      "Deliberation"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "refresher",
+   "reawakens",
+   "refresher",
+   "reawakens",
+   "Antigen",
+   "refresher",
+   "refresher",
+   "Deliberation"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 4.077
  },
  {
   "model": "openai_gpt-4-1",
@@ -10552,7 +12866,17 @@
      "chain reaction"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "fission",
+   "dampener",
+   "anesthetic",
+   "anesthetic",
+   "fission",
+   "dampener"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 3.679
  },
  {
   "model": "openai_gpt-4-1",
@@ -10608,7 +12932,19 @@
      "legal provisions"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "easing",
+   "easing",
+   "modifies",
+   "modifies",
+   "easing",
+   "easing",
+   "injects",
+   "injects"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.99
  },
  {
   "model": "openai_gpt-4-1",
@@ -10640,7 +12976,12 @@
      "Minotaure"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Minotaure"
+  ],
+  "n_rare": 1,
+  "mean_zipf": 4.052
  },
  {
   "model": "openai_gpt-4-1",
@@ -10672,7 +13013,18 @@
      "Guest musicians"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "scarecrow",
+   "Scarecrow",
+   "Scarecrow",
+   "deters",
+   "Egrets",
+   "scarecrow",
+   "deters"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 3.362
  },
  {
   "model": "openai_gpt-4-1",
@@ -10717,7 +13069,13 @@
      "internal threshold"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "modifies",
+   "modifies"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.41
  },
  {
   "model": "openai_gpt-4-1",
@@ -10758,7 +13116,17 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "fresco",
+   "immersive",
+   "tableaux",
+   "suspenseful",
+   "invokes",
+   "compositional"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 4.099
  },
  {
   "model": "openai_gpt-4-1",
@@ -10799,7 +13167,13 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "cultivates",
+   "meditative"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.302
  },
  {
   "model": "openai_gpt-4-1",
@@ -10845,7 +13219,16 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "Dharma",
+   "transformative",
+   "transmutes",
+   "liberates",
+   "harnessing"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.215
  },
  {
   "model": "openai_gpt-4o-mini",
@@ -10877,7 +13260,10 @@
      "Investment"
     ]
    }
-  ]
+  ],
+  "rare_words": [],
+  "n_rare": 0,
+  "mean_zipf": 4.409
  },
  {
   "model": "openai_gpt-4o-mini",
@@ -10909,7 +13295,14 @@
      "content"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "cipher",
+   "cipher",
+   "secures"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 3.723
  },
  {
   "model": "openai_gpt-4o-mini",
@@ -10941,7 +13334,13 @@
      "orbits"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "dharma",
+   "dharma"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 3.828
  },
  {
   "model": "openai_gpt-4o-mini",
@@ -10985,7 +13384,15 @@
      "protest songs"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "dystopianism",
+   "surrealism",
+   "surrealism",
+   "dystopianism"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.073
  },
  {
   "model": "openai_gpt-4o-mini",
@@ -11017,7 +13424,13 @@
      "Social Justice"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "ethication",
+   "ethication"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 3.616
  },
  {
   "model": "openai_gpt-4o-mini",
@@ -11049,7 +13462,10 @@
      "Personal Choices"
     ]
    }
-  ]
+  ],
+  "rare_words": [],
+  "n_rare": 0,
+  "mean_zipf": 4.345
  },
  {
   "model": "openai_gpt-4o-mini",
@@ -11081,7 +13497,13 @@
      "aesthetics"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "sacrament",
+   "sacrament"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 3.792
  },
  {
   "model": "openai_gpt-4o-mini",
@@ -11117,7 +13539,12 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "troubadour"
+  ],
+  "n_rare": 1,
+  "mean_zipf": 4.617
  },
  {
   "model": "openai_gpt-5",
@@ -11162,7 +13589,14 @@
      "three lines"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "warded",
+   "bypasses",
+   "bypasses"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.053
  },
  {
   "model": "openai_gpt-5",
@@ -11219,7 +13653,21 @@
      "energy extraction"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Penrose",
+   "AIRE",
+   "AIRE",
+   "thymus",
+   "Penrose",
+   "AIRE",
+   "Penrose",
+   "Penrose",
+   "AIRE",
+   "Penrose"
+  ],
+  "n_rare": 10,
+  "mean_zipf": 3.756
  },
  {
   "model": "openai_gpt-5",
@@ -11276,7 +13724,20 @@
      "packet switching"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "tetrodotoxin",
+   "tetrodotoxin",
+   "voltage-gated",
+   "headers",
+   "tetrodotoxin",
+   "voltage-gated",
+   "headers",
+   "tetrodotoxin",
+   "potentials"
+  ],
+  "n_rare": 9,
+  "mean_zipf": 3.507
  },
  {
   "model": "openai_gpt-5",
@@ -11333,7 +13794,19 @@
      "spelling"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Orthography",
+   "Orthography",
+   "adjudicates",
+   "Orthography",
+   "adjudicates",
+   "orthographic",
+   "counterrevolution",
+   "Orthography"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.959
  },
  {
   "model": "openai_gpt-5",
@@ -11392,7 +13865,23 @@
      "Slamdance"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "claque",
+   "claque",
+   "claque",
+   "Garnier",
+   "claque",
+   "Sundance",
+   "claque",
+   "claque",
+   "claque",
+   "ra-Comique",
+   "claque",
+   "Slamdance"
+  ],
+  "n_rare": 12,
+  "mean_zipf": 3.472
  },
  {
   "model": "openai_gpt-5",
@@ -11461,7 +13950,25 @@
      "10 dismissals"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "asterism",
+   "asterism",
+   "coexists",
+   "Constellations",
+   "coexists",
+   "asterism",
+   "IAU",
+   "MCC",
+   "asterism",
+   "IAU",
+   "constellations",
+   "asterism",
+   "constellations",
+   "dismissals"
+  ],
+  "n_rare": 14,
+  "mean_zipf": 3.945
  },
  {
   "model": "openai_gpt-5",
@@ -11505,7 +14012,15 @@
      "amendment"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "supermajority",
+   "facilitates",
+   "disinflation",
+   "facilitates"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.061
  },
  {
   "model": "openai_gpt-5",
@@ -11562,7 +14077,28 @@
      "exclusionary rule"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "taint",
+   "varistor",
+   "varistor",
+   "varistor",
+   "clamps",
+   "overvoltage",
+   "taint",
+   "varistor",
+   "clamps",
+   "varistor",
+   "taint",
+   "varistor",
+   "varistor",
+   "arrester",
+   "taint",
+   "varistor",
+   "exclusionary"
+  ],
+  "n_rare": 17,
+  "mean_zipf": 3.037
  },
  {
   "model": "openai_gpt-5",
@@ -11631,7 +14167,13 @@
      "Meditation"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "complements",
+   "complements"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.723
  },
  {
   "model": "openai_gpt-5",
@@ -11688,7 +14230,14 @@
      "chance"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Surrealism",
+   "Chaplin",
+   "gags"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.179
  },
  {
   "model": "openai_gpt-5",
@@ -11733,7 +14282,21 @@
      "judgment"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "adjuvant",
+   "adjuvant",
+   "adjuvant",
+   "stimulates",
+   "dendritic",
+   "adjuvant",
+   "stimulates",
+   "adjuvant",
+   "repertoires",
+   "adjuvant"
+  ],
+  "n_rare": 10,
+  "mean_zipf": 3.341
  },
  {
   "model": "openai_gpt-5",
@@ -11792,7 +14355,16 @@
      "sentencing"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "rabbinic",
+   "rabbinic",
+   "rabbinic",
+   "halakhic",
+   "rabbinic"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.201
  },
  {
   "model": "openai_gpt-5",
@@ -11849,7 +14421,18 @@
      "kaddish"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Hansard",
+   "Hansard",
+   "kaddish",
+   "Hansard",
+   "kaddish",
+   "Hansard",
+   "kaddish"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 3.594
  },
  {
   "model": "openai_gpt-5",
@@ -11895,7 +14478,16 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "legitimates",
+   "uptake",
+   "allocates",
+   "utterances",
+   "renaming"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.321
  },
  {
   "model": "openai_gpt-5",
@@ -11941,7 +14533,17 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "starfield",
+   "trajectories",
+   "assigns",
+   "rotates",
+   "sidereal",
+   "asterisms"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 4.198
  },
  {
   "model": "openai_gpt-5",
@@ -11982,7 +14584,12 @@
     "tag": "v"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "stabilizes"
+  ],
+  "n_rare": 1,
+  "mean_zipf": 4.271
  },
  {
   "model": "openai_gpt-5",
@@ -12028,7 +14635,16 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "composes",
+   "viewer's",
+   "composes",
+   "carves",
+   "chisels"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.359
  },
  {
   "model": "openai_gpt-5-2",
@@ -12098,7 +14714,19 @@
      "constitution"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "backstop",
+   "backstop",
+   "interbank",
+   "backstop",
+   "stabilizes",
+   "backstop",
+   "stabilizes",
+   "backstop"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 4.171
  },
  {
   "model": "openai_gpt-5-2",
@@ -12155,7 +14783,27 @@
      "equivalence principle"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "turiya",
+   "turiya",
+   "turiya",
+   "Mandukya",
+   "Upanishad",
+   "turiya",
+   "turiya",
+   "Advaita",
+   "Vedanta",
+   "turiya",
+   "turiya",
+   "embodies",
+   "nondualism",
+   "turiya",
+   "embodies",
+   "equivalence"
+  ],
+  "n_rare": 16,
+  "mean_zipf": 2.972
  },
  {
   "model": "openai_gpt-5-2",
@@ -12200,7 +14848,19 @@
      "film"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "pouncing",
+   "pouncing",
+   "pouncing",
+   "pouncing",
+   "storyboard",
+   "pouncing",
+   "fresco",
+   "pouncing"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.804
  },
  {
   "model": "openai_gpt-5-2",
@@ -12259,7 +14919,21 @@
      "specialization"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "operon",
+   "operon",
+   "operon",
+   "operon",
+   "operon",
+   "polymerase",
+   "operon",
+   "operon",
+   "operon",
+   "specialization"
+  ],
+  "n_rare": 10,
+  "mean_zipf": 3.719
  },
  {
   "model": "openai_gpt-5-2",
@@ -12316,7 +14990,22 @@
      "Language"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "structuralism",
+   "materialism",
+   "materialism",
+   "structuralism",
+   "Saussure",
+   "materialism",
+   "historiography",
+   "structuralism",
+   "historiography",
+   "interprets",
+   "interprets"
+  ],
+  "n_rare": 11,
+  "mean_zipf": 3.989
  },
  {
   "model": "openai_gpt-5-2",
@@ -12376,7 +15065,21 @@
      "editing options"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "bottleneck",
+   "bottleneck",
+   "bottleneck",
+   "bottleneck",
+   "bottleneck",
+   "bottleneck",
+   "bottleneck",
+   "constrains",
+   "bottleneck",
+   "constrains"
+  ],
+  "n_rare": 10,
+  "mean_zipf": 4.106
  },
  {
   "model": "openai_gpt-5-2",
@@ -12421,7 +15124,19 @@
      "Bravais lattices"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "colonia",
+   "colonia",
+   "colonia",
+   "colonia",
+   "colonia",
+   "colonia",
+   "Bravais",
+   "lattices"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.832
  },
  {
   "model": "openai_gpt-5-2",
@@ -12465,7 +15180,17 @@
      "Marylebone Cricket Club"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Ptolemy's",
+   "Ptolemy's",
+   "Almagest",
+   "Ptolemy's",
+   "Ptolemy",
+   "Marylebone"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 4.152
  },
  {
   "model": "openai_gpt-5-2",
@@ -12523,7 +15248,17 @@
      "circuit"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "utterance",
+   "utterance",
+   "hearsay",
+   "hearsay",
+   "utterance",
+   "utterance"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 4.216
  },
  {
   "model": "openai_gpt-5-2",
@@ -12568,7 +15303,18 @@
      "samadhi"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "samadhi",
+   "flyball",
+   "flyball",
+   "samadhi",
+   "flyball",
+   "samadhi",
+   "samadhi"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 3.62
  },
  {
   "model": "openai_gpt-5-2",
@@ -12625,7 +15371,24 @@
      "film set"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Andalouville",
+   "Tativille",
+   "Tativille",
+   "Playtime",
+   "Andalouville",
+   "Chien",
+   "Andalou",
+   "Tativille",
+   "Tati",
+   "Andalouville",
+   "uel",
+   "Tativille",
+   "Andalouville"
+  ],
+  "n_rare": 13,
+  "mean_zipf": 3.562
  },
  {
   "model": "openai_gpt-5-2",
@@ -12671,7 +15434,20 @@
      "Saint-Germain-des-Pr\u00e9s"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "encyclop",
+   "Encyclop",
+   "Encyclop",
+   "Diderot",
+   "encyclop",
+   "Sartre",
+   "Encyclop",
+   "encyclop",
+   "Saint-Germain-des-Pr"
+  ],
+  "n_rare": 9,
+  "mean_zipf": 3.793
  },
  {
   "model": "openai_gpt-5-2",
@@ -12717,7 +15493,15 @@
      "A Clockwork Orange film"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "volition",
+   "volition",
+   "volition",
+   "Clockwork"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.234
  },
  {
   "model": "openai_gpt-5-2",
@@ -12763,7 +15547,19 @@
      "dust mite"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "exfoliating",
+   "sloughing",
+   "sloughing",
+   "exfoliating",
+   "sloughing",
+   "louse",
+   "exfoliating",
+   "mite"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.737
  },
  {
   "model": "openai_gpt-5-2",
@@ -12820,7 +15616,14 @@
      "Beauty"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Hippo",
+   "Plotinus",
+   "Plotinus"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.208
  },
  {
   "model": "openai_gpt-5-2",
@@ -12878,7 +15681,32 @@
      "coring depth"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "iterative",
+   "coring",
+   "iterative",
+   "deepening",
+   "iterative",
+   "deepening",
+   "iterative",
+   "coring",
+   "dendrochronology",
+   "iterative",
+   "deepening",
+   "pruning",
+   "iterative",
+   "coring",
+   "increment",
+   "borer",
+   "iterative",
+   "deepening",
+   "iterative",
+   "coring",
+   "coring"
+  ],
+  "n_rare": 21,
+  "mean_zipf": 3.483
  },
  {
   "model": "openai_gpt-5-2",
@@ -12924,7 +15752,20 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "lexicon",
+   "normative",
+   "authorizes",
+   "utterance",
+   "abolishes",
+   "guillotines",
+   "punishes",
+   "royalist",
+   "phrasing"
+  ],
+  "n_rare": 9,
+  "mean_zipf": 3.92
  },
  {
   "model": "openai_gpt-5-2",
@@ -12970,7 +15811,15 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "archival",
+   "voiceover",
+   "sensations",
+   "adapts"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.241
  },
  {
   "model": "openai_gpt-5-2",
@@ -13011,7 +15860,13 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "legitimizing",
+   "recasts"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.554
  },
  {
   "model": "openai_gpt-5-2",
@@ -13057,7 +15912,15 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "beatific",
+   "contemplative",
+   "reshapes",
+   "purifies"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 3.971
  },
  {
   "model": "openai_gpt-5-2",
@@ -13103,7 +15966,17 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "Sistine",
+   "viewer's",
+   "viewpoints",
+   "MacGuffin",
+   "sculpts",
+   "cliffhangers"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 3.966
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -13163,7 +16036,17 @@
      "delegated authority"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "recapitalization",
+   "insolvency",
+   "recapitalization",
+   "recapitalization",
+   "recapitalization",
+   "delegated"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 3.83
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -13233,7 +16116,24 @@
      "improviser"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "spool",
+   "spool",
+   "spool",
+   "spool",
+   "spool",
+   "spool",
+   "cadence",
+   "cadence",
+   "misleads",
+   "picker",
+   "cadence",
+   "misleads",
+   "improviser"
+  ],
+  "n_rare": 13,
+  "mean_zipf": 3.947
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -13290,7 +16190,24 @@
      "photon absorption"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "burnable",
+   "burnable",
+   "burnable",
+   "fission",
+   "burnable",
+   "burnable",
+   "absorbs",
+   "neutrons",
+   "burnable",
+   "absorbs",
+   "photons",
+   "burnable",
+   "burnable"
+  ],
+  "n_rare": 13,
+  "mean_zipf": 3.41
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -13347,7 +16264,29 @@
      "model regularization"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "difficilior",
+   "lectio",
+   "difficilior",
+   "lectio",
+   "difficilior",
+   "difficilior",
+   "gradiometry",
+   "lectio",
+   "difficilior",
+   "difficilior",
+   "lectio",
+   "difficilior",
+   "presupposes",
+   "scribal",
+   "simplification",
+   "difficilior",
+   "presupposes",
+   "regularization"
+  ],
+  "n_rare": 18,
+  "mean_zipf": 2.439
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -13392,7 +16331,23 @@
      "dough expansion"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "quenching",
+   "nonphotochemical",
+   "quenching",
+   "nonphotochemical",
+   "quenching",
+   "dissipates",
+   "excitation",
+   "quenching",
+   "dissipates",
+   "nonphotochemical",
+   "quenching",
+   "quenching"
+  ],
+  "n_rare": 12,
+  "mean_zipf": 3.135
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -13438,7 +16393,19 @@
      "summit retreat"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "halogen",
+   "halogen",
+   "redeposits",
+   "tungsten",
+   "redeposits",
+   "halogen",
+   "filament",
+   "thinning"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.612
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -13484,7 +16451,26 @@
      "price signals"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "quenching",
+   "quorum",
+   "quenching",
+   "quorum",
+   "quenching",
+   "disrupts",
+   "quorum",
+   "quenching",
+   "disrupts",
+   "quorum",
+   "quenching",
+   "degrades",
+   "autoinducers",
+   "quenching",
+   "degrades"
+  ],
+  "n_rare": 15,
+  "mean_zipf": 3.366
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -13554,7 +16540,31 @@
      "percolation threshold"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "eutonic",
+   "eutonic",
+   "eutonic",
+   "eutonic",
+   "rewiring",
+   "eutonic",
+   "eutonic",
+   "eutonic",
+   "eutonic",
+   "topology",
+   "eutonic",
+   "deliquescence",
+   "eutonic",
+   "percolation",
+   "eutonic",
+   "minimizes",
+   "deliquescence",
+   "eutonic",
+   "minimizes",
+   "percolation"
+  ],
+  "n_rare": 20,
+  "mean_zipf": 2.908
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -13612,7 +16622,14 @@
      "modifications"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "transmits",
+   "transmits",
+   "phenotypes"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.218
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -13683,7 +16700,28 @@
      "conclusion"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "cadenza",
+   "cadenza",
+   "cadenza",
+   "cadenza",
+   "cadenza",
+   "foregrounds",
+   "cadenza",
+   "foregrounds",
+   "cadenza",
+   "suspends",
+   "orchestral",
+   "accompaniment",
+   "cadenza",
+   "suspends",
+   "cadenza",
+   "cadence",
+   "cadenza"
+  ],
+  "n_rare": 17,
+  "mean_zipf": 3.5
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -13752,7 +16790,14 @@
      "unauthorized revisions"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "parchment",
+   "CPI",
+   "BLS"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.123
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -13809,7 +16854,21 @@
      "judicial independence"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "arrester",
+   "arrester",
+   "arrester",
+   "grids",
+   "arrester",
+   "arrester",
+   "overvoltage",
+   "arrester",
+   "arrester",
+   "arrester"
+  ],
+  "n_rare": 10,
+  "mean_zipf": 3.489
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -13892,7 +16951,29 @@
      "insight"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "participatory",
+   "participatory",
+   "participatory",
+   "observational",
+   "participatory",
+   "participatory",
+   "participatory",
+   "participatory",
+   "foregrounds",
+   "participatory",
+   "foregrounds",
+   "meditator",
+   "participatory",
+   "participatory",
+   "participatory",
+   "elicits",
+   "participatory",
+   "elicits"
+  ],
+  "n_rare": 18,
+  "mean_zipf": 3.817
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -13961,7 +17042,31 @@
      "disciplinary oscillation"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Vinaya",
+   "droop",
+   "droop",
+   "droop",
+   "rotational",
+   "Vinaya",
+   "droop",
+   "strictness",
+   "droop",
+   "Vinaya",
+   "droop",
+   "droop",
+   "Vinaya",
+   "droop",
+   "droop",
+   "damps",
+   "Vinaya",
+   "droop",
+   "damps",
+   "oscillation"
+  ],
+  "n_rare": 20,
+  "mean_zipf": 3.493
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -14005,7 +17110,18 @@
      "spoken dialogue"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "pantomime",
+   "automatism",
+   "pantomime",
+   "pantomime",
+   "bypasses",
+   "pantomime",
+   "bypasses"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 3.85
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -14050,7 +17166,22 @@
      "moral dilemmas"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "cartography",
+   "antigenic",
+   "cartography",
+   "antigenic",
+   "cartography",
+   "cartography",
+   "antigenic",
+   "cartography",
+   "antigens",
+   "cartography",
+   "dilemmas"
+  ],
+  "n_rare": 11,
+  "mean_zipf": 3.446
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -14132,7 +17263,12 @@
      "forty hours"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Eucharist"
+  ],
+  "n_rare": 1,
+  "mean_zipf": 4.532
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -14190,7 +17326,22 @@
      "master score"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "crossdating",
+   "crossdating",
+   "crossdating",
+   "crossdating",
+   "crossdating",
+   "detects",
+   "crossdating",
+   "detects",
+   "crossdating",
+   "chronology",
+   "crossdating"
+  ],
+  "n_rare": 11,
+  "mean_zipf": 3.365
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -14248,7 +17399,14 @@
      "Covenant"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "reiterates",
+   "reiterates",
+   "Worshippers"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.348
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -14284,7 +17442,13 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "intermediary",
+   "accrue"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.403
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -14325,7 +17489,16 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "lament",
+   "authenticates",
+   "improvisation",
+   "replayed",
+   "riffs"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.238
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -14366,7 +17539,13 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 3
+  "emergent_count": 3,
+  "rare_words": [
+   "speciates",
+   "restores"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.178
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -14412,7 +17591,14 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "accretion",
+   "Caesars",
+   "propagate"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.126
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -14458,7 +17644,16 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "conceals",
+   "Tehuana",
+   "refrains",
+   "conceals",
+   "reorders"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.091
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -14499,7 +17694,15 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "sustains",
+   "actuality",
+   "actuality",
+   "lapses"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.148
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -14540,7 +17743,15 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "Tramp",
+   "estranges",
+   "gags",
+   "stabilizes"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.198
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -14586,7 +17797,18 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 3
+  "emergent_count": 3,
+  "rare_words": [
+   "Dulcinea",
+   "nonrepeating",
+   "residues",
+   "quests",
+   "enchantment",
+   "Archimedean",
+   "polygons"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 4.0
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -14627,7 +17849,13 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "antennas",
+   "retunes"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.123
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -14673,7 +17901,19 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "samsara",
+   "jivas",
+   "spacetime",
+   "jivas",
+   "karmic",
+   "karmic",
+   "deflects",
+   "rebirths"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.745
  },
  {
   "model": "openai_gpt-5-6-sol",
@@ -14719,7 +17959,16 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "quorum",
+   "adjusts",
+   "detects",
+   "autoinducers",
+   "dormancy"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 3.902
  },
  {
   "model": "openai_gpt-5-mini",
@@ -14776,7 +18025,17 @@
      "credit allocation"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "gerrymandering",
+   "gerrymandering",
+   "gerrymandering",
+   "alters",
+   "gerrymandering",
+   "alters"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 4.197
  },
  {
   "model": "openai_gpt-5-mini",
@@ -14834,7 +18093,22 @@
      "dough expansion"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "crumb",
+   "chloroplast",
+   "chloroplast",
+   "crumb",
+   "chloroplast",
+   "chlorophyll",
+   "crumb",
+   "chloroplast",
+   "optimizes",
+   "crumb",
+   "optimizes"
+  ],
+  "n_rare": 11,
+  "mean_zipf": 3.623
  },
  {
   "model": "openai_gpt-5-mini",
@@ -14891,7 +18165,20 @@
      "viewer perception"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "chisel",
+   "chisel",
+   "foreshortening",
+   "Vertigo",
+   "chisel",
+   "Sistine",
+   "alters",
+   "chisel",
+   "alters"
+  ],
+  "n_rare": 9,
+  "mean_zipf": 3.749
  },
  {
   "model": "openai_gpt-5-mini",
@@ -14948,7 +18235,13 @@
      "adaptations"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "accompanies",
+   "accompanies"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.208
  },
  {
   "model": "openai_gpt-5-mini",
@@ -15005,7 +18298,19 @@
      "The Tramp"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "pantomime",
+   "surrealiste",
+   "pantomime",
+   "Surrealism",
+   "pantomime",
+   "Chaplin",
+   "pantomime",
+   "Tramp"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 4.064
  },
  {
   "model": "openai_gpt-5-mini",
@@ -15048,7 +18353,21 @@
      "civic bad faith"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "conceptualized",
+   "Sartre",
+   "conceptualized",
+   "Immanuel",
+   "Kant",
+   "Sartre",
+   "popularized",
+   "Immanuel",
+   "Kant",
+   "popularized"
+  ],
+  "n_rare": 10,
+  "mean_zipf": 4.115
  },
  {
   "model": "openai_gpt-5-mini",
@@ -15107,7 +18426,10 @@
      "signal integrity"
     ]
    }
-  ]
+  ],
+  "rare_words": [],
+  "n_rare": 0,
+  "mean_zipf": 4.308
  },
  {
   "model": "openai_gpt-5-mini",
@@ -15165,7 +18487,20 @@
      "moral teaching"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "compatibilism",
+   "compatibilism",
+   "compatibilism",
+   "compatibilism",
+   "compatibilism",
+   "compatibilism",
+   "rabbinic",
+   "compatibilism",
+   "compatibilism"
+  ],
+  "n_rare": 9,
+  "mean_zipf": 3.452
  },
  {
   "model": "openai_gpt-5-mini",
@@ -15222,7 +18557,12 @@
      "dead skin"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "scavengers"
+  ],
+  "n_rare": 1,
+  "mean_zipf": 4.396
  },
  {
   "model": "openai_gpt-5-mini",
@@ -15279,7 +18619,13 @@
      "taste"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "affirms",
+   "affirms"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 3.939
  },
  {
   "model": "openai_gpt-5-mini",
@@ -15337,7 +18683,21 @@
      "Chess"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Gamechronology",
+   "Dendrochronology",
+   "Dendrochronology",
+   "Gamechronology",
+   "Dendrochronology",
+   "reconstructs",
+   "Gamechronology",
+   "reconstructs",
+   "Dendrochronology",
+   "Gamechronology"
+  ],
+  "n_rare": 10,
+  "mean_zipf": 2.936
  },
  {
   "model": "openai_gpt-5-mini",
@@ -15378,7 +18738,15 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "Astrofield",
+   "fielder",
+   "scoreboard",
+   "reforming"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.385
  },
  {
   "model": "openai_gpt-5-mini",
@@ -15419,7 +18787,14 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "Fridylan",
+   "autobiographical",
+   "tableaux"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.379
  },
  {
   "model": "openai_gpt-5-mini",
@@ -15460,7 +18835,15 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "Ionic",
+   "rewires",
+   "salinity",
+   "encodes"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.15
  },
  {
   "model": "openai_gpt-6-astra-flex",
@@ -15528,7 +18911,23 @@
      "C3"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "resonator",
+   "Rotational",
+   "superradiance",
+   "resonator",
+   "confines",
+   "Bosonic",
+   "resonator",
+   "confines",
+   "resonator",
+   "depletes",
+   "resonator",
+   "depletes"
+  ],
+  "n_rare": 12,
+  "mean_zipf": 4.079
  },
  {
   "model": "openai_gpt-6-astra-flex",
@@ -15608,7 +19007,29 @@
      "Coin rotation"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "overture",
+   "Hitchcock",
+   "Hitchcock",
+   "Hitchcock",
+   "overture",
+   "Piazza",
+   "Campidoglio",
+   "Hitchcock",
+   "Hitchcock",
+   "overture",
+   "Hitchcock",
+   "Marionette",
+   "overture",
+   "Hitchcock",
+   "overture",
+   "Phonograph",
+   "Hitchcock",
+   "overture"
+  ],
+  "n_rare": 18,
+  "mean_zipf": 4.077
  },
  {
   "model": "openai_gpt-6-astra-flex",
@@ -15688,7 +19109,34 @@
      "manuscript destruction"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "folio",
+   "tmRNA",
+   "tmRNA",
+   "rescues",
+   "ribosomes",
+   "folio",
+   "rescues",
+   "amanuenses",
+   "tmRNA",
+   "polypeptides",
+   "folio",
+   "tmRNA",
+   "encodes",
+   "folio",
+   "encodes",
+   "tmRNA",
+   "ribosome",
+   "folio",
+   "scribe",
+   "reassignment",
+   "tmRNA",
+   "proteolysis",
+   "folio"
+  ],
+  "n_rare": 23,
+  "mean_zipf": 2.926
  },
  {
   "model": "openai_gpt-6-astra-flex",
@@ -15769,7 +19217,37 @@
      "sentinel consolidation"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "ballast",
+   "Zener",
+   "pinning",
+   "Zener",
+   "pinning",
+   "ballast",
+   "Zener",
+   "pinning",
+   "immobilizes",
+   "ballast",
+   "immobilizes",
+   "Zener",
+   "pinning",
+   "ballast",
+   "coalescence",
+   "Zener",
+   "pinning",
+   "dispersion",
+   "ballast",
+   "dispersion",
+   "Zener",
+   "pinning",
+   "weakens",
+   "coarsening",
+   "ballast",
+   "weakens"
+  ],
+  "n_rare": 26,
+  "mean_zipf": 3.504
  },
  {
   "model": "openai_gpt-6-astra-flex",
@@ -15849,7 +19327,36 @@
      "novel estate enfranchisement"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "cahier",
+   "Wug",
+   "Wug",
+   "exemplifies",
+   "elicitation",
+   "cahier",
+   "exemplifies",
+   "cahiers",
+   "dol",
+   "ances",
+   "Wug",
+   "nonce",
+   "cahier",
+   "Wug",
+   "elicits",
+   "inflected",
+   "cahier",
+   "elicits",
+   "Wug",
+   "morphological",
+   "cahier",
+   "Wug",
+   "inflection",
+   "cahier",
+   "enfranchisement"
+  ],
+  "n_rare": 25,
+  "mean_zipf": 3.58
  },
  {
   "model": "openai_gpt-6-astra-flex",
@@ -15917,7 +19424,25 @@
      "Shot selection"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "constellations",
+   "constellations",
+   "constellations",
+   "nebulae",
+   "constellations",
+   "Unguarded",
+   "constellations",
+   "contrasted",
+   "constellations",
+   "contrasted",
+   "constellations",
+   "constellations",
+   "constellations",
+   "constellations"
+  ],
+  "n_rare": 14,
+  "mean_zipf": 4.279
  },
  {
   "model": "openai_gpt-6-astra-flex",
@@ -15985,7 +19510,14 @@
      "effective rights protection"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "adjusts",
+   "adjusts",
+   "multipliers"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.428
  },
  {
   "model": "openai_gpt-6-astra-flex",
@@ -16065,7 +19597,25 @@
      "court docket"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "turnstile",
+   "turnstile",
+   "turnstile",
+   "Coulomb",
+   "turnstile",
+   "turnstile",
+   "turnstile",
+   "turnstile",
+   "turnstile",
+   "turnstile",
+   "turnstile",
+   "turnstile",
+   "turnstile",
+   "docket"
+  ],
+  "n_rare": 14,
+  "mean_zipf": 4.056
  },
  {
   "model": "openai_gpt-6-astra-flex",
@@ -16146,7 +19696,30 @@
      "Class relations"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Lacanian",
+   "scansion",
+   "Lacanian",
+   "scansion",
+   "Lacanian",
+   "psychoanalysis",
+   "Lacanian",
+   "scansion",
+   "interrupts",
+   "interrupts",
+   "Gestus",
+   "Lacanian",
+   "scansion",
+   "Analysand",
+   "Lacanian",
+   "scansion",
+   "Lacanian",
+   "scansion",
+   "Signifiers"
+  ],
+  "n_rare": 19,
+  "mean_zipf": 3.675
  },
  {
   "model": "openai_gpt-6-astra-flex",
@@ -16214,7 +19787,31 @@
      "Biblical hermeneutics"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "quotient",
+   "Birkhoff's",
+   "Birkhoff's",
+   "numerator",
+   "quotient",
+   "numerator",
+   "Birkhoff's",
+   "denominator",
+   "quotient",
+   "denominator",
+   "Interpretive",
+   "Birkhoff's",
+   "evaluates",
+   "Polygons",
+   "quotient",
+   "evaluates",
+   "Scriptural",
+   "Birkhoff's",
+   "quotient",
+   "hermeneutics"
+  ],
+  "n_rare": 20,
+  "mean_zipf": 3.659
  },
  {
   "model": "openai_gpt-6-astra-flex",
@@ -16260,7 +19857,12 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "revocable"
+  ],
+  "n_rare": 1,
+  "mean_zipf": 4.451
  },
  {
   "model": "openai_gpt-6-astra-flex",
@@ -16301,7 +19903,16 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "bottlenecks",
+   "filament",
+   "Khumbu",
+   "Icefall",
+   "climber"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.179
  },
  {
   "model": "openai_gpt-6-astra-flex",
@@ -16347,7 +19958,16 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "Sidereal",
+   "fielders",
+   "cordon",
+   "reposition",
+   "sidereal"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.269
  },
  {
   "model": "openai_gpt-6-astra-flex",
@@ -16393,7 +20013,13 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "Tramp",
+   "breakdowns"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.529
  },
  {
   "model": "qwen_qwen-2-5-72b-instruct",
@@ -16450,7 +20076,13 @@
      "Access"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "facilitates",
+   "facilitates"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.213
  },
  {
   "model": "qwen_qwen-2-5-72b-instruct",
@@ -16482,7 +20114,13 @@
      "force"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "murti",
+   "murti"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 3.682
  },
  {
   "model": "qwen_qwen-2-5-72b-instruct",
@@ -16513,7 +20151,15 @@
      "inner peace"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "mindscaper",
+   "cinematographer",
+   "cinematographer",
+   "mindscaper"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 3.068
  },
  {
   "model": "qwen_qwen-2-5-72b-instruct",
@@ -16545,7 +20191,10 @@
      "comfort"
     ]
    }
-  ]
+  ],
+  "rare_words": [],
+  "n_rare": 0,
+  "mean_zipf": 4.368
  },
  {
   "model": "qwen_qwen-2-5-72b-instruct",
@@ -16581,7 +20230,13 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "Dharma",
+   "governs"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 3.927
  },
  {
   "model": "qwen_qwen3-max",
@@ -16638,7 +20293,20 @@
      "resilience to supply chain disruption"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "sourdough",
+   "mycorrhizal",
+   "mycorrhizal",
+   "sourdough",
+   "mycorrhizal",
+   "sourdough",
+   "bakeries",
+   "mycorrhizal",
+   "sourdough"
+  ],
+  "n_rare": 9,
+  "mean_zipf": 3.895
  },
  {
   "model": "qwen_qwen3-max",
@@ -16682,7 +20350,19 @@
      "contemplate divinity"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "cadence",
+   "leitmotif",
+   "leitmotif",
+   "recurs",
+   "cadence",
+   "recurs",
+   "leitmotif",
+   "cadence"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.818
  },
  {
   "model": "qwen_qwen3-max",
@@ -16739,7 +20419,28 @@
      "extended artificial illumination exposure"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "photobiological",
+   "tapering",
+   "acclimatization",
+   "acclimatization",
+   "mitigates",
+   "hypoxia",
+   "photobiological",
+   "tapering",
+   "mitigates",
+   "circadian",
+   "acclimatization",
+   "photobiological",
+   "tapering",
+   "brightening",
+   "acclimatization",
+   "photobiological",
+   "tapering"
+  ],
+  "n_rare": 17,
+  "mean_zipf": 3.01
  },
  {
   "model": "qwen_qwen3-max",
@@ -16783,7 +20484,14 @@
      "ball trajectories"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "partitions",
+   "partitions",
+   "trajectories"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.337
  },
  {
   "model": "qwen_qwen3-max",
@@ -16840,7 +20548,20 @@
      "existential confrontation"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "angst",
+   "facilitates",
+   "angst",
+   "facilitates",
+   "angst",
+   "dogma",
+   "cultivates",
+   "angst",
+   "cultivates"
+  ],
+  "n_rare": 9,
+  "mean_zipf": 3.963
  },
  {
   "model": "qwen_qwen3-max",
@@ -16884,7 +20605,17 @@
      "integrity duration"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "refreshment",
+   "reinvigorates",
+   "refreshment",
+   "reinvigorates",
+   "habituation",
+   "refreshment"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 3.799
  },
  {
   "model": "qwen_qwen3-max",
@@ -16920,7 +20651,18 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "votebank",
+   "allocates",
+   "quantified",
+   "entitlements",
+   "transferable",
+   "participatory",
+   "fractional"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 4.024
  },
  {
   "model": "qwen_qwen3-max",
@@ -16956,7 +20698,16 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "radiance",
+   "revelatory",
+   "evokes",
+   "beholder",
+   "contemplative"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.084
  },
  {
   "model": "qwen_qwen3-max",
@@ -16992,7 +20743,16 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "microbiome",
+   "decentralized",
+   "asexually",
+   "emergent",
+   "unintended"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.314
  },
  {
   "model": "x-ai_grok-4-5",
@@ -17049,7 +20809,19 @@
      "Unrest"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "bailout",
+   "Bailout",
+   "Bailout",
+   "bailout",
+   "Bailout",
+   "bailout",
+   "Bailout",
+   "bailout"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.668
  },
  {
   "model": "x-ai_grok-4-5",
@@ -17106,7 +20878,22 @@
      "rotation"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "tumbler",
+   "modifies",
+   "tumbler",
+   "modifies",
+   "tumblers",
+   "heightens",
+   "tumbler",
+   "heightens",
+   "anticipates",
+   "tumbler",
+   "anticipates"
+  ],
+  "n_rare": 11,
+  "mean_zipf": 3.821
  },
  {
   "model": "x-ai_grok-4-5",
@@ -17163,7 +20950,14 @@
      "Coolidge tube"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "neutrons",
+   "fission",
+   "Coolidge"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 3.939
  },
  {
   "model": "x-ai_grok-4-5",
@@ -17208,7 +21002,18 @@
      "Bread"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "linker",
+   "RuBisCO",
+   "RuBisCO",
+   "linker",
+   "RuBisCO",
+   "Photosynthesis",
+   "linker"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 3.276
  },
  {
   "model": "x-ai_grok-4-5",
@@ -17252,7 +21057,16 @@
      "matter"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "MHC",
+   "MHC",
+   "phagocytes",
+   "MHC",
+   "antigens"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 3.739
  },
  {
   "model": "x-ai_grok-4-5",
@@ -17309,7 +21123,16 @@
      "unease"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Vertigo",
+   "Hitchcock",
+   "Michelangelo",
+   "unease",
+   "unease"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.193
  },
  {
   "model": "x-ai_grok-4-5",
@@ -17366,7 +21189,19 @@
      "extreme heat"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Sherpa",
+   "Sherpa",
+   "Sherpa",
+   "climbers",
+   "filaments",
+   "Sherpa",
+   "endures",
+   "endures"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.984
  },
  {
   "model": "x-ai_grok-4-5",
@@ -17411,7 +21246,19 @@
      "antisepsis"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "putrefactionism",
+   "Pasteur",
+   "putrefactionism",
+   "hindered",
+   "specialization",
+   "putrefactionism",
+   "hindered",
+   "antisepsis"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.343
  },
  {
   "model": "x-ai_grok-4-5",
@@ -17456,7 +21303,14 @@
      "Subject"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Cadenza",
+   "Cadenza",
+   "Cadenza"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 3.488
  },
  {
   "model": "x-ai_grok-4-5",
@@ -17513,7 +21367,24 @@
      "invasions"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "annealing",
+   "annealing",
+   "annealing",
+   "dislocations",
+   "annealing",
+   "usurpations",
+   "annealing",
+   "relieves",
+   "annealing",
+   "relieves",
+   "annealing",
+   "annealing",
+   "invasions"
+  ],
+  "n_rare": 13,
+  "mean_zipf": 3.225
  },
  {
   "model": "x-ai_grok-4-5",
@@ -17569,7 +21440,24 @@
      "The Constitution"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "doctrinal",
+   "easing",
+   "easing",
+   "easing",
+   "doctrinal",
+   "easing",
+   "easing",
+   "doctrinal",
+   "easing",
+   "precedents",
+   "easing",
+   "doctrinal",
+   "easing"
+  ],
+  "n_rare": 13,
+  "mean_zipf": 3.766
  },
  {
   "model": "x-ai_grok-4-5",
@@ -17613,7 +21501,13 @@
      "motorcycle crash"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Frida",
+   "Kahlo"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.381
  },
  {
   "model": "x-ai_grok-4-5",
@@ -17657,7 +21551,14 @@
      "meditator"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "voiceover",
+   "gatha",
+   "meditator"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 3.843
  },
  {
   "model": "x-ai_grok-4-5",
@@ -17713,7 +21614,19 @@
      "Buddhism"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Carnot",
+   "Carnot",
+   "thermodynamics",
+   "Carnot",
+   "Sadi",
+   "Carnot",
+   "Gautama",
+   "Carnot"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.91
  },
  {
   "model": "x-ai_grok-4-5",
@@ -17770,7 +21683,15 @@
      "Two Treatises of Government"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "precedes",
+   "Sartre",
+   "Nothingness",
+   "Treatises"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.51
  },
  {
   "model": "x-ai_grok-4-5",
@@ -17814,7 +21735,21 @@
      "Syracuse"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "idyll",
+   "Galatea",
+   "Galatea",
+   "Cervantes",
+   "idyll",
+   "Archimedes",
+   "Galatea",
+   "Alcala",
+   "Henares",
+   "idyll"
+  ],
+  "n_rare": 10,
+  "mean_zipf": 3.553
  },
  {
   "model": "x-ai_grok-4-5",
@@ -17870,7 +21805,17 @@
      "Rice"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "modulation",
+   "modulation",
+   "modulation",
+   "conveys",
+   "conveys",
+   "modulation"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 4.173
  },
  {
   "model": "x-ai_grok-4-5",
@@ -17926,7 +21871,18 @@
      "epidermis"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "barnacle",
+   "barnacle",
+   "mites",
+   "barnacle",
+   "barnacles",
+   "barnacle",
+   "epidermis"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 3.692
  },
  {
   "model": "x-ai_grok-4-5",
@@ -17971,7 +21927,16 @@
      "fairness"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "uncreated",
+   "uncreated",
+   "manifests",
+   "manifests",
+   "uncreated"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.17
  },
  {
   "model": "x-ai_grok-4-5",
@@ -18012,7 +21977,14 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "endowments",
+   "secures",
+   "allocates"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.343
  },
  {
   "model": "x-ai_grok-4-5",
@@ -18053,7 +22025,20 @@
     "tag": "uv"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "balladeer",
+   "autobiographers",
+   "externalize",
+   "rupture",
+   "personas",
+   "externalizes",
+   "rupture",
+   "emblematic",
+   "overpainting"
+  ],
+  "n_rare": 9,
+  "mean_zipf": 3.561
  },
  {
   "model": "x-ai_grok-4-5",
@@ -18094,7 +22079,15 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "discloses",
+   "sustains",
+   "discloses",
+   "replays"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.127
  },
  {
   "model": "x-ai_grok-4-6",
@@ -18138,7 +22131,19 @@
      "uranium sample"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "fissiography",
+   "radiography",
+   "radiography",
+   "fissiography",
+   "fission",
+   "radiography",
+   "Crookes",
+   "fissiography"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.048
  },
  {
   "model": "x-ai_grok-4-6",
@@ -18182,7 +22187,19 @@
      "Predictions"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Sigils",
+   "Yantras",
+   "Yantras",
+   "Mantras",
+   "Sigils",
+   "Yantras",
+   "Puja",
+   "Sigils"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.086
  },
  {
   "model": "x-ai_grok-4-6",
@@ -18226,7 +22243,17 @@
      "Sandwiches"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Stroma",
+   "Stroma",
+   "Thylakoids",
+   "Fillings",
+   "Stroma",
+   "Chloroplasts"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 3.321
  },
  {
   "model": "x-ai_grok-4-6",
@@ -18258,7 +22285,14 @@
      "geographic isolation"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "colonist",
+   "Maltese",
+   "colonist"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 3.887
  },
  {
   "model": "x-ai_grok-4-6",
@@ -18290,7 +22324,18 @@
      "Confessionals"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Virtuoso",
+   "Cadenza",
+   "Cadenza",
+   "embellishes",
+   "Virtuoso",
+   "embellishes",
+   "Confessionals"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 2.81
  },
  {
   "model": "x-ai_grok-4-6",
@@ -18322,7 +22367,15 @@
      "levy barrier"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "nucleation",
+   "overcomes",
+   "legions",
+   "overcomes"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 3.86
  },
  {
   "model": "x-ai_grok-4-6",
@@ -18366,7 +22419,18 @@
      "John Wisden"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "epicycles",
+   "epicycles",
+   "Almagest",
+   "Wisden",
+   "epicycles",
+   "Ptolemy",
+   "Wisden"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 3.707
  },
  {
   "model": "x-ai_grok-4-6",
@@ -18410,7 +22474,22 @@
      "case law"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "interpretive",
+   "easing",
+   "easing",
+   "easing",
+   "interpretive",
+   "easing",
+   "easing",
+   "inflates",
+   "interpretive",
+   "easing",
+   "inflates"
+  ],
+  "n_rare": 11,
+  "mean_zipf": 3.594
  },
  {
   "model": "x-ai_grok-4-6",
@@ -18454,7 +22533,17 @@
      "Like a Rolling Stone"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "mestizaje",
+   "mestizaje",
+   "Frida",
+   "Kahlo",
+   "mestizaje",
+   "Fridas"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 3.619
  },
  {
   "model": "x-ai_grok-4-6",
@@ -18498,7 +22587,22 @@
      "theatrical acting"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "observational",
+   "sesshin",
+   "sesshin",
+   "intensifies",
+   "zazen",
+   "observational",
+   "intensifies",
+   "verite",
+   "sesshin",
+   "discursive",
+   "observational"
+  ],
+  "n_rare": 11,
+  "mean_zipf": 3.166
  },
  {
   "model": "x-ai_grok-4-6",
@@ -18542,7 +22646,12 @@
      "upaya"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "upaya"
+  ],
+  "n_rare": 1,
+  "mean_zipf": 4.406
  },
  {
   "model": "x-ai_grok-4-6",
@@ -18574,7 +22683,12 @@
      "nature"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "nothingness"
+  ],
+  "n_rare": 1,
+  "mean_zipf": 4.269
  },
  {
   "model": "x-ai_grok-4-6",
@@ -18619,7 +22733,19 @@
      "The mattress"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "molting",
+   "sloughing",
+   "sloughing",
+   "renews",
+   "molting",
+   "renews",
+   "sloughing",
+   "molting"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 3.494
  },
  {
   "model": "x-ai_grok-4-6",
@@ -18652,7 +22778,13 @@
      "composition"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "taints",
+   "taints"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.123
  },
  {
   "model": "x-ai_grok-4-6",
@@ -18696,7 +22828,17 @@
      "monasticism"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "absolutism",
+   "worldliness",
+   "strengthens",
+   "constitutionalism",
+   "strengthens",
+   "monasticism"
+  ],
+  "n_rare": 6,
+  "mean_zipf": 3.735
  },
  {
   "model": "x-ai_grok-4-6",
@@ -18732,7 +22874,12 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "allocates"
+  ],
+  "n_rare": 1,
+  "mean_zipf": 4.414
  },
  {
   "model": "x-ai_grok-4-6",
@@ -18768,7 +22915,16 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "ramifying",
+   "sequential",
+   "acorn",
+   "checkmate",
+   "branching"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.049
  },
  {
   "model": "z-ai_glm-4-5-air",
@@ -18838,7 +22994,13 @@
      "future guidance"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "dilemmas",
+   "dilemmas"
+  ],
+  "n_rare": 2,
+  "mean_zipf": 4.241
  },
  {
   "model": "z-ai_glm-4-5-air",
@@ -18874,7 +23036,14 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "manifests",
+   "manifests",
+   "refracts"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.659
  },
  {
   "model": "z-ai_glm-4-6",
@@ -18918,7 +23087,19 @@
      "Political Flexibility"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Hardening",
+   "Hardening",
+   "Hardening",
+   "Hardening",
+   "Rigidness",
+   "Hardening",
+   "Ductility",
+   "Hardening"
+  ],
+  "n_rare": 8,
+  "mean_zipf": 4.0
  },
  {
   "model": "z-ai_glm-4-6",
@@ -18974,7 +23155,14 @@
      "Miller's jargon"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "landraces",
+   "Trucker",
+   "jargon"
+  ],
+  "n_rare": 3,
+  "mean_zipf": 4.602
  },
  {
   "model": "z-ai_glm-4-6",
@@ -19030,7 +23218,23 @@
      "Civil Authority"
     ]
    }
-  ]
+  ],
+  "rare_words": [
+   "Exorcism",
+   "Exorcism",
+   "Exorcism",
+   "neutralizes",
+   "Exorcism",
+   "neutralizes",
+   "Exorcism",
+   "restores",
+   "Exorcism",
+   "restores",
+   "Exorcism",
+   "Exorcism"
+  ],
+  "n_rare": 12,
+  "mean_zipf": 3.812
  },
  {
   "model": "z-ai_glm-4-6",
@@ -19066,7 +23270,15 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "confessional",
+   "mythic",
+   "evokes",
+   "audiovisual"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 4.071
  },
  {
   "model": "z-ai_glm-4-6",
@@ -19102,7 +23314,18 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "Oneiric",
+   "Tramp",
+   "subversion",
+   "antagonistic",
+   "inhabits",
+   "dreamscape",
+   "repurposes"
+  ],
+  "n_rare": 7,
+  "mean_zipf": 3.574
  },
  {
   "model": "z-ai_glm-4-6",
@@ -19143,7 +23366,16 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 2
+  "emergent_count": 2,
+  "rare_words": [
+   "Stratagem",
+   "branching",
+   "sequential",
+   "branching",
+   "ossifies"
+  ],
+  "n_rare": 5,
+  "mean_zipf": 4.193
  },
  {
   "model": "z-ai_glm-4-6",
@@ -19184,6 +23416,14 @@
     "tag": "emergent"
    }
   ],
-  "emergent_count": 1
+  "emergent_count": 1,
+  "rare_words": [
+   "Dharmaic",
+   "karmic",
+   "karmic",
+   "dharmaic"
+  ],
+  "n_rare": 4,
+  "mean_zipf": 3.922
  }
 ]

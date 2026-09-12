@@ -5,18 +5,27 @@
               blend reaches scope 3 (double-scope with emergent properties);
   analogy  -- all three panel judges say the projection is valid and the invention coherent, and every
               triple of the path it was projected along was judged factual.
-Originality and surprise (R) are attached for ranking but play no part in the bar.
+Originality and surprise (R) are attached for reference but play no part in the bar or the ranking.
+
+Candidates are ranked by PLAINNESS, not originality: a showcase should be readable by a layperson,
+so each invention's text (name, generic space or projected source, every property) is scored by word
+commonness (wordfreq Zipf frequency). Primary key: number of rare words (Zipf < RARE_ZIPF, roughly
+"not in an ordinary reader's vocabulary"); tie-break: mean Zipf of the content words, higher first.
 
 Writes analysis/showcase_inventions.json (every qualifying invention, with the tagged structure or
-the source->image projection pulled from the response file) and a markdown listing of the top
-candidates per task, one per anchor pair and at most two per model, for choosing by eye.
+the source->image projection pulled from the response file, plus the plainness scores) and a markdown
+listing of the top candidates per task, one per anchor pair and at most two per model, for choosing
+by eye.
 
     .venv/bin/python -m src.kg_creat.scripts.compile_showcase_inventions
 """
 import argparse
 import json
+import re
 from collections import Counter
 from pathlib import Path
+
+from wordfreq import zipf_frequency
 
 from src.kg_creat.model_names import DISPLAY
 
@@ -24,6 +33,23 @@ RUN = Path("data/kg_creat/kombine_test30")
 OUT = RUN / "analysis" / "showcase_inventions.json"
 MD = Path("scratch/showcase_inventions/candidates.md")
 TOP = 15
+MIN_PROJECTION = 2     # analogy candidates must carry at least this many projected properties
+RARE_ZIPF = 3.3        # ~1 per 5 million words; "dormancy" 2.5, "ledger" 3.5, "conscience" 4.0
+STOP = set("a an the of to in on by for with as at from into via and or is are be its it their his her this that than".split())
+
+
+def plainness(text: str):
+    """(rare-word count, mean Zipf of content words, the rare words) for one invention's text."""
+    words = [w for w in re.findall(r"[A-Za-z][A-Za-z'-]*", text) if w.lower() not in STOP]
+    z = [(w, zipf_frequency(w.lower(), "en")) for w in words]
+    rare = [w for w, f in z if f < RARE_ZIPF]
+    return len(rare), (sum(f for _, f in z) / len(z) if z else 0.0), rare
+
+
+def invention_text(x) -> str:
+    if x["task"] == "blending":
+        return " ".join([x["name"], x["generic_space"] or ""] + [f"{p['relation']} {p['object']}" for p in x["properties"]])
+    return " ".join([x["name"], x["projected"] or ""] + [" ".join(p["source"]) + " " + " ".join(p["image"]) for p in x["projection"]])
 
 
 def _responses(model):
@@ -56,13 +82,19 @@ def collect():
                 rows.append(dict(base, task="analogy", name=r["invention"], projected=it.get("projected"),
                                  path=[r["triples"][0][0]] + [t[2] for t in r["triples"]],
                                  projection=[dict(source=p["source"], image=p["image"]) for p in it.get("projection", [])]))
+    for x in rows:
+        n_rare, mean_z, rare = plainness(invention_text(x))
+        x.update(rare_words=rare, n_rare=n_rare, mean_zipf=round(mean_z, 3))
     return rows
 
 
 def shortlist(rows, task):
-    """Top candidates by originality, one per anchor pair and at most two per model, for diversity."""
+    """Plainest candidates first (fewest rare words, then most common vocabulary), one per anchor
+    pair and at most two per model, for diversity."""
     seen_pair, per_model, out = set(), Counter(), []
-    for x in sorted((x for x in rows if x["task"] == task), key=lambda x: -(x["originality"] or 0)):
+    for x in sorted((x for x in rows if x["task"] == task), key=lambda x: (x["n_rare"], -x["mean_zipf"])):
+        if task == "analogy" and len(x["projection"]) < MIN_PROJECTION:      # a one-line projection has nothing to show
+            continue
         if (x["u"], x["v"]) in seen_pair or per_model[x["model"]] >= 2:
             continue
         seen_pair.add((x["u"], x["v"])); per_model[x["model"]] += 1; out.append(x)
@@ -74,12 +106,13 @@ def shortlist(rows, task):
 def md(rows):
     L = ["# Unanimously good inventions -- showcase candidates", "",
          "Bar: every panel judge (Haiku 4.5, GPT-5.4, o3) passes the invention; blends must reach scope 3; analogy paths must be fully factual.",
-         "Ranked by originality; one entry per anchor pair and at most two per model. Tags: u / v = from one input, uv = fused, em = emergent.", ""]
+         f"Ranked by plainness: fewest rare words (Zipf < {RARE_ZIPF}), then most common vocabulary. One entry per anchor pair and at most two per model. Tags: u / v = from one input, uv = fused, em = emergent.", ""]
     for task, op in (("blending", "+"), ("analogy", "::")):
         n = sum(x["task"] == task for x in rows)
         L += [f"## {task}  ({n} qualify of {'1,033' if task == 'blending' else '1,037'}; {len({x['model'] for x in rows if x['task'] == task})} models, {len({(x['u'], x['v']) for x in rows if x['task'] == task})} anchor pairs)", ""]
         for x in shortlist(rows, task):
-            L.append(f"**{x['u']} {op} {x['v']} -> \"{x['name']}\"** -- {x['display']} (originality {x['originality']:.2f}, surprise {x['surprise']:.2f})")
+            rare = f"; rare: {', '.join(x['rare_words'])}" if x["rare_words"] else ""
+            L.append(f"**{x['u']} {op} {x['v']} -> \"{x['name']}\"** -- {x['display']} (rare words {x['n_rare']}, mean Zipf {x['mean_zipf']:.2f}{rare}; originality {x['originality']:.2f})")
             if task == "blending":
                 L.append(f"- generic space: *{x['generic_space']}*")
                 L += [f"- [{p['tag'][:2]}] {p['relation']} {p['object']}" for p in x["properties"]]
