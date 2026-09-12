@@ -74,7 +74,8 @@ src/
 │       ├── calibrate_theta.py, plot_tau_theta_grid.py, analyze_anchor_distance.py  # theta's implied alpha; (tau, theta) density; anchor distance (null)
 │       ├── plot_pair_matrix.py, plot_multiples_examples.py   # model x model shared-property heatmap; side-by-side multiples (report)
 │       ├── make_tau_multiples_table.py, make_multiples_examples_table.py  # caption-free LaTeX fragments for the paper (tau table, examples tables)
-│       ├── make_paper_multiples_figure.py  # assembles the paper's old/new figure assets from the report figures
+│       ├── make_paper_multiples_figure.py  # assembles the paper's multiples figure assets from the report figures (unreferenced by the paper)
+│       ├── compile_showcase_inventions.py  # inventions every panel judge passed -> analysis JSON + ranked candidates.md (showcase figure)
 │       ├── sample_anagram.py, run_anagram.py, score_anagram.py    # anagram side probe
 │       └── build_gc.py, sample_bundles.py, plot_regime_a.py, compute_diversity.py, make_pass2.py  # legacy seed-BFS / Regime-A pipeline
 └── plot_twist/                 # active track (TwistBench: transformational creativity via plot twists); mirrored in the private repo samjschapiro/twistbench-code
