@@ -35,6 +35,7 @@ TAG = {"u": "tu", "v": "tv", "uv": "tuv", "emergent": "tem"}
 
 
 def tex(s: str) -> str:
+    s = s.replace("_", " ")          # kimi-k2 writes snake_case ("Moral_refresher", "administered_after"): show as words
     return (s.replace("\\", r"\textbackslash{}").replace("&", r"\&").replace("%", r"\%")
              .replace("_", r"\_").replace("#", r"\#").replace("$", r"\$"))
 
@@ -73,8 +74,9 @@ def render(rows) -> str:
          r"Anchors & Invention & Generic space / projected source & Properties \\",
          r"\midrule"]
     L += [row(x) for x in rows]
-    L += [r"\bottomrule", r"\end{tabular}", "",
-          r"\vspace{3pt}{\scriptsize \tg{tu}\,/\,\tg{tv} from the input of that colour \quad \tg{tuv} fused \quad \tg{tem} emergent}", ""]
+    L += [r"\bottomrule", r"\end{tabular}", ""]
+    if any(x["task"] == "blending" for x in rows):        # the chip legend only matters when a blend row is present
+        L += [r"\vspace{3pt}{\scriptsize \tg{tu}\,/\,\tg{tv} from the input of that colour \quad \tg{tuv} fused \quad \tg{tem} emergent}", ""]
     return "\n".join(L)
 
 
