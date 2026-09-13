@@ -6,14 +6,15 @@ in the middle column, then the unmatched properties of each side in grey. The pa
 same explicit choice as the figure script (plot_multiples_examples.PANELS / PAPER_PANELS), so the
 two never disagree.
 
-A second row shows the converse (Finding: naming and inventing dissociate): two inventions that carry
-the SAME coined name but share no property. Their rows are the best one-to-one pairing of properties
-(Hungarian assignment on cosine), unshaded, so the reader sees that even the closest pairs fall well
-below theta. These come from the `name_property_dissociation` examples in the same JSON.
+A second fragment, tab_same_name_examples.tex next to the first, shows the converse (Finding: naming
+and inventing dissociate): two inventions that carry the SAME coined name but share no property. Their
+rows are the best one-to-one pairing of properties (Hungarian assignment on cosine), unshaded, so the
+reader sees that even the closest pairs fall well below theta. These come from the
+`name_property_dissociation` examples in the same JSON.
 
-The output is a float-less fragment meant to be \\input inside a table float directly under the
-tau table. It carries NO caption and NO label: captions belong to the author and live in the section
-file next to the \\input, so regenerating this file can never overwrite one.
+Both outputs are float-less fragments meant to be \\input inside a table float. They carry NO caption
+and NO label: captions belong to the author and live in the section file next to the \\input, so
+regenerating these files can never overwrite one.
 
     .venv_mlx/bin/python -m src.kg_creat.scripts.make_multiples_examples_table \\
         data/kg_creat/kombine_test30/analysis/inventive_multiples.json \\
@@ -111,9 +112,8 @@ def best_pairing(m, embed):
     return [{"a": int(i), "b": int(j), "cos": float(S[i, j])} for i, j in zip(ri, ci)]
 
 
-def render(d, embed=None) -> str:
-    picks = [find(d["multiples"], *spec) for spec in PAPER_PANELS]
-    out = [
+def preamble():
+    return [
         HEADER,
         "% Fragment (no float wrapper, no caption): \\input inside a table float; the caption and label",
         "% live in the section file next to the \\input.",
@@ -124,17 +124,21 @@ def render(d, embed=None) -> str:
         r"\setlength{\tabcolsep}{2pt}",
         r"\renewcommand{\arraystretch}{1.05}",
     ]
-    tables = [one_table(m, letter) for m, letter in zip(picks, "abcdefgh")]
-    out.append("\\hfill\n".join(tables))
-    if embed is not None and SAME_NAME_PANELS:
-        same = []
-        for spec, letter in zip(SAME_NAME_PANELS, "cdefgh"[: len(SAME_NAME_PANELS)]):
-            m = find_same_name(d, *spec)
-            m["matches"] = best_pairing(m, embed)
-            same.append(one_table(m, letter, shade=False))
-        out += ["", "\\vspace{6pt}", "", "\\hfill\n".join(same)]
-    out.append("")
+
+
+def render(d) -> str:
+    picks = [find(d["multiples"], *spec) for spec in PAPER_PANELS]
+    out = preamble() + ["\\hfill\n".join(one_table(m, letter) for m, letter in zip(picks, "abcdefgh")), ""]
     return "\n".join(out)
+
+
+def render_same_name(d, embed) -> str:
+    same = []
+    for spec, letter in zip(SAME_NAME_PANELS, "abcdefgh"):
+        m = find_same_name(d, *spec)
+        m["matches"] = best_pairing(m, embed)
+        same.append(one_table(m, letter, shade=False))
+    return "\n".join(preamble() + ["\\hfill\n".join(same), ""])
 
 
 def main():
@@ -145,10 +149,13 @@ def main():
     d = json.loads(a.src.read_text())
     if "multiples" not in d:
         raise SystemExit(f"{a.src} has no `multiples` block -- re-run analyze_inventive_multiples.py")
+    a.dst.write_text(render(d))
+    print(f"wrote {a.dst} ({len(PAPER_PANELS)} multiples tables)")
     from src.kg_creat.embed import get_embedder
     embed = get_embedder("mlx-community/all-MiniLM-L6-v2-4bit")
-    a.dst.write_text(render(d, embed))
-    print(f"wrote {a.dst} ({len(PAPER_PANELS)} multiples tables + {len(SAME_NAME_PANELS)} same-name tables)")
+    dst2 = a.dst.with_name("tab_same_name_examples.tex")
+    dst2.write_text(render_same_name(d, embed))
+    print(f"wrote {dst2} ({len(SAME_NAME_PANELS)} same-name tables)")
 
 
 if __name__ == "__main__":
