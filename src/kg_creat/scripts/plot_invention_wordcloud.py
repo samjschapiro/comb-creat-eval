@@ -22,6 +22,9 @@ OUT = Path("docs/reports/2026-09-01_kg_creat_inventive_multiples/figures")
 PALETTE = {"blending": ["#1B4F72", "#2E86C1", "#154360", "#21618C", "#2874A6"],
            "analogy": ["#7B241C", "#C0392B", "#641E16", "#A93226", "#922B21"]}
 MAX_WORDS = 250
+NIMBUS = Path.home() / "Library/Fonts/NimbusRoman-Regular.otf"     # the paper's face, for the words and the titles
+
+plt.rcParams.update({"font.family": "serif", "font.serif": ["Nimbus Roman", "Times New Roman", "DejaVu Serif"]})
 
 
 def names():
@@ -44,8 +47,7 @@ def names():
 
 def main():
     freqs = names()
-    fonts = font_manager.findSystemFonts()
-    font = next((f for f in fonts if f.endswith(("NimbusRoman-Regular.otf", "Times New Roman.ttf", "Times.ttc", "DejaVuSerif.ttf"))), None)
+    font = str(NIMBUS) if NIMBUS.exists() else next((f for f in font_manager.findSystemFonts() if f.endswith(("Times New Roman.ttf", "DejaVuSerif.ttf"))), None)
     fig, axes = plt.subplots(1, 2, figsize=(16, 6.2))
     for ax, task, letter, op in zip(axes, ("blending", "analogy"), "ab", ("+", "::")):
         f = freqs[task]
