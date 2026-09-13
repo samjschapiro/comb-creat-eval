@@ -170,7 +170,7 @@ def render_examples(rows, images=False) -> str:
          r"\definecolor{domA}{HTML}{1E6F9D}\definecolor{domB}{HTML}{8B2706}\definecolor{invCol}{HTML}{001261}",
          r"\definecolor{hlName}{HTML}{FFF0A6}\definecolor{hlProp}{HTML}{E2F1DE}   % highlights: the coined name; its properties (image triples)",
          r"{\scriptsize\setlength{\fboxsep}{1.2pt}", r"\renewcommand{\arraystretch}{1.3}",
-         r"\renewcommand\tabularxcolumn[1]{m{#1}}"]
+         r"\renewcommand\tabularxcolumn[1]{>{\raggedright\arraybackslash}m{#1}}"]   # ragged: the highlight boxes cannot break
     if images:
         L += [r"\begin{tabularx}{\textwidth}{@{}m{2.1cm} X @{\hspace{6pt}}m{0.26\linewidth}@{}}", r"\toprule",
               r"\textbf{Task (model)} & \textbf{Example output} & \\", r"\midrule"]
