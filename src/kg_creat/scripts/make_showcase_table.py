@@ -150,11 +150,9 @@ def examples_row(x, letter, image=None) -> str:
          _c("domA", f"{bs}textbf{{Path a}} $(p_u)$: " + ", ".join(f"({tex(t[0])}, {tex(t[1])}, {tex(t[2])})" for t in pu)) + ".",
          _c("domB", f"{bs}textbf{{Path b}} $(p_v)$: " + ", ".join(f"({tex(t[0])}, {tex(t[1])}, {tex(t[2])})" for t in pv)) + ".",
          f"{bs}textbf{{Source}} $({bs}varphi)$: {_c(src_col, tex(src))} (from {tex(x['v'] if src_is_v else x['u'])}, no counterpart in {tex(x['u'] if src_is_v else x['v'])}).",
-         f"{bs}textbf{{Invention}} $(h {bs}gets M[{bs}varphi])$: {bs}colorbox{{hlName}}{{{_c('invCol', bs + 'textbf{' + tex(x['name']) + '}')}}}.",
+         f"{bs}textbf{{Invention}} $(h {bs}gets M[{bs}varphi])$: {_c('invCol', bs + 'textbf{' + tex(x['name']) + '}')}.",
          f"{bs}textbf{{Source to Target Mapping}} $(M^{{u, v}})$:"]
-    # the invention's properties are the image triples: each gets a highlight box (unbreakable, but every
-    # image triple is far shorter than the column, so the line simply breaks before the box if needed)
-    L += [f"{triple(p['source'], col)} ${bs}mapsto$ {bs}colorbox{{hlProp}}{{{triple(p['image'], col)}}}" for p in x["projection"]]
+    L += [f"{triple(p['source'], col)} ${bs}mapsto$ {triple(p['image'], col)}" for p in x["projection"]]
     body = f" {bs}newline\n".join(L)
     label = f"{bs}textbf{{({letter})}} Analogy {bs}newline ({tex(x['display'])})"
     cells = f"{label} & {body}"
@@ -168,8 +166,7 @@ def render_examples(rows, images=False) -> str:
          "% Fragment (no float wrapper, no caption), in the format of tab_examples.tex: \\input inside a figure/table float.",
          r"\providecommand{\provlogo}[1]{\raisebox{-0.15ex}{\includegraphics[height=0.85em]{media/logos/#1}}\,}",
          r"\definecolor{domA}{HTML}{1E6F9D}\definecolor{domB}{HTML}{8B2706}\definecolor{invCol}{HTML}{001261}",
-         r"\definecolor{hlName}{HTML}{FFF0A6}\definecolor{hlProp}{HTML}{E2F1DE}   % highlights: the coined name; its properties (image triples)",
-         r"{\scriptsize\setlength{\fboxsep}{1.2pt}", r"\renewcommand{\arraystretch}{1.3}",
+         r"{\scriptsize", r"\renewcommand{\arraystretch}{1.3}",
          r"\renewcommand\tabularxcolumn[1]{m{#1}}"]
     if images:
         L += [r"\begin{tabularx}{\textwidth}{@{}m{2.1cm} X @{\hspace{6pt}}m{0.26\linewidth}@{}}", r"\toprule",
