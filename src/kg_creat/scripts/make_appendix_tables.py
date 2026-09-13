@@ -60,7 +60,7 @@ def render(c: dict) -> str:
          r"{media/logos/#1}}\,}"]
 
     # (1) full leaderboard: overall + per-task composite, all models.
-    L += [r"\begin{table}[t]", r"\centering", r"\small",
+    L += [r"\begin{table}[htbp]", r"\centering", r"\small",
           r"\caption{\textbf{Full leaderboard.} Every model by the per-dimension "
           r"composite, as a \% of the maximum (stationary); the top rows appear in \Cref{tab:leaderboard}.}",
           r"\label{tab:leaderboard_full}", FIT_OPEN, r"\begin{tabular}{rlcccc}", r"\toprule",
@@ -77,7 +77,7 @@ def render(c: dict) -> str:
         rank = sorted(order, key=lambda m: pm[m]["per_task"].get(key) or -1, reverse=True)
         cols = "l" + "c" * (len(dims) + 1)
         head = " & ".join(h for _, h in dims)
-        L += [r"\begin{table}[t]", r"\centering", r"\small",
+        L += [r"\begin{table}[htbp]", r"\centering", r"\small",
               rf"\caption{{\textbf{{{label}: full per-dimension scores.}} Every model's "
               rf"score on each dimension, as a \% of the maximum, ordered by the task composite.}}",
               rf"\label{{tab:full_{key}}}", FIT_OPEN, rf"\begin{{tabular}}{{{cols}}}", r"\toprule",
