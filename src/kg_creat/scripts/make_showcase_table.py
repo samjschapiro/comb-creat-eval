@@ -99,6 +99,18 @@ def render(rows, images=False) -> str:
     return "\n".join(L)
 
 
+def aligned_paths(x):
+    """The two aligned paths (p_u, p_v) the model built before projecting, from its response file."""
+    resp = json.loads((RUN / "responses" / x["model"] / "responses.json").read_text())
+    for r in resp:
+        if r["mode"] != "analogy":
+            continue
+        for it in r.get("items", []):
+            if it.get("invention") == x["name"] and r["u_label"] == x["u"] and r["v_label"] == x["v"]:
+                return it["paths"][0], it["paths"][1]
+    raise SystemExit(f"FATAL: no aligned paths for {x['name']!r} in {x['model']}")
+
+
 def from_run(task, name, model):
     """Build a showcase row for an invention that is not in the unanimous JSON, from the run files."""
     scores = json.loads((RUN / "scores" / model / "path_scores.json").read_text())
@@ -112,11 +124,69 @@ def from_run(task, name, model):
     raise SystemExit(f"FATAL: ({task}, {name!r}) not found in {model}'s run files")
 
 
+def _c(col, txt): return f"\\textcolor{{{col}}}{{{txt}}}"
+
+
+def triple(t, col_map):
+    """(s, r, o) with each entity coloured by the domain it belongs to (col_map: entity -> colour)."""
+    def ent(e): return _c(col_map[e], tex(e)) if e in col_map else tex(e)
+    return f"({ent(t[0])}, {tex(t[1])}, {ent(t[2])})"
+
+
+def examples_row(x, letter, image=None) -> str:
+    """One analogy in the format of the paper's Table 3 (example outputs on each task)."""
+    pu, pv = aligned_paths(x)
+    nodes_u = {e for t in pu for e in (t[0], t[2])} | {x["u"]}
+    nodes_v = {e for t in pv for e in (t[0], t[2])} | {x["v"]}
+    src = x["projected"]
+    # the source domain is whichever path the source triples' objects come from
+    objs = [p["source"][2] for p in x["projection"]]
+    src_is_v = sum(o in nodes_v for o in objs) >= sum(o in nodes_u for o in objs)
+    src_col, tgt_col = ("domB", "domA") if src_is_v else ("domA", "domB")
+    col = {e: "domA" for e in nodes_u}; col.update({e: "domB" for e in nodes_v})
+    col[src] = src_col; col[x["name"]] = "invCol"
+    bs = chr(92)
+    L = [f"{bs}textbf{{Anchors}} $(u,v)$: {_c('domA', bs + 'emph{' + tex(x['u']) + '}')} $::$ {_c('domB', bs + 'emph{' + tex(x['v']) + '}')}.",
+         _c("domA", f"{bs}textbf{{Path a}} $(p_u)$: " + ", ".join(f"({tex(t[0])}, {tex(t[1])}, {tex(t[2])})" for t in pu)) + ".",
+         _c("domB", f"{bs}textbf{{Path b}} $(p_v)$: " + ", ".join(f"({tex(t[0])}, {tex(t[1])}, {tex(t[2])})" for t in pv)) + ".",
+         f"{bs}textbf{{Source}} $({bs}varphi)$: {_c(src_col, tex(src))} (from {tex(x['v'] if src_is_v else x['u'])}, no counterpart in {tex(x['u'] if src_is_v else x['v'])}).",
+         f"{bs}textbf{{Invention}} $(h {bs}gets M[{bs}varphi])$: {_c('invCol', bs + 'textbf{' + tex(x['name']) + '}')}.",
+         f"{bs}textbf{{Source to Target Mapping}} $(M^{{u, v}})$:"]
+    L += [f"{triple(p['source'], col)} ${bs}mapsto$ {triple(p['image'], col)}" for p in x["projection"]]
+    body = f" {bs}newline\n".join(L)
+    label = f"{bs}textbf{{({letter})}} Analogy {bs}newline ({tex(x['display'])})"
+    cells = f"{label} & {body}"
+    if image:
+        cells += f" & {bs}includegraphics[width={bs}linewidth]{{{image}}}"
+    return cells + f" {bs}{bs}"
+
+
+def render_examples(rows, images=False) -> str:
+    L = [HEADER,
+         "% Fragment (no float wrapper, no caption), in the format of tab_examples.tex: \\input inside a figure/table float.",
+         r"\providecommand{\provlogo}[1]{\raisebox{-0.15ex}{\includegraphics[height=0.85em]{media/logos/#1}}\,}",
+         r"\definecolor{domA}{HTML}{1E6F9D}\definecolor{domB}{HTML}{8B2706}\definecolor{invCol}{HTML}{001261}",
+         r"{\scriptsize", r"\renewcommand{\arraystretch}{1.3}",
+         r"\renewcommand\tabularxcolumn[1]{m{#1}}"]
+    if images:
+        L += [r"\begin{tabularx}{\textwidth}{@{}m{2.1cm} X @{\hspace{6pt}}m{0.26\linewidth}@{}}", r"\toprule",
+              r"\textbf{Task (model)} & \textbf{Example output} & \\", r"\midrule"]
+    else:
+        L += [r"\begin{tabularx}{\textwidth}{@{}m{2.1cm} X@{}}", r"\toprule",
+              r"\textbf{Task (model)} & \textbf{Example output} \\", r"\midrule"]
+    body = [examples_row(x, letter, IMAGES.get(x["name"]) if images else None) for x, letter in zip(rows, "abcdefgh")]
+    L.append("\n\\midrule\n".join(body))
+    L += [r"\bottomrule", r"\end{tabularx}", "}", ""]
+    return "\n".join(L)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("src", type=Path)
     ap.add_argument("dst", type=Path)
     ap.add_argument("--images", action="store_true", help="add the illustration column (paper figure layout)")
+    ap.add_argument("--style", choices=["columns", "examples"], default="columns",
+                    help="columns: one column per field; examples: the paper's Table 3 format (paths, source, invention, mapping)")
     a = ap.parse_args()
     data = json.loads(a.src.read_text())
     rows = []
@@ -128,7 +198,7 @@ def main():
         if len(m) != 1:
             raise SystemExit(f"FATAL: ({task}, {name!r}) matches {len(m)} showcase inventions")
         rows.append(m[0])
-    a.dst.write_text(render(rows, images=a.images))
+    a.dst.write_text(render_examples(rows, images=a.images) if a.style == "examples" else render(rows, images=a.images))
     print(f"wrote {a.dst} ({len(rows)} rows: " + "; ".join(f"{x['name']} [{x['display']}]" for x in rows) + ")")
 
 
