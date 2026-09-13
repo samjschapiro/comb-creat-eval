@@ -49,7 +49,7 @@ def main():
     freqs = names()
     font = str(NIMBUS) if NIMBUS.exists() else next((f for f in font_manager.findSystemFonts() if f.endswith(("Times New Roman.ttf", "DejaVuSerif.ttf"))), None)
     fig, axes = plt.subplots(1, 2, figsize=(16, 6.2))
-    for ax, task, letter, op in zip(axes, ("blending", "analogy"), "ab", ("+", "::")):
+    for ax, task, letter in zip(axes, ("analogy", "blending"), "ab"):
         f = freqs[task]
         colors = PALETTE[task]
         wc = WordCloud(width=1500, height=1000, background_color="white", max_words=MAX_WORDS, prefer_horizontal=0.95,
@@ -57,7 +57,7 @@ def main():
                        color_func=lambda *a, **k: colors[hash(a[0]) % len(colors)], collocations=False)
         wc.generate_from_frequencies(f)
         ax.imshow(wc, interpolation="bilinear"); ax.axis("off")
-        ax.set_title(f"({letter}) {task}", fontsize=22, loc="left", pad=8)
+        ax.set_title(f"({letter}) {task}", fontsize=30, loc="left", pad=10)
         print(f"{task}: {sum(f.values()):,} inventions, {len(f):,} distinct names; top: {f.most_common(6)}")
     fig.tight_layout(w_pad=1.5)
     OUT.mkdir(parents=True, exist_ok=True)
