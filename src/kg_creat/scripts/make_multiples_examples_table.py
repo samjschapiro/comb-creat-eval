@@ -6,7 +6,7 @@ in the middle column, then the unmatched properties of each side in grey. The pa
 same explicit choice as the figure script (plot_multiples_examples.PANELS / PAPER_PANELS), so the
 two never disagree.
 
-A second fragment, tab_same_name_examples.tex next to the first, shows the converse (Finding: naming
+A second row of the same fragment (and, separately, tab_same_name_examples.tex) shows the converse (Finding: naming
 and inventing dissociate): two inventions that carry the SAME coined name but share no property. Their
 rows are the best one-to-one pairing of properties (Hungarian assignment on cosine), unshaded, so the
 reader sees that even the closest pairs fall well below theta. These come from the
@@ -126,9 +126,18 @@ def preamble():
     ]
 
 
-def render(d) -> str:
+def render(d, embed=None) -> str:
+    """The multiples row; with an embedder, a second row of same-name pairs (best pairing, unshaded)."""
     picks = [find(d["multiples"], *spec) for spec in PAPER_PANELS]
-    out = preamble() + ["\\hfill\n".join(one_table(m, letter) for m, letter in zip(picks, "abcdefgh")), ""]
+    out = preamble() + ["\\hfill\n".join(one_table(m, letter) for m, letter in zip(picks, "abcdefgh"))]
+    if embed is not None and SAME_NAME_PANELS:
+        same = []
+        for spec, letter in zip(SAME_NAME_PANELS, "abcdefgh"[len(picks):]):
+            m = find_same_name(d, *spec)
+            m["matches"] = best_pairing(m, embed)
+            same.append(one_table(m, letter, shade=False))
+        out += ["", "\\vspace{6pt}", "", "\\hfill\n".join(same)]
+    out.append("")
     return "\n".join(out)
 
 
@@ -149,10 +158,10 @@ def main():
     d = json.loads(a.src.read_text())
     if "multiples" not in d:
         raise SystemExit(f"{a.src} has no `multiples` block -- re-run analyze_inventive_multiples.py")
-    a.dst.write_text(render(d))
-    print(f"wrote {a.dst} ({len(PAPER_PANELS)} multiples tables)")
     from src.kg_creat.embed import get_embedder
     embed = get_embedder("mlx-community/all-MiniLM-L6-v2-4bit")
+    a.dst.write_text(render(d, embed))
+    print(f"wrote {a.dst} ({len(PAPER_PANELS)} multiples tables + {len(SAME_NAME_PANELS)} same-name tables below)")
     dst2 = a.dst.with_name("tab_same_name_examples.tex")
     dst2.write_text(render_same_name(d, embed))
     print(f"wrote {dst2} ({len(SAME_NAME_PANELS)} same-name tables)")
