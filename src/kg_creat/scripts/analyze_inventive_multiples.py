@@ -754,7 +754,27 @@ def main():
             break
     comp_names = [len({_nn(names[i]) for i in c}) for _, _, c in clusters]
     tau3 = [p for p in pairs if p["shared"] >= 3]
+    # A FALSE multiple: two models coin the same name for the same anchors but share NO property at
+    # theta (shared == 0). Reported per task and overall, at the pair level and at the invention
+    # level (inventions that belong to at least one such pair), mirroring the tau table.
+    n_task = Counter(str(tk[i]) for i in range(len(names)))
+    def false_block(sel):
+        sn = [p for p in same_name if sel(p)]
+        fm = [p for p in sn if p["shared"] == 0]
+        inv_same = {i for p in sn for i in (p["a"], p["b"])}
+        inv_false = {i for p in fm for i in (p["a"], p["b"])}
+        n_inv = sum(n_task[t] for t in n_task if sel({"task": t}))
+        return {"same_name_pairs": len(sn), "false_multiples": len(fm),
+                "pct_of_same_name_pairs": (100.0 * len(fm) / len(sn)) if sn else float("nan"),
+                "shared_counts": {str(k): v for k, v in sorted(Counter(p["shared"] for p in sn).items())},
+                "n_inventions": n_inv, "inventions_same_name": len(inv_same), "inventions_false_multiple": len(inv_false),
+                "pct_inventions_same_name": 100.0 * len(inv_same) / n_inv, "pct_inventions_false_multiple": 100.0 * len(inv_false) / n_inv}
+    false_multiples = {"definition": "same coined name (normalised), same anchors, different models, shared == 0 at theta",
+                       "blending": false_block(lambda p: p["task"] == "blending"),
+                       "analogy": false_block(lambda p: p["task"] == "analogy"),
+                       "all": false_block(lambda p: True)}
     dissoc = {
+        "false_multiples": false_multiples,
         "table": {"same_name_multiple": cell(True, True), "same_name_not_multiple": cell(True, False),
                   "different_name_multiple": cell(False, True), "different_name_not_multiple": cell(False, False)},
         "p_multiple_given_same_name": float(np.mean([p["structural"] for p in same_name])),
