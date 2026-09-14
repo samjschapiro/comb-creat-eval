@@ -7,8 +7,8 @@ here now, in a module with NO matplotlib dependency, so the table scripts can im
 """
 
 LOGO_SLUG = {"openai": "openai", "anthropic": "claude", "google": "googlegemini", "x-ai": "xai",
-             "deepseek": "deepseek", "qwen": "qwen", "z-ai": "zai", "meta": "meta"}
-# microsoft and moonshotai have no logo asset on disk, so they get a brand colour and no mark.
+             "deepseek": "deepseek", "qwen": "qwen", "z-ai": "zai", "meta": "meta", "moonshotai": "kimi"}
+# microsoft has no logo asset on disk, so it gets a brand colour and no mark.
 # approximate brand colors; models sharing a provider get distinct shades of the same hue.
 BRAND = {"openai": "#10A37F", "google": "#4285F4", "anthropic": "#D97757", "x-ai": "#1A1A1A",
          "qwen": "#615CED", "meta": "#0866FF", "deepseek": "#4D6BFE", "z-ai": "#2F7D6E",

@@ -69,6 +69,12 @@ def _load_logos():
     out = {}
     for prov, slug in LOGO_SLUG.items():
         f = LOGO_DIR / f"{slug}.svg"
+        png = LOGO_DIR / f"{slug}.png"
+        if not f.exists() and png.exists():          # kimi: its SVG uses H/V/arc commands svgpath2mpl cannot parse, so a
+            img = (plt.imread(png) * 255).astype(np.uint8) if plt.imread(png).dtype != np.uint8 else plt.imread(png)
+            rgba = np.zeros((*img.shape[:2], 4), np.uint8); rgba[..., :3] = (0x33, 0x33, 0x33); rgba[..., 3] = img[..., 3]
+            out[prov] = rgba                            # pre-rendered transparent PNG is recoloured to the logo grey instead
+            continue
         if not f.exists():
             continue
         d = re.search(r'\sd="([^"]+)"', f.read_text()).group(1)
