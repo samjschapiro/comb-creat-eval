@@ -53,7 +53,9 @@ def model_cell(key: str) -> str:
     return f"{logo}{tex(DISPLAY.get(key, key.split('_', 1)[-1]))}"
 
 
-def one_table(m, letter, shade=True) -> str:
+def one_table(m, letter, shade=True, kind="Inventive Multiple", number=1) -> str:
+    """kind/number head the panel title, e.g. "(a) Inventive Multiple #1: \\emph{Opera} + \\emph{Documentary film}"
+    (the author's wording on Overleaf, 2026-09-14); a same-name pair is a "False Multiple"."""
     a, b = m["a"], m["b"]
     matched = sorted(m["matches"], key=lambda x: -x["cos"])
     ma, mb = {x["a"] for x in matched}, {x["b"] for x in matched}
@@ -65,7 +67,7 @@ def one_table(m, letter, shade=True) -> str:
     rest_b = [j for j in range(len(b["properties"])) if j not in mb]
     op = "+" if m["task"] == "blending" else "::"
     L = [f"\\begin{{minipage}}[t]{{0.49\\linewidth}}\\centering",
-         f"\\textbf{{({letter}) {tex(m['u'])} {op} {tex(m['v'])}}}\\\\[3pt]",
+         f"\\textbf{{({letter}) {kind} \\#{number}: \\emph{{{tex(m['u'])}}} {op} \\emph{{{tex(m['v'])}}}}}\\\\[3pt]",
          r"\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.43\linewidth}@{\hspace{4pt}}c@{\hspace{4pt}}"
          r">{\raggedright\arraybackslash}p{0.43\linewidth}@{}}",
          r"\toprule",
@@ -129,13 +131,13 @@ def preamble():
 def render(d, embed=None) -> str:
     """The multiples row; with an embedder, a second row of same-name pairs (best pairing, unshaded)."""
     picks = [find(d["multiples"], *spec) for spec in PAPER_PANELS]
-    out = preamble() + ["\\hfill\n".join(one_table(m, letter) for m, letter in zip(picks, "abcdefgh"))]
+    out = preamble() + ["\\hfill\n".join(one_table(m, letter, number=i + 1) for i, (m, letter) in enumerate(zip(picks, "abcdefgh")))]
     if embed is not None and SAME_NAME_PANELS:
         same = []
-        for spec, letter in zip(SAME_NAME_PANELS, "abcdefgh"[len(picks):]):
+        for i, (spec, letter) in enumerate(zip(SAME_NAME_PANELS, "abcdefgh"[len(picks):])):
             m = find_same_name(d, *spec)
             m["matches"] = best_pairing(m, embed)
-            same.append(one_table(m, letter, shade=False))
+            same.append(one_table(m, letter, shade=False, kind="False Multiple", number=i + 1))
         out += ["", "\\vspace{6pt}", "", "\\hfill\n".join(same)]
     out.append("")
     return "\n".join(out)
@@ -143,10 +145,10 @@ def render(d, embed=None) -> str:
 
 def render_same_name(d, embed) -> str:
     same = []
-    for spec, letter in zip(SAME_NAME_PANELS, "abcdefgh"):
+    for i, (spec, letter) in enumerate(zip(SAME_NAME_PANELS, "abcdefgh")):
         m = find_same_name(d, *spec)
         m["matches"] = best_pairing(m, embed)
-        same.append(one_table(m, letter, shade=False))
+        same.append(one_table(m, letter, shade=False, kind="False Multiple", number=i + 1))
     return "\n".join(preamble() + ["\\hfill\n".join(same), ""])
 
 
