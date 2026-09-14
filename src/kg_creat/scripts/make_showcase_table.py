@@ -229,7 +229,7 @@ def render_examples(rows, images=False) -> str:
          r"\renewcommand\tabularxcolumn[1]{m{#1}}"]
     if images:
         L += [r"\begin{tabularx}{\textwidth}{@{}m{2.1cm} X @{\hspace{6pt}}m{0.20\linewidth}@{}}", r"\toprule",
-              r"\textbf{Task (model)} & \textbf{Example output} & \\", r"\midrule"]
+              r"\textbf{Task (model)} & \textbf{Example output} & \textbf{Illustration} \\", r"\midrule"]
     else:
         L += [r"\begin{tabularx}{\textwidth}{@{}m{2.1cm} X@{}}", r"\toprule",
               r"\textbf{Task (model)} & \textbf{Example output} \\", r"\midrule"]
