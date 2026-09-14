@@ -6,7 +6,8 @@ in the middle column, then the unmatched properties of each side in grey. The pa
 same explicit choice as the figure script (plot_multiples_examples.PANELS / PAPER_PANELS), so the
 two never disagree.
 
-A second row of the same fragment (and, separately, tab_same_name_examples.tex) shows the converse (Finding: naming
+A second fragment, tab_same_name_examples.tex (appendix; or a second row of the main fragment with
+--same-name-row), shows the converse (Finding: naming
 and inventing dissociate): two inventions that carry the SAME coined name but share no property. Their
 rows are the best one-to-one pairing of properties (Hungarian assignment on cosine), unshaded, so the
 reader sees that even the closest pairs fall well below theta. These come from the
@@ -178,14 +179,16 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("src", type=Path, help="inventive_multiples.json")
     ap.add_argument("dst", type=Path, help="output .tex fragment")
+    ap.add_argument("--same-name-row", action="store_true",
+                    help="also append the false-multiples row to the main fragment (default: they go only to tab_same_name_examples.tex, for the appendix)")
     a = ap.parse_args()
     d = json.loads(a.src.read_text())
     if "multiples" not in d:
         raise SystemExit(f"{a.src} has no `multiples` block -- re-run analyze_inventive_multiples.py")
     from src.kg_creat.embed import get_embedder
     embed = get_embedder("mlx-community/all-MiniLM-L6-v2-4bit")
-    a.dst.write_text(render(d, embed))
-    print(f"wrote {a.dst} ({len(PAPER_PANELS)} multiples tables + {len(SAME_NAME_PANELS)} same-name tables below)")
+    a.dst.write_text(render(d, embed if a.same_name_row else None))
+    print(f"wrote {a.dst} ({len(PAPER_PANELS)} multiples tables" + (f" + {len(SAME_NAME_PANELS)} same-name tables below)" if a.same_name_row else ")"))
     dst2 = a.dst.with_name("tab_same_name_examples.tex")
     dst2.write_text(render_same_name(d, embed))
     print(f"wrote {dst2} ({len(SAME_NAME_PANELS)} same-name tables)")
