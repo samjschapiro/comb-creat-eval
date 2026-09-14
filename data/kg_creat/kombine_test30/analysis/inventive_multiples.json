@@ -399,6 +399,56 @@
     "inventions_false_multiple": 408,
     "pct_inventions_same_name": 23.91304347826087,
     "pct_inventions_false_multiple": 19.71014492753623
+   },
+   "by_shared": [
+    {
+     "shared": 0,
+     "n": 513,
+     "pct_of_same_name_pairs": 68.12749003984064,
+     "inventions_pct": 19.71014492753623,
+     "blending_pct": 67.04225352112677,
+     "analogy_pct": 86.04651162790698,
+     "same_provider_pct": 55.92417061611374,
+     "cross_provider_pct": 72.87822878228782
+    },
+    {
+     "shared": 1,
+     "n": 198,
+     "pct_of_same_name_pairs": 26.294820717131476,
+     "inventions_pct": 11.159420289855072,
+     "blending_pct": 27.183098591549296,
+     "analogy_pct": 11.627906976744185,
+     "same_provider_pct": 33.649289099526065,
+     "cross_provider_pct": 23.431734317343174
+    },
+    {
+     "shared": 2,
+     "n": 38,
+     "pct_of_same_name_pairs": 5.046480743691899,
+     "inventions_pct": 3.140096618357488,
+     "blending_pct": 5.211267605633803,
+     "analogy_pct": 2.3255813953488373,
+     "same_provider_pct": 9.004739336492891,
+     "cross_provider_pct": 3.5055350553505535
+    },
+    {
+     "shared": 3,
+     "n": 4,
+     "pct_of_same_name_pairs": 0.5312084993359893,
+     "inventions_pct": 0.3864734299516908,
+     "blending_pct": 0.5633802816901409,
+     "analogy_pct": 0.0,
+     "same_provider_pct": 1.4218009478672986,
+     "cross_provider_pct": 0.18450184501845018
+    }
+   ],
+   "n_same_name_by_task": {
+    "blending": 710,
+    "analogy": 43
+   },
+   "n_same_name_by_family": {
+    "same": 211,
+    "different": 542
    }
   },
   "table": {

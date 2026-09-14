@@ -769,10 +769,26 @@ def main():
                 "shared_counts": {str(k): v for k, v in sorted(Counter(p["shared"] for p in sn).items())},
                 "n_inventions": n_inv, "inventions_same_name": len(inv_same), "inventions_false_multiple": len(inv_false),
                 "pct_inventions_same_name": 100.0 * len(inv_same) / n_inv, "pct_inventions_false_multiple": 100.0 * len(inv_false) / n_inv}
+    def pct(sel_pairs, k):
+        return (100.0 * sum(1 for p in sel_pairs if min(p["shared"], 3) == k) / len(sel_pairs)) if sel_pairs else float("nan")
+    by_shared = []
+    for k in (0, 1, 2, 3):             # k = 3 means >= 3, like the tau table's last row
+        rows_k = [p for p in same_name if min(p["shared"], 3) == k]
+        inv_k = {i for p in rows_k for i in (p["a"], p["b"])}
+        by_shared.append({"shared": k, "n": len(rows_k), "pct_of_same_name_pairs": pct(same_name, k),
+                          "inventions_pct": 100.0 * len(inv_k) / len(names),
+                          "blending_pct": pct([p for p in same_name if p["task"] == "blending"], k),
+                          "analogy_pct": pct([p for p in same_name if p["task"] == "analogy"], k),
+                          "same_provider_pct": pct([p for p in same_name if p["same_provider"]], k),
+                          "cross_provider_pct": pct([p for p in same_name if not p["same_provider"]], k)})
     false_multiples = {"definition": "same coined name (normalised), same anchors, different models, shared == 0 at theta",
                        "blending": false_block(lambda p: p["task"] == "blending"),
                        "analogy": false_block(lambda p: p["task"] == "analogy"),
-                       "all": false_block(lambda p: True)}
+                       "all": false_block(lambda p: True),
+                       "by_shared": by_shared,
+                       "n_same_name_by_task": {t: sum(1 for p in same_name if p["task"] == t) for t in ("blending", "analogy")},
+                       "n_same_name_by_family": {"same": sum(1 for p in same_name if p["same_provider"]),
+                                                 "different": sum(1 for p in same_name if not p["same_provider"])}}
     dissoc = {
         "false_multiples": false_multiples,
         "table": {"same_name_multiple": cell(True, True), "same_name_not_multiple": cell(True, False),
