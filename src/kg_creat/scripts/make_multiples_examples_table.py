@@ -32,9 +32,9 @@ from src.kg_creat.scripts.plot_multiples_examples import PAPER_PANELS, find
 
 # (task, u, v, model a, model b): same-name pairs for the second row, looked up in the JSON's
 # name_property_dissociation examples; each must be present or the script fails.
-SAME_NAME_PANELS = [
-    ("blending", "The steam engine", "Buddhism", "anthropic_claude-opus-4-6", "openai_gpt-5-mini"),   # "dharma engine": the word cloud's most reused name
-    ("blending", "Don Quixote", "Pi", "openai_gpt-4o-mini", "openai_gpt-5-mini"),                     # "Quixotic Pi": the least overlap of any same-name pair
+SAME_NAME_PANELS = [   # everyday anchors, common-sense properties, and almost nothing in common
+    ("blending", "The blue whale", "The mattress", "anthropic_claude-fable-5", "qwen_qwen-2-5-72b-instruct"),   # "whale bed"
+    ("blending", "Rice", "Radio", "moonshotai_kimi-k2", "openai_gpt-4o-mini"),                                   # "rice radio"
 ]
 RUN = Path("data/kg_creat/kombine_test30")
 
