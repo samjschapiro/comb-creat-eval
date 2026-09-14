@@ -19,9 +19,10 @@ import numpy as np
 
 SRC = Path("data/kg_creat/kombine_test30/analysis/inventive_multiples.json")
 OUT = Path("docs/reports/2026-09-01_kg_creat_inventive_multiples/figures")
-BLEND, ANALOGY = "#3F6F8F", "#9A7D2E"          # the paper's task colours (facet-correlation figure: TASK_COL)
-SAME, DIFF = "#4D4D4D", "#BDBDBD"              # model family: neutral greys
-INV = "#103D5F"                                 # the paper's batlowBlue
+# Figure 2's palette (the Kombine overview): soft red, tan and blue entities, dark slate outlines
+BLEND, ANALOGY = "#D87878", "#D89878"
+SAME, DIFF = "#486878", "#C9CDD1"
+INV = "#78A8C8"
 plt.rcParams.update({"font.family": "serif", "font.serif": ["Nimbus Roman", "Times New Roman", "DejaVu Serif"], "font.size": 16})
 YMIN = 0.03                                      # log-axis floor; a zero rate is written just above it
 
