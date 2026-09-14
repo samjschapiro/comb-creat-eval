@@ -28,7 +28,7 @@ from src.kg_creat.model_names import DISPLAY, LOGO_SLUG, _provider
 SHOWCASE = [
     ("association", "Table 3"),                                    # verbatim row, see ASSOCIATION_ROW
     ("analogy", "Accountability bond"),                            # officials post a bond forfeited on abuse of power
-    ("analogy", "whale groomer drone", "anthropic_claude-fable-5"),  # a vacuum cleaner for the blue whale
+    # ("analogy", "whale groomer drone", "anthropic_claude-fable-5"),  # a vacuum cleaner for the blue whale (dropped 09-13: one analogy suffices)
     ("blending", "Mandate bank"),                                  # a bank whose deposits are votes, lent as mandates
 ]
 ASSOCIATION_ROW = (r"Association \newline (gpt-5)", r"\textbf{Anchors} $(u,v)$: \textcolor{domA}{\emph{Democracy}} $\to$ \textcolor{domB}{\emph{Banking}}. \newline "
