@@ -30,13 +30,17 @@ YMIN = 0.03                                      # log-axis floor; a zero rate i
 
 def bars(ax, taus, left, right, left_lab, right_lab, cl, cr, ratio_key=None, log=True):
     x = np.arange(len(taus)); w = 0.36
-    for off, vals, lab, c in ((-w / 2, left, left_lab, cl), (w / 2, right, right_lab, cr)):
-        v = np.array(vals, float); pos = x + off
-        ax.bar(pos[v > 0], v[v > 0], w, color=c, label=lab, edgecolor="none", zorder=3)
-        for xi, vi in zip(pos, v):
+    L, Rv = np.array(left, float), np.array(right, float)
+    for off, vals, lab, c, side in ((-w / 2, L, left_lab, cl, -1), (w / 2, Rv, right_lab, cr, +1)):
+        pos = x + off
+        ax.bar(pos[vals > 0], vals[vals > 0], w, color=c, label=lab, edgecolor="none", zorder=3)
+        for k, (xi, vi) in enumerate(zip(pos, vals)):
             y = (vi * 1.15) if vi > 0 else YMIN * 1.15
-            lab = "0%" if vi == 0 else (f"{vi:.2f}%" if vi < 1 else f"{vi:.1f}%")
-            ax.text(xi, y, lab, ha="center", va="bottom", fontsize=12.5, color="black")
+            txt = "0%" if vi == 0 else (f"{vi:.2f}%" if vi < 1 else f"{vi:.1f}%")
+            other = Rv[k] if side < 0 else L[k]
+            nudge = side * 0.07 if other > vi else 0.0        # the shorter bar's label steps away from its taller neighbour
+            ax.text(xi + nudge, y, txt, ha="center", va="bottom", fontsize=10.5, color="black", zorder=5,
+                    bbox=dict(boxstyle="square,pad=0.12", facecolor="white", edgecolor="none", alpha=0.9))
     if ratio_key:
         for xi, (l, r) in enumerate(zip(left, right)):
             if r > 0:
@@ -57,7 +61,7 @@ def main():
     fig, axes = plt.subplots(1, 3, figsize=(10.4, 3.9), gridspec_kw={"width_ratios": [1.05, 1.15, 1.15]})
     ax = axes[0]; v = [rows[t]["inventions_pct"] for t in taus]; x = np.arange(3)
     ax.bar(x, v, 0.55, color=INV, zorder=3)
-    for xi, vi in zip(x, v): ax.text(xi, vi + 1.5, f"{vi:.1f}%", ha="center", va="bottom", fontsize=12.5, color="black")
+    for xi, vi in zip(x, v): ax.text(xi, vi + 1.5, f"{vi:.1f}%", ha="center", va="bottom", fontsize=10.5, color="black")
     ax.set_xticks(x); ax.set_xticklabels([f"$\\tau={t}$" for t in taus], fontsize=15); ax.set_ylim(0, 80)
     ax.set_yticks([0, 20, 40, 60, 80]); ax.set_yticklabels([f"{t}%" for t in (0, 20, 40, 60, 80)], fontsize=14)
     ax.set_title("(a) Inventions in a multiple", loc="left", fontsize=17)
