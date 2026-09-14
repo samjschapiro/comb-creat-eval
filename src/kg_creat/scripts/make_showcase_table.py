@@ -31,7 +31,7 @@ SHOWCASE = [
     ("analogy", "whale groomer drone", "anthropic_claude-fable-5"),  # a vacuum cleaner for the blue whale
     ("blending", "Mandate bank"),                                  # a bank whose deposits are votes, lent as mandates
 ]
-ASSOCIATION_ROW = (r"Association \\newline (gpt-5)", r"\textbf{Anchors} $(u,v)$: \textcolor{domA}{\emph{Democracy}} $\to$ \textcolor{domB}{\emph{Banking}}. \newline "
+ASSOCIATION_ROW = (r"Association \newline (gpt-5)", r"\textbf{Anchors} $(u,v)$: \textcolor{domA}{\emph{Democracy}} $\to$ \textcolor{domB}{\emph{Banking}}. \newline "
                    r"\textbf{Path} $(p)$: (\textcolor{domA}{Democracy}, upholds, the rule of law) $\to$ (the rule of law, enforces, property rights) $\to$ (property rights, enable, \textcolor{domB}{Banking}).")
 # --images: an illustration per row (generated with gpt-5-image; prompts in scratch/showcase_inventions/
 # gen_images.py) in a further column, vertically centred against its row, so the table is the centrepiece
