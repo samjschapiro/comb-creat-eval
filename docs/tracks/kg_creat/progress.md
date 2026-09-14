@@ -679,3 +679,14 @@ Source `llm_creativity_mech_interp/src/experiments/kombine_generation/` (commits
 **Showcase candidates.** `compile_showcase_inventions.py` collects the inventions every panel judge passed (blend: generic space valid, coherent, scope 3; analogy: valid, coherent, path fully factual): 105/1,033 blends (31 models, 24 pairs) and 286/1,037 analogy inventions (35 models, 30 pairs); listing in `scratch/showcase_inventions/candidates.md` ranked by originality (one per pair, ≤ 2 per model), mocks of a card gallery, a chip table and an originality × surprise scatter in the same folder. The unanimous set is **not** more original or surprising than the rest (medians equal), so a scatter would undercut the showcase; cards or a table are the layouts to choose between. A plainness ranking (wordfreq Zipf) was tried and reverted at the user's request.
 
 **Open.** Showcase picks and layout; results-section organisation (author's); retest30 go-ahead; the two blank Rice + Radio cells.
+
+## 2026-09-12 → 09-14 — paper tables and figures rebuilt around concrete inventions; false multiples
+
+**Table 3** is now generated (`make_showcase_table.py --style examples --images`) in its original format with an Illustration column: Radio → The Milky Way (association, claude-opus-5, from the run), whale groomer drone (analogy, claude-fable-5, the human study's worked example), market colony (blend, claude-opus-4.5, judge-unanimous), pictures by gpt-5-image via OpenRouter ($1.71 for all attempts, cost ledger). **Table 5** has a second row of false multiples (whale bed; rice radio) with the author's panel-title format generated; caption reworked with permission. **Word cloud** of coined names (`plot_invention_wordcloud.py`) is a figure in the benchmark float; the τ table moved to the appendix (Table 13) and a **false-multiples table** (Table 14, same layout) sits under it. **Appendix reordered** by first reference from the body (background, cc vs generalisation + comparison table, entity pool, task prompts, judge prompts, reliability, full results); 27–28 pages.
+
+**False multiples** (same normalised name, same anchors, different models, τ = 0 shared at θ), now a block in `analyze_inventive_multiples.py`: 513/753 same-name pairs (68.1%); 408/2,070 inventions (19.7%; blends 33.6%, analogy 5.9%); same-name analogy pairs are false more often than blend pairs (86% vs 67%), same-family pairs less often (56% vs 73%). Rerun reproduced 395 multiples at τ = 2.
+
+**Assets.** Kimi logo (`media/logos/kimi.pdf`, `assets/logos/kimi.png` + PNG fallback in the plot loader). `make_tau_multiples_table.py` reproduces the author's Overleaf edits. Showcase candidates: `scratch/showcase_inventions/{practical_candidates,blend_candidates}.md`, mocks and `gen_images.py`.
+
+**Open.** Table 14 caption is an `\ai{}` draft; Definition 3 still cites "interest" as Table 3's projected source; logo-bearing figures need regeneration for Kimi; retest30 awaits go-ahead.
+

@@ -76,6 +76,9 @@ src/
 │       ├── make_tau_multiples_table.py, make_multiples_examples_table.py  # caption-free LaTeX fragments for the paper (tau table, examples tables)
 │       ├── make_paper_multiples_figure.py  # assembles the paper's multiples figure assets from the report figures (unreferenced by the paper)
 │       ├── compile_showcase_inventions.py  # inventions every panel judge passed -> analysis JSON + ranked candidates.md (showcase figure)
+│       ├── make_showcase_table.py          # Table 3: example outputs per task from the run files, Table-3 format, optional illustration column
+│       ├── plot_invention_wordcloud.py     # word cloud of coined invention names per task (paper figure)
+│       ├── make_false_multiples_table.py   # appendix table of false multiples (same name, tau = 0 shared), laid out like the tau table
 │       ├── sample_anagram.py, run_anagram.py, score_anagram.py    # anagram side probe
 │       └── build_gc.py, sample_bundles.py, plot_regime_a.py, compute_diversity.py, make_pass2.py  # legacy seed-BFS / Regime-A pipeline
 └── plot_twist/                 # active track (TwistBench: transformational creativity via plot twists); mirrored in the private repo samjschapiro/twistbench-code
