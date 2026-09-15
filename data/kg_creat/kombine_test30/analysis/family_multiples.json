@@ -1,0 +1,71 @@
+{
+ "tau": 2,
+ "cross_family_pct": 0.9406073636119323,
+ "cross_family_pair_items": 29768,
+ "by_provider": [
+  {
+   "provider": "x-ai",
+   "name": "xAI",
+   "n_models": 2,
+   "n_pair_items": 59,
+   "n_multiples": 5,
+   "within_pct": 8.474576271186441
+  },
+  {
+   "provider": "deepseek",
+   "name": "DeepSeek",
+   "n_models": 3,
+   "n_pair_items": 180,
+   "n_multiples": 13,
+   "within_pct": 7.222222222222222
+  },
+  {
+   "provider": "meta-llama",
+   "name": "Meta",
+   "n_models": 2,
+   "n_pair_items": 58,
+   "n_multiples": 3,
+   "within_pct": 5.172413793103448
+  },
+  {
+   "provider": "qwen",
+   "name": "Qwen",
+   "n_models": 2,
+   "n_pair_items": 60,
+   "n_multiples": 2,
+   "within_pct": 3.3333333333333335
+  },
+  {
+   "provider": "anthropic",
+   "name": "Anthropic",
+   "n_models": 10,
+   "n_pair_items": 2674,
+   "n_multiples": 77,
+   "within_pct": 2.8795811518324608
+  },
+  {
+   "provider": "z-ai",
+   "name": "Z.ai",
+   "n_models": 2,
+   "n_pair_items": 56,
+   "n_multiples": 1,
+   "within_pct": 1.7857142857142858
+  },
+  {
+   "provider": "google",
+   "name": "Google",
+   "n_models": 5,
+   "n_pair_items": 572,
+   "n_multiples": 6,
+   "within_pct": 1.048951048951049
+  },
+  {
+   "provider": "openai",
+   "name": "OpenAI",
+   "n_models": 7,
+   "n_pair_items": 1260,
+   "n_multiples": 8,
+   "within_pct": 0.6349206349206349
+  }
+ ]
+}
