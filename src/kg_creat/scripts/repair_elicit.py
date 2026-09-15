@@ -26,7 +26,7 @@ from src.dat_eval.llm import get_async_client  # noqa: E402
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "scripts" / "safety"))
 from cost_tracker import PRICING  # noqa: E402
 
-RESP_DIR = Path("data/kg_creat/kombine_test30/responses")
+RESP_DIR = Path("data/kg_creat/kombine_test30/responses")     # overridable: --resp-dir / --prompts (retest30)
 PROMPTS = Path("data/kg_creat/kombine_test30/prompts/prompts.json")
 BASE_MAX_TOKENS = 1600
 REASONING = {"exclude": False}      # default effort, matching the original run
@@ -150,5 +150,11 @@ if __name__ == "__main__":
                     help="override the retry ceiling (null-content failures need more than the original)")
     ap.add_argument("--models", nargs="+", default=None,
                     help="restrict to these model ids (required once a model has been scored)")
+    ap.add_argument("--resp-dir", default=None, help="responses dir to repair (default: kombine_test30)")
+    ap.add_argument("--prompts", default=None, help="prompts.json of that run (default: kombine_test30)")
     args = ap.parse_args()
+    if args.resp_dir:
+        RESP_DIR = Path(args.resp_dir)
+    if args.prompts:
+        PROMPTS = Path(args.prompts)
     asyncio.run(main(args.dry_run, args.parse_too, args.models, args.config, args.max_tokens))

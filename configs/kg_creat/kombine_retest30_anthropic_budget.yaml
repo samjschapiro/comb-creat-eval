@@ -1,0 +1,22 @@
+# TEST-RETEST (2026-09-15): opus-4.5 and opus-4.6, the two Claude models (test30 drew them via OpenRouter at T = 0.9 with
+# an 8k thinking cap; kombine_test30_anthropic3.yaml), re-elicited on the DIRECT Anthropic key with the
+# same 8k thinking budget via the older `thinking.type: enabled` interface, which this generation
+# requires (adaptive thinking is rejected); fable-5 is the reverse case and runs on the adaptive config. No temperature (the endpoint has none): a recorded deviation
+# that can only lower the measured reliability. Est ~$35; hard cap $50.
+upstream_dir: data/kg_creat/kombine_retest30/prompts
+output_dir: data/kg_creat/kombine_retest30/responses
+modes: [baseline, analogy, blending]
+provider:
+  kind: anthropic
+  api_key_env: ANTHROPIC_API_KEY
+  thinking_budget_tokens: 8000
+eval:
+  temperatures: [0.9]        # not sent
+  n_samples: 1
+  max_tokens: 32000          # must exceed the thinking budget (provider check)
+  max_tokens_absolute: true
+concurrency: 3
+budget_usd: 90.0             # HARD cap on the ANTHROPIC key (actual-cost stop); opus-4.6 alone cost $28.88 at $75/M output
+models:
+  - anthropic/claude-opus-4.5
+  - anthropic/claude-opus-4.6

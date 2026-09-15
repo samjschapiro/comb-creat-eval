@@ -1,0 +1,34 @@
+# TEST-RETEST (2026-09-15): all seven Claude models of the pool, re-elicited on the DIRECT Anthropic key
+# on the disjoint retest30 item set (30 anchor pairs shared by all three tasks;
+# data/kg_creat/kombine_retest30/prompts). Adaptive thinking at medium effort, no temperature (the
+# endpoint has none), absolute max_tokens, traces saved where the API returns them.
+#   - opus-4.8, opus-4.7, sonnet-4.6, fable-5.1: SAME conditions as their test30 draw
+#     (kombine_test30_anthropic4.yaml).
+#   - fable-5, opus-4.6, opus-4.5: their test30 draw went through OpenRouter at T = 0.9 with an 8k
+#     thinking cap (kombine_test30_anthropic3.yaml); the direct endpoint cannot reproduce that, so for
+#     these three the retest varies sampling conditions as well as items. That can only LOWER the
+#     measured reliability (a conservative estimate); the paper should say so.
+# Est ~$85 on the Anthropic key (the two fable models are most of it); hard cap $110.
+# SPLIT 2026-09-15 after the first pass: sonnet-4.6 finished ($13.51); opus-4.5 rejected adaptive thinking
+# ("adaptive thinking is not supported" for that generation), so the older three run from a sibling config
+# with an explicit thinking budget. This file: the adaptive-thinking generation only.
+upstream_dir: data/kg_creat/kombine_retest30/prompts
+output_dir: data/kg_creat/kombine_retest30/responses
+modes: [baseline, analogy, blending]
+provider:
+  kind: anthropic
+  api_key_env: ANTHROPIC_API_KEY
+  thinking_type: adaptive
+  effort: medium
+eval:
+  temperatures: [0.9]        # not sent
+  n_samples: 1
+  max_tokens: 32000
+  max_tokens_absolute: true
+concurrency: 3
+budget_usd: 70.0             # HARD cap; test30 spend was $5.8 + $3.9 + $20.6 (+ fable-5, priced like fable-5.1)
+models:
+  - anthropic/claude-opus-4.7
+  - anthropic/claude-opus-4.8
+  - anthropic/claude-fable-5.1
+  - anthropic/claude-fable-5          # rejects thinking.type=enabled, so it runs here (adaptive), not with opus-4.5
