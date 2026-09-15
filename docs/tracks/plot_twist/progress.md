@@ -94,7 +94,7 @@ The jsPsych 7.3.4 experiment lives in
 `llm_creativity_mech_interp/src/experiments/twistbench_preference/` (template-repo conventions;
 `js/stimuli-data.js` is generated). Reading is gated on scrolling to the end plus a dwell floor, and
 `read_ms` is recorded per story. **1 pair per participant, ~20-35 min** — price Prolific
-accordingly; with 9 pairs, N participants gives ~N/9 judgments per pair. `pairs_per_participant`
+accordingly; superseded on 2026-09-15 by a 25-pair pool with server-assigned slots, below. `pairs_per_participant`
 lives in the config, and the participant-facing story counts and duration estimates are computed
 from the stimulus set, so the consent form and instructions cannot quote a stale number.
 
@@ -115,6 +115,40 @@ the completion screen, which then states the outcome; the POST retries once and 
 `localStorage` first, so a backend outage is visible rather than silent. Each session lands in three
 tables: `sessions` (raw payload), `judgments` (one row per pair), `reads` (one row per story, with
 `read_ms`).
+
+**Slot assignment, 25-pair pool and blinding fixes (2026-09-15).** Implemented after sizing the
+study with Samuel.
+- **Pool.** Round-robin length matching, up to 3 sonnet stories per human story: **25 pairs**. Eight
+  human stories get 3 partners; After Twenty Years gets 1 (only one sonnet story is within 1.35x its
+  length). 25 of the 29 eligible sonnet stories are used; worst length ratio 1.30. Plain greedy
+  matching had dropped After Twenty Years entirely at 2+ partners per story.
+- **Slots.** 4 readers per pair, 2 with each story first: 100 slots, handed out by the server
+  (`/getSlot`), least-filled pair first. Slots reopen on abandonment (90 min) or exclusion; each ID
+  takes part once; debug walkthroughs claim none. Tested: 100 simultaneous claims gave 100 distinct
+  slots, exactly 4 per pair, order 2/2 in every pair (29 API checks and 20 browser checks, all pass).
+- **Exclusion rule (Samuel, 2026-09-15): either reading check wrong.** Stored in full, slot reopens,
+  participant not told.
+- **Sample size.** 100 people who finish; recruit about 118-133 at 15-25% loss. If 70% prefer the
+  human story, that gives 98% chance of p < .05 and 92% of p < .01, optimistic because the same 9
+  human stories repeat. A 10-15 person pilot should set the final number.
+- **Blinding hole found and fixed.** The browser payload used real story ids (the sonnet ones read
+  `anthropic_claude-sonnet-4-5__...`), pair ids of the form `human__vs__llm`, listed the human story
+  first in every pair, and named the model in a header comment and in `EXPERIMENT_CONFIG`. View-source
+  or the network tab gave authorship away. The deploy check had only looked for `author_kind`, so it
+  passed. Now all ids are opaque and pair order is sorted; the builder and `deploy_study.sh` both
+  refuse a payload with any real id, model name or authorship word outside the prose. Not fixable:
+  the full stories are public on the project page, so a participant who searches a sentence can
+  still find out.
+- **Reading checks.** Wrote checks for the 16 new sonnet stories, then rewrote all 34 after an audit:
+  the correct option was the longest in 31/34 items (25.7 vs 18.9 words) and colons/semicolons
+  appeared almost only in correct answers, so "pick the longest" passed without reading. Now 6/34 and
+  no such punctuation; the builder fails on either giveaway. Another annotation error found: the
+  reveal for `...t10__s02` says the heroine has no claim, but the forgery is a trap she set and she
+  is the real heir.
+- **Limitation for the paper.** The sonnet side repeats itself (5 of 25 setups open in a grief
+  support group, 13 of 25 mention a death or grief, "Sarah" names a character in 9 of 25); none of the
+  9 human stories do. Each participant reads one sonnet story, so the study measures single-story
+  quality, not that sameness.
 
 **Round 2 of reviewer feedback (2026-09-02, Roger Beaty + John Walkiewicz, jointly).** John timed
 the live preview at ~20 min, matching the app's own estimate. Four changes:
@@ -170,11 +204,9 @@ a public URL. The browser now gets `{id, words, text}` only; `serve.py` attaches
 `server/pairs.json`, which is never served. The deploy script hard-fails if `author_kind` reappears
 in the payload and excludes both `server/` and the README (which names the LLM source).
 
-Still to do: a backend (DataPipe/OSF is the fastest path for a static host; Vercel + submit-data
-lambda matches the other experiments — this machine has neither node/npm nor aws/sam installed),
-Prolific setup (`COMPLETION_URL` is still empty), and an analysis script for the returned JSON.
-With no server in the DataPipe path, authorship would be attached at analysis time by joining
-`story_id` against `data/plot_twist/human_eval/pairs.json`.
+Still to do: host a backend that serves both `/getSlot` and `/submitData` (`server/serve.py` does;
+a static host or DataPipe cannot hand out slots), set `COMPLETION_URL`, run the pilot, and write the
+analysis script (sessions with `counted = 1`; ids in the database are already real).
 
 The sections below document the earlier (superseded) method-paper framing and remain for history.
 

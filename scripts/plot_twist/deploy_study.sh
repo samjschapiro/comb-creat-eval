@@ -18,7 +18,8 @@
 #   ./scripts/plot_twist/deploy_study.sh --publish   # actually push
 set -euo pipefail
 
-STUDY="/Users/schapiro/Desktop/Experiments/llm_creativity_mech_interp/src/experiments/twistbench_preference"
+# Override with STUDY_DIR=... to deploy from another checkout of the study branch (a worktree).
+STUDY="${STUDY_DIR:-/Users/schapiro/Desktop/Experiments/llm_creativity_mech_interp/src/experiments/twistbench_preference}"
 REMOTE="https://github.com/samjschapiro/twistbench.git"
 CLONE="${TMPDIR:-/tmp}/twistbench-study-deploy"
 SUBDIR="study"
@@ -28,12 +29,27 @@ DRY_RUN="--dry-run"
 [ -f "$STUDY/index.html" ]           || { echo "FATAL: $STUDY/index.html not found."; exit 1; }
 [ -f "$STUDY/js/stimuli-data.js" ]   || { echo "FATAL: stimuli not built — run build_human_eval_stimuli.sh"; exit 1; }
 
-# Refuse to publish a payload that carries authorship. This is the blind, so it is checked
-# every deploy rather than trusted to stay fixed.
-if grep -q "author_kind" "$STUDY/js/stimuli-data.js"; then
-  echo "FATAL: js/stimuli-data.js contains author_kind — rebuild the stimuli before deploying."
-  exit 1
-fi
+# Refuse to publish a payload that gives authorship away. Checked on every deploy rather than
+# trusted to stay fixed: an earlier payload shipped real story ids ("anthropic_claude-sonnet-...")
+# that this check, then only looking for "author_kind", let straight through. Story prose and
+# option wording are blanked first, so a character who happens to read a sonnet is not a failure.
+python3 - "$STUDY/js/stimuli-data.js" <<'PYCHECK'
+import json, re, sys
+src = open(sys.argv[1], encoding="utf-8").read()
+blobs = re.findall(r"^window\.\w+ = (.*?);\s*$", src, re.M | re.S)
+if len(blobs) < 3:
+    sys.exit(f"FATAL: expected STORIES, STIMULUS_PAIRS and EXPERIMENT_CONFIG in {sys.argv[1]}")
+def blank(o):
+    if isinstance(o, dict):
+        return {k: ("" if k == "text" else blank(v)) for k, v in o.items()}
+    return [blank(x) for x in o] if isinstance(o, list) else o
+skeleton = (src.split("window.")[0] + json.dumps([blank(json.loads(b)) for b in blobs])).lower()
+bad = [t for t in ("author_kind", "anthropic", "claude", "sonnet", "__vs__", "llm_source",
+                   "real_id", '"correct"', "human", "llm") if t in skeleton]
+if bad:
+    sys.exit(f"FATAL: js/stimuli-data.js carries {bad} outside story text. Rebuild the stimuli.")
+print("blinding check passed: no authorship markers outside story text")
+PYCHECK
 
 rm -rf "$CLONE"
 git clone --quiet --depth 1 "$REMOTE" "$CLONE"

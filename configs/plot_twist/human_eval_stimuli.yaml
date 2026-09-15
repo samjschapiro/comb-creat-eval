@@ -27,8 +27,11 @@ require_gated: true                             # realism == 5; matches the head
 max_words: 3200          # per story; excludes the four 5k-20k word human classics
 max_length_ratio: 1.35
 
-# --- what the participant does --------------------------------------------------
-pairs_per_participant: 1
+# --- pool and slot plan ----------------------------------------------------------
+# Each human story takes up to this many LLM stories, round-robin (see the builder).
+llm_per_human: 3
+# Readers per pair, half with each story read first. Must be even.
+readers_per_pair: 4
 
 # --- outputs --------------------------------------------------------------------
 output_dir: "data/plot_twist/human_eval"

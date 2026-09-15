@@ -1,166 +1,287 @@
 {
   "_README": [
     "Reading-comprehension items for the TwistBench human preference study, one per pool story.",
-    "Roger Beaty and John Walkiewicz asked for distractors tied to the story itself: drawing them",
-    "from other stories' reveals let anyone who read the first page eliminate them on setting and",
-    "characters alone, so the item tested 'did you open this' rather than 'did you read the ending'.",
+    "Roger Beaty and John Walkiewicz asked for distractors tied to the story itself: drawing them from other stories' reveals let anyone who read the first page eliminate them on setting and characters alone.",
     "",
     "Rules these were written to:",
-    "  - All four options use the SAME story's characters and setting, so nothing but the ending",
-    "    itself distinguishes them.",
-    "  - The correct option is authored in the same voice and length band as the distractors. Using",
-    "    the LLM `reveal` annotation for the correct one and hand-written text for the rest would",
-    "    make style the giveaway.",
-    "  - Every distractor is verified FALSE against the story text, not against the annotation. (The",
-    "    annotation for anthropic_claude-sonnet-4-5__t09__s01 is itself wrong: it says Marcus's",
-    "    sister never existed, but the story's memorial wall confirms she was real and died.)",
-    "  - Distractors are plausible endings for that setup, not absurd ones.",
+    "  - All four options use the SAME story's characters and setting, so nothing but the ending distinguishes them.",
+    "  - All four options sit in the same length band, and the correct one is NOT systematically the longest. The first version had the correct option longest in 31 of 34 items (25.7 vs 18.9 words), so 'pick the longest' passed the check without reading. build_human_eval_stimuli.py now audits this on every build.",
+    "  - No colons or semicolons in any option. The first version used them almost only in correct answers, a second style cue.",
+    "  - Correct options are written against the story TEXT, not the LLM annotation, which is wrong in places: the reveal for ...t09__s01 says the sister never existed (the memorial wall says she did), and the reveal for ...t10__s02 says the heroine has no claim (the forgery is a trap she set, and she is the real heir).",
+    "  - Distractors are plausible endings for that setup, and are not what the ending reveals.",
     "",
     "The builder fails if any pool story is missing here or has other than 3 distractors."
   ],
-
   "after-twenty-years": {
-    "correct": "The man waiting is a criminal wanted in Chicago; the first policeman was Jimmy Wells himself, who could not make the arrest and sent a plain-clothes officer to do it.",
+    "correct": "The waiting man is a criminal wanted in Chicago, and the first policeman was Jimmy Wells, who sent another officer to make the arrest.",
     "distractors": [
-      "Jimmy Wells never came at all, and a note tells the waiting man that his friend had died years before.",
-      "Both men had turned criminal in the twenty years apart, and each had come to the meeting meaning to hand in the other.",
-      "The man waiting in the doorway was Jimmy Wells, and the friend he had been expecting was the policeman who first spoke to him."
+      "Jimmy Wells never arrived, and a note from a stranger tells the waiting man that his old friend had died years ago.",
+      "Both men had turned to crime in their years apart, and each had come to the meeting planning to hand in the other.",
+      "The waiting man was really Jimmy Wells, and the friend he had come to meet was the policeman walking the beat."
     ]
   },
   "anthropic_claude-sonnet-4-5__t10__s08": {
-    "correct": "Eleanor's stories were true: she had run an escape network for children during the war and been formally honoured for it, and her family had dismissed all of it as invention.",
+    "correct": "Eleanor's wartime stories were true, since she had been honoured for smuggling children to safety, and her own family had dismissed them as invention.",
     "distractors": [
-      "Eleanor had invented the whole wartime history, and the documents in her file turn out to have been forged by Eleanor herself.",
-      "Eleanor had not rescued anyone but had worked for the occupiers, which is why her family would never speak about the war.",
-      "Maya discovers that Eleanor was her own grandmother, given up for adoption decades before they met."
+      "Eleanor had invented her whole wartime past, and the documents in her file turn out to have been forged by Eleanor herself.",
+      "Eleanor had not rescued anyone but had worked for the occupiers, which is why her family refused to talk about the war.",
+      "Maya discovers that Eleanor was her own grandmother, who had given up Maya's mother for adoption long before they ever met."
     ]
   },
   "chickamauga": {
-    "correct": "The child is a deaf mute, who has heard nothing of the battle he has been playing among, and the dead woman at the burning house is his mother.",
+    "correct": "The child is a deaf mute who never heard the battle around him, and the dead woman beside the burning house is his mother.",
     "distractors": [
-      "The child had been dreaming the whole march, and wakes unharmed in his own bed as the story closes.",
-      "The child is blind, and has been feeling his way through a forest he was never able to see.",
-      "The crawling men the child leads turn out to be his father's regiment, come to carry him home."
+      "The child had been dreaming through the whole march, and he wakes up unharmed in his own bed as the story ends.",
+      "The child is blind, and he has been feeling his way through a smoke-filled forest that he was never able to see.",
+      "The wounded men the child leads turn out to be his father's regiment, who have come looking for him to carry him home."
     ]
   },
   "anthropic_claude-sonnet-4-5__t09__s01": {
-    "correct": "Marcus's sister was the real Dr. Sarah Morrison, who died; he had taken her name and fixated on the narrator because she shares it and had filled his sister's post.",
+    "correct": "Marcus's sister was a real Dr. Sarah Morrison who died, and he fixated on the narrator because she has the same name.",
     "distractors": [
-      "Marcus had invented his sister entirely, and hospital records show that no Dr. Sarah Morrison had ever worked there.",
-      "Marcus was himself a psychiatrist who had lost his licence, and had posed as a volunteer in order to observe the narrator.",
-      "The narrator discovers that she had treated Marcus's sister years earlier and failed to prevent her death."
+      "Marcus had invented his sister entirely, and hospital records show that no Dr. Sarah Morrison had ever worked there before.",
+      "Marcus was a psychiatrist who had lost his licence, and he had posed as a volunteer so that he could observe the narrator.",
+      "The narrator discovers that years earlier she had treated Marcus's sister as a patient, and failed to prevent her death."
     ]
   },
   "desirees-baby": {
-    "correct": "An old letter from his mother reveals that it is Armand, not his wife, who belongs to the race he had condemned her for.",
+    "correct": "A letter from Armand's mother reveals that it is Armand himself, not his wife, who belongs to the race he had condemned her for.",
     "distractors": [
-      "A letter reveals that his wife's unknown parents had both been white, and that his accusation had been baseless from the start.",
-      "Armand had known his wife's origins before he married her, and had hidden them from his own family for years.",
-      "The child was not Armand's at all, and the bundle of old letters reveals an earlier attachment of hers."
+      "A letter reveals that his wife's unknown parents had both been white, so his accusation against her had been baseless from the start.",
+      "Armand had known about his wife's origins before he married her, and he had hidden them from his own family for years.",
+      "The child was not Armand's at all, and the bundle of old letters he burns reveals an earlier attachment of his wife's."
     ]
   },
   "anthropic_claude-sonnet-4-5__t09__s05": {
-    "correct": "Rachel had deliberately caused a patient's death because he was responsible for Sarah's father's, then killed her own mother to stop her exposing it.",
+    "correct": "Rachel deliberately caused a patient's death because he was to blame for Sarah's father's death, then killed her mother to keep it hidden.",
     "distractors": [
-      "Margaret took her own life after discovering that Rachel had been stealing drugs from her patients for years.",
-      "It was Margaret who had caused the patient's death, and Rachel had spent years covering for her mother.",
-      "Sarah's own father had been the surgeon at fault, and Rachel's crimes turn out to have nothing to do with him."
+      "Margaret took her own life after discovering that her daughter Rachel had been quietly stealing drugs from the hospital for years.",
+      "It was Margaret who had caused the patient's death in surgery, and Rachel had spent years covering up her mother's fatal mistake.",
+      "Sarah's own father turns out to have been the surgeon at fault, and Rachel's two killings had nothing to do with him at all."
     ]
   },
   "dusk": {
-    "correct": "The cake of soap belonged to the elderly gentleman from the bench, not to the young man, so the hard-luck story had been a lie after all.",
+    "correct": "The cake of soap belonged to the elderly gentleman on the bench, not the young man, so his hard-luck story had been a lie.",
     "distractors": [
-      "The young man returns the sovereign the following day with interest, proving that his story had been true all along.",
-      "The elderly gentleman turns out to be the young man's father, who had sent him to test Gortsby's charity.",
-      "Gortsby discovers his own wallet gone, lifted while he was hunting through the dusk for the young man."
+      "The young man comes back the next day to return the sovereign with interest, proving that his story had been true all along.",
+      "The elderly gentleman turns out to be the young man's father, who had sent his son out to test Gortsby's charity.",
+      "Gortsby finds that his own wallet is gone, lifted from his pocket while he was hunting through the dusk for the young man."
     ]
   },
   "anthropic_claude-sonnet-4-5__t10__s04": {
-    "correct": "The woman calling herself Rebecca was an impostor working for the people Sarah had threatened, exposed when her description of Sarah matched nobody.",
+    "correct": "The woman calling herself Rebecca was an impostor working for Sarah's enemies, and she gave herself away by describing Sarah wrongly.",
     "distractors": [
-      "Rebecca was genuine, and it was Sarah who had faked her own death and been in hiding the whole time.",
-      "The letter had been written by Sarah before she died, as a test of whether Claire would keep looking.",
-      "Rebecca was an undercover police officer who had been quietly protecting Claire from the start."
+      "Rebecca was genuine, and it was Sarah who had faked her own death and had been hiding from the company the whole time.",
+      "The letter Claire received had been written by Sarah before she died, as a test of whether her sister would keep looking.",
+      "Rebecca was an undercover police officer who had been quietly protecting Claire from the people behind Sarah's death all along."
     ]
   },
   "horseman-in-the-sky": {
-    "correct": "The horseman that Druse shot from the cliff was his own father.",
+    "correct": "The horseman Druse shot from his post above the cliff was his own father, who was fighting for the other side.",
     "distractors": [
-      "The horseman was Druse's commanding officer, who had ridden out to test whether the sentries were awake.",
-      "Druse had fired deliberately wide, and the horse had gone over the edge of its own accord.",
-      "The officer who watched the horse fall was Druse's father, and never learned who had fired the shot."
+      "The horseman was Druse's own commanding officer, who had ridden out alone to test whether the sentries were awake.",
+      "Druse had deliberately fired wide of the rider, and the startled horse had gone over the edge of the cliff on its own.",
+      "The officer who watched the horse fall was Druse's father, who never learned that it was his son who had fired the shot."
     ]
   },
   "anthropic_claude-sonnet-4-5__t09__s00": {
-    "correct": "Charlotte's grandmother had been an intelligence agent during the Cold War, her file sealed for decades at her own request.",
+    "correct": "Charlotte's grandmother had been an intelligence agent, and her service record had been sealed for decades at her own request.",
     "distractors": [
-      "The papers in the attic had belonged to a previous owner of the house and had nothing to do with her grandmother.",
-      "Her grandmother had been watched for decades as a suspected foreign agent, and the suspicion had been wrong.",
-      "It was Charlotte's grandfather who had been the agent, and her grandmother had spent her life covering for him."
+      "The papers hidden in the attic had belonged to the house's previous owner and had nothing to do with her grandmother at all.",
+      "Her grandmother had been watched for decades as a suspected foreign spy, and the government's suspicion turned out to be wrong.",
+      "It was Charlotte's grandfather who had been the secret agent, and her grandmother had spent her whole life covering for him."
     ]
   },
   "luck": {
-    "correct": "The celebrated soldier is in fact a fool, and every honour he holds records a blunder that happened to turn out well.",
+    "correct": "The celebrated general is really a complete fool, and every honour he has received marks a blunder that happened to turn out well.",
     "distractors": [
-      "The soldier's victories had been real, but he had taken the credit for plans the narrator drew up for him.",
-      "The narrator had secretly coached him before every examination and every battle, and directed each move he made.",
-      "The soldier had always known he was incompetent, and had tried repeatedly to resign and been refused each time."
+      "The general's victories had been real, but he had quietly taken the credit for battle plans that the narrator drew up for him.",
+      "The narrator had secretly coached him before every examination and every battle, and had directed each move he ever made.",
+      "The general had always known he was incompetent, and he had tried again and again to resign from the army but was always refused."
     ]
   },
   "anthropic_claude-sonnet-4-5__t09__s08": {
-    "correct": "Margaret had been following her estranged daughter's life through anonymous accounts online, and died alone of natural causes with the cookies still in the oven.",
+    "correct": "Margaret had been following her estranged daughter's life through anonymous accounts online, and she died alone of natural causes in her kitchen.",
     "distractors": [
-      "Margaret had been killed by her daughter, who had come back to the apartment that night after all.",
-      "The letter was a forgery and Margaret had no daughter, having invented her over many years.",
-      "Margaret had been poisoned slowly over several months by a neighbour who wanted the apartment."
+      "Margaret had been killed by her daughter, who had secretly come back to the apartment that night after years of silence.",
+      "The letter was a forgery and Margaret had no daughter at all, having invented one to fill many lonely years on her own.",
+      "Margaret had been slowly poisoned over several months by a friendly neighbour who wanted to take over her rent-controlled apartment."
     ]
   },
   "necklace": {
-    "correct": "The borrowed necklace had been paste, worth five hundred francs, and the ten years of poverty had been for nothing.",
+    "correct": "The necklace she borrowed and lost had been paste worth only five hundred francs, so her years of poverty had been pointless.",
     "distractors": [
-      "Her friend had known about the substitution from the beginning, and had said nothing while she paid.",
-      "The necklace had never been lost at all: it had slipped into the lining of her cloak and stayed there.",
-      "The replacement she bought was itself a fake, and the debt she spent ten years paying had been a fraud."
+      "Her friend had known about the replacement from the very beginning, and had said nothing while she spent ten years paying.",
+      "The necklace had never been lost at all, because it had slipped into the lining of her cloak and stayed there for years.",
+      "The replacement necklace she bought was itself a fake, so the debt she spent ten years repaying had been a fraud."
     ]
   },
   "anthropic_claude-sonnet-4-5__t12__s03": {
-    "correct": "David had not left willingly: Sarah's sister and Richard staged the assault and the restraining order to keep them apart, and Sarah went on to marry Richard.",
+    "correct": "Richard attacked her and, with her sister's help, framed David so that they were kept apart, and Sarah went on to marry Richard.",
     "distractors": [
-      "David had left of his own accord to escape gambling debts, exactly as Sarah had believed for thirty years.",
-      "Sarah's memory of the accident was false, and she had staged her own injury in order to end the relationship.",
-      "Tom, who wrote the letter, had been the one who attacked Sarah, and had blamed Richard to clear himself."
+      "David had left of his own accord to escape his gambling debts, exactly as Sarah had believed for the past thirty years.",
+      "Sarah's memory of the accident was false, and she had staged her own fall at the overlook in order to end things with David.",
+      "Tom, the man who wrote the letter, had been the one who attacked Sarah, and he had blamed Richard in order to clear himself."
     ]
   },
   "the-jewelry": {
-    "correct": "The jewellery he had always dismissed as paste was real and worth a fortune, and he sells it, leaves his post, and marries again badly.",
+    "correct": "The jewellery he had dismissed as fake was real and worth a fortune, and he sells it, quits his job and marries again.",
     "distractors": [
-      "The jewellery was paste after all, and the jeweller who offered him a fortune had been running a swindle.",
-      "His wife had inherited the jewels from a family she had never once spoken of to him.",
-      "His wife had been buying the jewels quietly with money taken from his employer's accounts."
+      "The jewellery was fake after all, and the jeweller who offered him a fortune for it had been running a swindle on him.",
+      "His late wife had inherited the jewels from a wealthy family she had never once mentioned to him in all their years of marriage.",
+      "His wife had been buying the jewels in secret with money she had quietly taken from his employer's accounts over the years."
     ]
   },
   "anthropic_claude-sonnet-4-5__t12__s06": {
-    "correct": "The father had a second son he had never acknowledged, whom he had quietly kept photographs of for years.",
+    "correct": "The father had a second son he never acknowledged, and had quietly kept photographs of the boy growing up beside his family's.",
     "distractors": [
-      "The father's secret was a second family abroad, which the narrator's mother had known about from the beginning.",
-      "The other man was not the father's son at all, but a student he had mentored after his own children left home.",
-      "The father had been preparing to leave the family, and the letters were the proof of it."
+      "The father's secret was a whole second family abroad, which the narrator's mother turns out to have known about from the beginning.",
+      "The man they meet is not the father's son at all, but a student the father mentored after his own children left home.",
+      "The father had been secretly preparing to leave the family for good, and the letters in his desk were the proof of it."
     ]
   },
   "the-last-leaf": {
-    "correct": "The last leaf had been painted on the wall by the old artist downstairs, who caught pneumonia doing it in the storm and died of it.",
+    "correct": "The last leaf had been painted onto the wall by the old artist downstairs, who caught pneumonia doing it in the storm and died.",
     "distractors": [
-      "Sue had tied the last real leaf to the vine herself, to stop Johnsy giving up.",
-      "The ivy was an evergreen variety, so the last leaf was never going to fall at all.",
-      "The old artist had painted Johnsy's portrait rather than the leaf, and it was the portrait that gave her hope."
+      "Sue had tied the last real leaf onto the vine herself during the night, so that Johnsy would not give up and let go.",
+      "The ivy was an evergreen variety, so its last leaf was never going to fall, whatever the weather did that winter night.",
+      "The old artist had painted Johnsy's portrait rather than the leaf, and it was seeing that portrait that gave her the will to live."
     ]
   },
   "anthropic_claude-sonnet-4-5__t12__s00": {
-    "correct": "Margaret is not a grieving widow but the deliberate killer of her husband and his associates, using the assumptions people make about her blindness to escape suspicion.",
+    "correct": "Margaret is not a grieving widow but the killer of her husband and his associates, hiding behind people's assumptions about blindness.",
     "distractors": [
-      "Her husband's death really had been an accident, and her confession is a delusion brought on by grief.",
-      "Her guide dog's trainer had committed the killings, and Margaret had been shielding him throughout.",
-      "The detective had killed her husband himself, and Margaret had quietly worked out how he did it."
+      "Her husband's death really had been an accident, and her confession to the detective is a delusion brought on by her grief.",
+      "Her guide dog's trainer had committed all of the killings, and Margaret had been lying to the detective for months to shield him.",
+      "The detective had killed her husband himself, and Margaret had quietly worked out how he did it before inviting him over."
+    ]
+  },
+  "anthropic_claude-sonnet-4-5__t09__s04": {
+    "correct": "Emma's fears had been real, since her stalker Tyler owned the building, and the landlady and Dr. Morrison were his family protecting him.",
+    "distractors": [
+      "Emma had invented the stalker, and the journal she left behind turns out to be a careful record of her own slow breakdown.",
+      "The stalker was Sarah's own former boyfriend, who had secretly arranged for her to rent Emma's old apartment so that he could watch her.",
+      "Emma comes back for her belongings and admits that she wrote the whole journal to frighten whoever moved into the apartment after her."
+    ]
+  },
+  "anthropic_claude-sonnet-4-5__t10__s05": {
+    "correct": "Rachel finds a photo showing her new neighbour had crossed paths with Daniel before moving in, and starts to think his fears were real.",
+    "distractors": [
+      "Daniel's therapist finally calls back to tell Rachel that the journals were written by someone else and planted in his apartment after he died.",
+      "Rachel discovers that Daniel is still alive, and that he has been living in Seattle under another name for over a year.",
+      "Rachel realizes she has been writing new entries in Daniel's journals herself, and that the helpful neighbour never really existed."
+    ]
+  },
+  "anthropic_claude-sonnet-4-5__t10__s02": {
+    "correct": "She planted a forged letter so the con man's scheme will collapse, while the genuine letter proving her family's claim is locked away.",
+    "distractors": [
+      "She had forged the letter to steal the property, and the man she was dealing with was an investigator sent to catch her.",
+      "The letter turns out to be genuine, but it proves that the property had belonged to another family all along, not to hers.",
+      "The man who approached her turns out to be her grandmother's lawyer, who had kept the real letter hidden for many decades."
+    ]
+  },
+  "anthropic_claude-sonnet-4-5__t10__s01": {
+    "correct": "The music box had belonged to the shop owner's father, who loved her grandmother, but the letter inside never reached her.",
+    "distractors": [
+      "The shop owner's father had stolen the music box from her grandmother, and had sold it to pay for his passage abroad.",
+      "The music box for sale in the shop was only a copy, and the real one had been buried with her grandmother years earlier.",
+      "Her grandmother had hidden the letter away herself, to spare the shop owner's father a painful last goodbye at the railway station."
+    ]
+  },
+  "anthropic_claude-sonnet-4-5__t12__s02": {
+    "correct": "The visiting doctor was a fraud who forged the journal and a twin photo to invent a lost brother and reach her inheritance.",
+    "distractors": [
+      "The journal is genuine, and her mother really had given up a twin brother for adoption without ever telling Margaret about him.",
+      "The visitor turns out to be her real brother, who had tracked her down to claim his share of their late mother's estate.",
+      "Her mother had arranged for the journal to be delivered after her death, as a final test of whether Margaret could forgive her."
+    ]
+  },
+  "anthropic_claude-sonnet-4-5__t10__s00": {
+    "correct": "Two of her group's members were imaginary, created by her mind to carry the grief for her son that she could not face.",
+    "distractors": [
+      "The whole group had been imaginary, and she had spent every Tuesday evening talking to rows of empty chairs in a church basement.",
+      "One of the regular members of her group turns out to be the drunk driver whose car had killed her son three years earlier.",
+      "Her husband had been coming to the group under a false name for months, so that he could keep a close watch over her."
+    ]
+  },
+  "anthropic_claude-sonnet-4-5__t09__s07": {
+    "correct": "His biological father is Jonathan, his late father's best friend, who had been the donor and watched him grow up from afar.",
+    "distractors": [
+      "The man who raised him was really his uncle, who had taken him in as a baby after both of his real parents died.",
+      "The old letter was about another family's child, and his parentage turns out to be exactly what he had always believed it was.",
+      "Jonathan is not his father but his older half-brother, born of a relationship his mother had kept secret before she married."
+    ]
+  },
+  "anthropic_claude-sonnet-4-5__t10__s09": {
+    "correct": "Their father had faked his death to protect the family, and returns to kill Marcus after admitting he made sure David died.",
+    "distractors": [
+      "Their father really had died in the crash, and the man at the funeral was a detective who had been following David's case.",
+      "David had faked his own overdose and slipped out of the hospital to join their father, who had been hiding for twenty years.",
+      "Their father returns to warn Marcus, and then helps him expose the dangerous people who had forced him to disappear."
+    ]
+  },
+  "anthropic_claude-sonnet-4-5__t12__s09": {
+    "correct": "The daughter they adopted is Maria's own child, the baby she gave up long ago, and Maria decides to tell her everything.",
+    "distractors": [
+      "Sarah's birth mother turns out to be Tom's younger sister, who had given her baby up for adoption to avoid a family scandal.",
+      "The agency's error means Sarah was never given up for adoption at all, but was switched with another baby at the hospital.",
+      "Maria and Tom agree to keep the secret, and quietly ask the adoption agency to leave Sarah's old file closed for good."
+    ]
+  },
+  "anthropic_claude-sonnet-4-5__t12__s08": {
+    "correct": "She and the group are all psychiatric patients, and her husband is alive, because it was really their daughter who died.",
+    "distractors": [
+      "The other group members were paid actors, hired by her own therapist to test whether she was finally ready to practise again.",
+      "One of the men in the group turns out to be her husband's killer, hiding among them behind an invented story of loss.",
+      "The church basement had been closed for years, and she had been leading the Tuesday evening sessions down there entirely on her own."
+    ]
+  },
+  "anthropic_claude-sonnet-4-5__t10__s07": {
+    "correct": "Daniel was talked into vanishing by Thomas, who claimed Sarah was in danger, but there was no danger and Thomas was framing Sarah.",
+    "distractors": [
+      "Daniel had left her for another woman, and the phone hidden in his gym bag held the messages arranging his new life.",
+      "Detective Morris had been working with Thomas all along, and had carefully steered the investigation away from him from the start.",
+      "Thomas really was working undercover inside a criminal gang, and Daniel is safe in hiding until the danger to Sarah has passed."
+    ]
+  },
+  "anthropic_claude-sonnet-4-5__t12__s07": {
+    "correct": "Claire admits she has been acting sadder than she feels, clinging to the pain to stay close to Emma, and begins to heal.",
+    "distractors": [
+      "Claire admits that Emma's illness was found too late because she had ignored the early warning signs for months before the diagnosis.",
+      "Claire reveals that the letters she writes are to a daughter who is still alive but no longer willing to speak to her.",
+      "Claire leaves the support group for good after learning that one of the other members had been lying about ever losing a child."
+    ]
+  },
+  "anthropic_claude-sonnet-4-5__t09__s02": {
+    "correct": "He never meant to steal the jade horse, and each weekly visit was a choice to go on living after his wife died.",
+    "distractors": [
+      "He had been planning a theft all along, and confesses it to the dying shop owner during a visit to the hospital.",
+      "He had been taking small items on every visit, and the shop owner had known all along and had quietly let him do it.",
+      "The shop owner turns out to be his estranged father, who had been waiting for years for his son to recognise him."
+    ]
+  },
+  "anthropic_claude-sonnet-4-5__t09__s09": {
+    "correct": "Her brother had caused the other man's daughter's death while trying to frighten her into silence, and Maya decides never to tell him.",
+    "distractors": [
+      "Her brother had died trying to pull the other man's daughter out of the crash, and Maya finally tells the father so.",
+      "The other man's daughter had driven her brother to suicide by threatening to expose him, and Maya confronts the father about it.",
+      "The father had known the whole truth all along, and had joined the support group only to track down the family of the man responsible."
+    ]
+  },
+  "anthropic_claude-sonnet-4-5__t10__s06": {
+    "correct": "Eleanor and his grandmother were wartime lovers until his grandmother married, and Eleanor's last letter says she took her own life.",
+    "distractors": [
+      "Eleanor had betrayed his grandmother to the authorities during the war, and had spent the rest of her long life trying to atone.",
+      "Eleanor turns out to be his real grandmother, who had given up his mother to be raised by her closest friend from the war.",
+      "His grandmother had been a wartime spy, and Eleanor was the officer who had recruited her and then kept her secret."
+    ]
+  },
+  "anthropic_claude-sonnet-4-5__t10__s03": {
+    "correct": "The Emma he kept seeing was his own guilt wearing her face, and her phone proves his text had not caused her fatal crash.",
+    "distractors": [
+      "Emma's spirit had been real all along, and she had come back to tell him who was truly responsible for the crash that killed her.",
+      "His wife had been staging the visions to push him into confessing that he was the one who caused their daughter's death.",
+      "He learns that Emma had actually survived the crash, and had been staying with her friend Sarah ever since the accident."
     ]
   }
 }

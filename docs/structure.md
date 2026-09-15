@@ -100,7 +100,7 @@ src/
         ├── judge_reliability.py, grm_irt.py, bayes_grm_jrt.py  # inter-judge reliability
         ├── cost_log.py                # OpenRouter spend → docs/tracks/plot_twist/cost_log.md
         ├── build_website_data.py      # JSON payload for the project page (website/twistbench/)
-        ├── build_human_eval_stimuli.py  # length-matched human-vs-top-LLM pairs -> jsPsych stimuli
+        ├── build_human_eval_stimuli.py  # human preference study: 25-pair pool, slot plan, opaque-id stimuli + server key
         └── make_tc_barplot.py         # TC scorecard (Overall + 2×2 facet grid) + breakdown figures
 
 configs/
