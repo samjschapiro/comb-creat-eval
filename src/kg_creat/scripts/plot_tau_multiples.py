@@ -19,10 +19,10 @@ import numpy as np
 
 SRC = Path("data/kg_creat/kombine_test30/analysis/inventive_multiples.json")
 OUT = Path("docs/reports/2026-09-01_kg_creat_inventive_multiples/figures")
-# Figure 2's palette (the Kombine overview): soft red, tan and blue entities, dark slate outlines
-BLEND, ANALOGY = "#D87878", "#D89878"
+# One palette for all three panels: the same-family slate and light grey (Table 4 above it carries the salmon/peach task tints)
+BLEND, ANALOGY = "#486878", "#C9CDD1"
 SAME, DIFF = "#486878", "#C9CDD1"
-INV = "#78A8C8"
+INV = "#486878"
 plt.rcParams.update({"font.family": "serif", "font.serif": ["Nimbus Roman", "Times New Roman", "DejaVu Serif"], "font.size": 16,
                      "text.color": "black", "axes.labelcolor": "black", "xtick.color": "black", "ytick.color": "black", "axes.edgecolor": "black"})
 YMIN = 0.03                                      # log-axis floor; a zero rate is written just above it
