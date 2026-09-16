@@ -320,7 +320,10 @@ def plot(facets, facet_v, out_png, dims=None, compact=False):
     plt.rcParams.update({"font.family": "serif",
                          "font.serif": ["Nimbus Roman", "Times New Roman", "DejaVu Serif"],
                          "text.color": "#222222"})
-    TASK_COL = {"association": "#A8476A", "analogy": "#9A7D2E", "blending": "#3F6F8F"}
+    # one palette with Table 4 / Figures 6 and 8: slate for negative r, white at 0, salmon deepening to brick for positive r
+    from matplotlib.colors import LinearSegmentedColormap
+    CMAP = LinearSegmentedColormap.from_list("slate_salmon", [(0.0, "#486878"), (0.5, "#FFFFFF"), (0.78, "#D87878"), (1.0, "#9E3A3A")])
+    TASK_COL = {"association": "#486878", "analogy": "#486878", "blending": "#486878"}
     dims = dims or DIMS
     facets = [f for f in facets if f[1] in dims[f[0]]]
     k = len(facets)
@@ -345,7 +348,7 @@ def plot(facets, facet_v, out_png, dims=None, compact=False):
         fig, ax = plt.subplots(figsize=(0.34 * k + 2.1, 0.34 * k + 1.2))
     else:
         fig, ax = plt.subplots(figsize=(0.71 * k + 2.0, 0.62 * k + 2.6))
-    im = ax.imshow(D, cmap="RdBu_r", vmin=-1, vmax=1)
+    im = ax.imshow(D, cmap=CMAP, vmin=-1, vmax=1)
     for i in range(k):
         for j in range(i + 1):
             if i == j:

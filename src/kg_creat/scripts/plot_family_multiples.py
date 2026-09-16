@@ -23,7 +23,7 @@ OUT_JSON = Path("data/kg_creat/kombine_test30/analysis/family_multiples.json")
 OUT = Path("docs/reports/2026-09-01_kg_creat_inventive_multiples/figures")
 NAME = {"anthropic": "Anthropic", "openai": "OpenAI", "google": "Google", "x-ai": "xAI", "deepseek": "DeepSeek",
         "meta-llama": "Meta", "qwen": "Qwen", "z-ai": "Z.ai", "moonshotai": "Moonshot", "microsoft": "Microsoft"}
-SAME, DIFF = "#486878", "#C9CDD1"          # the tau figure's family colours (Figure 2's slate)
+SAME, DIFF = "#486878", "#C9CDD1"          # the slate of Figure 6 and Table 4's row tint, so the multiples figures share one palette
 plt.rcParams.update({"font.family": "serif", "font.serif": ["Nimbus Roman", "Times New Roman", "DejaVu Serif"], "font.size": 15,
                      "text.color": "black", "axes.labelcolor": "black", "xtick.color": "black", "ytick.color": "black", "axes.edgecolor": "black"})
 
