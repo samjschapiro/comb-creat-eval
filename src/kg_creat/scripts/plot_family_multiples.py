@@ -76,7 +76,7 @@ def main():
     ax.set_ylabel("$\\tau=2$ multiples (% of pairs)", fontsize=13.5)
     ax.set_ylim(0, max(v) * 1.28); ax.set_yticks([0, 2, 4, 6, 8, 10]); ax.set_yticklabels([f"{t}%" for t in (0, 2, 4, 6, 8, 10)], fontsize=12)
     ax.spines[["top", "right"]].set_visible(False); ax.grid(axis="y", color="#E6E6E6", zorder=0)
-    ax.legend(frameon=False, fontsize=12, loc="upper right", handlelength=1.6)
+    ax.legend(frameon=False, fontsize=14, loc="upper right", handlelength=1.6)
     fig.tight_layout()
     OUT.mkdir(parents=True, exist_ok=True)
     for ext in ("png", "pdf"):
