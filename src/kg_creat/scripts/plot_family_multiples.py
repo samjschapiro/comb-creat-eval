@@ -57,11 +57,22 @@ def main():
 
     fig, ax = plt.subplots(figsize=(6.2, 3.3))
     x = np.arange(len(rows)); v = [r["within_pct"] for r in rows]
-    ax.bar(x, v, 0.62, color=SAME, zorder=3, label="Same family")
+    ax.bar(x, v, 0.62, color=SAME, zorder=3, label="Same")
     for xi, r in zip(x, rows):
         ax.text(xi, r["within_pct"] + 0.25, f"{r['within_pct']:.1f}%", ha="center", va="bottom", fontsize=12, color="black")
-    ax.axhline(cross_pct, color="black", ls="--", lw=1.3, zorder=4, label=f"Different families ({cross_pct:.1f}%)")
-    ax.set_xticks(x); ax.set_xticklabels([f"{r['name']}\n$n={r['n_models']}$" for r in rows], fontsize=12)
+    ax.axhline(cross_pct, color="black", ls="--", lw=1.3, zorder=4, label=f"Different ({cross_pct:.1f}%)")
+    # the provider mark sits just under the axis and the provider name hangs from it (as in the generic-space grid)
+    from matplotlib.offsetbox import AnnotationBbox, OffsetImage
+    from src.kg_creat.scripts.plot_multiples_matrix import brand_logos
+    logos = brand_logos(); LOGO_KEY = {"meta-llama": "meta"}
+    ax.set_xticks(x); ax.set_xticklabels([r["name"] for r in rows], fontsize=12)
+    ax.tick_params(axis="x", length=0, pad=24)
+    for xi, r in zip(x, rows):
+        img = logos.get(LOGO_KEY.get(r["provider"], r["provider"]))
+        if img is not None:
+            ab = AnnotationBbox(OffsetImage(img, zoom=0.040, alpha=0.95), (xi, -0.85), frameon=False,
+                                box_alignment=(0.5, 0.5), annotation_clip=False, xycoords="data")
+            ab.set_clip_on(False); ax.add_artist(ab)
     ax.set_ylabel("$\\tau=2$ multiples (% of pairs)", fontsize=13.5)
     ax.set_ylim(0, max(v) * 1.28); ax.set_yticks([0, 2, 4, 6, 8, 10]); ax.set_yticklabels([f"{t}%" for t in (0, 2, 4, 6, 8, 10)], fontsize=12)
     ax.spines[["top", "right"]].set_visible(False); ax.grid(axis="y", color="#E6E6E6", zorder=0)
