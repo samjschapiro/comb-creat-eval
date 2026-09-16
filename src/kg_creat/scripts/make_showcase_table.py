@@ -224,7 +224,7 @@ def render_examples(rows, images=False) -> str:
     L = [HEADER,
          "% Fragment (no float wrapper, no caption), in the format of tab_examples.tex: \\input inside a figure/table float.",
          r"\providecommand{\provlogo}[1]{\raisebox{-0.15ex}{\includegraphics[height=0.85em]{media/logos/#1}}\,}",
-         r"\definecolor{domA}{HTML}{1E6F9D}\definecolor{domB}{HTML}{8B2706}\definecolor{invCol}{HTML}{001261}\definecolor{emCol}{HTML}{BE6533}",
+         r"\definecolor{domA}{HTML}{3F6F8E}\definecolor{domB}{HTML}{8C5A2B}\definecolor{invCol}{HTML}{22394F}\definecolor{emCol}{HTML}{C4703A}",
          r"{\scriptsize", r"\renewcommand{\arraystretch}{1.3}",
          r"\renewcommand\tabularxcolumn[1]{m{#1}}"]
     if images:
