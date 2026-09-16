@@ -39,7 +39,7 @@ def style(ax):
 
 def title_legend(ax, title, handles=None):
     """Panel title at the left; the legend inside the axes at the upper right, above the low tau = 3 bars and the ratio row."""
-    ax.set_title(title, loc="left", fontsize=16, pad=8)
+    ax.set_title(title, loc="left", fontsize=16, pad=8, fontweight="bold")
     if handles:
         ax.legend(handles=handles, frameon=False, fontsize=12.5, loc="upper center", ncol=2, handlelength=1.0,
                   handletextpad=0.5, columnspacing=1.2, borderaxespad=0.1)
