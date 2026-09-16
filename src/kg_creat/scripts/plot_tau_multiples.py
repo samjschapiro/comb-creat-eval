@@ -58,10 +58,14 @@ def bars(ax, taus, left, right, left_lab, right_lab, cl, cr, ratio=True, ytick_l
             nudge = side * 0.06 if other > vi else 0.0        # the shorter bar's label steps away from its taller neighbour
             ax.text(xi + nudge, y, txt, ha="center", va="bottom", fontsize=10, color="black", zorder=5,
                     bbox=dict(boxstyle="square,pad=0.1", facecolor="white", edgecolor="none", alpha=0.9))
-    if ratio:                                                  # the left/right ratio, one row at a fixed height above each pair
+    if ratio:                                                  # left/right ratio over a bracket spanning the two bars
         for xi, (l, r) in enumerate(zip(left, right)):
             if r > 0:
-                ax.text(xi, RATIO_Y, f"{l / r:.1f}$\\times$", ha="center", va="center", fontsize=13, fontweight="bold", color="black")
+                top = max(l, r) * 2.3                              # bracket bar sits above both value labels (log axis)
+                tick = top / 1.3                                   # short drops at the bracket ends
+                ax.plot([xi - w / 2, xi - w / 2, xi + w / 2, xi + w / 2], [tick, top, top, tick], color="black", lw=0.9,
+                        solid_capstyle="butt", zorder=4, clip_on=False)
+                ax.text(xi, top * 1.15, f"{l / r:.1f}$\\times$", ha="center", va="bottom", fontsize=13, fontweight="bold", color="black")
     ax.set_xticks(x); ax.set_xticklabels([f"$\\tau={t}$" for t in taus], fontsize=14)
     ax.set_yscale("log"); ax.set_ylim(YMIN, 260)
     ax.set_yticks([0.1, 1, 10, 100]); ax.set_yticklabels(["0.1%", "1%", "10%", "100%"] if ytick_labels else [], fontsize=13)
@@ -70,7 +74,6 @@ def bars(ax, taus, left, right, left_lab, right_lab, cl, cr, ratio=True, ytick_l
     return [Patch(color=cl, label=left_lab), Patch(color=cr, label=right_lab)]
 
 
-RATIO_Y = 48                                      # the ratio row sits on one line, above the tallest bar and below the legend
 
 
 def main():
