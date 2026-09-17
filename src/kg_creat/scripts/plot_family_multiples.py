@@ -51,31 +51,36 @@ def main():
     print(f"overall: same {overall['same_provider_pct']:.1f}%  different (matched) {overall['different_provider_matched_pct']:.1f}%")
 
     fig, ax = plt.subplots(figsize=(6.2, 3.3))
-    x = np.arange(len(rows)); w = 0.38
+    x = np.arange(len(rows)); w = 0.62
     S = [r["same_pct"] for r in rows]; Dm = [r["different_matched_pct"] for r in rows]
-    ax.bar(x - w / 2, S, w, color=SAME, zorder=3, label="Same")
-    ax.bar(x + w / 2, Dm, w, color=DIFF, zorder=3, label="Different")
-    ymax = max(S) * 1.25
-    for xi, s_, d_ in zip(x, S, Dm):
-        ax.text(xi - w / 2 - (0.04 if d_ > s_ else 0), s_ + ymax * 0.012, f"{s_:.1f}%", ha="center", va="bottom", fontsize=10.5, color="black")
-        ax.text(xi + w / 2 + (0.04 if s_ > d_ else 0), d_ + ymax * 0.012, f"{d_:.1f}%", ha="center", va="bottom", fontsize=10.5, color="black")
+    E = [s_ - d_ for s_, d_ in zip(S, Dm)]                  # excess over the opportunity-matched other-provider expectation
+    rows.sort(key=lambda r: -(r["same_pct"] - r["different_matched_pct"])); S = [r["same_pct"] for r in rows]
+    Dm = [r["different_matched_pct"] for r in rows]; E = [s_ - d_ for s_, d_ in zip(S, Dm)]
+    ax.bar(x, E, w, color=SAME, zorder=3, label="Same provider")
+    ymax = max(E) * 1.25; ymin = -5.0                        # a clean floor below the one negative bar
+    for xi, e_ in zip(x, E):
+        ax.text(xi, e_ + ymax * 0.012 if e_ >= 0 else e_ - ymax * 0.012, f"{e_:+.1f}", ha="center",
+                va="bottom" if e_ >= 0 else "top", fontsize=11, color="black")
+    ax.axhline(0, color="black", ls="--", lw=1.3, zorder=4, label="Other providers (expected)")
     # the provider mark sits just under the axis and the provider name hangs from it (as in the generic-space grid)
     from matplotlib.offsetbox import AnnotationBbox, OffsetImage
     from src.kg_creat.scripts.plot_multiples_matrix import brand_logos
     logos = brand_logos(); LOGO_KEY = {"meta-llama": "meta"}
-    ax.set_xticks(x); ax.set_xticklabels([r["name"] for r in rows], fontsize=10.5)
-    ax.tick_params(axis="x", length=0, pad=24)
+    ax.set_xticks(x); ax.set_xticklabels([r["name"] for r in rows])
     for xi, r in zip(x, rows):
         img = logos.get(LOGO_KEY.get(r["provider"], r["provider"]))
         if img is not None:
-            ab = AnnotationBbox(OffsetImage(img, zoom=0.040, alpha=0.95), (xi, -ymax * 0.085), frameon=False,
+            ab = AnnotationBbox(OffsetImage(img, zoom=0.040, alpha=0.95), (xi, ymin - (ymax - ymin) * 0.09), frameon=False,
                                 box_alignment=(0.5, 0.5), annotation_clip=False, xycoords="data")
             ab.set_clip_on(False); ax.add_artist(ab)
-    ax.set_ylabel("% of concepts in a $\\tau = 2$ multiple", fontsize=13.5)
-    ax.set_ylim(0, ymax); ticks = list(range(0, int(ymax) + 1, 5))
-    ax.set_yticks(ticks); ax.set_yticklabels([f"{t}%" for t in ticks], fontsize=12)
+    ax.set_ylabel("Concepts with a sibling multiple\n(points beyond expectation)", fontsize=12)
+    ax.set_ylim(ymin, ymax); ticks = list(range(int(ymin), int(ymax) + 1, 5))
+    ax.set_yticks(ticks); ax.set_yticklabels([f"{t:+d}" if t else "0" for t in ticks], fontsize=12)
     ax.spines[["top", "right"]].set_visible(False); ax.grid(axis="y", color="#E6E6E6", zorder=0)
-    ax.legend(frameon=False, fontsize=14, loc="upper right", handlelength=1.6)
+    ax.tick_params(axis="x", length=0, pad=24)                # set last: later axis calls rebuild the ticks and drop label styling
+    for lab in ax.get_xticklabels():
+        lab.set_fontsize(10.5); lab.set_rotation(30); lab.set_ha("right"); lab.set_rotation_mode("anchor")
+    ax.legend(frameon=False, fontsize=12.5, loc="upper right", handlelength=1.6)
     fig.tight_layout()
     OUT.mkdir(parents=True, exist_ok=True)
     for ext in ("png", "pdf"):
