@@ -29,52 +29,51 @@ plt.rcParams.update({"font.family": "serif", "font.serif": ["Nimbus Roman", "Tim
 
 
 def main():
-    d = json.loads(SRC.read_text()); m = d["model_pair_matrix"]
-    models, provs = m["models"], m["providers"]
-    n = len(models)
-    hits = defaultdict(float); items = defaultdict(float); cross_hits = cross_items = 0.0
-    for task in ("blending", "analogy"):
-        R, N = np.array(m[task]["multiple_rate"], float), np.array(m[task]["n_items"], float)
-        for i in range(n):
-            for j in range(i + 1, n):
-                if not np.isfinite(R[i, j]) or N[i, j] == 0:
-                    continue
-                if provs[i] == provs[j]:
-                    hits[provs[i]] += R[i, j] * N[i, j]; items[provs[i]] += N[i, j]
-                else:
-                    cross_hits += R[i, j] * N[i, j]; cross_items += N[i, j]
-    n_models = defaultdict(int)
-    for p in provs:
-        n_models[p] += 1
-    rows = [{"provider": p, "name": NAME.get(p, p), "n_models": n_models[p], "n_pair_items": int(items[p]),
-             "n_multiples": int(round(hits[p])), "within_pct": 100.0 * hits[p] / items[p]} for p in items if items[p] > 0]
-    rows.sort(key=lambda r: -r["within_pct"])
-    cross_pct = 100.0 * cross_hits / cross_items
-    OUT_JSON.write_text(json.dumps({"tau": 2, "cross_family_pct": cross_pct, "cross_family_pair_items": int(cross_items), "by_provider": rows}, indent=1))
+    """Concept level, opportunity-matched (analyze_inventive_multiples.concept_level): per provider, the share of its
+    concepts with >= 1 tau = 2 multiple from a model of the same provider ("Same"), beside the share expected from the
+    same number of models of other providers ("Different"), so providers with many models are not favoured."""
+    d = json.loads(SRC.read_text())
+    row = [r for r in d["concept_level"] if r["tau"] == 2][0]
+    rows = []
+    for key, v in row.items():
+        if not key.startswith("provider:"):
+            continue
+        prov = key[len("provider:"):]
+        rows.append({"provider": prov, "name": NAME.get(prov, prov), "n_concepts": v["n_concepts"],
+                     "mean_same_candidates": v["mean_same_candidates"], "same_pct": v["same_provider_pct"],
+                     "different_matched_pct": v["different_provider_matched_pct"], "different_raw_pct": v["different_provider_pct"]})
+    rows.sort(key=lambda r: -r["same_pct"])
+    overall = row["all"]
+    OUT_JSON.write_text(json.dumps({"tau": 2, "unit": "concept", "overall_same_pct": overall["same_provider_pct"],
+                                    "overall_different_matched_pct": overall["different_provider_matched_pct"], "by_provider": rows}, indent=1))
     for r in rows:
-        print(f"{r['name']:10s} {r['n_models']} models  {r['n_multiples']:3d} / {r['n_pair_items']:5d} = {r['within_pct']:.1f}%")
-    print(f"cross-family {cross_pct:.2f}% over {int(cross_items)} pair-items")
+        print(f"{r['name']:10s} n={r['n_concepts']:4d} k={r['mean_same_candidates']:.1f}  same {r['same_pct']:.1f}%  different (matched) {r['different_matched_pct']:.1f}%")
+    print(f"overall: same {overall['same_provider_pct']:.1f}%  different (matched) {overall['different_provider_matched_pct']:.1f}%")
 
     fig, ax = plt.subplots(figsize=(6.2, 3.3))
-    x = np.arange(len(rows)); v = [r["within_pct"] for r in rows]
-    ax.bar(x, v, 0.62, color=SAME, zorder=3, label="Same")
-    for xi, r in zip(x, rows):
-        ax.text(xi, r["within_pct"] + 0.25, f"{r['within_pct']:.1f}%", ha="center", va="bottom", fontsize=12, color="black")
-    ax.axhline(cross_pct, color="black", ls="--", lw=1.3, zorder=4, label=f"Different ({cross_pct:.1f}%)")
+    x = np.arange(len(rows)); w = 0.38
+    S = [r["same_pct"] for r in rows]; Dm = [r["different_matched_pct"] for r in rows]
+    ax.bar(x - w / 2, S, w, color=SAME, zorder=3, label="Same")
+    ax.bar(x + w / 2, Dm, w, color=DIFF, zorder=3, label="Different")
+    ymax = max(S) * 1.25
+    for xi, s_, d_ in zip(x, S, Dm):
+        ax.text(xi - w / 2 - (0.04 if d_ > s_ else 0), s_ + ymax * 0.012, f"{s_:.1f}%", ha="center", va="bottom", fontsize=10.5, color="black")
+        ax.text(xi + w / 2 + (0.04 if s_ > d_ else 0), d_ + ymax * 0.012, f"{d_:.1f}%", ha="center", va="bottom", fontsize=10.5, color="black")
     # the provider mark sits just under the axis and the provider name hangs from it (as in the generic-space grid)
     from matplotlib.offsetbox import AnnotationBbox, OffsetImage
     from src.kg_creat.scripts.plot_multiples_matrix import brand_logos
     logos = brand_logos(); LOGO_KEY = {"meta-llama": "meta"}
-    ax.set_xticks(x); ax.set_xticklabels([r["name"] for r in rows], fontsize=12)
+    ax.set_xticks(x); ax.set_xticklabels([r["name"] for r in rows], fontsize=10.5)
     ax.tick_params(axis="x", length=0, pad=24)
     for xi, r in zip(x, rows):
         img = logos.get(LOGO_KEY.get(r["provider"], r["provider"]))
         if img is not None:
-            ab = AnnotationBbox(OffsetImage(img, zoom=0.040, alpha=0.95), (xi, -0.85), frameon=False,
+            ab = AnnotationBbox(OffsetImage(img, zoom=0.040, alpha=0.95), (xi, -ymax * 0.085), frameon=False,
                                 box_alignment=(0.5, 0.5), annotation_clip=False, xycoords="data")
             ab.set_clip_on(False); ax.add_artist(ab)
-    ax.set_ylabel("$\\tau=2$ multiples (% of pairs)", fontsize=13.5)
-    ax.set_ylim(0, max(v) * 1.28); ax.set_yticks([0, 2, 4, 6, 8, 10]); ax.set_yticklabels([f"{t}%" for t in (0, 2, 4, 6, 8, 10)], fontsize=12)
+    ax.set_ylabel("% of concepts in a $\\tau = 2$ multiple", fontsize=13.5)
+    ax.set_ylim(0, ymax); ticks = list(range(0, int(ymax) + 1, 5))
+    ax.set_yticks(ticks); ax.set_yticklabels([f"{t}%" for t in ticks], fontsize=12)
     ax.spines[["top", "right"]].set_visible(False); ax.grid(axis="y", color="#E6E6E6", zorder=0)
     ax.legend(frameon=False, fontsize=14, loc="upper right", handlelength=1.6)
     fig.tight_layout()

@@ -250,6 +250,51 @@ def tau_curve(pairs_all, null, task_of_inv):
     return rows
 
 
+
+def concept_level(pairs_all, task_of_inv, tau_max, provider_of_inv=None):
+    """Multiples counted per invented CONCEPT rather than per pair, for the figure that reports everything at
+    the concept level. For each tau: the share of concepts that have >= 1 multiple among the concepts of (i)
+    models of their own provider and (ii) models of other providers, and (iii) the OPPORTUNITY-MATCHED version
+    of (ii): a concept with k same-provider candidates gets, in expectation, the chance that k candidates drawn
+    at random from its D other-provider candidates include >= 1 multiple, 1 - C(D-d, k) / C(D, k) with d the
+    number of other-provider multiples (exact hypergeometric, no sampling). (i) and (iii) then rest on the same
+    number of candidate partners, which the raw shares do not: a concept has ~4.7 same-provider candidates but
+    ~29 other-provider ones. Averaged over concepts with >= 1 same-provider candidate, overall and per task."""
+    from math import comb
+    by = defaultdict(lambda: {"same": [], "diff": []})
+    for p in pairs_all:
+        key = "same" if p["same_provider"] else "diff"
+        by[p["a"]][key].append(p["shared"]); by[p["b"]][key].append(p["shared"])
+    rows = []
+    for tau in range(1, int(tau_max) + 1):
+        acc = defaultdict(lambda: {"n": 0, "same": 0.0, "diff": 0.0, "diff_matched": 0.0, "k": 0.0, "D": 0.0})
+        for i, task in task_of_inv.items():
+            s, dl = by[i]["same"], by[i]["diff"]
+            k, D = len(s), len(dl)
+            if k == 0 or D < k:
+                continue
+            d = sum(1 for x in dl if x >= tau)
+            p_matched = 1.0 - comb(D - d, k) / comb(D, k)
+            scopes = ("all", task) + ((("provider:" + provider_of_inv[i]),) if provider_of_inv else ())
+            for scope in scopes:                              # overall, per task, and per provider of the concept's model
+                a = acc[scope]; a["n"] += 1; a["k"] += k; a["D"] += D
+                a["same"] += any(x >= tau for x in s); a["diff"] += d > 0; a["diff_matched"] += p_matched
+        row = {"tau": tau}
+        for scope, a in acc.items():
+            n = a["n"]
+            row[scope] = {"n_concepts": n, "mean_same_candidates": a["k"] / n, "mean_different_candidates": a["D"] / n,
+                          "same_provider_pct": 100.0 * a["same"] / n, "different_provider_pct": 100.0 * a["diff"] / n,
+                          "different_provider_matched_pct": 100.0 * a["diff_matched"] / n}
+        rows.append(row)
+    print("\nCONCEPT-LEVEL FAMILY CONVERGENCE (share of concepts with >= 1 multiple; 'matched' = other providers at the"
+          " same number of candidate partners as own provider)")
+    for r in rows:
+        a = r["all"]
+        print(f"  tau={r['tau']}: n={a['n_concepts']}  same {a['same_provider_pct']:.1f}%  different raw {a['different_provider_pct']:.1f}%"
+              f"  different matched {a['different_provider_matched_pct']:.1f}%  (k={a['mean_same_candidates']:.1f}, D={a['mean_different_candidates']:.1f})")
+    return rows
+
+
 def cross_item_null(SMAT, OBJS, tk, item_of, tau_max, rng):
     """Same task, DIFFERENT anchor pair: what two inventions share by chance. Two inventions answering
     different items cannot share an item-specific property, so their matches are what generic phrasing
@@ -984,6 +1029,7 @@ def main():
 
     task_of_inv = {i: str(tk[i]) for i in range(len(names))}
     curve = tau_curve(pairs, null, task_of_inv)
+    concepts = concept_level(pairs, task_of_inv, max(r["tau"] for r in curve), {i: _provider(mo[i]) for i in range(len(names))})
     routes = task_routes(pairs, null, curve)
     grid = sensitivity(pairs, SMAT, groups, names)
 
@@ -1007,6 +1053,7 @@ def main():
         "same_name_pairs": {"n": len(named_hit),
                             "pct_that_are_multiples": 100*float(np.mean([p["structural"] for p in named_hit]))},
         "calibration": calib, "tau_curve": curve, "sensitivity": grid,
+        "concept_level": concepts,
         "anchor_echo": echo, "null": {"n_per_task": N_NULL // 2, "seed": NULL_SEED, **null},
         "task_routes": routes,
         "name_property_dissociation": dissoc,

@@ -27,7 +27,6 @@ SAME, DIFF = "#486878", "#C9CDD1"
 INV = "#486878"
 plt.rcParams.update({"font.family": "serif", "font.serif": ["Nimbus Roman", "Times New Roman", "DejaVu Serif"], "font.size": 16,
                      "text.color": "black", "axes.labelcolor": "black", "xtick.color": "black", "ytick.color": "black", "axes.edgecolor": "black"})
-YMIN = 0.03                                      # log-axis floor; a zero rate is written just above it
 
 
 def style(ax):
@@ -45,60 +44,68 @@ def title_legend(ax, title, handles=None):
                   handletextpad=0.5, columnspacing=1.2, borderaxespad=0.1)
 
 
-def bars(ax, taus, left, right, left_lab, right_lab, cl, cr, ratio=True, ytick_labels=True):
+def bars(ax, taus, left, right, left_lab, right_lab, cl, cr, ymax, ratio=True):
+    """Two bars per tau on a linear percent axis; the left/right ratio sits over a bracket spanning the pair."""
     x = np.arange(len(taus)); w = 0.36
     L, Rv = np.array(left, float), np.array(right, float)
     for off, vals, c, side in ((-w / 2, L, cl, -1), (w / 2, Rv, cr, +1)):
         pos = x + off
         ax.bar(pos[vals > 0], vals[vals > 0], w, color=c, edgecolor="none", zorder=3)
         for k, (xi, vi) in enumerate(zip(pos, vals)):
-            y = (vi * 1.12) if vi > 0 else YMIN * 1.12
             txt = "0%" if vi == 0 else (f"{vi:.2f}%" if vi < 1 else f"{vi:.1f}%")
             other = Rv[k] if side < 0 else L[k]
             nudge = side * 0.06 if other > vi else 0.0        # the shorter bar's label steps away from its taller neighbour
-            ax.text(xi + nudge, y, txt, ha="center", va="bottom", fontsize=10, color="black", zorder=5,
+            if max(vi, other) < ymax * 0.05: nudge = side * 0.12   # both bars tiny: labels sit at the same height, so step both apart
+            ax.text(xi + nudge, vi + ymax * 0.012, txt, ha="center", va="bottom", fontsize=10, color="black", zorder=5,
                     bbox=dict(boxstyle="square,pad=0.1", facecolor="white", edgecolor="none", alpha=0.9))
-    if ratio:                                                  # left/right ratio over a bracket spanning the two bars
+    if ratio:
         for xi, (l, r) in enumerate(zip(left, right)):
             if r > 0:
-                top = max(l, r) * 2.3                              # bracket bar sits above both value labels (log axis)
-                tick = top / 1.3                                   # short drops at the bracket ends
+                top = max(l, r) + ymax * 0.10                      # bracket bar above both value labels
+                tick = top - ymax * 0.03
                 ax.plot([xi - w / 2, xi - w / 2, xi + w / 2, xi + w / 2], [tick, top, top, tick], color="black", lw=0.9,
                         solid_capstyle="butt", zorder=4, clip_on=False)
-                ax.text(xi, top * 1.15, f"{l / r:.1f}$\\times$", ha="center", va="bottom", fontsize=13, fontweight="bold", color="black")
+                ax.text(xi, top + ymax * 0.012, f"{l / r:.1f}$\\times$", ha="center", va="bottom", fontsize=13, fontweight="bold", color="black")
     ax.set_xticks(x); ax.set_xticklabels([f"$\\tau={t}$" for t in taus], fontsize=14)
-    ax.set_yscale("log"); ax.set_ylim(YMIN, 260)
-    ax.set_yticks([0.1, 1, 10, 100]); ax.set_yticklabels(["0.1%", "1%", "10%", "100%"] if ytick_labels else [], fontsize=13)
-    ax.yaxis.set_minor_locator(mticker.NullLocator())
+    ax.set_ylim(0, ymax)
+    step = 20 if ymax > 60 else 10
+    ticks = list(range(0, int(ymax) + 1, step))
+    ax.set_yticks(ticks); ax.set_yticklabels([f"{t}%" for t in ticks], fontsize=13)
     style(ax)
     return [Patch(color=cl, label=left_lab), Patch(color=cr, label=right_lab)]
-
-
 
 
 def main():
     d = json.loads(SRC.read_text())
     rows = {r["tau"]: r for r in d["tau_curve"]}
+    fam = {r["tau"]: r["all"] for r in d["concept_level"]}
     taus = [1, 2, 3]
-    fig, axes = plt.subplots(1, 3, figsize=(10.8, 3.7), gridspec_kw={"width_ratios": [1.0, 1.1, 1.0], "wspace": 0.25})
+    fig, axes = plt.subplots(1, 3, figsize=(10.8, 3.7), gridspec_kw={"width_ratios": [1.0, 1.1, 1.0], "wspace": 0.3})
     ax = axes[0]; v = [rows[t]["inventions_pct"] for t in taus]; x = np.arange(3)
     ax.bar(x, v, 0.55, color=INV, edgecolor="none", zorder=3)
     for xi, vi in zip(x, v): ax.text(xi, vi + 1.5, f"{vi:.1f}%", ha="center", va="bottom", fontsize=10, color="black")
     ax.set_xticks(x); ax.set_xticklabels([f"$\\tau={t}$" for t in taus], fontsize=14); ax.set_ylim(0, 80)
     ax.set_yticks([0, 20, 40, 60, 80]); ax.set_yticklabels([f"{t}%" for t in (0, 20, 40, 60, 80)], fontsize=13)
-    ax.set_ylabel("% of inventions", fontsize=13)
-    style(ax); title_legend(ax, "(a) Inventions in a multiple")
-    h = bars(axes[1], taus, [rows[t]["blending_pct"] for t in taus], [rows[t]["analogy_pct"] for t in taus], "Blend", "Analogy", BLEND, ANALOGY)
-    axes[1].set_ylabel("% of invention pairs", fontsize=13)
-    title_legend(axes[1], "(b) Pairs in multiples by task", h)
-    h = bars(axes[2], taus, [rows[t]["same_provider_pct"] for t in taus], [rows[t]["cross_provider_pct"] for t in taus], "Same", "Different", SAME, DIFF, ytick_labels=False)
-    title_legend(axes[2], "(c) Pairs in multiples by family", h)
+    ax.set_ylabel("% of concepts", fontsize=13)
+    style(ax); title_legend(ax, "(a) Concepts in a multiple")
+    # (b) share of each task's concepts that have >= 1 multiple
+    h = bars(axes[1], taus, [rows[t]["inventions_blending_pct"] for t in taus], [rows[t]["inventions_analogy_pct"] for t in taus],
+             "Blend", "Analogy", BLEND, ANALOGY, ymax=130)
+    axes[1].set_yticks([0, 20, 40, 60, 80, 100]); axes[1].set_yticklabels([f"{t}%" for t in (0, 20, 40, 60, 80, 100)], fontsize=13)
+    title_legend(axes[1], "(b) By task", h)
+    # (c) share of concepts with >= 1 multiple from a model of the same provider, against the share expected from the
+    # same number of models of other providers (opportunity-matched, see analyze_inventive_multiples.concept_level)
+    h = bars(axes[2], taus, [fam[t]["same_provider_pct"] for t in taus], [fam[t]["different_provider_matched_pct"] for t in taus],
+             "Same", "Different", SAME, DIFF, ymax=55)
+    title_legend(axes[2], "(c) By family", h)
     OUT.mkdir(parents=True, exist_ok=True)
     for ext in ("png", "pdf"):
         fig.savefig(OUT / f"fig_tau_multiples.{ext}", dpi=220, bbox_inches="tight")
     print("saved", OUT / "fig_tau_multiples.{png,pdf}")
     for t in taus:
-        r = rows[t]; print(f"tau={t}: blend {r['blending_pct']:.2f} analogy {r['analogy_pct']:.2f} same {r['same_provider_pct']:.2f} diff {r['cross_provider_pct']:.2f} inv {r['inventions_pct']:.1f}")
+        r, f = rows[t], fam[t]
+        print(f"tau={t}: concepts {r['inventions_pct']:.1f}%  blend {r['inventions_blending_pct']:.1f}% analogy {r['inventions_analogy_pct']:.1f}%"
+              f"  same {f['same_provider_pct']:.1f}% matched-different {f['different_provider_matched_pct']:.1f}%")
 
 
 if __name__ == "__main__":
