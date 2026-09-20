@@ -143,7 +143,7 @@ scripts/
 ├── dat_eval/                   # bash wrappers for dat_eval pipeline
 ├── new_tests/                  # bash wrappers for new_tests runners
 │   ├── run_eqbench_cw.sh, run_hivemind.sh, run_liveideabench.sh, run_noveltybench.sh
-├── kg_creat/                   # deploy_study.sh (jsPsych human-generation study)
+├── kg_creat/                   # deploy_study.sh: publishes the jsPsych human-generation study (source in llm_creativity_mech_interp) to schapiro.ai/kombine
 └── safety/
     ├── status.sh               # see what's running, file activity, API conns
     ├── kill_all.sh             # SIGTERM + SIGKILL all eval processes

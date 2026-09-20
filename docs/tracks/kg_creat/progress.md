@@ -690,3 +690,7 @@ Source `llm_creativity_mech_interp/src/experiments/kombine_generation/` (commits
 
 **Open.** Table 14 caption is an `\ai{}` draft; Definition 3 still cites "interest" as Table 3's projected source; logo-bearing figures need regeneration for Kimi; retest30 awaits go-ahead.
 
+
+## 2026-09-12 → 09-20 — human study: reviewer edits reconciled, controls, completion code
+
+After the 09-12 entry the platform took the doc's "Study Items (REVISED)" wording with Akshay's accepted edits ("you will / you should", "called an entity", "the last entity of one row"), and a headless word-by-word checker confirmed all nine participant texts match the doc; the doc was updated the other way for the one-row Both example and the "final step will appear below the line" sentence. Blending now asks for the shared abstract structure before the name. The easy items (Life :: A journey, Breakfast + Lunch) lead their blocks; 4 real items per task. Bonus banner reads "your bonus depends on how original and unusual your responses are compared with other participants'" (threshold sentence removed). Traps use a different word per item. Final page shows the Prolific completion code (placeholder). All of it is live at schapiro.ai/kombine and the study repo is pushed. Session log: `docs/logs/2026-09-20/1652_human_study_platform_finalized.md`.

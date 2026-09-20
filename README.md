@@ -65,6 +65,7 @@ uv run python src/kg_creat/scripts/run_elicit.py configs/kg_creat/kombine_test30
 uv run python src/kg_creat/scripts/score.py configs/kg_creat/kombine_test30_panel_score.yaml
 .venv_mlx/bin/python -m src.kg_creat.scripts.analyze_inventive_multiples
 uv run python -m src.kg_creat.scripts.make_tau_multiples_table data/kg_creat/kombine_test30/analysis/inventive_multiples.json papers/kg_creat-iclr/media/tab_tau_multiples.tex papers/kg_creat-iclr/media/tab_task_routes.tex
+bash scripts/kg_creat/deploy_study.sh   # publish the human study (source in llm_creativity_mech_interp) to schapiro.ai/kombine
 ```
 
 ## Safety
