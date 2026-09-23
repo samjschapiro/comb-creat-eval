@@ -33,6 +33,8 @@ from src.kg_creat.scripts.plot_multiples_examples import PAPER_PANELS, find
 
 # (task, u, v, model a, model b): same-name pairs for the second row, looked up in the JSON's
 # name_property_dissociation examples; each must be present or the script fails.
+# unmatched property rows the author deleted from the Overleaf fragment (2026-09-22), keyed by (task, u, v)
+DROP_UNMATCHED = {("blending", "Opera", "Documentary film"): {"aria length fixed by interview duration"}}
 SAME_NAME_PANELS = [   # everyday anchors, common-sense properties, and almost nothing in common
     ("blending", "The blue whale", "The mattress", "anthropic_claude-fable-5", "qwen_qwen-2-5-72b-instruct"),   # "whale bed"
     ("blending", "Rice", "Radio", "moonshotai_kimi-k2", "openai_gpt-4o-mini"),                                   # "rice radio"
@@ -55,9 +57,11 @@ def model_cell(key: str) -> str:
     return f"{logo}{tex(DISPLAY.get(key, key.split('_', 1)[-1]))}"
 
 
-def one_table(m, letter, shade=True, kind="Inventive Multiple", number=1) -> str:
+def one_table(m, letter, shade=True, kind="Inventive Multiple", number=1, pad=None, title_prefix=True) -> str:
     """kind/number head the panel title, e.g. "(a) Inventive Multiple #1: \\emph{Opera} + \\emph{Documentary film}"
-    (the author's wording on Overleaf, 2026-09-14); a same-name pair is a "False Multiple"."""
+    (the author's wording on Overleaf, 2026-09-14). On 2026-09-22 the author shortened the main-table titles to just
+    "\\textbf{\\footnotesize \\emph{u} + \\emph{v}}" (title_prefix=False); a same-name pair is a "False Multiple".
+    pad: name of a length macro added to the last row, used by render() to give both panels the same height."""
     a, b = m["a"], m["b"]
     matched = sorted(m["matches"], key=lambda x: -x["cos"])
     ma, mb = {x["a"] for x in matched}, {x["b"] for x in matched}
@@ -65,11 +69,13 @@ def one_table(m, letter, shade=True, kind="Inventive Multiple", number=1) -> str
     # so a matched row shows WHICH property paired with which, not a positional alignment
     pa = lambda i: f"$p_{{{i + 1}}}$: {tex(a['properties'][i])}"
     pb = lambda j: f"$p'_{{{j + 1}}}$: {tex(b['properties'][j])}"
-    rest_a = [i for i in range(len(a["properties"])) if i not in ma]
-    rest_b = [j for j in range(len(b["properties"])) if j not in mb]
+    drop = DROP_UNMATCHED.get((m["task"], m["u"], m["v"]), set())     # unmatched rows the author removed by hand
+    rest_a = [i for i in range(len(a["properties"])) if i not in ma and a["properties"][i] not in drop]
+    rest_b = [j for j in range(len(b["properties"])) if j not in mb and b["properties"][j] not in drop]
     op = "+" if m["task"] == "blending" else "::"
-    L = [f"\\begin{{minipage}}[t]{{0.49\\linewidth}}\\centering",
-         f"\\textbf{{({letter}) {kind} \\#{number}: \\emph{{{tex(m['u'])}}} {op} \\emph{{{tex(m['v'])}}}}}\\\\[3pt]",
+    title = (f"\\textbf{{({letter}) {kind} \\#{number}: \\emph{{{tex(m['u'])}}} {op} \\emph{{{tex(m['v'])}}}}}" if title_prefix
+             else f"\\textbf{{\\footnotesize \\emph{{{tex(m['u'])}}} {op} \\emph{{{tex(m['v'])}}}}}")
+    L = ([] if pad else [f"\\begin{{minipage}}[t]{{0.49\\linewidth}}\\centering"]) + [title + "\\\\[3pt]",
          r"\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.43\linewidth}@{\hspace{4pt}}c@{\hspace{4pt}}"
          r">{\raggedright\arraybackslash}p{0.43\linewidth}@{}}",
          r"\toprule",
@@ -92,7 +98,11 @@ def one_table(m, letter, shade=True, kind="Inventive Multiple", number=1) -> str
             ra = f"\\textcolor{{gray}}{{{pa(rest_a[k])}}}" if k < len(rest_a) else ""
             rb = f"\\textcolor{{gray}}{{{pb(rest_b[k])}}}" if k < len(rest_b) else ""
             L.append(f"{ra} & & {rb} \\\\")
-    L += [r"\bottomrule", r"\end{tabular}", r"\end{minipage}"]
+    if pad:                                               # equal panel heights: the shorter panel gets extra space on its last row
+        L[-1] = L[-1][:-2] + f"\\\\[\\{pad}]"
+        L += [r"\bottomrule", r"\end{tabular}"]
+    else:
+        L += [r"\bottomrule", r"\end{tabular}", r"\end{minipage}"]
     return "\n".join(L)
 
 
@@ -156,7 +166,24 @@ def preamble():
 def render(d, embed=None) -> str:
     """The multiples row; with an embedder, a second row of same-name pairs (best pairing, unshaded)."""
     picks = [find(d["multiples"], *spec) for spec in PAPER_PANELS]
-    out = preamble() + ["\\hfill\n".join(one_table(m, letter, number=i + 1) for i, (m, letter) in enumerate(zip(picks, "abcdefgh")))]
+    assert len(picks) == 2, "the equal-height layout below is written for two panels"
+    panels = [one_table(m, letter, number=i + 1, pad=f"multpad{letter.upper()}", title_prefix=False) for i, (m, letter) in enumerate(zip(picks, "ab"))]
+    out = preamble() + [
+        "% Both panels are typeset once into boxes to measure them, then the shorter one is padded on its last row so the",
+        "% two bottom rules end at the same height (Alexi, 2026-09-22: \"can we make these figures the same height?\").",
+        r"\newlength{\multpadA}\newlength{\multpadB}\setlength{\multpadA}{0pt}\setlength{\multpadB}{0pt}",
+        r"\newsavebox{\multboxA}\newsavebox{\multboxB}",
+        "\\newcommand{\\multpanelA}{%\n" + panels[0] + "}",
+        "\\newcommand{\\multpanelB}{%\n" + panels[1] + "}",
+        r"\savebox{\multboxA}{\begin{minipage}[t]{0.49\linewidth}\centering\multpanelA\end{minipage}}",
+        r"\savebox{\multboxB}{\begin{minipage}[t]{0.49\linewidth}\centering\multpanelB\end{minipage}}",
+        r"\ifdim\dimexpr\ht\multboxA+\dp\multboxA\relax>\dimexpr\ht\multboxB+\dp\multboxB\relax",
+        r"  \setlength{\multpadB}{\dimexpr\ht\multboxA+\dp\multboxA-\ht\multboxB-\dp\multboxB\relax}",
+        r"\else",
+        r"  \setlength{\multpadA}{\dimexpr\ht\multboxB+\dp\multboxB-\ht\multboxA-\dp\multboxA\relax}",
+        r"\fi",
+        r"\begin{minipage}[t]{0.49\linewidth}\centering\multpanelA\end{minipage}\hfill",
+        r"\begin{minipage}[t]{0.49\linewidth}\centering\multpanelB\end{minipage}"]
     if embed is not None and SAME_NAME_PANELS:
         same = []
         for i, (spec, letter) in enumerate(zip(SAME_NAME_PANELS, "abcdefgh"[len(picks):])):

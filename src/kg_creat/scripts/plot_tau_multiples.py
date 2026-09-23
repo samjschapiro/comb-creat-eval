@@ -102,6 +102,15 @@ def main():
     for ext in ("png", "pdf"):
         fig.savefig(OUT / f"fig_tau_multiples.{ext}", dpi=220, bbox_inches="tight")
     print("saved", OUT / "fig_tau_multiples.{png,pdf}")
+    # the same three panels as separate files with no in-plot title, for a LaTeX subfigure layout whose
+    # (a)/(b)/(c) labels come from \subcaption; each panel is drawn at the width it has in the combined figure
+    widths = {"a": 3.3, "b": 3.6, "c": 3.3}
+    for letter, ax in zip("abc", axes):
+        title = ax.get_title(loc="left"); ax.set_title("")
+        bb = ax.get_tightbbox(fig.canvas.get_renderer()).transformed(fig.dpi_scale_trans.inverted())
+        fig.savefig(OUT / f"fig_tau_multiples_{letter}.pdf", bbox_inches=bb.expanded(1.02, 1.02))
+        ax.set_title(title, loc="left", fontsize=16, pad=8, fontweight="bold")
+    print("saved", OUT / "fig_tau_multiples_{a,b,c}.pdf")
     for t in taus:
         r, f = rows[t], fam[t]
         print(f"tau={t}: concepts {r['inventions_pct']:.1f}%  blend {r['inventions_blending_pct']:.1f}% analogy {r['inventions_analogy_pct']:.1f}%"
