@@ -75,41 +75,59 @@ def bars(ax, taus, left, right, left_lab, right_lab, cl, cr, ymax, ratio=True):
     return [Patch(color=cl, label=left_lab), Patch(color=cr, label=right_lab)]
 
 
-def main():
-    d = json.loads(SRC.read_text())
-    rows = {r["tau"]: r for r in d["tau_curve"]}
-    fam = {r["tau"]: r["all"] for r in d["concept_level"]}
-    taus = [1, 2, 3]
-    fig, axes = plt.subplots(1, 3, figsize=(10.8, 3.7), gridspec_kw={"width_ratios": [1.0, 1.1, 1.0], "wspace": 0.3})
-    ax = axes[0]; v = [rows[t]["inventions_pct"] for t in taus]; x = np.arange(3)
+def panel_a(ax, rows, taus):
+    v = [rows[t]["inventions_pct"] for t in taus]; x = np.arange(3)
     ax.bar(x, v, 0.55, color=INV, edgecolor="none", zorder=3)
     for xi, vi in zip(x, v): ax.text(xi, vi + 1.5, f"{vi:.1f}%", ha="center", va="bottom", fontsize=10, color="black")
     ax.set_xticks(x); ax.set_xticklabels([f"$\\tau={t}$" for t in taus], fontsize=14); ax.set_ylim(0, 80)
     ax.set_yticks([0, 20, 40, 60, 80]); ax.set_yticklabels([f"{t}%" for t in (0, 20, 40, 60, 80)], fontsize=13)
     ax.set_ylabel("% of concepts", fontsize=13)
-    style(ax); title_legend(ax, "(a) Concepts in a multiple")
-    # (b) share of each task's concepts that have >= 1 multiple
-    h = bars(axes[1], taus, [rows[t]["inventions_blending_pct"] for t in taus], [rows[t]["inventions_analogy_pct"] for t in taus],
+    style(ax)
+    return None
+
+
+def panel_b(ax, rows, taus):
+    # share of each task's concepts that have >= 1 multiple
+    h = bars(ax, taus, [rows[t]["inventions_blending_pct"] for t in taus], [rows[t]["inventions_analogy_pct"] for t in taus],
              "Blend", "Analogy", BLEND, ANALOGY, ymax=130)
-    axes[1].set_yticks([0, 20, 40, 60, 80, 100]); axes[1].set_yticklabels([f"{t}%" for t in (0, 20, 40, 60, 80, 100)], fontsize=13)
-    title_legend(axes[1], "(b) By task", h)
-    # (c) share of concepts with >= 1 multiple from a model of the same provider, against the share expected from the
+    ax.set_yticks([0, 20, 40, 60, 80, 100]); ax.set_yticklabels([f"{t}%" for t in (0, 20, 40, 60, 80, 100)], fontsize=13)
+    return h
+
+
+def panel_c(ax, fam, taus):
+    # share of concepts with >= 1 multiple from a model of the same provider, against the share expected from the
     # same number of models of other providers (opportunity-matched, see analyze_inventive_multiples.concept_level)
-    h = bars(axes[2], taus, [fam[t]["same_provider_pct"] for t in taus], [fam[t]["different_provider_matched_pct"] for t in taus],
-             "Same", "Different", SAME, DIFF, ymax=55)
-    title_legend(axes[2], "(c) By family", h)
+    return bars(ax, taus, [fam[t]["same_provider_pct"] for t in taus], [fam[t]["different_provider_matched_pct"] for t in taus],
+                "Same", "Different", SAME, DIFF, ymax=55)
+
+
+def main():
+    d = json.loads(SRC.read_text())
+    rows = {r["tau"]: r for r in d["tau_curve"]}
+    fam = {r["tau"]: r["all"] for r in d["concept_level"]}
+    taus = [1, 2, 3]
+    panels = [("a", "Concepts in a multiple", lambda ax: panel_a(ax, rows, taus)),
+              ("b", "Pairs in multiples by task", lambda ax: panel_b(ax, rows, taus)),
+              ("c", "Pairs in multiples by family", lambda ax: panel_c(ax, fam, taus))]
+    # combined figure with in-plot (a)/(b)/(c) titles
+    fig, axes = plt.subplots(1, 3, figsize=(10.8, 3.7), gridspec_kw={"width_ratios": [1.0, 1.1, 1.0], "wspace": 0.3})
+    for ax, (letter, title, draw) in zip(axes, panels):
+        h = draw(ax); title_legend(ax, f"({letter}) {title}", h)
     OUT.mkdir(parents=True, exist_ok=True)
     for ext in ("png", "pdf"):
         fig.savefig(OUT / f"fig_tau_multiples.{ext}", dpi=220, bbox_inches="tight")
     print("saved", OUT / "fig_tau_multiples.{png,pdf}")
-    # the same three panels as separate files with no in-plot title, for a LaTeX subfigure layout whose
-    # (a)/(b)/(c) labels come from \subcaption; each panel is drawn at the width it has in the combined figure
-    widths = {"a": 3.3, "b": 3.6, "c": 3.3}
-    for letter, ax in zip("abc", axes):
-        title = ax.get_title(loc="left"); ax.set_title("")
-        bb = ax.get_tightbbox(fig.canvas.get_renderer()).transformed(fig.dpi_scale_trans.inverted())
-        fig.savefig(OUT / f"fig_tau_multiples_{letter}.pdf", bbox_inches=bb.expanded(1.02, 1.02))
-        ax.set_title(title, loc="left", fontsize=16, pad=8, fontweight="bold")
+    # the same three panels as separate untitled figures, for a LaTeX subfigure layout whose (a)/(b)/(c) come from
+    # \subcaption (Alexi, 2026-09-22); widths follow the combined figure's column ratios
+    # saved UNCROPPED at a fixed height (constrained layout, no tight bbox) so the three files share one scale and
+    # come out the same height once each is set to its subfigure width; the widths are the LaTeX column fractions
+    for (letter, title, draw), wid in zip(panels, (3.3, 3.6, 3.3)):
+        f1, ax1 = plt.subplots(figsize=(wid, 3.5), layout="constrained")
+        h = draw(ax1)
+        if h:
+            ax1.legend(handles=h, frameon=False, fontsize=12.5, loc="upper center", ncol=2, handlelength=1.0,
+                       handletextpad=0.5, columnspacing=1.2, borderaxespad=0.1)
+        f1.savefig(OUT / f"fig_tau_multiples_{letter}.pdf"); plt.close(f1)
     print("saved", OUT / "fig_tau_multiples_{a,b,c}.pdf")
     for t in taus:
         r, f = rows[t], fam[t]
