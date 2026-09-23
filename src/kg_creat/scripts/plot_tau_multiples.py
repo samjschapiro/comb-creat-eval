@@ -56,7 +56,7 @@ def bars(ax, taus, left, right, left_lab, right_lab, cl, cr, ymax, ratio=True):
             other = Rv[k] if side < 0 else L[k]
             nudge = side * 0.06 if other > vi else 0.0        # the shorter bar's label steps away from its taller neighbour
             if max(vi, other) < ymax * 0.05: nudge = side * 0.12   # both bars tiny: labels sit at the same height, so step both apart
-            ax.text(xi + nudge, vi + ymax * 0.012, txt, ha="center", va="bottom", fontsize=10, color="black", zorder=5,
+            ax.text(xi + nudge, vi + ymax * 0.012, txt, ha="center", va="bottom", fontsize=12, color="black", zorder=5,
                     bbox=dict(boxstyle="square,pad=0.1", facecolor="white", edgecolor="none", alpha=0.9))
     if ratio:
         for xi, (l, r) in enumerate(zip(left, right)):
@@ -78,7 +78,7 @@ def bars(ax, taus, left, right, left_lab, right_lab, cl, cr, ymax, ratio=True):
 def panel_a(ax, rows, taus):
     v = [rows[t]["inventions_pct"] for t in taus]; x = np.arange(3)
     ax.bar(x, v, 0.55, color=INV, edgecolor="none", zorder=3)
-    for xi, vi in zip(x, v): ax.text(xi, vi + 1.5, f"{vi:.1f}%", ha="center", va="bottom", fontsize=10, color="black")
+    for xi, vi in zip(x, v): ax.text(xi, vi + 1.5, f"{vi:.1f}%", ha="center", va="bottom", fontsize=12, color="black")
     ax.set_xticks(x); ax.set_xticklabels([f"$\\tau={t}$" for t in taus], fontsize=14); ax.set_ylim(0, 80)
     ax.set_yticks([0, 20, 40, 60, 80]); ax.set_yticklabels([f"{t}%" for t in (0, 20, 40, 60, 80)], fontsize=13)
     ax.set_ylabel("% of concepts", fontsize=13)
