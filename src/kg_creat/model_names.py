@@ -33,7 +33,7 @@ DISPLAY = {
     # pool expansion 2026-09-06/07 (30 -> 35)
     "anthropic_claude-opus-4-8": "claude-opus-4.8", "anthropic_claude-opus-4-7": "claude-opus-4.7",
     "anthropic_claude-sonnet-4-6": "claude-sonnet-4.6", "anthropic_claude-fable-5-1": "claude-fable-5.1",
-    "openai_gpt-6-astra-flex": "gpt-6-astra-flex",
+    "openai_gpt-6-astra-flex": "gpt-6-astra",   # the author shortened this display name by hand on Overleaf (2026-09-24)
 }
 def _provider(model_key):
     """The provider a model key belongs to. Falls back to the key's own prefix so a provider with no
