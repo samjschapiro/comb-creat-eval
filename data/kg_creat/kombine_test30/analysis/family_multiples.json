@@ -1,71 +1,80 @@
 {
  "tau": 2,
- "cross_family_pct": 0.9406073636119323,
- "cross_family_pair_items": 29768,
+ "unit": "concept",
+ "overall_same_pct": 9.304703476482617,
+ "overall_different_matched_pct": 4.111500999991981,
  "by_provider": [
   {
-   "provider": "x-ai",
-   "name": "xAI",
-   "n_models": 2,
-   "n_pair_items": 59,
-   "n_multiples": 5,
-   "within_pct": 8.474576271186441
+   "provider": "anthropic",
+   "name": "Anthropic",
+   "n_concepts": 597,
+   "mean_same_candidates": 8.958123953098827,
+   "same_pct": 18.42546063651591,
+   "different_matched_pct": 7.348159599691521,
+   "different_raw_pct": 15.242881072026801
   },
   {
    "provider": "deepseek",
    "name": "DeepSeek",
-   "n_models": 3,
-   "n_pair_items": 180,
-   "n_multiples": 13,
-   "within_pct": 7.222222222222222
+   "n_concepts": 180,
+   "mean_same_candidates": 2.0,
+   "same_pct": 14.444444444444445,
+   "different_matched_pct": 2.2041362831129234,
+   "different_raw_pct": 17.77777777777778
+  },
+  {
+   "provider": "x-ai",
+   "name": "xAI",
+   "n_concepts": 118,
+   "mean_same_candidates": 1.0,
+   "same_pct": 8.474576271186441,
+   "different_matched_pct": 1.079312465828321,
+   "different_raw_pct": 17.796610169491526
   },
   {
    "provider": "meta-llama",
    "name": "Meta",
-   "n_models": 2,
-   "n_pair_items": 58,
-   "n_multiples": 3,
-   "within_pct": 5.172413793103448
-  },
-  {
-   "provider": "qwen",
-   "name": "Qwen",
-   "n_models": 2,
-   "n_pair_items": 60,
-   "n_multiples": 2,
-   "within_pct": 3.3333333333333335
-  },
-  {
-   "provider": "anthropic",
-   "name": "Anthropic",
-   "n_models": 10,
-   "n_pair_items": 2674,
-   "n_multiples": 77,
-   "within_pct": 2.8795811518324608
-  },
-  {
-   "provider": "z-ai",
-   "name": "Z.ai",
-   "n_models": 2,
-   "n_pair_items": 56,
-   "n_multiples": 1,
-   "within_pct": 1.7857142857142858
-  },
-  {
-   "provider": "google",
-   "name": "Google",
-   "n_models": 5,
-   "n_pair_items": 572,
-   "n_multiples": 6,
-   "within_pct": 1.048951048951049
+   "n_concepts": 116,
+   "mean_same_candidates": 1.0,
+   "same_pct": 5.172413793103448,
+   "different_matched_pct": 0.9798924309839212,
+   "different_raw_pct": 24.137931034482758
   },
   {
    "provider": "openai",
    "name": "OpenAI",
-   "n_models": 7,
-   "n_pair_items": 1260,
-   "n_multiples": 8,
-   "within_pct": 0.6349206349206349
+   "n_concepts": 420,
+   "mean_same_candidates": 6.0,
+   "same_pct": 3.5714285714285716,
+   "different_matched_pct": 4.939339105798731,
+   "different_raw_pct": 15.238095238095237
+  },
+  {
+   "provider": "qwen",
+   "name": "Qwen",
+   "n_concepts": 120,
+   "mean_same_candidates": 1.0,
+   "same_pct": 3.3333333333333335,
+   "different_matched_pct": 0.7646780303030299,
+   "different_raw_pct": 18.333333333333332
+  },
+  {
+   "provider": "google",
+   "name": "Google",
+   "n_concepts": 293,
+   "mean_same_candidates": 3.9044368600682593,
+   "same_pct": 3.0716723549488054,
+   "different_matched_pct": 2.6743219338252877,
+   "different_raw_pct": 10.580204778156997
+  },
+  {
+   "provider": "z-ai",
+   "name": "Z.ai",
+   "n_concepts": 112,
+   "mean_same_candidates": 1.0,
+   "same_pct": 1.7857142857142858,
+   "different_matched_pct": 0.6036931818181817,
+   "different_raw_pct": 9.821428571428571
   }
  ]
 }
