@@ -3,7 +3,8 @@ records of every model's path_scores.json (originality = base, em_originality = 
 element-level, k-NN -- the same method as score.score_originality, but on two element sets:
 
   analogy   base = anchor-path elements (the mapping)          emergent = invention h (projection images + name)
-  blending  base = [u]/[v]/[uv] projected triples of the blend  emergent = [emergent] triples of the blend
+  blending  base = the GENERIC SPACE g, one string, pooled over all models' generic spaces for the item (the paper's
+            O_bl(g) := rho(g); until 2026-09-24 this was the [u]/[v]/[uv] projected triples)   emergent = [emergent] triples
 
 Association is untouched (no emergent invention). Judge-free; local MLX embeddings, so no API cost.
 
@@ -37,7 +38,8 @@ def orig_elements(it, mode, u, v):
     elif mode == "blending":
         tags = it.get("tags") or []
         tr = it["paths"][0] if it.get("paths") else []
-        base = _artifact_elements([[t for i, t in enumerate(tr) if i < len(tags) and tags[i] in ("u", "v", "uv")]], u, v)
+        g = _norm(it.get("generic_space") or "")
+        base = {("c", g)} if g else set()                    # O_bl(g) := rho(g) over the item's generic spaces
         emg = _artifact_elements([[t for i, t in enumerate(tr) if i < len(tags) and tags[i] == "emergent"]], u, v)
     else:
         return set(), set()
