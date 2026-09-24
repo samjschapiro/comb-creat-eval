@@ -21,6 +21,7 @@ import numpy as np
 SRC = Path("data/kg_creat/kombine_test30/analysis/inventive_multiples.json")
 OUT_JSON = Path("data/kg_creat/kombine_test30/analysis/family_multiples.json")
 OUT = Path("docs/reports/2026-09-01_kg_creat_inventive_multiples/figures")
+FIG_SIZE = (10.8, 2.6)   # inches; a wide, short row so it sits as row (d) under the three tau panels in the paper (author, 2026-09-24); was (6.2, 3.3)
 NAME = {"anthropic": "Anthropic", "openai": "OpenAI", "google": "Google", "x-ai": "xAI", "deepseek": "DeepSeek",
         "meta-llama": "Meta", "qwen": "Qwen", "z-ai": "Z.ai", "moonshotai": "Moonshot", "microsoft": "Microsoft"}
 SAME, DIFF = "#486878", "#C9CDD1"          # the slate of Figure 6 and Table 4's row tint, so the multiples figures share one palette
@@ -50,7 +51,7 @@ def main():
         print(f"{r['name']:10s} n={r['n_concepts']:4d} k={r['mean_same_candidates']:.1f}  same {r['same_pct']:.1f}%  different (matched) {r['different_matched_pct']:.1f}%")
     print(f"overall: same {overall['same_provider_pct']:.1f}%  different (matched) {overall['different_provider_matched_pct']:.1f}%")
 
-    fig, ax = plt.subplots(figsize=(6.2, 3.3))
+    fig, ax = plt.subplots(figsize=FIG_SIZE)
     x = np.arange(len(rows)); w = 0.62
     S = [r["same_pct"] for r in rows]; Dm = [r["different_matched_pct"] for r in rows]
     E = [s_ - d_ for s_, d_ in zip(S, Dm)]                  # excess over the opportunity-matched other-provider expectation
