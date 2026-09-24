@@ -41,7 +41,7 @@ def title_legend(ax, title, handles=None):
     """Panel title at the left; the legend inside the axes at the upper right, above the low tau = 3 bars and the ratio row."""
     ax.set_title(title, loc="left", fontsize=16, pad=8, fontweight="bold")
     if handles:
-        ax.legend(handles=handles, frameon=False, fontsize=12.5, loc="upper center", ncol=2, handlelength=1.0,
+        ax.legend(handles=handles, frameon=False, fontsize=12.5, loc="upper right", ncol=1, handlelength=1.0,
                   handletextpad=0.5, columnspacing=1.2, borderaxespad=0.1)
 
 
@@ -126,7 +126,7 @@ def main():
         f1, ax1 = plt.subplots(figsize=(wid, PANEL_H), layout="constrained")
         h = draw(ax1)
         if h:
-            ax1.legend(handles=h, frameon=False, fontsize=12.5, loc="upper center", ncol=2, handlelength=1.0,
+            ax1.legend(handles=h, frameon=False, fontsize=12.5, loc="upper right", ncol=1, handlelength=1.0,   # stacked over the low tau = 3 bars, clear of the tau = 1 ratio (author, 2026-09-24)
                        handletextpad=0.5, columnspacing=1.2, borderaxespad=0.1)
         f1.savefig(OUT / f"fig_tau_multiples_{letter}.pdf"); plt.close(f1)
     print("saved", OUT / "fig_tau_multiples_{a,b,c}.pdf")
