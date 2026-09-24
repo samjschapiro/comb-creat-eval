@@ -21,6 +21,7 @@ import numpy as np
 
 SRC = Path("data/kg_creat/kombine_test30/analysis/inventive_multiples.json")
 OUT = Path("docs/reports/2026-09-01_kg_creat_inventive_multiples/figures")
+PANEL_H = 2.5   # inches; was 3.5 -- the paper needs the row about 30% shorter (author, 2026-09-24)
 # One palette for all three panels, shared with Table 4's row tint and Figure 8: dark slate for the first bar, light grey for the second
 BLEND, ANALOGY = "#486878", "#C9CDD1"
 SAME, DIFF = "#486878", "#C9CDD1"
@@ -122,7 +123,7 @@ def main():
     # saved UNCROPPED at a fixed height (constrained layout, no tight bbox) so the three files share one scale and
     # come out the same height once each is set to its subfigure width; the widths are the LaTeX column fractions
     for (letter, title, draw), wid in zip(panels, (3.3, 3.6, 3.3)):
-        f1, ax1 = plt.subplots(figsize=(wid, 3.5), layout="constrained")
+        f1, ax1 = plt.subplots(figsize=(wid, PANEL_H), layout="constrained")
         h = draw(ax1)
         if h:
             ax1.legend(handles=h, frameon=False, fontsize=12.5, loc="upper center", ncol=2, handlelength=1.0,
