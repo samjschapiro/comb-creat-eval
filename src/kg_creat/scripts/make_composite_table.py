@@ -27,7 +27,8 @@ def _name(key):
 
 # provider -> logo file stem in media/logos/ (rendered from assets/logos by render_logos.py)
 PROV_SLUG = {"openai": "openai", "anthropic": "claude", "google": "googlegemini", "x-ai": "xai",
-             "deepseek": "deepseek", "qwen": "qwen", "z-ai": "zai", "meta-llama": "meta"}
+             "deepseek": "deepseek", "qwen": "qwen", "z-ai": "zai", "meta-llama": "meta",
+             "moonshotai": "kimi", "microsoft": "microsoft"}
 
 
 def _logo(key):
