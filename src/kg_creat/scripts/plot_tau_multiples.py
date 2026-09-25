@@ -45,24 +45,29 @@ def title_legend(ax, title, handles=None):
                   handletextpad=0.5, columnspacing=1.2, borderaxespad=0.1)
 
 
-def bars(ax, taus, left, right, left_lab, right_lab, cl, cr, ymax, ratio=True):
+def bars(ax, taus, left, right, left_lab, right_lab, cl, cr, ymax, ratio=True, ci_left=None, ci_right=None):
     """Two bars per tau on a linear percent axis; the left/right ratio sits over a bracket spanning the pair."""
     x = np.arange(len(taus)); w = 0.36
     L, Rv = np.array(left, float), np.array(right, float)
-    for off, vals, c, side in ((-w / 2, L, cl, -1), (w / 2, Rv, cr, +1)):
+    hi = {-1: L.copy(), +1: Rv.copy()}                       # top of each bar's error bar, for label and bracket placement
+    for off, vals, c, side, ci in ((-w / 2, L, cl, -1, ci_left), (w / 2, Rv, cr, +1, ci_right)):
         pos = x + off
         ax.bar(pos[vals > 0], vals[vals > 0], w, color=c, edgecolor="none", zorder=3)
+        if ci is not None:
+            lo_, hi_ = np.array(ci, float).T
+            ax.errorbar(pos, vals, yerr=[vals - lo_, hi_ - vals], fmt="none", ecolor="black", elinewidth=0.9, capsize=2.5, capthick=0.9, zorder=4)
+            hi[side] = hi_
         for k, (xi, vi) in enumerate(zip(pos, vals)):
             txt = "0%" if vi == 0 else (f"{vi:.2f}%" if vi < 1 else f"{vi:.1f}%")
             other = Rv[k] if side < 0 else L[k]
             nudge = side * 0.06 if other > vi else 0.0        # the shorter bar's label steps away from its taller neighbour
             if max(vi, other) < ymax * 0.05: nudge = side * 0.12   # both bars tiny: labels sit at the same height, so step both apart
-            ax.text(xi + nudge, vi + ymax * 0.012, txt, ha="center", va="bottom", fontsize=12, color="black", zorder=5,
+            ax.text(xi + nudge, hi[side][k] + ymax * 0.012, txt, ha="center", va="bottom", fontsize=12, color="black", zorder=5,
                     bbox=dict(boxstyle="square,pad=0.1", facecolor="white", edgecolor="none", alpha=0.9))
     if ratio:
         for xi, (l, r) in enumerate(zip(left, right)):
             if r > 0:
-                top = max(l, r) + ymax * 0.10                      # bracket bar above both value labels
+                top = max(hi[-1][xi], hi[+1][xi]) + ymax * 0.10    # bracket bar above both value labels
                 tick = top - ymax * 0.03
                 ax.plot([xi - w / 2, xi - w / 2, xi + w / 2, xi + w / 2], [tick, top, top, tick], color="black", lw=0.9,
                         solid_capstyle="butt", zorder=4, clip_on=False)
@@ -76,10 +81,35 @@ def bars(ax, taus, left, right, left_lab, right_lab, cl, cr, ymax, ratio=True):
     return [Patch(color=cl, label=left_lab), Patch(color=cr, label=right_lab)]
 
 
-def panel_a(ax, rows, taus):
-    v = [rows[t]["inventions_pct"] for t in taus]; x = np.arange(3)
+def boot_ci(per_concept, taus, value, select=lambda c: True, n_boot=2000, seed=0):
+    """95% percentile CI of a mean share, by a cluster bootstrap over ITEMS (the input pair): concepts invented for the
+    same item share one candidate pool, so items are resampled with replacement and every concept of a drawn item comes
+    along. `value(concept, tau_index)` returns the per-concept quantity or None."""
+    rng = np.random.default_rng(seed)
+    items = sorted({tuple(c["item"]) + (c["task"],) for c in per_concept if select(c)})
+    by_item = {it: [] for it in items}
+    for c in per_concept:
+        if select(c):
+            by_item[tuple(c["item"]) + (c["task"],)].append(c)
+    out = []
+    for ti, _ in enumerate(taus):
+        sums = np.array([sum(v for c in cs if (v := value(c, ti)) is not None) for cs in by_item.values()], float)
+        cnts = np.array([sum(1 for c in cs if value(c, ti) is not None) for cs in by_item.values()], float)
+        draws = rng.integers(0, len(items), size=(n_boot, len(items)))
+        est = 100.0 * sums[draws].sum(axis=1) / np.maximum(cnts[draws].sum(axis=1), 1)
+        out.append((float(np.percentile(est, 2.5)), float(np.percentile(est, 97.5))))
+    return out
+
+
+def panel_a(ax, rows, taus, ci=None):
+    v = np.array([rows[t]["inventions_pct"] for t in taus]); x = np.arange(3)
     ax.bar(x, v, 0.55, color=INV, edgecolor="none", zorder=3)
-    for xi, vi in zip(x, v): ax.text(xi, vi + 1.5, f"{vi:.1f}%", ha="center", va="bottom", fontsize=12, color="black")
+    top = v.copy()
+    if ci is not None:
+        lo_, hi_ = np.array(ci, float).T
+        ax.errorbar(x, v, yerr=[v - lo_, hi_ - v], fmt="none", ecolor="black", elinewidth=0.9, capsize=2.5, capthick=0.9, zorder=4)
+        top = hi_
+    for xi, vi, ti in zip(x, v, top): ax.text(xi, ti + 1.5, f"{vi:.1f}%", ha="center", va="bottom", fontsize=12, color="black")
     ax.set_xticks(x); ax.set_xticklabels([f"$\\tau={t}$" for t in taus], fontsize=14); ax.set_ylim(0, 80)
     ax.set_yticks([0, 20, 40, 60, 80]); ax.set_yticklabels([f"{t}%" for t in (0, 20, 40, 60, 80)], fontsize=13)
     ax.set_ylabel("% of concepts", fontsize=13)
@@ -87,29 +117,38 @@ def panel_a(ax, rows, taus):
     return None
 
 
-def panel_b(ax, rows, taus):
+def panel_b(ax, rows, taus, ci_bl=None, ci_an=None):
     # share of each task's concepts that have >= 1 multiple
     h = bars(ax, taus, [rows[t]["inventions_blending_pct"] for t in taus], [rows[t]["inventions_analogy_pct"] for t in taus],
-             "Blend", "Analogy", BLEND, ANALOGY, ymax=130)
+             "Blend", "Analogy", BLEND, ANALOGY, ymax=130, ci_left=ci_bl, ci_right=ci_an)
     ax.set_yticks([0, 20, 40, 60, 80, 100]); ax.set_yticklabels([f"{t}%" for t in (0, 20, 40, 60, 80, 100)], fontsize=13)
     return h
 
 
-def panel_c(ax, fam, taus):
+def panel_c(ax, fam, taus, ci_same=None, ci_diff=None):
     # share of concepts with >= 1 multiple from a model of the same provider, against the share expected from the
     # same number of models of other providers (opportunity-matched, see analyze_inventive_multiples.concept_level)
     return bars(ax, taus, [fam[t]["same_provider_pct"] for t in taus], [fam[t]["different_provider_matched_pct"] for t in taus],
-                "Same", "Different", SAME, DIFF, ymax=55)
+                "Same", "Different", SAME, DIFF, ymax=55, ci_left=ci_same, ci_right=ci_diff)
 
 
 def main():
     d = json.loads(SRC.read_text())
     rows = {r["tau"]: r for r in d["tau_curve"]}
-    fam = {r["tau"]: r["all"] for r in d["concept_level"]}
+    fam = {r["tau"]: r["all"] for r in d["concept_level"]["by_tau"]}
+    pc = d["concept_level"]["per_concept"]
     taus = [1, 2, 3]
-    panels = [("a", "Concepts in a multiple", lambda ax: panel_a(ax, rows, taus)),
-              ("b", "Pairs in multiples by task", lambda ax: panel_b(ax, rows, taus)),
-              ("c", "Pairs in multiples by family", lambda ax: panel_c(ax, fam, taus))]
+    # 95% CIs from a cluster bootstrap over items (Tom Griffiths, 2026-09-25: error bars)
+    ci_a = boot_ci(pc, taus, lambda c, ti: c["any"][ti])
+    ci_bl = boot_ci(pc, taus, lambda c, ti: c["any"][ti], select=lambda c: c["task"] == "blending")
+    ci_an = boot_ci(pc, taus, lambda c, ti: c["any"][ti], select=lambda c: c["task"] == "analogy")
+    ci_same = boot_ci(pc, taus, lambda c, ti: c["same"][ti])
+    ci_diff = boot_ci(pc, taus, lambda c, ti: c["diff_matched"][ti])
+    for lab, ci in (("a", ci_a), ("blend", ci_bl), ("analogy", ci_an), ("same", ci_same), ("diff", ci_diff)):
+        print(f"CI {lab:8s} " + "  ".join(f"tau={t}: [{lo:.1f}, {hi:.1f}]" for t, (lo, hi) in zip(taus, ci)))
+    panels = [("a", "Concepts in a multiple", lambda ax: panel_a(ax, rows, taus, ci_a)),
+              ("b", "Pairs in multiples by task", lambda ax: panel_b(ax, rows, taus, ci_bl, ci_an)),
+              ("c", "Pairs in multiples by family", lambda ax: panel_c(ax, fam, taus, ci_same, ci_diff))]
     # combined figure with in-plot (a)/(b)/(c) titles
     fig, axes = plt.subplots(1, 3, figsize=(10.8, 3.7), gridspec_kw={"width_ratios": [1.0, 1.1, 1.0], "wspace": 0.3})
     for ax, (letter, title, draw) in zip(axes, panels):

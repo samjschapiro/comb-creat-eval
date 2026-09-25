@@ -34,7 +34,7 @@ def main():
     concepts with >= 1 tau = 2 multiple from a model of the same provider ("Same"), beside the share expected from the
     same number of models of other providers ("Different"), so providers with many models are not favoured."""
     d = json.loads(SRC.read_text())
-    row = [r for r in d["concept_level"] if r["tau"] == 2][0]
+    row = [r for r in d["concept_level"]["by_tau"] if r["tau"] == 2][0]
     rows = []
     for key, v in row.items():
         if not key.startswith("provider:"):

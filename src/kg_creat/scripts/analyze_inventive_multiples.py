@@ -251,7 +251,7 @@ def tau_curve(pairs_all, null, task_of_inv):
 
 
 
-def concept_level(pairs_all, task_of_inv, tau_max, provider_of_inv=None):
+def concept_level(pairs_all, task_of_inv, tau_max, provider_of_inv=None, item_of_inv=None):
     """Multiples counted per invented CONCEPT rather than per pair, for the figure that reports everything at
     the concept level. For each tau: the share of concepts that have >= 1 multiple among the concepts of (i)
     models of their own provider and (ii) models of other providers, and (iii) the OPPORTUNITY-MATCHED version
@@ -266,15 +266,22 @@ def concept_level(pairs_all, task_of_inv, tau_max, provider_of_inv=None):
         key = "same" if p["same_provider"] else "diff"
         by[p["a"]][key].append(p["shared"]); by[p["b"]][key].append(p["shared"])
     rows = []
+    # one record per concept, for the figure's item-bootstrapped error bars: for each tau, whether the concept has
+    # >= 1 multiple at all (panels a/b), among its own provider's models, and the matched other-provider expectation
+    per_concept = {i: {"task": task, "item": list(item_of_inv[i]) if item_of_inv else None,
+                       "any": [], "same": [], "diff_matched": []} for i, task in task_of_inv.items()}
     for tau in range(1, int(tau_max) + 1):
         acc = defaultdict(lambda: {"n": 0, "same": 0.0, "diff": 0.0, "diff_matched": 0.0, "k": 0.0, "D": 0.0})
         for i, task in task_of_inv.items():
             s, dl = by[i]["same"], by[i]["diff"]
+            per_concept[i]["any"].append(int(any(x >= tau for x in s + dl)))
             k, D = len(s), len(dl)
             if k == 0 or D < k:
+                per_concept[i]["same"].append(None); per_concept[i]["diff_matched"].append(None)
                 continue
             d = sum(1 for x in dl if x >= tau)
             p_matched = 1.0 - comb(D - d, k) / comb(D, k)
+            per_concept[i]["same"].append(int(any(x >= tau for x in s))); per_concept[i]["diff_matched"].append(round(p_matched, 6))
             scopes = ("all", task) + ((("provider:" + provider_of_inv[i]),) if provider_of_inv else ())
             for scope in scopes:                              # overall, per task, and per provider of the concept's model
                 a = acc[scope]; a["n"] += 1; a["k"] += k; a["D"] += D
@@ -286,13 +293,14 @@ def concept_level(pairs_all, task_of_inv, tau_max, provider_of_inv=None):
                           "same_provider_pct": 100.0 * a["same"] / n, "different_provider_pct": 100.0 * a["diff"] / n,
                           "different_provider_matched_pct": 100.0 * a["diff_matched"] / n}
         rows.append(row)
+    rows_out = {"by_tau": rows, "per_concept": list(per_concept.values())}
     print("\nCONCEPT-LEVEL FAMILY CONVERGENCE (share of concepts with >= 1 multiple; 'matched' = other providers at the"
           " same number of candidate partners as own provider)")
     for r in rows:
         a = r["all"]
         print(f"  tau={r['tau']}: n={a['n_concepts']}  same {a['same_provider_pct']:.1f}%  different raw {a['different_provider_pct']:.1f}%"
               f"  different matched {a['different_provider_matched_pct']:.1f}%  (k={a['mean_same_candidates']:.1f}, D={a['mean_different_candidates']:.1f})")
-    return rows
+    return rows_out
 
 
 def cross_item_null(SMAT, OBJS, tk, item_of, tau_max, rng):
@@ -1029,7 +1037,8 @@ def main():
 
     task_of_inv = {i: str(tk[i]) for i in range(len(names))}
     curve = tau_curve(pairs, null, task_of_inv)
-    concepts = concept_level(pairs, task_of_inv, max(r["tau"] for r in curve), {i: _provider(mo[i]) for i in range(len(names))})
+    concepts = concept_level(pairs, task_of_inv, max(r["tau"] for r in curve), {i: _provider(mo[i]) for i in range(len(names))},
+                             {i: (str(us[i]), str(vs[i])) for i in range(len(names))})
     routes = task_routes(pairs, null, curve)
     grid = sensitivity(pairs, SMAT, groups, names)
 
