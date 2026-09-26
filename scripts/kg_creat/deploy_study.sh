@@ -36,7 +36,7 @@ mkdir -p "$CLONE/$SUBDIR"
 # --delete keeps the published copy in step with the source, scoped to kombine/ only. vercel.json is a
 # Vercel artifact unused on Pages; README/.gitignore are repo hygiene, not served content.
 rsync -a --delete $DRY_RUN -v \
-  --exclude .git --exclude 'vercel.json' --exclude .gitignore --exclude README.md --exclude collector \
+  --exclude .git --exclude 'vercel.json' --exclude .gitignore --exclude README.md --exclude collector --exclude apps_script \
   "$STUDY/" "$CLONE/$SUBDIR/"
 
 if [ -n "$DRY_RUN" ]; then
