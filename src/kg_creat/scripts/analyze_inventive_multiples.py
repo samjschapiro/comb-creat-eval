@@ -269,6 +269,7 @@ def concept_level(pairs_all, task_of_inv, tau_max, provider_of_inv=None, item_of
     # one record per concept, for the figure's item-bootstrapped error bars: for each tau, whether the concept has
     # >= 1 multiple at all (panels a/b), among its own provider's models, and the matched other-provider expectation
     per_concept = {i: {"task": task, "item": list(item_of_inv[i]) if item_of_inv else None,
+                       "provider": provider_of_inv[i] if provider_of_inv else None,
                        "any": [], "same": [], "diff_matched": []} for i, task in task_of_inv.items()}
     for tau in range(1, int(tau_max) + 1):
         acc = defaultdict(lambda: {"n": 0, "same": 0.0, "diff": 0.0, "diff_matched": 0.0, "k": 0.0, "D": 0.0})
