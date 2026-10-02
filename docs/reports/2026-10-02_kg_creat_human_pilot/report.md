@@ -27,7 +27,8 @@ report every human result both with and without it.
   desktop only, US/UK, English first language, approval rate ≥ 95%; reward $8.00, estimated 40 min.
 - **Sample:** 10 people started; 5 returned (quit; Prolific does not report when); 5 finished.
   2 finishers rejected for AI use. **Genuine finishers analysed below: n = 3** (slots 3, 4, 9).
-  A second pilot round of 2 places (the rejected places, refilled) was running when this was written.
+  A second round of 2 places (the rejected places, refilled) added **person 6** (slot 0, 21 min, genuine);
+  the other refill returned. **Genuine finishers: n = 4.**
 - **What this frame is not evidence about.** Three people is an existence check, not an estimate of any
   rate. Nothing here says how common misunderstanding or AI use will be at n = 120; it says each happens.
 
@@ -71,6 +72,7 @@ against AI use; their slots (0, 8) were reopened.
 | 2 | Plato → Rope | Plato *concept* Greek → *philosophy* metaphors → *language* chains → *binding* rope | relations are nouns |
 | 3 | Penicillin → Networks | Penicillin *is created by* mold → *gets reported on the* news → *is broadcast on* TV | never reaches the target |
 | 3 | Radio → The Milky Way | Radio *Watches* The Milky Way → *Creates* The Radio | loops back past the target |
+| 6 | Cheese → Muhammad Ali | Cheese *satisrying* taste → *expeirence* excitement → *adrenaline* muhammed ali | relations are nouns, not true |
 
 **Analogy: the mirror error, and inventions unrelated to the mapping.**
 
@@ -80,6 +82,8 @@ against AI use; their slots (0, 8) were reopened.
 | 1 | all items | invention skipped every time | |
 | 2 | Justice :: Electricity | invention: cows *require* grass → robot judges *require* charging | source unrelated to the analogy |
 | 3 | Vaccines :: Ethics | Vaccines *protect against* sickness / Ethics *protect against* bad behavior → "behavior vaccine" | **good** |
+| 6 | Hinduism :: Gravity | Hinduism *grounding* body / Gravity *grounding* life | one row, noun as relation; inventions skipped on all six items |
+| 6 | Life :: A journey | formal *time* clock / forever *time* clock | neither concept used at all |
 
 **Blending: the shared abstract structure is the hardest idea.**
 
@@ -89,6 +93,7 @@ against AI use; their slots (0, 8) were reopened.
 | 1 | three items | skipped in 4–9 s each | |
 | 2 | Christianity + Beauty | structure "the honest teachings of Jesus" | fits one input only |
 | 3 | The Ten Commandments + Free will | "how people decide how to behave" → **Custom Commandments**; "a person picks their own ten rules" | **good**, though links copy the inputs |
+| 6 | Breakfast + Lunch | name "energy"; structure "body fuel"; links "eggs *fuel* body", "rice *full* belly" | structure plausible, but no link is about the new concept |
 
 No genuine participant used a "Both" row outside the warm-up, so double-scope blends are essentially
 absent from the human pilot data.
