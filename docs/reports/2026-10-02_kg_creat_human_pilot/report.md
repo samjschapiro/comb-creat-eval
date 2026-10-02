@@ -132,7 +132,9 @@ with the exclusion rate. AI-flagged sessions are excluded from both.
 
 ## Reproduce / where things are
 
-- Raw pilot files: Drive folder "Kombine study data (private)" (`responses/`, `identity/`); earlier test
-  sessions archived in its "test sessions (pre-launch archive)" subfolder.
+- Raw pilot files: Drive folder "Kombine study data (private)", subfolder "pilot 2026-10-02 (design before
+  the quick check)" (`responses/`, `identity/`, and a README mapping each session to its slot and person
+  label). These sessions predate the quick check and are not pooled with the main study. Earlier test
+  sessions are in the "test sessions (pre-launch archive)" subfolder.
 - Item bundles and slot plan: `src/kg_creat/scripts/build_human_study_items.py`.
 - Slot status: the Apps Script web app URL with `?action=status` (in the study README).
