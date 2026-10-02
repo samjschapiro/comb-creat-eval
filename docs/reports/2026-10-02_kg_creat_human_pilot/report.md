@@ -41,11 +41,11 @@ report every human result both with and without it.
 | sessions saved (responses + identity file) | 5 of 5 |
 | slots claimed and marked done | 5 of 5 |
 | correct completion code | 5 of 5 |
-| completion time (min) | 27, 34, 46, 51, 71 (median 46) |
+| completion time (min), genuine finishers | 21, 27, 34, 46 (median 30); the two AI users took 51 and 71 |
 
-Two operational problems: the median 46 minutes exceeds the 40-minute estimate (pay works out to about
-$10.40/hr against a $12/hr target), and one genuine session took 71 minutes, longer than the 60-minute
-slot hold, which in a busy run would let a second participant be given the same slot.
+Timing is fine for genuine participants: the median of 30 minutes is under the 40-minute estimate (the $8
+reward works out to about $16/hr), and every genuine session finished well inside the 60-minute slot hold.
+Only an AI user (71 minutes) ran past the hold.
 
 ### 2. AI use is real and the traps catch it
 
@@ -124,9 +124,12 @@ with the exclusion rate. AI-flagged sessions are excluded from both.
 
 ## Changes recommended before scaling to 120
 
-1. Raise the slot hold from 60 to about 90 minutes (one constant in the Apps Script; needs a redeploy).
-2. Re-time the study: estimate 50 minutes and adjust the reward to keep about $12/hr, or shorten it.
-3. Comprehension supports: lock the last association entity to the target; reject an analogy whose left
+1. Slot hold and pay need no change (see the timing note above); the quick check adds a few minutes.
+2. Done 2026-10-02: a quick check (multiple choice on new pairs, with feedback, retried until correct)
+   right after each task's instructions; clearer wording on relations, where a chain stops, and which side
+   is which; a warning when an analogy row uses the same entities on both sides; the blend's name fills the
+   new-concept column.
+3. Still open, comprehension supports: lock the last association entity to the target; reject an analogy whose left
    side names the right-hand concept or the reverse; a short practice item with feedback before the
    analogy and blending blocks.
 
