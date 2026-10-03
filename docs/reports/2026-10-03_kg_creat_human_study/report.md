@@ -10,8 +10,9 @@ after screening, 76 are kept, 18 are kept but flagged as likely AI-assisted, and
 by hidden trap words, 5 no effort). AI use is the main data-quality problem: about 1 in 3 sessions shows some
 AI signal. Kept human answers pass the benchmark's validity check (utility) less often than the typical
 model on every task, and on association less often than every model, mostly by breaking the task's rules
-(chains that do not end at the target, false links). On originality, human answers are farther from model
-answers than from each other on all three tasks; model answers, in turn, sit inside the human answers' region
+(chains that do not end at the target, false links). On the paper's composite, kept humans rank last of 37
+entries, yet their valid answers are more original than most models' valid answers, and less surprising.
+Human answers are farther from model answers than from each other on all three tasks; model answers, in turn, sit inside the human answers' region
 on association and analogy but not on blending, where each group stays away from the other.
 
 ## Data size and quality (read this first)
@@ -95,7 +96,38 @@ Haiku 4.5; factuality by Haiku 4.5). Test items only.
 - **Flagged sessions score higher than kept ones on every task**, consistent with AI help, and a reason to
   keep them out of the main human numbers.
 
-### 2. Directional originality: humans reach places models do not; on blending the two groups avoid each other
+### 2. On the paper's composite, kept humans rank last; their valid answers are more original but less surprising
+
+All 35 models and both human groups rescored against ONE originality pool (every human and model answer to the
+item), on the 86 items both answered (the human warm-ups and the two worked-example pairs dropped). The
+rescoring reproduces the models' stored originality exactly when the pool is models only (19,555 values, max
+difference 0). The composite is the paper's: each dimension is gated by utility (0 if the answer failed) and
+expressed as a fraction of its maximum.
+
+- **Overall: kept humans 17.4, last of 37** (phi-4 18.1; model median about 37). Flagged humans 24.5.
+- The gap comes from utility and from everything gated on it, above all the emergent steps: humans' invention
+  utility and integration (analogy) and emergent utility and integration (blending) are below all but 0–2
+  models, largely because people skip the invention and the "true of neither" step.
+
+**Among answers that pass utility** (not gated), the picture splits:
+
+| dimension (passed answers only) | humans, kept | model median | models below humans |
+|---|---|---|---|
+| association originality | 0.352 | 0.321 | 31 of 35 |
+| analogy originality (the mapping) | 0.456 | 0.472 | 11 of 35 |
+| analogy invention originality | 0.536 | 0.508 | 29 of 35 |
+| blend originality (generic space) | 0.508 | 0.378 | 35 of 35 |
+| blend emergent originality | 0.521 | 0.478 | 33 of 35 |
+| association surprise | 0.637 | 0.668 | 4 of 35 |
+| analogy surprise | 0.704 | 0.769 | 1 of 35 |
+| blend surprise | 0.762 | 0.802 | 5 of 35 |
+
+When a human answer is valid, it is more original than most models' valid answers on four of five
+originality measures, and less surprising (its linked concepts sit closer together) on all three tasks.
+Caveat: the shared pool is mostly model answers, so originality here is partly distance from what the models
+say — the same thing finding 3 measures directly.
+
+### 3. Directional originality: humans reach places models do not; on blending the two groups avoid each other
 
 For an answer from group X, O(X|Y) is the benchmark's originality computed against group Y only: the mean
 distance of the answer's concepts and relations to their 5 nearest neighbours among Y's answers to the same
@@ -133,9 +165,6 @@ Judging all human answers (kept + flagged + warm-ups, 1,277 answers): **$48.25**
 
 ## Not yet done
 
-- **Standard originality and the composite for humans vs. models.** Human originality was scored against the
-  combined human + model pool, but the models' stored originality uses the older model-only pool;
-  recomputing the models against the combined pool is free and comes before any composite comparison.
 - **Utility-gated directional originality** (passed answers only); robustness to a second embedding model.
 - **The remaining 28 slots.** Collection is paused; refilling them brings association and analogy to about
   18–19 answers per item, blending to about 10.
@@ -151,5 +180,8 @@ Judging all human answers (kept + flagged + warm-ups, 1,277 answers): **$48.25**
   `rejudge_factuality_haiku.py --scores-dir data/kg_creat/human_study/scores`.
 - Utility vs. models: `data/kg_creat/human_study/analysis/utility_vs_models.json` (computed from path scores,
   test items only).
+- Composite on one shared pool: `src/kg_creat/scripts/rescore_originality_combined.py --pool combined` →
+  `data/kg_creat/human_study/combined_scores/` (copies; the models' own score files are untouched), then
+  `compute_composite.py` on it, then `analyze_human_vs_models.py` → `analysis/human_vs_models.json`.
 - Directional originality: `src/kg_creat/scripts/analyze_directional_originality.py` →
   `data/kg_creat/human_study/analysis/directional_originality.json` (per-item values included).
