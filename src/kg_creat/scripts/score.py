@@ -466,7 +466,14 @@ async def main(config_path, overwrite=False, debug=False):
 
     # Item-specific originality needs the embedded element pool across ALL models, so build the
     # per-item pool once, up front, before scoring any single model.
-    item_pool = build_item_element_pool(model_dirs, embed)
+    # pool_extra_dirs: other response sets whose elements join the originality pool WITHOUT being scored
+    # (the human study is scored against a pool that also holds every model's answers to the same item).
+    pool_dirs = list(model_dirs)
+    for extra in config.get("pool_extra_dirs", []):
+        if not Path(extra).exists():
+            raise FileNotFoundError(f"FATAL: pool_extra_dirs entry not found: {extra}")
+        pool_dirs += [d for d in Path(extra).iterdir() if (d / "responses.json").exists()]
+    item_pool = build_item_element_pool(pool_dirs, embed)
     print(f"Built embedded element pool over {len(item_pool)} items (for originality).")
     J.reset_judge_usage()   # track actual judge token spend across all models -> cost ledger
 

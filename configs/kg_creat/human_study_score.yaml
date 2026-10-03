@@ -1,0 +1,19 @@
+# Human generation study: judge the human answers exactly like the models (kombine_test30_panel_score.yaml).
+# Same 3-judge subjective panel; the first-pass factuality judge is then REPLACED by the Haiku rejudge
+# (rejudge_factuality_haiku.py --scores-dir data/kg_creat/human_study/scores), as for the models.
+# Originality is pool-relative over humans + all models' answers to the same item (pool_extra_dirs).
+upstream_dir: data/kg_creat/human_study/score_input
+output_dir: data/kg_creat/human_study/scores
+pool_extra_dirs:
+  - data/kg_creat/kombine_test30/responses
+judge:
+  enabled: true
+  models:
+    - anthropic/claude-haiku-4.5
+    - openai/gpt-5.4
+    - openai/o3
+  factuality_model: openai/gpt-oss-120b   # first pass only; overwritten by the Haiku rejudge
+  panel_open_ended: true
+  concurrency: 16
+embedding:
+  model: mlx-community/all-MiniLM-L6-v2-4bit
