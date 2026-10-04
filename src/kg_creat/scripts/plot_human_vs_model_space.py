@@ -59,7 +59,7 @@ def answers():
                 partner = idx.get((r["prompt_id"], r.get("temperature"), r.get("sample_idx"), r["path_idx"] + 1))
                 paths = [trip, partner["triples"] if partner else []]
                 passed = r.get("pair_sat") is True
-                label = " → ".join(t[2] for t in trip[:2]) + " ‖ " + " → ".join(t[2] for t in paths[1][:2])
+                label = " → ".join(t[2] for t in trip[:2]) + " | " + " → ".join(t[2] for t in paths[1][:2])
             else:
                 paths, passed = [trip], r.get("sat") is True
                 label = (" → ".join([trip[0][0]] + [t[2] for t in trip]) if mode == "baseline"
@@ -95,6 +95,13 @@ def stage_plot():
     import matplotlib.pyplot as plt
     from sklearn.decomposition import PCA
     from sklearn.manifold import TSNE
+    # Nimbus Roman (the URW Times the paper's LaTeX uses) for every piece of text; fail loudly if it is missing
+    from matplotlib import font_manager
+    if "Nimbus Roman" not in {f.name for f in font_manager.fontManager.ttflist}:
+        raise SystemExit("FATAL: Nimbus Roman is not installed")
+    plt.rcParams.update({"font.family": "serif", "font.serif": ["Nimbus Roman"], "mathtext.fontset": "custom",
+                         "mathtext.rm": "Nimbus Roman", "mathtext.it": "Nimbus Roman:italic",
+                         "mathtext.bf": "Nimbus Roman:bold"})
     plt.rcParams.update({"font.size": 14, "axes.titlesize": 16, "axes.labelsize": 15,
                          "xtick.labelsize": 13, "ytick.labelsize": 13, "legend.fontsize": 13})
     X = np.load(CACHE)["X"]
