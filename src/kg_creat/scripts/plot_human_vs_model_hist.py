@@ -3,8 +3,7 @@
 Models: one composite per model (35). Humans: one composite per kept participant, the paper's composite
 (compute_composite.artifact_dims) computed on that participant's own answers. All scores come from the shared
 human + model originality pool on the 86 items both answered (data/kg_creat/human_study/combined_scores).
-A task a participant skipped entirely is missing for that person (not 0), as in the group composite; a
-person's Overall is the mean of the tasks they answered. A person's score rests on ~14 answers against ~90 per
+Skipped items count as failed answers (0), as in the group composite (build_skip0_scores.py). A person's score rests on ~14 answers against ~90 per
 model, so the human distribution is wider partly from noise.
 
     .venv/bin/python -m src.kg_creat.scripts.plot_human_vs_model_hist
@@ -18,7 +17,7 @@ import numpy as np
 
 from src.kg_creat.scripts.compute_composite import TASK_DIMS, _mean, _ok, artifact_dims
 
-SCORES = Path("data/kg_creat/human_study/combined_scores")
+SCORES = Path("data/kg_creat/human_study/combined_scores_skip0")   # skipped items count as failed (0); see build_skip0_scores.py
 OUT = Path("data/kg_creat/human_study/figures/composite_hist.png")
 MOCK = Path("scratch/human_vs_model_space/composite_hist.png")
 HUMAN, MODEL = "#d95f02", "#1b6ca8"

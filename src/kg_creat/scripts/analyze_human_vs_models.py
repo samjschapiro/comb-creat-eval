@@ -15,7 +15,7 @@ import os
 
 import numpy as np
 
-SCORES = "data/kg_creat/human_study/combined_scores"
+SCORES = "data/kg_creat/human_study/combined_scores_skip0"   # skipped items count as failed (0); see build_skip0_scores.py
 OUT = "data/kg_creat/human_study/analysis/human_vs_models.json"
 TASKS = [("association", "baseline"), ("analogy", "analogy"), ("blending", "blending")]
 
@@ -39,6 +39,31 @@ def compare(h, xs):
             "models_below_human": int(sum(x < h for x in xs)), "n_models": len(xs)}
 
 
+def human_rows(comp, models):
+    """Composite of kept humans and of the kept humans who passed the Breakfast + Lunch screen (blend judge on the
+    warm-up, data/kg_creat/human_study/scores), with each group's rank among the models + that group."""
+    from src.kg_creat.scripts.compute_composite import TASK_DIMS, _mean, _ok, artifact_dims
+    root = "data/kg_creat/human_study"
+    idx = {r["sample_idx"]: r["session_id"] for r in json.load(open(f"{root}/score_input/human_kept/responses.json"))}
+    passed = {idx[r["sample_idx"]] for r in json.load(open(f"{root}/scores/human_kept/path_scores.json"))
+              if r["prompt_id"] == "blend_ctrl_1" and r.get("generic_ok") is True}
+    kept = json.load(open(f"{SCORES}/human_kept/path_scores.json"))
+
+    def composite(recs):
+        raw = artifact_dims(recs)
+        pt = {t: 100 * _mean([raw[t][k] for k in ds if _ok(raw[t].get(k))]) for t, ds in TASK_DIMS.items()}
+        return {"overall": _mean(list(pt.values())), **pt}
+    out = {}
+    for name, recs, n in (("all", kept, len(idx)),
+                          ("filtered", [r for r in kept if idx.get(r.get("sample_idx")) in passed], len(passed))):
+        c = composite(recs)
+        out[name] = {"n_sessions": n, **{v: {"score": round(c[v], 2),
+                     "rank": 1 + sum((comp[m]["overall"] if v == "overall" else comp[m]["per_task"][v]) > c[v]
+                                     for m in models), "of": len(models) + 1}
+                     for v in ("overall", "association", "analogy", "blending")}}
+    return out
+
+
 def main():
     comp = json.load(open(f"{SCORES}/composite.json"))
     pm = comp["per_model"]
@@ -55,6 +80,8 @@ def main():
     for key in ap["human_kept"]:
         res["among_passed"][key] = {g: compare(ap[g][key], [ap[m][key] for m in models if key in ap[m]])
                                     for g in ("human_kept", "human_flagged") if key in ap[g]}
+    # human groups for the paper's table: all kept, and kept who passed the pre-registered Breakfast + Lunch screen
+    res["human_rows"] = human_rows(pm, models)
     json.dump(res, open(OUT, "w"), indent=1)
     for sect in ("gated", "among_passed"):
         print(sect)
