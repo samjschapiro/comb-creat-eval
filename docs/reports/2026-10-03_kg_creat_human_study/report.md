@@ -173,7 +173,27 @@ whose ρ is the share of variance due to real differences between units (0 = all
   the composite gap is driven by zeros and by validity, not by how original valid work is.
 - **People differ more than models.** Net of sampling noise, between-person variation in pass rate (ρ 0.12–0.14)
   is about twice the between-model variation at matched size (ρ 0.07–0.09).
-- Every human vs. pseudo-participant distribution differs (two-sample KS p < 10⁻⁶ on all 19 metrics).
+- Every human vs. pseudo-participant distribution differs (two-sample KS p < 10⁻⁶ on all 19 metrics); per-dimension
+  fits for every task in `figures/score_distributions_per_dim.png`.
+
+**Per dimension, over answers that pass utility** (raw values, not gated; beta fits; humans kept vs. all model
+answers):
+
+| dimension | n humans / models | mean humans / models | difference [95% CI] | SD humans / models |
+|---|---|---|---|---|
+| association surprise | 83 / 9,386 | 0.632 / 0.664 | −0.032 [−0.049, −0.015] | 0.077 / 0.093 |
+| association originality | 83 / 9,386 | 0.354 / 0.331 | +0.024 [+0.007, +0.040] | 0.078 / 0.053 |
+| analogy surprise | 115 / 530 | 0.704 / 0.764 | −0.060 [−0.076, −0.045] | 0.078 / 0.076 |
+| analogy originality (mapping) | 115 / 530 | 0.456 / 0.463 | −0.007 [−0.020, +0.008] | 0.073 / 0.058 |
+| analogy invention originality | 88 / 530 | 0.539 / 0.507 | +0.032 [+0.018, +0.045] | 0.060 / 0.058 |
+| blend surprise | 45 / 435 | 0.757 / 0.802 | −0.045 [−0.078, −0.016] | 0.099 / 0.082 |
+| blend originality (generic space) | 45 / 435 | 0.523 / 0.383 | +0.139 [+0.098, +0.182] | 0.143 / 0.096 |
+| blend emergent originality | 36 / 434 | 0.533 / 0.482 | +0.051 [+0.018, +0.082] | 0.095 / 0.058 |
+
+Valid human answers are less surprising on every task, more original on four of five originality measures
+(analogy mapping originality the exception, no difference), and more spread out on originality (SD up to 1.5x).
+Utility, emergent utility and integration are discrete per unit (k of n), so their beta curves in the per-dimension
+figure are approximate; the beta-binomial above is the right model for pass counts.
 
 ### 4. Directional originality: humans reach places models do not; on blending the two groups avoid each other
 

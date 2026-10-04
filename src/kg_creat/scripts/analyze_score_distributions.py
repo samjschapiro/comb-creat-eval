@@ -135,6 +135,42 @@ def compare(h, m, rng):
     return out
 
 
+RAWKEY = {"surprise": "R", "originality": "originality", "em_originality": "em_originality"}
+
+
+def passed_values(recs, task, dim):
+    """Raw (un-gated) values of one continuous dimension over the answers that PASSED utility."""
+    arts = heads(recs, MODE[task])
+    ok = [(r.get("pair_sat") if task == "analogy" else r.get("sat")) is True for r in arts]
+    return [float(np.clip(r[RAWKEY[dim]], 0, 1)) for r, p in zip(arts, ok)
+            if p and not r.get("_missing") and _ok(r.get(RAWKEY[dim]))]
+
+
+def artifact_level(rng):
+    """Beta fits to each continuous dimension over passed answers: humans (kept) vs. all models' answers."""
+    hum = json.loads((SCORES / "human_kept" / "path_scores.json").read_text())
+    mod = [r for f in sorted(SCORES.glob("*/path_scores.json")) if not f.parent.name.startswith("human")
+           for r in json.loads(f.read_text())]
+    out = {}
+    for task, dims in TASK_DIMS.items():
+        for dim in dims:
+            if dim not in RAWKEY:
+                continue
+            h, m = passed_values(hum, task, dim), passed_values(mod, task, dim)
+            if len(h) < 5:
+                continue
+            fit = {}
+            for g, x in (("human", h), ("model", m)):
+                a, b, _, _ = stats.beta.fit(np.clip(x, 1e-4, 1 - 1e-4), floc=0, fscale=1)
+                fit[g] = {"n": len(x), "a": float(a), "b": float(b), "mean": float(np.mean(x)), "sd": float(np.std(x)),
+                          "median": float(np.median(x))}
+            boot = [np.mean(rng.choice(h, len(h))) - np.mean(rng.choice(m, len(m))) for _ in range(BOOT)]
+            fit["diff_mean"] = {"est": float(np.mean(h) - np.mean(m)), "ci95": [float(np.percentile(boot, 2.5)), float(np.percentile(boot, 97.5))]}
+            fit["ks_p"] = float(stats.ks_2samp(h, m).pvalue)
+            out[f"{task}.{dim}"] = fit
+    return out
+
+
 def main():
     rng = np.random.default_rng(SEED)
     H, n_items = humans()
@@ -152,6 +188,7 @@ def main():
                 nn = [u[task]["_n"] for u in units if task in u]
                 r[g]["betabinom"] = fit_betabinom(kk, nn)
         res["metrics"][f"{task}.{dim}"] = r
+    res["passed_answers"] = artifact_level(rng)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     json.dump(res, open(OUT, "w"), indent=1)
 
@@ -168,7 +205,13 @@ def main():
               f"pseudo mu {r['pseudo']['betabinom']['mu']:.2f} rho {r['pseudo']['betabinom']['rho']:.2f} | "
               f"models mu {r['model']['betabinom']['mu']:.2f} rho {r['model']['betabinom']['rho']:.2f}")
 
+    print("\npassed answers only (raw values, beta fits): humans vs. models")
+    for k, r in res["passed_answers"].items():
+        print(f"  {k:28s} n {r['human']['n']:4d}/{r['model']['n']:5d}  mean {r['human']['mean']:.3f} / {r['model']['mean']:.3f}  "
+              f"diff {r['diff_mean']['est']:+.3f} [{r['diff_mean']['ci95'][0]:+.3f},{r['diff_mean']['ci95'][1]:+.3f}]  "
+              f"sd {r['human']['sd']:.3f}/{r['model']['sd']:.3f}  KS p {r['ks_p']:.1e}")
     plot(res, H, Mp)
+    plot_dims(res, H, Mp)
 
 
 def plot(res, H, Mp):
@@ -209,6 +252,53 @@ def plot(res, H, Mp):
     fig.savefig(FIG, dpi=180)
     shutil.copy(FIG, MOCK)
     print(f"wrote {OUT}, {FIG} (copy {MOCK})")
+
+
+def plot_dims(res, H, Mp):
+    """Per-unit, utility-gated: every dimension of every task (rows = tasks), humans vs. pseudo-participants."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    names = {"utility": "utility", "surprise": "surprise", "originality": "originality",
+             "em_originality": "invention orig." , "em_utility": "emergent utility", "em_integration": "integration"}
+    tasks = list(TASK_DIMS)
+    ncol = max(len(d) for d in TASK_DIMS.values())
+    fig, axes = plt.subplots(3, ncol, figsize=(4.2 * ncol, 12))
+    bins = np.linspace(0, 1, 21)
+    w0 = bins[1] - bins[0]
+    xs = np.linspace(0.005, 0.995, 300)
+    letters = iter("abcdefghijklmnopqrstuvwxyz")
+    for i, t in enumerate(tasks):
+        for j in range(ncol):
+            ax = axes[i, j]
+            if j >= len(TASK_DIMS[t]):
+                ax.axis("off")
+                continue
+            d = TASK_DIMS[t][j]
+            r = res["metrics"][f"{t}.{d}"]
+            for g, units, c in (("pseudo", Mp, MODEL), ("human", H, HUMAN)):
+                x = np.array([u[t][d] for u in units if t in u and _ok(u[t].get(d))])
+                z = r[g]["zib"]
+                ax.hist(x[x > 0], bins=bins, weights=np.ones((x > 0).sum()) / len(x) / w0, color=c, alpha=0.35)
+                if z["a"]:
+                    ax.plot(xs, (1 - z["pi"]) * stats.beta.pdf(xs, z["a"], z["b"]), color=c, lw=2)
+                ax.bar(0 if g == "pseudo" else w0 / 2, z["pi"] / w0, width=w0 / 2, align="edge", color=c, alpha=0.9)
+            label = "emergent orig." if (t == "blending" and d == "em_originality") else names[d]
+            ax.set_title(f"({next(letters)}) {t}: {label}")
+            ax.set_xlim(0, 1)
+            if j == 0:
+                ax.set_ylabel("density")
+            ax.text(0.97, 0.95, f"P(0) {r['human']['zib']['pi']:.2f} / {r['pseudo']['zib']['pi']:.2f}",
+                    transform=ax.transAxes, ha="right", va="top", fontsize=12)
+    from matplotlib.lines import Line2D
+    axes[0, ncol - 1].legend(handles=[Line2D([], [], color=HUMAN, lw=3, label="humans"),
+                                      Line2D([], [], color=MODEL, lw=3, label="model pseudo-participants")],
+                             loc="center", frameon=False, fontsize=15)
+    fig.tight_layout()
+    f = FIG.with_name("score_distributions_per_dim.png")
+    fig.savefig(f, dpi=160)
+    shutil.copy(f, MOCK.with_name(f.name))
+    print(f"wrote {f}")
 
 
 if __name__ == "__main__":
