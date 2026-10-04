@@ -295,11 +295,20 @@ def plot_dims(res, H, Mp):
                                       Line2D([], [], color=MODEL, lw=3, label="model pseudo-participants")],
                              loc="center", frameon=False, fontsize=15)
     fig.tight_layout()
-    f = FIG.with_name("score_distributions_per_dim.png")
+    f = FIG.with_name(FIG.stem.replace("score_distributions", "score_distributions_per_dim") + ".png")
     fig.savefig(f, dpi=160)
     shutil.copy(f, MOCK.with_name(f.name))
     print(f"wrote {f}")
 
 
 if __name__ == "__main__":
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--skips", choices=["zero", "dropped"], default="zero",
+                    help="zero: skipped items count as failed (main analysis); dropped: skipped items are left out")
+    if ap.parse_args().skips == "dropped":
+        SCORES = Path("data/kg_creat/human_study/combined_scores")
+        OUT = OUT.with_name("score_distributions_skips_dropped.json")
+        FIG = FIG.with_name("score_distributions_skips_dropped.png")
+        MOCK = MOCK.with_name("score_distributions_skips_dropped.png")
     main()
