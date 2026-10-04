@@ -35,7 +35,25 @@ def _logo(key):
     return next((s for p, s in PROV_SLUG.items() if key.startswith(p)), None)
 
 
-def render(composite: dict, top_n: int = 10) -> str:
+def _ordinal(n):
+    return f"{n}{'th' if 11 <= n % 100 <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
+
+
+def human_rows(human: dict) -> list:
+    """A reference row for the human study: the kept participants' score in each column and their rank
+    among the models + humans, from the composite on the shared human + model originality pool
+    (data/kg_creat/human_study/combined_scores/composite.json; the flagged human group is left out)."""
+    pm = human["per_model"]
+    ents = [m for m in pm if m != "human_flagged"]
+    cells = []
+    for _, view in VIEWS:
+        s = lambda m: pm[m]["overall"] if view == "overall" else pm[m]["per_task"][view]
+        rank = sorted(ents, key=s, reverse=True).index("human_kept") + 1
+        cells.append(f"{s('human_kept'):.1f}~({_ordinal(rank)} of {len(ents)})")
+    return ["\\midrule", "Humans & " + " & ".join(cells) + " \\\\"]
+
+
+def render(composite: dict, top_n: int = 10, human: dict | None = None) -> str:
     pm = composite["per_model"]
     models = composite["models"]
 
@@ -80,13 +98,15 @@ def render(composite: dict, top_n: int = 10) -> str:
             else:
                 cells.append("")
         lines.append(f"{i + 1} & " + " & ".join(cells) + " \\\\")
+    lines += human_rows(human) if human else []
     lines += ["\\bottomrule", "\\end{tabular}}", "}", ""]
     return "\n".join(lines)
 
 
-def main(composite_path, out_path, top_n):
+def main(composite_path, out_path, top_n, human_path=None):
     composite = json.loads(Path(composite_path).read_text())
-    tex = render(composite, top_n)
+    human = json.loads(Path(human_path).read_text()) if human_path else None
+    tex = render(composite, top_n, human)
     Path(out_path).write_text(tex)
     print(f"Wrote {out_path} ({composite['per_model'].__len__()} models, top {top_n}/column)")
 
@@ -96,5 +116,8 @@ if __name__ == "__main__":
     ap.add_argument("composite_path")
     ap.add_argument("out_path")
     ap.add_argument("--top_n", type=int, default=10)
+    ap.add_argument("--human", default=None,
+                    help="human-study composite (data/kg_creat/human_study/combined_scores/composite.json): "
+                         "adds a Humans reference row below the ranking")
     args = ap.parse_args()
-    main(args.composite_path, args.out_path, args.top_n)
+    main(args.composite_path, args.out_path, args.top_n, args.human)
