@@ -82,6 +82,13 @@ Most no-effort sessions needed at least one retry, but so did many kept ones.
 
 ### 1. Human answers pass the validity check less often than most models
 
+**Skipped items count as failed (0)** throughout the main analysis, for humans and models alike: an item
+someone ticked "I can't think of one" for is a failed answer, not a missing one, so skipping the hard items
+cannot raise a score. Kept humans skipped 203 of 1,077 assigned test answers (151 blends, 32% of all blends
+assigned; 52 analogies; association has no skip box); the 35 models left 50 answers unusable between them
+(`build_skip0_scores.py`). Dropping skips instead flatters humans, mostly on blending (utility 0.22 instead of
+0.13, composite 13.2 instead of 7.4); that version is kept as a sensitivity check (`combined_scores/`).
+
 Utility is the benchmark's first gate: an association chain that is well formed, ends at the target and is
 factual; an analogy whose two paths form a valid mapping (pair verdict); a blend whose shared abstract
 structure the judge panel accepts. Same judges and rules as the models (3-judge panel o3, GPT-5.4,
@@ -90,15 +97,15 @@ Haiku 4.5; factuality by Haiku 4.5). Test items only.
 | task | humans, kept | humans, kept + passed the Breakfast + Lunch screen | humans, flagged | 35 models: min / median / max | kept humans beat |
 |---|---|---|---|---|---|
 | association | 0.22 (n = 375) | 0.22 (n = 230) | 0.39 (n = 95) | 0.30 / 0.63 / 0.78 | 0 of 35 |
-| analogy | 0.39 (n = 298) | 0.42 (n = 193) | 0.55 (n = 71) | 0.28 / 0.53 / 0.87 | 7 of 35 |
-| blending | 0.22 (n = 201) | 0.25 (n = 147) | 0.33 (n = 64) | 0.11 / 0.41 / 0.83 | 2 of 35 |
+| analogy | 0.33 (n = 350) | 0.38 (n = 214) | 0.45 (n = 87) | 0.25 / 0.50 / 0.86 | 4 of 35 |
+| blending | 0.13 (n = 352) | 0.17 (n = 213) | 0.24 (n = 89) | 0.07 / 0.43 / 0.86 | 1 of 35 |
 
 - **Association fails on the rules.** Of the 375 kept chains, 31% fail on structure (they do not end at the
   target, or the links do not connect) and a further 45% have at least one link the factuality judge marks
   false. The models rarely break structure.
 - **The pre-registered comprehension screen changes little.** 46 of the 65 kept people who answered the
   Breakfast + Lunch warm-up passed it (generic-space judge); restricting to them raises analogy and blending
-  utility by 3 points and leaves association unchanged.
+  utility by 4–5 points and leaves association unchanged.
 - **Flagged sessions score higher than kept ones on every task**, consistent with AI help, and a reason to
   keep them out of the main human numbers.
 
@@ -110,7 +117,9 @@ rescoring reproduces the models' stored originality exactly when the pool is mod
 difference 0). The composite is the paper's: each dimension is gated by utility (0 if the answer failed) and
 expressed as a fraction of its maximum.
 
-- **Overall: kept humans 16.8, last of 37** (phi-4 18.1; model median about 37). Flagged humans 26.1.
+- **Overall: kept humans 13.7, last of 37** (phi-4 17.2; model median 36.7). Kept humans who passed the
+  Breakfast + Lunch screen: 15.7, also last. Flagged humans 22.2. By task, kept humans rank 36th (association
+  14.7), 34th (analogy 19.1) and 35th (blending 7.4) of 36.
 - The gap comes from utility and from everything gated on it, above all the emergent steps: humans' invention
   utility and integration (analogy) and emergent utility and integration (blending) are below all but 0–2
   models, largely because people skip the invention and the "true of neither" step.
@@ -131,9 +140,42 @@ expressed as a fraction of its maximum.
 When a human answer is valid, it is more original than most models' valid answers on four of five
 originality measures, and less surprising (its linked concepts sit closer together) on all three tasks.
 Caveat: the shared pool is mostly model answers, so originality here is partly distance from what the models
-say — the same thing finding 3 measures directly.
+say — the same thing finding 4 measures directly.
 
-### 3. Directional originality: humans reach places models do not; on blending the two groups avoid each other
+### 3. How performance is distributed: humans are zero-inflated and more varied, not just shifted down
+
+Per-person scores rest on ~14 answers against ~90 per model, so a person's score is noisier for that reason
+alone. Humans are therefore compared with model **pseudo-participants**: a model answering a random set of
+items the same size as a real person's set (30 per model, 1,050 in all). Each group is fitted with a
+zero-inflated beta (a share P(0) of exact zeros, a beta for the rest) and, for pass counts, a beta-binomial,
+whose ρ is the share of variance due to real differences between units (0 = all alike), net of sampling noise.
+
+| | P(0) humans / pseudo | mean of the non-zero part, humans / pseudo | SD humans / pseudo |
+|---|---|---|---|
+| Overall composite | 0.11 / 0.00 | 0.15 / 0.37 | 0.10 / 0.13 |
+| association composite | 0.39 / 0.03 | 0.24 / 0.39 | 0.15 / 0.17 |
+| analogy composite | 0.24 / 0.04 | 0.25 / 0.42 | 0.17 / 0.20 |
+| blending composite | 0.59 / 0.10 | 0.19 / 0.37 | 0.11 / 0.20 |
+| analogy invention originality | 0.39 / 0.04 | 0.28 / 0.29 | 0.17 / 0.14 |
+| blend originality | 0.59 / 0.10 | 0.17 / 0.19 | 0.10 / 0.11 |
+
+| pass rate (beta-binomial) | humans: mean, ρ | pseudo-participants: mean, ρ |
+|---|---|---|
+| association | 0.22, 0.14 | 0.57, 0.07 |
+| analogy | 0.33, 0.12 | 0.55, 0.08 |
+| blending | 0.13, 0.13 | 0.44, 0.09 |
+
+- **Two kinds of human.** A large share of people produce no valid answer at all on a task (39% on
+  association, 24% on analogy, 59% on blending), against 3–10% of model pseudo-participants. The rest form a
+  continuous distribution that overlaps the models', shifted lower on composite and utility.
+- **Originality is where the non-zero parts meet.** Among units with any valid answer, human and model
+  originality distributions nearly coincide (analogy invention 0.28 vs 0.29; blend originality 0.17 vs 0.19);
+  the composite gap is driven by zeros and by validity, not by how original valid work is.
+- **People differ more than models.** Net of sampling noise, between-person variation in pass rate (ρ 0.12–0.14)
+  is about twice the between-model variation at matched size (ρ 0.07–0.09).
+- Every human vs. pseudo-participant distribution differs (two-sample KS p < 10⁻⁶ on all 19 metrics).
+
+### 4. Directional originality: humans reach places models do not; on blending the two groups avoid each other
 
 For an answer from group X, O(X|Y) is the benchmark's originality computed against group Y only: the mean
 distance of the answer's concepts and relations to their 5 nearest neighbours among Y's answers to the same
@@ -189,5 +231,8 @@ Judging all human answers (kept + flagged + warm-ups, 1,277 answers): **$48.25**
 - Composite on one shared pool: `src/kg_creat/scripts/rescore_originality_combined.py --pool combined` →
   `data/kg_creat/human_study/combined_scores/` (copies; the models' own score files are untouched), then
   `compute_composite.py` on it, then `analyze_human_vs_models.py` → `analysis/human_vs_models.json`.
+- Skips as failures: `src/kg_creat/scripts/build_skip0_scores.py` → `combined_scores_skip0/` (main analysis).
+- Distributions: `src/kg_creat/scripts/analyze_score_distributions.py` → `analysis/score_distributions.json`,
+  `figures/score_distributions.png`; per-person histograms `plot_human_vs_model_hist.py`.
 - Directional originality: `src/kg_creat/scripts/analyze_directional_originality.py` →
   `data/kg_creat/human_study/analysis/directional_originality.json` (per-item values included).
