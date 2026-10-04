@@ -6,6 +6,7 @@ data/kg_creat/human_study/figures/ and copied to scratch/human_vs_model_space/:
 
   space_all_items.png   per task, every item pooled after subtracting the item's mean answer (so the map
                         shows how answers spread WITHIN an item, not which item they answer); PCA and t-SNE
+  space_pca_all_vs_passed.png   PCA only, all answers (top row) vs. answers that passed utility (bottom row)
   space_showcase.png    one item per task (the item with the most human answers), PCA within the item;
                         point size = originality, filled = passed utility, hollow = failed; the three most
                         original PASSED human and model answers are labelled (failed answers are often
@@ -131,6 +132,31 @@ def stage_plot():
     fig.savefig(OUT / "space_all_items.png", dpi=180)
     plt.close(fig)
 
+    # (1b) PCA only: all answers (top) vs. answers that passed utility (bottom), item-centred within each subset
+    fig, axes = plt.subplots(2, 3, figsize=(18, 11.5))
+    letters = iter("abcdef")
+    for row, (rowname, keep) in enumerate((("all answers", np.ones(len(meta), bool)), ("passed only", passed))):
+        for col, (t, _m) in enumerate(TASKS):
+            sel = (task == t) & keep
+            Xt = X[sel].copy()
+            for it in np.unique(item[sel]):
+                rows = item[sel] == it
+                Xt[rows] -= Xt[rows].mean(axis=0)
+            Z = PCA(n_components=2, random_state=0).fit_transform(Xt)
+            ax = axes[row, col]
+            g, o = grp[sel], orig[sel]
+            for who, c, z in (("model", MODEL, 1), ("human", HUMAN, 2)):
+                k = g == who
+                ax.scatter(Z[k, 0], Z[k, 1], s=6 + 60 * (o[k] - o.min()) / (np.ptp(o) + 1e-9), c=c,
+                           alpha=0.25 if who == "model" else 0.75, linewidths=0, zorder=z,
+                           label=f"{who}s (n = {k.sum()})")
+            ax.set_title(f"({next(letters)}) {t}, {rowname}")
+            ax.set_xlabel("PC 1"); ax.set_ylabel("PC 2"); ax.set_xticks([]); ax.set_yticks([])
+            ax.legend(loc="upper right", markerscale=2, frameon=False, fontsize=12)
+    fig.tight_layout()
+    fig.savefig(OUT / "space_pca_all_vs_passed.png", dpi=180)
+    plt.close(fig)
+
     # (2) one showcase item per task: the item with the most human answers
     import textwrap
     from matplotlib.lines import Line2D
@@ -177,9 +203,9 @@ def stage_plot():
     plt.close(fig)
 
     MOCK.mkdir(parents=True, exist_ok=True)
-    for f in ("space_all_items.png", "space_showcase.png"):
+    for f in ("space_all_items.png", "space_pca_all_vs_passed.png", "space_showcase.png"):
         shutil.copy(OUT / f, MOCK / f)
-    print(f"wrote {OUT}/space_all_items.png, space_showcase.png (copies in {MOCK})")
+    print(f"wrote space_all_items.png, space_pca_all_vs_passed.png, space_showcase.png to {OUT} (copies in {MOCK})")
 
 
 if __name__ == "__main__":
