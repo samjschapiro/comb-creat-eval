@@ -6,7 +6,7 @@
 much of it is usable, and how do human answers compare with the 35 benchmark models on the same items?
 
 **Answer in one paragraph.** 118 sessions were collected under the final design (with the quick check);
-after screening, 76 are kept, 18 are kept but flagged as likely AI-assisted, and 24 are excluded (19 caught
+after screening, 75 are kept, 19 are kept but flagged as likely AI-assisted, and 24 are excluded (19 caught
 by hidden trap words, 5 no effort). AI use is the main data-quality problem: about 1 in 3 sessions shows some
 AI signal. Kept human answers pass the benchmark's validity check (utility) less often than the typical
 model on every task, and on association less often than every model, mostly by breaking the task's rules
@@ -20,22 +20,22 @@ on association and analogy but not on blending, where each group stays away from
 | | count |
 |---|---|
 | sessions collected under the final design (quick check after each task's instructions) | **118** (131 files; 13 are duplicate uploads) |
-| kept | **76** |
-| kept but flagged (likely AI, suspected AI, or borderline no effort) — reported separately | **18** |
+| kept | **75** |
+| kept but flagged (likely AI, suspected AI, or borderline no effort) — reported separately | **19** |
 | excluded: AI use caught by hidden trap words | **19** |
 | excluded: no effort (keyboard mashing, nonsense) | **5** |
-| median completion time, kept sessions | 51 min |
+| median completion time, kept sessions | 50.5 min |
 | slots filled toward the 120-slot plan (excluded sessions' slots reopened) | 92 of 120 |
 
 **Usable answers per item** (kept sessions, test items only; the target was 20):
 
 | task | items | answers per item, min / median / max | total |
 |---|---|---|---|
-| association | 30 | 9 / 14 / 15 | 380 |
-| analogy | 28 | 8 / 11 / 15 | 302 |
-| blending | 28 | **3 / 8 / 11** | 206 |
+| association | 30 | 9 / 14 / 15 | 375 |
+| analogy | 28 | 8 / 11 / 15 | 298 |
+| blending | 28 | **3 / 8 / 11** | 201 |
 
-Blending is thin because people skip it: of the 76 kept people, 21 answered no test blend at all and 22
+Blending is thin because people skip it: of the 75 kept people, 21 answered no test blend at all and 21
 answered all of them. Every blending result below rests on few answers per item.
 
 **Recruitment.** Prolific, Cocosci Lab account, study `6abd23503d9299654c1d658e`; desktop only; reward $8.00.
@@ -46,7 +46,7 @@ with 9 AI and 4 no-effort submissions still unrejected; they are excluded from t
 The 8 pilot sessions (design without the quick check; `docs/reports/2026-10-02_kg_creat_human_pilot/`)
 are not included.
 
-**What this frame is not evidence about.** One pass of 76 US/UK-English Prolific workers is not a
+**What this frame is not evidence about.** One pass of 75 US/UK-English Prolific workers is not a
 population estimate of human creativity. Each person answered each item once, while each model answered it
 up to 5 times, so every comparison here is of the typical answer, not the best one. The 35 models are pooled
 when compared with humans.
@@ -63,13 +63,19 @@ and agree with them (no session with 2+ trap words was kept, and every trap-word
   agent: no keystrokes on any item and the honeypot filled.
 - **No effort (exclusion).** Keyboard mashing ("Black holes *fger* ergr") or answers unrelated to the items
   ("Vaccines :: Ethics → Soap Fights Sword").
+- **Researcher review.** One session that passed every automatic check was moved to flagged after review: its
+  blends reused the "a system that/in which ..." shared-structure template of the AI sessions (e.g. "a structured
+  system in which smaller units combine to form a large organized whole" against a flagged session's "A system
+  in which smaller parts are organized into a larger, structured whole", same item). It was the only kept
+  person scoring near the top models on all three tasks. Moving a session between groups needs no rescoring
+  (`regroup_human_scores.py`).
 - **Likely AI (flagged, kept separate).** One trap word, or paste attempts with polished AI-style text, or
   text that appeared without typing, or repeated known AI phrasings. AI-written blends recur across
   different participants ("Chronomeal", "Noonrise", "Midday Reset", "breaks the overnight fast", "a
-  scheduled refueling ..."): 50% of flagged and 25% of excluded sessions contain one, against 3% of kept.
+  scheduled refueling ..."): 47% of flagged and 25% of excluded sessions contain one, against 3% of kept.
 
 **The quick check does not catch AI use.** Passing every quick check on the first try was more common among
-excluded (71%) and flagged (67%) sessions than among kept ones (41%). It filters confusion, not cheating.
+excluded (71%) and flagged (68%) sessions than among kept ones (40%). It filters confusion, not cheating.
 Most no-effort sessions needed at least one retry, but so did many kept ones.
 
 ## Findings
@@ -83,16 +89,16 @@ Haiku 4.5; factuality by Haiku 4.5). Test items only.
 
 | task | humans, kept | humans, kept + passed the Breakfast + Lunch screen | humans, flagged | 35 models: min / median / max | kept humans beat |
 |---|---|---|---|---|---|
-| association | 0.23 (n = 380) | 0.23 (n = 235) | 0.37 (n = 90) | 0.30 / 0.63 / 0.78 | 0 of 35 |
-| analogy | 0.39 (n = 302) | 0.43 (n = 197) | 0.54 (n = 67) | 0.28 / 0.53 / 0.87 | 7 of 35 |
-| blending | 0.24 (n = 206) | 0.27 (n = 152) | 0.29 (n = 59) | 0.11 / 0.41 / 0.83 | 2 of 35 |
+| association | 0.22 (n = 375) | 0.22 (n = 230) | 0.39 (n = 95) | 0.30 / 0.63 / 0.78 | 0 of 35 |
+| analogy | 0.39 (n = 298) | 0.42 (n = 193) | 0.55 (n = 71) | 0.28 / 0.53 / 0.87 | 7 of 35 |
+| blending | 0.22 (n = 201) | 0.25 (n = 147) | 0.33 (n = 64) | 0.11 / 0.41 / 0.83 | 2 of 35 |
 
-- **Association fails on the rules.** Of the 380 kept chains, 31% fail on structure (they do not end at the
+- **Association fails on the rules.** Of the 375 kept chains, 31% fail on structure (they do not end at the
   target, or the links do not connect) and a further 45% have at least one link the factuality judge marks
   false. The models rarely break structure.
-- **The pre-registered comprehension screen changes little.** 47 of the 66 kept people who answered the
+- **The pre-registered comprehension screen changes little.** 46 of the 65 kept people who answered the
   Breakfast + Lunch warm-up passed it (generic-space judge); restricting to them raises analogy and blending
-  utility by 3–4 points and leaves association unchanged.
+  utility by 3 points and leaves association unchanged.
 - **Flagged sessions score higher than kept ones on every task**, consistent with AI help, and a reason to
   keep them out of the main human numbers.
 
@@ -104,7 +110,7 @@ rescoring reproduces the models' stored originality exactly when the pool is mod
 difference 0). The composite is the paper's: each dimension is gated by utility (0 if the answer failed) and
 expressed as a fraction of its maximum.
 
-- **Overall: kept humans 17.4, last of 37** (phi-4 18.1; model median about 37). Flagged humans 24.5.
+- **Overall: kept humans 16.8, last of 37** (phi-4 18.1; model median about 37). Flagged humans 26.1.
 - The gap comes from utility and from everything gated on it, above all the emergent steps: humans' invention
   utility and integration (analogy) and emergent utility and integration (blending) are below all but 0–2
   models, largely because people skip the invention and the "true of neither" step.
@@ -113,14 +119,14 @@ expressed as a fraction of its maximum.
 
 | dimension (passed answers only) | humans, kept | model median | models below humans |
 |---|---|---|---|
-| association originality | 0.352 | 0.321 | 31 of 35 |
+| association originality | 0.354 | 0.321 | 32 of 35 |
 | analogy originality (the mapping) | 0.456 | 0.472 | 11 of 35 |
-| analogy invention originality | 0.536 | 0.508 | 29 of 35 |
-| blend originality (generic space) | 0.508 | 0.378 | 35 of 35 |
-| blend emergent originality | 0.521 | 0.478 | 33 of 35 |
-| association surprise | 0.637 | 0.668 | 4 of 35 |
+| analogy invention originality | 0.539 | 0.508 | 30 of 35 |
+| blend originality (generic space) | 0.523 | 0.378 | 35 of 35 |
+| blend emergent originality | 0.533 | 0.478 | 35 of 35 |
+| association surprise | 0.632 | 0.668 | 3 of 35 |
 | analogy surprise | 0.704 | 0.769 | 1 of 35 |
-| blend surprise | 0.762 | 0.802 | 5 of 35 |
+| blend surprise | 0.757 | 0.802 | 5 of 35 |
 
 When a human answer is valid, it is more original than most models' valid answers on four of five
 originality measures, and less surprising (its linked concepts sit closer together) on all three tasks.
@@ -131,22 +137,22 @@ say — the same thing finding 3 measures directly.
 
 For an answer from group X, O(X|Y) is the benchmark's originality computed against group Y only: the mean
 distance of the answer's concepts and relations to their 5 nearest neighbours among Y's answers to the same
-item (MiniLM embeddings). Every reference pool is cut to the same size per item (median 38–48 element
+item (MiniLM embeddings). Every reference pool is cut to the same size per item (median 36–48 element
 surfaces), because a larger pool always looks closer, and an answer is never compared with its own producer
 (a person's own answer; a model's other draws). Kept humans vs. all 35 models; all answers, passed or not.
 95% bootstrap intervals over items.
 
 | task | O(H\|H) | O(H\|L) | O(L\|L) | O(L\|H) |
 |---|---|---|---|---|
-| association (30 items) | 0.594 | 0.650 | 0.632 | 0.636 |
-| analogy (28) | 0.602 | 0.644 | 0.638 | 0.645 |
-| blending (28) | 0.629 | 0.663 | 0.616 | 0.654 |
+| association (30 items) | 0.595 | 0.651 | 0.633 | 0.637 |
+| analogy (28) | 0.604 | 0.646 | 0.639 | 0.647 |
+| blending (28) | 0.634 | 0.666 | 0.618 | 0.658 |
 
 | contrast | association | analogy | blending |
 |---|---|---|---|
-| O(H\|L) − O(H\|H): humans farther from models than from each other | +0.056 [0.049, 0.063] | +0.043 [0.035, 0.051] | +0.033 [0.027, 0.040] |
-| O(L\|H) − O(L\|L): models farther from humans than from other models | +0.004 [−0.002, 0.009] | +0.007 [0.001, 0.014] | +0.038 [0.030, 0.048] |
-| O(H\|H) − O(L\|L): humans more spread out than models | −0.038 [−0.049, −0.028] | −0.036 [−0.050, −0.023] | +0.014 [0.006, 0.021] |
+| O(H\|L) − O(H\|H): humans farther from models than from each other | +0.057 [0.050, 0.063] | +0.042 [0.035, 0.050] | +0.032 [0.025, 0.040] |
+| O(L\|H) − O(L\|L): models farther from humans than from other models | +0.004 [−0.001, 0.010] | +0.007 [0.001, 0.014] | +0.040 [0.031, 0.048] |
+| O(H\|H) − O(L\|L): humans more spread out than models | −0.038 [−0.048, −0.028] | −0.035 [−0.049, −0.022] | +0.016 [0.007, 0.024] |
 
 - On every task, humans share ideas with each other that the models do not use.
 - On association and analogy the asymmetry is one-way: model answers are about as close to human answers as
