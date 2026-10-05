@@ -30,12 +30,30 @@ from pathlib import Path
 import numpy as np
 
 SCORES = "data/kg_creat/human_study/combined_scores"
+SKIP0 = "data/kg_creat/human_study/combined_scores_skip0"   # adds one failed record per skipped item (build_skip0_scores.py)
 OUT = Path("data/kg_creat/human_study/figures")
 CACHE = OUT / "answer_embeddings.npz"
 META = OUT / "answer_meta.json"
 MOCK = Path("scratch/human_vs_model_space")
 TASKS = [("association", "baseline"), ("analogy", "analogy"), ("blending", "blending")]
 HUMAN, MODEL = "#DA7678", "#71A8C4"   # the red and blue fills of the paper's Figure 2 (02_cc_overview.png)
+
+
+def skipped():
+    """{(group, task): number of skipped items}: the failed records build_skip0_scores.py adds. A skip has no answer to
+    embed, so it cannot be a point, but the pass rate printed on the plot counts it as failed, as the paper's text does."""
+    out = {}
+    mode_task = {m: t for t, m in TASKS}
+    for f in glob.glob(f"{SKIP0}/*/path_scores.json"):
+        ent = os.path.basename(os.path.dirname(f))
+        if ent == "human_flagged":
+            continue
+        group = "human" if ent == "human_kept" else "model"
+        for r in json.load(open(f)):
+            if r.get("_missing") and r["mode"] in mode_task:
+                k = (group, mode_task[r["mode"]])
+                out[k] = out.get(k, 0) + 1
+    return out
 
 
 def answers():
@@ -169,6 +187,7 @@ def stage_plot():
     # a smaller canvas with large type, and one horizontal legend under the panels.
     from matplotlib.lines import Line2D
     big = {"font.size": 20, "axes.titlesize": 24, "axes.labelsize": 22, "legend.fontsize": 20}
+    skips = skipped()
     with plt.rc_context(big):
         fig, axes = plt.subplots(1, 3, figsize=(15, 5.6))
         for ax, letter, (t, _m) in zip(axes, "abc", TASKS):
@@ -187,8 +206,10 @@ def stage_plot():
                                facecolors=c if good else "none", edgecolors=c, linewidths=0.7 if who == "model" else 1.2)
             nh, nm = int((g == "human").sum()), int((g == "model").sum())
             ax.set_title(f"({letter}) {t}")
-            ax.text(0.03, 0.03, f"humans n = {nh} ({100 * ok[g == 'human'].mean():.0f}% passed)\n"
-                                f"LLMs n = {nm} ({100 * ok[g == 'model'].mean():.0f}% passed)",
+            # pass rate with skipped items counted as failed (the paper's numbers); n = answers plotted
+            rate = lambda who, n: 100 * ok[g == who].sum() / (n + skips.get((who, t), 0))
+            ax.text(0.03, 0.03, f"humans n = {nh} ({rate('human', nh):.0f}% passed)\n"
+                                f"LLMs n = {nm} ({rate('model', nm):.0f}% passed)",
                     transform=ax.transAxes, fontsize=16, va="bottom", zorder=5,
                     bbox=dict(facecolor="white", edgecolor="none", alpha=0.85, pad=3))
             ax.set_xlabel("PC 1"); ax.set_ylabel("PC 2"); ax.set_xticks([]); ax.set_yticks([])
