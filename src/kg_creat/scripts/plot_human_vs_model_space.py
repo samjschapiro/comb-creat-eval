@@ -165,38 +165,41 @@ def stage_plot():
     fig.savefig(OUT / "space_pca_all_vs_passed.png", dpi=180)
     plt.close(fig)
 
-    # (1c) PCA, all answers, one row: filled = passed utility, hollow = failed
+    # (1c) PCA, all answers, one row: filled = passed utility, hollow = failed. Sized for a full-width paper figure:
+    # a smaller canvas with large type, and one horizontal legend under the panels.
     from matplotlib.lines import Line2D
-    fig, axes = plt.subplots(1, 3, figsize=(19, 6.6))
-    for ax, letter, (t, _m) in zip(axes, "abc", TASKS):
-        sel = task == t
-        Xt = X[sel].copy()
-        for it in np.unique(item[sel]):
-            rows = item[sel] == it
-            Xt[rows] -= Xt[rows].mean(axis=0)
-        Z = PCA(n_components=2, random_state=0).fit_transform(Xt)
-        g, o, ok = grp[sel], orig[sel], passed[sel]
-        size = 6 + 60 * (o - o.min()) / (np.ptp(o) + 1e-9)
-        for who, c, z, a in (("model", MODEL, 1, 0.22), ("human", HUMAN, 2, 0.8)):
-            for good in (False, True):
-                k = (g == who) & (ok == good)
-                ax.scatter(Z[k, 0], Z[k, 1], s=size[k], zorder=z + (0.5 if good else 0), alpha=a,
-                           facecolors=c if good else "none", edgecolors=c, linewidths=0.6 if who == "model" else 1.0)
-        nh, nm = int((g == "human").sum()), int((g == "model").sum())
-        ax.set_title(f"({letter}) {t}")
-        ax.text(0.02, 0.02, f"humans n = {nh} ({100 * ok[g == 'human'].mean():.0f}% passed)\n"
-                            f"models n = {nm} ({100 * ok[g == 'model'].mean():.0f}% passed)",
-                transform=ax.transAxes, fontsize=12, va="bottom", zorder=5,
-                bbox=dict(facecolor="white", edgecolor="none", alpha=0.85, pad=3))
-        ax.set_xlabel("PC 1"); ax.set_ylabel("PC 2"); ax.set_xticks([]); ax.set_yticks([])
-    axes[0].legend(handles=[Line2D([], [], marker="o", ls="", color=HUMAN, ms=9, label="human, passed"),
-                            Line2D([], [], marker="o", ls="", mfc="none", color=HUMAN, ms=9, label="human, failed"),
-                            Line2D([], [], marker="o", ls="", color=MODEL, ms=9, label="model, passed"),
-                            Line2D([], [], marker="o", ls="", mfc="none", color=MODEL, ms=9, label="model, failed")],
-                   loc="upper right", frameon=True, framealpha=0.9, fontsize=12)
-    fig.tight_layout()
-    fig.savefig(OUT / "space_pca_utility.png", dpi=180)
-    plt.close(fig)
+    big = {"font.size": 20, "axes.titlesize": 24, "axes.labelsize": 22, "legend.fontsize": 20}
+    with plt.rc_context(big):
+        fig, axes = plt.subplots(1, 3, figsize=(15, 5.6))
+        for ax, letter, (t, _m) in zip(axes, "abc", TASKS):
+            sel = task == t
+            Xt = X[sel].copy()
+            for it in np.unique(item[sel]):
+                rows = item[sel] == it
+                Xt[rows] -= Xt[rows].mean(axis=0)
+            Z = PCA(n_components=2, random_state=0).fit_transform(Xt)
+            g, o, ok = grp[sel], orig[sel], passed[sel]
+            size = 5 + 45 * (o - o.min()) / (np.ptp(o) + 1e-9)
+            for who, c, z, a in (("model", MODEL, 1, 0.22), ("human", HUMAN, 2, 0.85)):
+                for good in (False, True):
+                    k = (g == who) & (ok == good)
+                    ax.scatter(Z[k, 0], Z[k, 1], s=size[k], zorder=z + (0.5 if good else 0), alpha=a,
+                               facecolors=c if good else "none", edgecolors=c, linewidths=0.6 if who == "model" else 1.1)
+            nh, nm = int((g == "human").sum()), int((g == "model").sum())
+            ax.set_title(f"({letter}) {t}")
+            ax.text(0.03, 0.03, f"humans n = {nh} ({100 * ok[g == 'human'].mean():.0f}% passed)\n"
+                                f"LLMs n = {nm} ({100 * ok[g == 'model'].mean():.0f}% passed)",
+                    transform=ax.transAxes, fontsize=16, va="bottom", zorder=5,
+                    bbox=dict(facecolor="white", edgecolor="none", alpha=0.85, pad=3))
+            ax.set_xlabel("PC 1"); ax.set_ylabel("PC 2"); ax.set_xticks([]); ax.set_yticks([])
+        fig.legend(handles=[Line2D([], [], marker="o", ls="", color=HUMAN, ms=13, label="human, passed"),
+                            Line2D([], [], marker="o", ls="", mfc="none", mew=1.8, color=HUMAN, ms=13, label="human, failed"),
+                            Line2D([], [], marker="o", ls="", color=MODEL, ms=13, label="LLM, passed"),
+                            Line2D([], [], marker="o", ls="", mfc="none", mew=1.8, color=MODEL, ms=13, label="LLM, failed")],
+                   loc="lower center", ncol=4, frameon=False, bbox_to_anchor=(0.5, -0.01), columnspacing=2.2, handletextpad=0.4)
+        fig.tight_layout(rect=(0, 0.09, 1, 1))
+        fig.savefig(OUT / "space_pca_utility.png", dpi=300)
+        plt.close(fig)
 
     # (2) one showcase item per task: the item with the most human answers
     import textwrap
