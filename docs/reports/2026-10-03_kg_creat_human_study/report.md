@@ -283,6 +283,13 @@ Judging all human answers (kept + flagged + warm-ups, 1,277 answers): **$48.25**
 
 ## Not yet done
 
+- **A figure for finding 5** (options; none made yet):
+  A. forest plot of supersense share differences (human − LLM, 95% CI) per task, concepts above relations, an
+     example word on each side (recommended for the main text);
+  B. "butterfly" bars of the 10 most human- and LLM-skewed words per task (log-odds);
+  C. the semantic-space figure with concept-cluster labels at their positions;
+  D. a side-by-side table of typical human vs. LLM answers on two or three items (pairs well with A or B).
+  Context-aware supersense tagging (by hand or an LLM tagger) would remove first-sense noise.
 - **Utility-gated directional originality** (passed answers only); robustness to a second embedding model.
 - **The remaining 28 slots.** Collection is paused; refilling them brings association and analogy to about
   18–19 answers per item, blending to about 10.
