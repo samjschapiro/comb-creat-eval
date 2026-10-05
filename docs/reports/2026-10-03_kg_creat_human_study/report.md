@@ -275,7 +275,7 @@ Caveats: proper names count as rare words, so "specific" and "named" overlap; hu
 hundred uses per task, so single words are noisy (the categories recur on all three tasks); and some plainness
 may be effort, since humans type their answers.
 
-### 6. Humans produce no inventive multiples
+### 6. Humans produce no inventive multiples (documented only; left out of the paper by decision, 2026-10-05)
 
 The paper's τ-inventive-multiple test, unchanged (`analyze_human_multiples.py`): an invention's properties are
 "relation object" with its name dropped and anchor echoes removed; two inventions on the same item are a
@@ -319,13 +319,12 @@ Judging all human answers (kept + flagged + warm-ups, 1,277 answers): **$48.25**
 
 ## Not yet done
 
-- **A figure for finding 5** (options; none made yet):
-  A. forest plot of supersense share differences (human − LLM, 95% CI) per task, concepts above relations, an
-     example word on each side (recommended for the main text);
-  B. "butterfly" bars of the 10 most human- and LLM-skewed words per task (log-odds);
-  C. the semantic-space figure with concept-cluster labels at their positions;
-  D. a side-by-side table of typical human vs. LLM answers on two or three items (pairs well with A or B).
-  Context-aware supersense tagging (by hand or an LLM tagger) would remove first-sense noise.
+- **Figures for finding 5** (chosen 2026-10-05: word clouds + category bars; mocks made, not yet in the paper):
+  `plot_human_llm_language.py` writes `data/kg_creat/human_study/figures/language_wordclouds.{png,pdf}` (2x2:
+  human / LLM concepts and relations, whole phrases pooled over tasks, sized by log-odds z; per-panel PDFs
+  `_a`-`_d`) and `supersense_bars.{png,pdf}` (2x3: concept and relation supersense shares per task, top 8
+  categories by total share, * = 95% CI on the difference excludes zero). Context-aware supersense tagging
+  would remove first-sense noise.
 - **Utility-gated directional originality** (passed answers only); robustness to a second embedding model.
 - **The remaining 28 slots.** Collection is paused; refilling them brings association and analogy to about
   18–19 answers per item, blending to about 10.
