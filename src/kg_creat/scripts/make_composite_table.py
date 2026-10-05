@@ -39,18 +39,37 @@ def _ordinal(n):
     return f"{n}{'th' if 11 <= n % 100 <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
 
 
-def human_rows(human: dict) -> list:
-    """A reference row for the human study: the kept participants' score in each column and their rank
-    among the models + humans, from the composite on the shared human + model originality pool
-    (data/kg_creat/human_study/combined_scores/composite.json; the flagged human group is left out)."""
+def human_rows(human: dict, rows: dict) -> list:
+    """A second block below the top-N, in the same "rank & name~(score)" format: every column ranks the models
+    together with the kept human participants,
+    and the block shows only the ranks at which a human group appears in some column (vdots mark skipped ranks).
+
+    ``human`` is the human-study composite on the shared human + model originality pool with skipped items
+    counted as failed (data/kg_creat/human_study/combined_scores_skip0/composite.json); ``rows`` is
+    analysis/human_vs_models.json["human_rows"] (the two groups' scores)."""
     pm = human["per_model"]
-    ents = [m for m in pm if m != "human_flagged"]
-    cells = []
-    for _, view in VIEWS:
-        s = lambda m: pm[m]["overall"] if view == "overall" else pm[m]["per_task"][view]
-        rank = sorted(ents, key=s, reverse=True).index("human_kept") + 1
-        cells.append(f"{s('human_kept'):.1f}~({_ordinal(rank)} of {len(ents)})")
-    return ["\\midrule", "Humans & " + " & ".join(cells) + " \\\\"]
+    score = {m: {"overall": pm[m]["overall"], **pm[m]["per_task"]} for m in pm if not m.startswith("human")}
+    labels = {"all": "Humans"}   # all kept participants (the comprehension-screened subset is reported in the text only)
+    for k, lab in labels.items():
+        score[lab] = {v: rows[k][v]["score"] for _, v in VIEWS}
+    ranked = {v: sorted(score, key=lambda m: score[m][v], reverse=True) for _, v in VIEWS}
+    first = min(ranked[v].index(lab) for _, v in VIEWS for lab in labels.values())
+
+    def cell(m, v):
+        if m in labels.values():
+            return f"\\textit{{{m}}}~({score[m][v]:.1f})"
+        logo = _logo(m)
+        return (f"\\provlogo{{{logo}}}" if logo else "") + f"{_name(m)}~({score[m][v]:.1f})"
+    # only the ranks at which a human group appears in some column; skipped ranks are marked with a vdots row
+    show = sorted({ranked[v].index(lab) for _, v in VIEWS for lab in labels.values()})
+    vdots = "\\multicolumn{5}{c}{$\\vdots$} \\\\"
+    out, prev = ["\\midrule"], None
+    for i in show:
+        if prev is None or i != prev + 1:
+            out.append(vdots)
+        out.append(f"{i + 1} & " + " & ".join(cell(ranked[v][i], v) for _, v in VIEWS) + " \\\\")
+        prev = i
+    return out
 
 
 def render(composite: dict, top_n: int = 10, human: dict | None = None) -> str:
@@ -98,14 +117,16 @@ def render(composite: dict, top_n: int = 10, human: dict | None = None) -> str:
             else:
                 cells.append("")
         lines.append(f"{i + 1} & " + " & ".join(cells) + " \\\\")
-    lines += human_rows(human) if human else []
+    lines += human_rows(*human) if human else []
     lines += ["\\bottomrule", "\\end{tabular}}", "}", ""]
     return "\n".join(lines)
 
 
 def main(composite_path, out_path, top_n, human_path=None):
     composite = json.loads(Path(composite_path).read_text())
-    human = json.loads(Path(human_path).read_text()) if human_path else None
+    human = ((json.loads(Path(human_path).read_text()),
+              json.loads(Path("data/kg_creat/human_study/analysis/human_vs_models.json").read_text())["human_rows"])
+             if human_path else None)
     tex = render(composite, top_n, human)
     Path(out_path).write_text(tex)
     print(f"Wrote {out_path} ({composite['per_model'].__len__()} models, top {top_n}/column)")
@@ -117,7 +138,7 @@ if __name__ == "__main__":
     ap.add_argument("out_path")
     ap.add_argument("--top_n", type=int, default=10)
     ap.add_argument("--human", default=None,
-                    help="human-study composite (data/kg_creat/human_study/combined_scores/composite.json): "
-                         "adds a Humans reference row below the ranking")
+                    help="human-study composite (data/kg_creat/human_study/combined_scores_skip0/composite.json): "
+                         "adds a second block where both human groups are ranked among the models")
     args = ap.parse_args()
     main(args.composite_path, args.out_path, args.top_n, args.human)
