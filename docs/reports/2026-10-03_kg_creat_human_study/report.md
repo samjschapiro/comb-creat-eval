@@ -225,6 +225,38 @@ surfaces), because a larger pool always looks closer, and an answer is never com
 - Humans are more alike than models on association and analogy, and less alike on blending, where model
   blends converge on each other.
 
+### 5. What humans and LLMs say differently: everyday and human-centred vs. specific and encyclopedic
+
+Concepts and relations of kept humans vs. the 35 LLMs on the 86 shared items (concept uses: association 783
+human / 55,411 LLM; analogy 891 / 5,777; blending 771 / 5,879). Three views
+(`analyze_human_llm_language.py`): per-element features, words over-used by each group (log-odds with an
+informative Dirichlet prior, Monroe et al. 2008), and k-means clusters (k = 30) of concept embeddings with the
+clusters where each group is over-represented.
+
+| | word commonness (wordfreq Zipf), human / LLM | concepts with a rare word (Zipf < 3), human / LLM |
+|---|---|---|
+| association | 4.47 / 3.89 | 8% / 35% |
+| analogy | 4.60 / 4.00 | 5% / 24% |
+| blending | 4.55 / 4.09 | 11% / 21% |
+
+- **Concepts.** LLMs reach for named and technical entities: scientists and artists (James Clerk Maxwell, Dorothy
+  Hodgkin, Emil Fischer, Salvador Dalí), places (Naples, the Mogao Caves), physics (ions, event horizon, Hawking
+  radiation), mechanisms (pin tumbler, quorum sensing), law and politics (public reason, informed consent).
+  Humans reach for people and everyday life (people, humans, money, power, rain, football), emotion and value
+  (happiness, love, the soul, death), religion and art.
+- **Relations.** Humans link with simple causal and helping verbs (creates, brings, helps, allows, makes, needs),
+  spatial words (inside, up) and similarity ("like" is the most human-skewed association relation; "sounds
+  like" marks wordplay). LLMs link with formal and scholarly verbs (studied, influenced, developed, pioneered;
+  enables, employs, shapes; via, transforms, converts, encodes).
+- **Chains.** Human association chains are shorter (2.8 vs. 4.5 links) and move by everyday association and
+  similarity; LLM chains walk documented facts ("X studied Y, who influenced Z").
+- **Framing.** Human blends often address a person ("you", "your", "can", "helps you ..."); LLM blends describe
+  mechanisms in the third person ("transforms X via Y").
+
+Caveats: proper names count as rare words, so "specific" and "named" overlap; human word lists rest on a few
+hundred uses per task, so single words are noisy (the categories recur on all three tasks); and some plainness
+may be effort, since humans type their answers.
+
 ## Cost
 
 Judging all human answers (kept + flagged + warm-ups, 1,277 answers): **$48.25** — $47.40 on OpenRouter
@@ -254,5 +286,6 @@ Judging all human answers (kept + flagged + warm-ups, 1,277 answers): **$48.25**
 - Skips as failures: `src/kg_creat/scripts/build_skip0_scores.py` → `combined_scores_skip0/` (main analysis).
 - Distributions: `src/kg_creat/scripts/analyze_score_distributions.py` → `analysis/score_distributions.json`,
   `figures/score_distributions.png`; per-person histograms `plot_human_vs_model_hist.py`.
+- Language contrast: `src/kg_creat/scripts/analyze_human_llm_language.py` → `analysis/language_contrast.json`.
 - Directional originality: `src/kg_creat/scripts/analyze_directional_originality.py` →
   `data/kg_creat/human_study/analysis/directional_originality.json` (per-item values included).
