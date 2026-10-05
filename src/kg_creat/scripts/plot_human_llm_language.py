@@ -34,6 +34,7 @@ NIMBUS = Path.home() / "Library/Fonts/NimbusRoman-Regular.otf"
 HUMAN, MODEL = "#DA7678", "#71A8C4"
 SHADES = {"human": ["#DA7678", "#B5484B", "#8E2F33", "#C95F62"], "llm": ["#71A8C4", "#3F7FA0", "#2A5D78", "#5B93B1"]}
 TOP_CATS, MAX_WORDS = 8, 120
+LABEL = {"not in WordNet": "other"}   # phrases WordNet does not know (mostly names and technical terms)
 
 
 def style():
@@ -89,7 +90,7 @@ def bars():
             ax.barh(y + h / 2, [100 * c["human"] for c in cats], h, color=HUMAN)
             ax.barh(y - h / 2, [100 * c["llm"] for c in cats], h, color=MODEL)
             sig = lambda c: c["ci95"][0] > 0 or c["ci95"][1] < 0
-            ax.set_yticks(y, [c["category"] + (" *" if sig(c) else "") for c in cats])
+            ax.set_yticks(y, [LABEL.get(c["category"], c["category"]) + (" *" if sig(c) else "") for c in cats])
             ax.set_title(f"({'abcdef'[row * 3 + col]}) {task.capitalize()} {label}", loc="left")
             ax.set_xlabel("share (%)")
             ax.spines[["top", "right"]].set_visible(False)
