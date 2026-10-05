@@ -275,6 +275,42 @@ Caveats: proper names count as rare words, so "specific" and "named" overlap; hu
 hundred uses per task, so single words are noisy (the categories recur on all three tasks); and some plainness
 may be effort, since humans type their answers.
 
+### 6. Humans produce no inventive multiples
+
+The paper's τ-inventive-multiple test, unchanged (`analyze_human_multiples.py`): an invention's properties are
+"relation object" with its name dropped and anchor echoes removed; two inventions on the same item are a
+τ-multiple when a one-to-one pairing of their properties at cosine ≥ θ = 0.674 has size ≥ τ. Kept humans vs. the
+35 LLMs on the shared items: analogy 298 human / 967 LLM inventions, blending 201 / 965. A pair rate does not
+depend on how many inventions an item has, so the three pair types compare directly. "Eligible" = both
+inventions carry ≥ τ properties; "per property" = shared / the smaller property count.
+
+| | pairs | τ = 1 | τ = 2 | eligible τ = 2 | per property |
+|---|---|---|---|---|---|
+| blending, human–human | 675 | 3 (0.44%) | **0** | 0 of 642 | 0.17% |
+| blending, human–LLM | 6,928 | 95 (1.37%) | **0** | 0 of 6,755 | 0.46% |
+| blending, LLM–LLM | 16,154 | 2,973 (18.4%) | 358 (2.22%) | 2.22% | 4.51% |
+| analogy, human–human | 1,509 | 1 (0.07%) | 0 | 0 of 3 | 0.16% |
+| analogy, human–LLM | 10,307 | 5 (0.05%) | 0 | 0 of 463 | 0.08% |
+| analogy, LLM–LLM | 16,221 | 369 (2.27%) | 10 (0.06%) | 0.10% | 1.29% |
+
+- **Blending is the clean test.** Human blends carry 2.8 properties (LLMs 5.0) and 642 of 675 human pairs could
+  qualify at τ = 2. At the LLM–LLM rate about 14 human–human and 150 human–LLM multiples would be expected; there
+  are none. Even single shared properties are rare: 0.44% of human pairs against 18.4% of LLM pairs.
+- **Analogy cannot really test τ = 2.** Humans wrote one projected property (182 of 298) or none (98), so only 3
+  human pairs carry two properties each. At τ = 1, among eligible pairs, humans share a property 0.16% of the
+  time against 2.34% for LLMs.
+- **Utility-passed answers only:** the same, no human multiple at τ = 2 on either task (human–LLM blending τ = 1
+  rises to 3.1%, still far below LLM–LLM 18.5%).
+- **What a human–LLM single match looks like:** on Blues + Key, "Expression ... unlocks feelings" against
+  several models' "Blues Key ... unlocks hidden emotions"; on analogy E25, "conscience guides personal decisions"
+  against GPT-4o-mini's "choice compass guides personal choices". These are the shared stock image of the item,
+  one property deep.
+
+So convergence on the same invention is an LLM phenomenon here: humans neither converge with each other nor
+with models. Caveats: an item has 3–11 human blends, so a human multiple needs two people on the same item, but
+the pair rate already accounts for that; human properties are shorter and plainer, which may lower cosine
+matches somewhat; a single human writes one answer per item, like a single model draw.
+
 ## Cost
 
 Judging all human answers (kept + flagged + warm-ups, 1,277 answers): **$48.25** — $47.40 on OpenRouter

@@ -714,3 +714,7 @@ Kombine overall is now the fourth construct ("combinatorial creativity") in the 
 ## 2026-10-03 — human study: participant messages and pending compensation
 
 Participants wrote that the study ran past its 40-minute estimate (median kept session 51 min; several timed out at 74). The researcher messaged 12 of them through the Prolific API (9 with saved data, 2 whose responses never saved, 1 timed-out pilot participant), promising at least $12/hr as the IRB allows; every recipient with data was first checked for effort and AI use, and two AI cases who wrote in were left out. Pending, not yet done: approve all 12 (6 manual approvals of timed-out submissions) and pay $93.60 in bonuses. Message texts, recipients, minutes and amounts: `data/kg_creat/human_study/compensation/` (local only; holds Prolific IDs). Open: whether to top up every approved participant who took longer than the estimate.
+
+## 2026-10-05 — human study: humans produce no inventive multiples
+
+The paper's τ-multiple test, unchanged, on kept human inventions (`analyze_human_multiples.py`, report finding 6). Blending: 0 human–human (of 675 pairs) and 0 human–LLM (of 6,928) multiples at τ = 2, against 2.22% of LLM–LLM pairs, although 95% of human pairs carry enough properties to qualify; single shared properties 0.44% vs. 18.4%. Analogy cannot test τ = 2 (humans write one projected property); at τ = 1 humans share 0.16% vs. LLMs 2.34%. Same with utility-passed answers only. Convergence on one invention is an LLM phenomenon in this data.
