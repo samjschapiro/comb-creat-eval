@@ -64,6 +64,14 @@ def main():
     for ext in ("png", "pdf"):
         fig.savefig(OUT / f"fig_invention_wordcloud.{ext}", dpi=200, bbox_inches="tight")
     print("saved", OUT / "fig_invention_wordcloud.{png,pdf}")
+    # one file per panel, no in-plot title: the paper sets (a)/(b) as LaTeX subcaptions (as for Figure 6)
+    for ax, task, letter in zip(axes, ("analogy", "blending"), "ab"):
+        img = ax.get_images()[0].get_array()
+        f2, a2 = plt.subplots(figsize=(7.5, 5.0))
+        a2.imshow(img, interpolation="bilinear"); a2.axis("off")
+        f2.savefig(OUT / f"fig_invention_wordcloud_{letter}.pdf", dpi=200, bbox_inches="tight", pad_inches=0.02)
+        plt.close(f2)
+    print("saved", OUT / "fig_invention_wordcloud_{a,b}.pdf")
 
 
 if __name__ == "__main__":
