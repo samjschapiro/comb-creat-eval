@@ -35,7 +35,7 @@ CACHE = OUT / "answer_embeddings.npz"
 META = OUT / "answer_meta.json"
 MOCK = Path("scratch/human_vs_model_space")
 TASKS = [("association", "baseline"), ("analogy", "analogy"), ("blending", "blending")]
-HUMAN, MODEL = "#d95f02", "#1b6ca8"
+HUMAN, MODEL = "#DA7678", "#71A8C4"   # the red and blue fills of the paper's Figure 2 (02_cc_overview.png)
 
 
 def answers():
@@ -180,11 +180,11 @@ def stage_plot():
             Z = PCA(n_components=2, random_state=0).fit_transform(Xt)
             g, o, ok = grp[sel], orig[sel], passed[sel]
             size = 5 + 45 * (o - o.min()) / (np.ptp(o) + 1e-9)
-            for who, c, z, a in (("model", MODEL, 1, 0.22), ("human", HUMAN, 2, 0.85)):
+            for who, c, z, a in (("model", MODEL, 1, 0.35), ("human", HUMAN, 2, 0.9)):
                 for good in (False, True):
                     k = (g == who) & (ok == good)
                     ax.scatter(Z[k, 0], Z[k, 1], s=size[k], zorder=z + (0.5 if good else 0), alpha=a,
-                               facecolors=c if good else "none", edgecolors=c, linewidths=0.6 if who == "model" else 1.1)
+                               facecolors=c if good else "none", edgecolors=c, linewidths=0.7 if who == "model" else 1.2)
             nh, nm = int((g == "human").sum()), int((g == "model").sum())
             ax.set_title(f"({letter}) {t}")
             ax.text(0.03, 0.03, f"humans n = {nh} ({100 * ok[g == 'human'].mean():.0f}% passed)\n"
