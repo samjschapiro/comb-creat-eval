@@ -253,6 +253,24 @@ clusters where each group is over-represented.
 - **Framing.** Human blends often address a person ("you", "your", "can", "helps you ..."); LLM blends describe
   mechanisms in the third person ("transforms X via Y").
 
+**By WordNet supersense** (26 noun / 15 verb classes; Ciaramita & Johnson 2003; `analyze_supersenses.py`; first
+sense of the phrase or its head word; 95% bootstrap CIs over participants and models), the differences that
+exclude zero:
+
+| task | more often human | more often LLM |
+|---|---|---|
+| association concepts | object (+3.0 pp: sun, rock), state (+2.4), attribute (+1.8), animal (+1.3) | not in WordNet (−6.5: names, technical terms), person (−5.2: Emil Fischer, Galileo), location (−3.6: London) |
+| association relations | motion (+7.6: drives, moves, leads to), emotion (+2.3), contact (+2.1: opens, unlocks) | creation (−4.3: wrote, written by), communication (−3.8: directed, named after), consumption (−2.8), cognition (−2.5: studied by) |
+| analogy concepts | state (+1.9: life, happiness, peace), feeling (+1.3: emotion, hope) | location (−1.8), plant (−1.0) |
+| analogy relations | motion (+6.9: leads to, brings), no verb (+6.0) | change (−4.8: enables, regulates, converts), cognition (−3.6), communication (−3.5), possession, consumption |
+| blending concepts | not in WordNet (+6.9: adjectives, odd phrases), person (+3.0: players, youth), animal (+1.5: humans) | communication (−6.3: information, testimony), act (−2.6), quantity (−1.0) |
+| blending relations | stative (+7.6: is, is a), no verb (+5.2) | possession (−4.4: distributes), change (−4.0: transforms, converts) |
+
+The supersenses agree with the word-level picture: LLMs name people and places and link through authorship,
+study and transformation; humans use everyday objects, states and feelings and link through movement, being and
+plain association. First-sense tagging is noisy ("like" is tagged as an emotion verb, though it is mostly used
+for similarity), so single small categories should not be over-read.
+
 Caveats: proper names count as rare words, so "specific" and "named" overlap; human word lists rest on a few
 hundred uses per task, so single words are noisy (the categories recur on all three tasks); and some plainness
 may be effort, since humans type their answers.
@@ -286,6 +304,8 @@ Judging all human answers (kept + flagged + warm-ups, 1,277 answers): **$48.25**
 - Skips as failures: `src/kg_creat/scripts/build_skip0_scores.py` → `combined_scores_skip0/` (main analysis).
 - Distributions: `src/kg_creat/scripts/analyze_score_distributions.py` → `analysis/score_distributions.json`,
   `figures/score_distributions.png`; per-person histograms `plot_human_vs_model_hist.py`.
-- Language contrast: `src/kg_creat/scripts/analyze_human_llm_language.py` → `analysis/language_contrast.json`.
+- Language contrast: `src/kg_creat/scripts/analyze_human_llm_language.py` → `analysis/language_contrast.json`;
+  supersenses `analyze_supersenses.py` → `analysis/supersenses.json` (WordNet in `data/nltk_data`, run with
+  `NLTK_DATA=data/nltk_data`).
 - Directional originality: `src/kg_creat/scripts/analyze_directional_originality.py` →
   `data/kg_creat/human_study/analysis/directional_originality.json` (per-item values included).
