@@ -322,8 +322,9 @@ Judging all human answers (kept + flagged + warm-ups, 1,277 answers): **$48.25**
 - **Figures for finding 5** (chosen 2026-10-05: word clouds + category bars; mocks made, not yet in the paper):
   `plot_human_llm_language.py` writes `data/kg_creat/human_study/figures/language_wordclouds.{png,pdf}` (2x2:
   human / LLM concepts and relations, whole phrases pooled over tasks, sized by log-odds z; per-panel PDFs
-  `_a`-`_d`) and `supersense_bars.{png,pdf}` (2x3: concept and relation supersense shares per task, top 8
-  categories by total share, * = 95% CI on the difference excludes zero). Context-aware supersense tagging
+  `_a`-`_d`) and `supersense_bars.{png,pdf}` (1x2: concept and relation supersense shares, the three tasks pooled with equal
+  weight, only the 8 categories per panel whose difference is largest among those with a 95% CI excluding zero;
+  "not in WordNet" shown as "other", WordNet's top-level nouns as "general"). Context-aware supersense tagging
   would remove first-sense noise.
 - **Utility-gated directional originality** (passed answers only); robustness to a second embedding model.
 - **The remaining 28 slots.** Collection is paused; refilling them brings association and analogy to about

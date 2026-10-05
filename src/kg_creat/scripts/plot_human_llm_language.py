@@ -5,8 +5,8 @@
                log-odds z with an informative Dirichlet prior (Monroe et al. 2008, as in
                analyze_human_llm_language.py); only phrases with z > 0 for that group appear.
   bars         share of concepts (noun supersense) and relations (verb supersense) in each WordNet category,
-               humans vs. LLMs, per task, from analyze_supersenses.py's output; 95% bootstrap CIs on the
-               difference that exclude zero are starred.
+               humans vs. LLMs, the three tasks pooled with equal weight (analyze_supersenses.py, "all");
+               only the categories where the groups differ most (95% bootstrap CI on the difference excludes 0).
 
 Kept humans and the 35 scored models, on the 86 shared items.
 
@@ -34,7 +34,8 @@ NIMBUS = Path.home() / "Library/Fonts/NimbusRoman-Regular.otf"
 HUMAN, MODEL = "#DA7678", "#71A8C4"
 SHADES = {"human": ["#DA7678", "#B5484B", "#8E2F33", "#C95F62"], "llm": ["#71A8C4", "#3F7FA0", "#2A5D78", "#5B93B1"]}
 TOP_CATS, MAX_WORDS = 8, 120
-LABEL = {"not in WordNet": "other"}   # phrases WordNet does not know (mostly names and technical terms)
+LABEL = {"not in WordNet": "other",   # phrases WordNet does not know (mostly names and technical terms)
+         "Tops": "general"}           # WordNet top-level nouns: food, space, knowledge, person, events
 
 
 def style():
@@ -79,24 +80,24 @@ def wordclouds(rows):
 
 
 def bars():
-    res = json.loads(SUPERSENSES.read_text())
-    fig, axes = plt.subplots(2, 3, figsize=(20, 11))
-    for col, task in enumerate(("association", "analogy", "blending")):
-        for row, (name, label) in enumerate((("concepts", "concepts"), ("relations", "relations"))):
-            ax = axes[row, col]
-            cats = sorted(res[task][name], key=lambda r: -(r["human"] + r["llm"]))[:TOP_CATS]
-            y = np.arange(len(cats))[::-1]
-            h = 0.38
-            ax.barh(y + h / 2, [100 * c["human"] for c in cats], h, color=HUMAN)
-            ax.barh(y - h / 2, [100 * c["llm"] for c in cats], h, color=MODEL)
-            sig = lambda c: c["ci95"][0] > 0 or c["ci95"][1] < 0
-            ax.set_yticks(y, [LABEL.get(c["category"], c["category"]) + (" *" if sig(c) else "") for c in cats])
-            ax.set_title(f"({'abcdef'[row * 3 + col]}) {task.capitalize()} {label}", loc="left")
-            ax.set_xlabel("share (%)")
-            ax.spines[["top", "right"]].set_visible(False)
+    """Tasks pooled with equal weight ("all" in supersenses.json); only the categories whose human - LLM difference
+    has a 95% CI excluding zero, the TOP_CATS largest; human-leaning categories on top, LLM-leaning below."""
+    res = json.loads(SUPERSENSES.read_text())["all"]
+    fig, axes = plt.subplots(1, 2, figsize=(16, 6.5))
+    for ax, letter, name in zip(axes, "ab", ("concepts", "relations")):
+        sig = [c for c in res[name] if c["ci95"][0] > 0 or c["ci95"][1] < 0]
+        cats = sorted(sorted(sig, key=lambda c: -abs(c["diff"]))[:TOP_CATS], key=lambda c: -c["diff"])
+        y = np.arange(len(cats))[::-1]
+        h = 0.38
+        ax.barh(y + h / 2, [100 * c["human"] for c in cats], h, color=HUMAN)
+        ax.barh(y - h / 2, [100 * c["llm"] for c in cats], h, color=MODEL)
+        ax.set_yticks(y, [LABEL.get(c["category"], c["category"]) for c in cats])
+        ax.set_title(f"({letter}) {name.capitalize()}", loc="left")
+        ax.set_xlabel("share (%)")
+        ax.spines[["top", "right"]].set_visible(False)
     fig.legend([Patch(color=HUMAN), Patch(color=MODEL)], ["Humans", "LLMs"], loc="lower center", ncol=2,
                frameon=False, bbox_to_anchor=(0.5, -0.01))
-    fig.tight_layout(rect=(0, 0.04, 1, 1), h_pad=2.0, w_pad=2.0)
+    fig.tight_layout(rect=(0, 0.07, 1, 1), w_pad=3.0)
     save(fig, "supersense_bars")
 
 
