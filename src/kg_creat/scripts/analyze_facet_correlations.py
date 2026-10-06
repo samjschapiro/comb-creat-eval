@@ -470,7 +470,7 @@ if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument("--shared-pool", action="store_true",
-                    help="read data/kg_creat/human_study/combined_scores_skip0 (models only) and write *_shared outputs")
+                    help="read data/kg_creat/human_study/paper_scores (models only) and write *_shared outputs")
     ap.add_argument("--scores-dir", default=None, help="diagnostic: any scores dir with a composite.json; writes *_<dirname>")
     a = ap.parse_args()
     if a.scores_dir:
@@ -480,7 +480,7 @@ if __name__ == "__main__":
         FIG = FIG.with_name(f"fig_facet_corr_{SCORE_DIR.name}.png")
         FIG_SMALL = FIG.with_name(f"fig_facet_corr_reduced_{SCORE_DIR.name}.png")
     elif a.shared_pool:
-        SCORE_DIR = Path("data/kg_creat/human_study/combined_scores_skip0")
+        SCORE_DIR = Path("data/kg_creat/human_study/paper_scores")
         SCORES = SCORE_DIR / "composite.json"
         OUT = OUT.with_name("facet_correlations_shared.json")
         FIG = FIG.with_name("fig_facet_corr_shared.png")

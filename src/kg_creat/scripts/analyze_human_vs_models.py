@@ -15,7 +15,7 @@ import os
 
 import numpy as np
 
-SCORES = "data/kg_creat/human_study/combined_scores_skip0"   # skipped items count as failed (0); see build_skip0_scores.py
+SCORES = "data/kg_creat/human_study/paper_scores"   # the paper's scores: shared pool, skips failed, all 90 model items (build_paper_scores.py)
 OUT = "data/kg_creat/human_study/analysis/human_vs_models.json"
 TASKS = [("association", "baseline"), ("analogy", "analogy"), ("blending", "blending")]
 

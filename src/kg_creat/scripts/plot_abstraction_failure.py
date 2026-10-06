@@ -184,6 +184,6 @@ if __name__ == "__main__":
                     help="read data/kg_creat/human_study/combined_scores_skip0 (the paper's scores since 2026-10-06; the "
                          "worked-example items are not in it) and write *_shared figures")
     if ap.parse_args().shared_pool:
-        SCORES = Path("data/kg_creat/human_study/combined_scores_skip0")
+        SCORES = Path("data/kg_creat/human_study/paper_scores")
         OUT = OUT.with_name("fig_abstraction_failure_shared.png")
     main()

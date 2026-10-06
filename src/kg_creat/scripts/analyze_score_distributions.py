@@ -28,7 +28,7 @@ from scipy import optimize, stats
 
 from src.kg_creat.scripts.compute_composite import TASK_DIMS, _mean, _ok, artifact_dims
 
-SCORES = Path("data/kg_creat/human_study/combined_scores_skip0")
+SCORES = Path("data/kg_creat/human_study/paper_scores")   # the paper's scores (build_paper_scores.py)
 OUT = Path("data/kg_creat/human_study/analysis/score_distributions.json")
 FIG = Path("data/kg_creat/human_study/figures/score_distributions.png")
 MOCK = Path("scratch/human_vs_model_space/score_distributions.png")
