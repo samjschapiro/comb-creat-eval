@@ -21,6 +21,11 @@ models' kombine_test30 answers (all draws). The two warm-up items have no model 
 Item-level means; 95% bootstrap CIs over items.
 
     .venv_mlx/bin/python -m src.kg_creat.scripts.analyze_directional_originality
+    .venv_mlx/bin/python -m src.kg_creat.scripts.analyze_directional_originality --valid
+
+--valid keeps only answers that pass utility (association: every triple factual; analogy: a valid pair; blending: a
+valid generic space), as both query and reference, and writes directional_originality_valid.json. Verdicts come
+from data/kg_creat/human_study/paper_scores; an answer with no scored record (structurally failed) is not valid.
 """
 import glob
 import json
@@ -40,12 +45,35 @@ K, REPEATS, BOOT, SEED = 5, 20, 2000, 0
 TASK = {"baseline": "association", "analogy": "analogy", "blending": "blending"}
 
 
-def artifacts(responses, source):
+PAPER_SCORES = Path("data/kg_creat/human_study/paper_scores")
+
+
+def verdicts(entity):
+    """{(prompt_id, sample_idx, item index): (valid, triples)} from one entity's scored records. Association has one
+    path per item (path_idx = item index); analogy and blending one item whose head record is path_idx 0."""
+    out = {}
+    for r in json.load(open(PAPER_SCORES / entity / "path_scores.json")):
+        if r.get("_missing"):
+            continue
+        if r["mode"] == "analogy":
+            if r["path_idx"] == 0 and "pair_sat" in r:
+                out[(r["prompt_id"], r.get("sample_idx"), 0)] = (r.get("pair_sat") is True, r["triples"])
+        elif r["mode"] == "blending":
+            if r["path_idx"] == 0:
+                out[(r["prompt_id"], r.get("sample_idx"), 0)] = (r.get("sat") is True, r["triples"])
+        else:
+            out[(r["prompt_id"], r.get("sample_idx"), r["path_idx"])] = (r.get("sat") is True, r["triples"])
+    return out
+
+
+def artifacts(responses, source, valid=None):
     """{prompt_id: [element-surface set per artifact]} (non-anchor concepts + relations), the producer of each
     artifact ({prompt_id: [source]}: the session for humans, the model for models), and the mode per item."""
     arts, src, mode = defaultdict(list), defaultdict(list), {}
     for r in responses:
-        for it in r.get("items") or []:
+        for i, it in enumerate(r.get("items") or []):
+            if valid is not None and not valid(r, i, it):
+                continue
             els = {s for _k, s in _artifact_elements(it.get("paths") or [], r.get("u_label"), r.get("v_label"))}
             if els:
                 arts[r["prompt_id"]].append(els)
@@ -70,13 +98,31 @@ def score(query, ref_arts, keep, M, vec, rng):
     return float(np.mean(vals))
 
 
-def main():
+def main(only_valid=False):
     rng = np.random.default_rng(SEED)
-    human, hsrc, mode = artifacts(json.load(open(HUMAN)), lambda r: r["session_id"])
     scored = {Path(p).parent.name for p in glob.glob(f"{SCORED}/*/summary.json")}
+    hv = lv = None
+    if only_valid:
+        V = {"human": verdicts("human_kept"), **{m: verdicts(m) for m in scored}}
+        checked = {"n": 0, "mismatch": 0}
+
+        def check(table, r, i, it):
+            v = table.get((r["prompt_id"], r.get("sample_idx"), i))
+            if v is None:
+                return False
+            path = (it.get("paths") or [[]])[0]
+            checked["n"] += 1
+            checked["mismatch"] += [list(map(str, t)) for t in path] != [list(map(str, t)) for t in v[1]]
+            return v[0]
+        hv = lambda r, i, it: check(V["human"], r, i, it)
+        lv = lambda r, i, it: check(V[r["_model"]], r, i, it)
+    human, hsrc, mode = artifacts(json.load(open(HUMAN)), lambda r: r["session_id"], hv)
     llm_resp = [{**r, "_model": d.name} for d in sorted(Path(LLM).iterdir()) if d.name in scored
                 for r in json.load(open(d / "responses.json"))]
-    llm, lsrc, _ = artifacts(llm_resp, lambda r: r["_model"])
+    llm, lsrc, _ = artifacts(llm_resp, lambda r: r["_model"], lv)
+    if only_valid:
+        print(f"verdict lookup: {checked['n']} answers matched to a scored record, {checked['mismatch']} with "
+              f"different triples")
     items = sorted(pid for pid in human if pid in llm)
     print(f"{len(items)} items; {sum(len(human[p]) for p in items)} human and "
           f"{sum(len(llm[p]) for p in items)} model artifacts ({len(scored)} models)")
@@ -123,11 +169,16 @@ def main():
                    "ci95": [round(float(x), 4) for x in np.percentile(boot[:, a] - boot[:, b], [2.5, 97.5])]}
                for k, (a, b) in diffs.items()},
         }
+    out_path = OUT.with_name("directional_originality_valid.json") if only_valid else OUT
     OUT.parent.mkdir(parents=True, exist_ok=True)
     json.dump({"summary": summary, "per_item": per_item,
-               "params": {"k": K, "repeats": REPEATS, "boot": BOOT, "seed": SEED}}, open(OUT, "w"), indent=1)
+               "params": {"k": K, "repeats": REPEATS, "boot": BOOT, "seed": SEED, "only_valid": only_valid}},
+              open(out_path, "w"), indent=1)
     print(json.dumps(summary, indent=1))
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--valid", action="store_true", help="only answers that pass utility (query and reference)")
+    main(ap.parse_args().valid)

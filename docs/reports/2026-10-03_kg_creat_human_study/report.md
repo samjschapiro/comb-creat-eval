@@ -225,6 +225,26 @@ surfaces), because a larger pool always looks closer, and an answer is never com
 - Humans are more alike than models on association and analogy, and less alike on blending, where model
   blends converge on each other.
 
+### 4b. Directional originality among VALID answers only (2026-10-06)
+
+`analyze_directional_originality.py --valid`: only answers that pass utility, as both query and reference (verdicts
+from `paper_scores`; 18,362 answers matched to their scored record, 0 with different triples). Pools are small: 243
+valid human answers; items with at least two valid humans: association 17, analogy 21, blending 10; reference size
+M = 13 / 13 / 9. 95% bootstrap CIs over items.
+
+| | O(H\|H) | O(H\|L) | O(L\|L) | O(L\|H) | H\|L − H\|H | L\|H − L\|L | H\|H − L\|L | H\|L − L\|L |
+|---|---|---|---|---|---|---|---|---|
+| association | 0.678 | 0.730 | 0.731 | 0.718 | +0.053 [0.037, 0.069] | −0.013 [−0.020, −0.006] | −0.053 [−0.073, −0.035] | −0.001 [−0.007, 0.005] |
+| analogy | 0.661 | 0.705 | 0.710 | 0.707 | +0.043 [0.034, 0.053] | −0.003 [−0.010, 0.004] | −0.049 [−0.065, −0.033] | −0.005 [−0.014, 0.004] |
+| blending | 0.701 | 0.729 | 0.719 | 0.728 | +0.029 [0.015, 0.042] | +0.009 [−0.010, 0.032] | −0.018 [−0.038, 0.001] | +0.010 [−0.007, 0.029] |
+
+At equal pool size, a valid human answer is no farther from valid LLM answers than another valid LLM answer is
+(H|L − L|L ≈ 0 on every task), and valid human answers are more alike each other than valid LLM answers are
+(H|H < L|L on association and analogy). So the "valid human answers are more original" result on the shared pool is
+not supported at equal pool size; it reflects how originality is measured against a pool that is ~95% LLM answers.
+What does hold: valid human answers sit farther from LLM answers than from other humans' (H|L > H|H on all tasks).
+With all answers (valid or not), H|L − L|L is positive on association (+0.018) and blending (+0.048).
+
 ### 5. What humans and LLMs say differently: everyday and human-centred vs. specific and encyclopedic
 
 Concepts and relations of kept humans vs. the 35 LLMs on the 86 shared items (concept uses: association 783
