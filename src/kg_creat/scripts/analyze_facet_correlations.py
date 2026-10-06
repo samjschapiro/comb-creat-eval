@@ -24,6 +24,8 @@ A pool this size gives a large critical |r| for p < 0.05: individual coefficient
 claims, so every reported cell also gets its p-value in the JSON.
 
     .venv/bin/python -m src.kg_creat.scripts.analyze_facet_correlations
+    # the paper's scores since 2026-10-06: shared human + model originality pool, unanswered items failed
+    .venv/bin/python -m src.kg_creat.scripts.analyze_facet_correlations --shared-pool
 """
 import glob
 import json
@@ -74,7 +76,9 @@ def ungated_dims(model: str) -> dict:
             ok = [r for r in arts if r.get("sat") is True]
 
         def dim(key, f=lambda v: float(v)):         # over every artifact, pass or fail
-            vals = [f(r[key]) for r in arts if r.get(key) is not None]
+            # an unanswered item (a `_missing` record added by build_skip0_scores.py) counts as a failure in
+            # utility above, but it has no surprise or originality, so it is left out of every other dimension
+            vals = [f(r[key]) for r in arts if r.get(key) is not None and not r.get("_missing")]
             return float(np.mean(vals)) if vals else float("nan")
 
         d = {"utility": (len(ok) / len(arts)) if arts else float("nan"),
@@ -93,7 +97,7 @@ def ungated_dims(model: str) -> dict:
 
 def main():
     c = json.loads(SCORES.read_text())
-    models = c["models"]
+    models = [m for m in c["models"] if not m.startswith("human")]   # a human-study composite holds the human groups too
     pm = c["per_model"]
     n = len(models)
 
@@ -213,6 +217,8 @@ def cell_means():
                     if not r.get("triples"):
                         continue
                     ok = r.get("sat") is True
+                if r.get("_missing"):
+                    continue                              # unanswered item: no answer to describe per item
                 byitem[(r["u_label"], r["v_label"])].append((r, ok))
             for item, rs in byitem.items():
                 cells[(task, "utility")][m][item] = float(np.mean([o for _, o in rs]))
@@ -461,4 +467,22 @@ def associative_hypothesis(pm, models, facet_v):
     return out
 
 if __name__ == "__main__":
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--shared-pool", action="store_true",
+                    help="read data/kg_creat/human_study/combined_scores_skip0 (models only) and write *_shared outputs")
+    ap.add_argument("--scores-dir", default=None, help="diagnostic: any scores dir with a composite.json; writes *_<dirname>")
+    a = ap.parse_args()
+    if a.scores_dir:
+        SCORE_DIR = Path(a.scores_dir)
+        SCORES = SCORE_DIR / "composite.json"
+        OUT = OUT.with_name(f"facet_correlations_{SCORE_DIR.name}.json")
+        FIG = FIG.with_name(f"fig_facet_corr_{SCORE_DIR.name}.png")
+        FIG_SMALL = FIG.with_name(f"fig_facet_corr_reduced_{SCORE_DIR.name}.png")
+    elif a.shared_pool:
+        SCORE_DIR = Path("data/kg_creat/human_study/combined_scores_skip0")
+        SCORES = SCORE_DIR / "composite.json"
+        OUT = OUT.with_name("facet_correlations_shared.json")
+        FIG = FIG.with_name("fig_facet_corr_shared.png")
+        FIG_SMALL = FIG.with_name("fig_facet_corr_reduced_shared.png")
     main()

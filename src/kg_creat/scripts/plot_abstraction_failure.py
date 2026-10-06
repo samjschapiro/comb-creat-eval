@@ -170,7 +170,7 @@ def by_item(M, items, models, item_rate, model_rate, logos):
             ax.add_artist(ab)
         ax.text(j + 0.15, nr + 0.75, _disp(m), rotation=55, rotation_mode="anchor", ha="right", va="top",
                 fontsize=14, color="black")
-    out = OUT.with_name("fig_abstraction_failure_by_item")
+    out = OUT.with_name(OUT.stem.replace("fig_abstraction_failure", "fig_abstraction_failure_by_item"))
     for ext in ("png", "pdf"):
         fig.savefig(out.with_suffix("." + ext), dpi=300, bbox_inches="tight")
     plt.close(fig)
@@ -178,4 +178,12 @@ def by_item(M, items, models, item_rate, model_rate, logos):
 
 
 if __name__ == "__main__":
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--shared-pool", action="store_true",
+                    help="read data/kg_creat/human_study/combined_scores_skip0 (the paper's scores since 2026-10-06; the "
+                         "worked-example items are not in it) and write *_shared figures")
+    if ap.parse_args().shared_pool:
+        SCORES = Path("data/kg_creat/human_study/combined_scores_skip0")
+        OUT = OUT.with_name("fig_abstraction_failure_shared.png")
     main()

@@ -74,7 +74,7 @@ def human_rows(human: dict, rows: dict) -> list:
 
 def render(composite: dict, top_n: int = 10, human: dict | None = None) -> str:
     pm = composite["per_model"]
-    models = composite["models"]
+    models = [m for m in composite["models"] if not m.startswith("human")]   # a human-study composite holds the human groups too
 
     def score(m, view):
         return pm[m]["overall"] if view == "overall" else pm[m]["per_task"].get(view)
