@@ -7,6 +7,9 @@ leaderboard, \\Cref{tab:leaderboard}):
         data/kg_creat/kombine_test30/scores/composite.json papers/kg_creat-iclr/media/tab_per_task_full.tex \\
         [--human data/kg_creat/human_study/combined_scores_skip0/composite.json]
 
+To match the human rows of \\Cref{tab:leaderboard}, pass the human-study composite as BOTH arguments: the models
+are then scored on the shared human + model originality pool with unanswered items counted as failed.
+
 --human adds a "Humans" row (all kept participants, skipped items counted as failed, as in the main
 leaderboard) to every table, placed by its score among the models and styled as in \\Cref{tab:leaderboard}.
 """
@@ -63,7 +66,7 @@ HUMANS = "Humans"
 
 def render(c: dict, human: dict | None = None) -> str:
     pm = dict(c["per_model"])
-    order = list(c["ranking"])
+    order = [m for m in c["ranking"] if not m.startswith("human")]   # a human-study composite also holds the human groups
     if human:
         pm[HUMANS] = human["per_model"]["human_kept"]
         order = sorted(order + [HUMANS], key=lambda m: pm[m]["overall"], reverse=True)
