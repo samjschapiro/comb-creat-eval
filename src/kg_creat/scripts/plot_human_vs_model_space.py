@@ -35,6 +35,7 @@ OUT = Path("data/kg_creat/human_study/figures")
 CACHE = OUT / "answer_embeddings.npz"
 META = OUT / "answer_meta.json"
 MOCK = Path("scratch/human_vs_model_space")
+DIRECTIONAL = Path("data/kg_creat/human_study/analysis/directional_originality.json")
 TASKS = [("association", "baseline"), ("analogy", "analogy"), ("blending", "blending")]
 HUMAN, MODEL = "#DA7678", "#71A8C4"   # the red and blue fills of the paper's Figure 2 (02_cc_overview.png)
 
@@ -220,6 +221,23 @@ def stage_plot():
                    loc="lower center", ncol=4, frameon=False, bbox_to_anchor=(0.5, -0.01), columnspacing=2.2, handletextpad=0.4)
         fig.tight_layout(rect=(0, 0.09, 1, 1))
         fig.savefig(OUT / "space_pca_utility.png", dpi=300)
+        # the same figure with each task's directional originality (all answers, equal pool sizes;
+        # analyze_directional_originality.py): how much farther each group sits from the other group than from itself
+        d = json.loads(DIRECTIONAL.read_text())["summary"]
+        from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, VPacker
+        for ax, (t, _m) in zip(axes, TASKS):
+            lines = []
+            for key, lab, c in (("HL-HH", r"$O(H|L) - O(H|H)$", HUMAN), ("LH-LL", r"$O(L|H) - O(L|L)$", MODEL)):
+                v = d[t][key]
+                sig = "*" if (v["ci95"][0] > 0 or v["ci95"][1] < 0) else ""
+                num = f"{v['mean']:+.3f}".replace("+0.", "+.").replace("-0.", "\u2212.")
+                lines.append(TextArea(f"{lab} = {num}{sig}", textprops=dict(color=c, fontsize=15, fontweight="bold")))
+            box = AnchoredOffsetbox(loc="upper left", child=VPacker(children=lines, align="left", pad=0, sep=3),
+                                    frameon=True, borderpad=0.4, pad=0.3)
+            box.patch.set(facecolor="white", edgecolor="none", alpha=1.0)
+            box.set_zorder(6)
+            ax.add_artist(box)
+        fig.savefig(OUT / "space_pca_utility_directional.png", dpi=300)
         plt.close(fig)
 
     # (2) one showcase item per task: the item with the most human answers
@@ -268,9 +286,10 @@ def stage_plot():
     plt.close(fig)
 
     MOCK.mkdir(parents=True, exist_ok=True)
-    for f in ("space_all_items.png", "space_pca_all_vs_passed.png", "space_pca_utility.png", "space_showcase.png"):
+    for f in ("space_all_items.png", "space_pca_all_vs_passed.png", "space_pca_utility.png",
+              "space_pca_utility_directional.png", "space_showcase.png"):
         shutil.copy(OUT / f, MOCK / f)
-    print(f"wrote space_all_items.png, space_pca_all_vs_passed.png, space_pca_utility.png, space_showcase.png to {OUT} (copies in {MOCK})")
+    print(f"wrote space_all_items.png, space_pca_all_vs_passed.png, space_pca_utility.png (+ _directional), space_showcase.png to {OUT} (copies in {MOCK})")
 
 
 if __name__ == "__main__":
