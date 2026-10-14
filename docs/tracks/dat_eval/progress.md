@@ -369,8 +369,9 @@ Hivemind via the ~28 unmapped open Table-6 models. Full account in
 paper's NoveltyBench Overall validity/specificity column exactly from
 cached test scores + `benchmarks.json`, and confirms the CDAT +0.60
 NoveltyBench specificity is **n.s. (p≈0.21) at n=8–10** — the number to
-lead the rebuttal's power discussion with. (DRAT/RAT are out of scope
-for this submission per the author — a different paper.)
+lead the rebuttal's power discussion with. (The DRAT is out of scope
+for this submission per the author — a different paper. The RAT is in scope;
+corrected 2026-10-03.)
 
 ### 2026-07-28 — Rebuttal posted; NoveltyBench n=10→23; CDAT claim downgraded
 
@@ -438,3 +439,42 @@ n=23 now rules out large NoveltyBench effects but not moderate ones.
 from the DAT** — his abstract says the opposite ("a range of factors call
 into question the 'creativity' of generative AI"), and his 2025 follow-up
 is "Why Generative AI Has Limited Creativity." He supports our motivation.
+
+### 2026-10-03 — Accepted (NeurIPS 2026 poster); camera-ready plan
+
+Overleaf NeurIPS files reset to the submitted version (`cac1df9`, no DRAT) and pushed with a camera-ready header and new affiliations (`da43097`, `a64ef62`, `e1ccdff`). The full list of rebuttal commitments, with numbers, open decisions (use case vs "not necessary"; the RAT is in, only the DRAT is out) and suggested order, is in [the camera-ready report](../../reports/2026-10-03_neurips_camera_ready/report.md). It replaces the checklist above. New items: MMLU-Pro-only specificity (biggest change), per-temperature reporting, T = 0.7 runs, power analysis for every null, and Figure 3 significance stars. The CDAT NoveltyBench specificity is +0.03; the +0.14 in the reply to 6Cbj was CDAT's validity.
+
+### 2026-10-03 (later) — MMLU-Pro-only recompute; RAT and Kombine in Table 1 and the figures
+
+New `src/dat_eval/scripts/neurips_camera_ready.py` generates the Table 1 body, the headline figure and Figure 3 from one set of cells, written to `data/dat_eval/neurips_camera_ready/cells.json`. Specificity controls for MMLU-Pro only (k = 1). The RAT is a row, and Kombine overall is a fourth construct (combinatorial creativity). Figure 3 prints only significant cells. The figures go to `papers/iccc-2026/figures/neurips/` so the shared ICML/preprint figures are untouched.
+
+Headline changes vs the submitted Table 1:
+- DAT has significant specificity on all three creative-writing benchmarks (+.38\*, +.50\*\*, +.68\*\*).
+- PACE has significant specificity on Arena CW (+.41\*) and Mazur CW (+.52\*). The "PACE is a capability proxy" claim no longer holds; only the RAT shows that pattern.
+- No significant specificity anywhere on divergent thinking, scientific ideation or Kombine.
+- PACE validity on LiveIdeaBench is +.44\* (n = 25).
+
+The text now defines specificity with MMLU-Pro only. The §5 prose and captions are still owed by the author. Full account: [recompute report](../../reports/2026-10-03_neurips_mmlu_specificity_and_kombine/report.md). Separately, `src/dat_eval/scripts/kombine_as_benchmark.py` found that CDAT predicts Kombine originality beyond capability ([log](../../logs/2026-10-03/kombine_as_semantic_distance_benchmark.md)).
+
+### 2026-10-14 — camera-ready writing and layout
+
+- **§5 results** rewritten for the MMLU-Pro-only numbers.
+  - The RAT is now the capability proxy, not PACE.
+  - The DAT is the only test that is valid and specific on all three creative-writing benchmarks.
+  - New paragraphs on output diversity and combinatorial creativity.
+  - The promised power sentence for scientific ideation (n = 20–22, |r| ≥ .56–.58).
+- **Four constructs** in the intro, conclusion and §3: creative writing, output diversity on open-ended prompts, combinatorial creativity (Kombine, arXiv 2509.21043), scientific ideation. Table and figures follow that order.
+- **Capability correlations** in the text are against MMLU-Pro only.
+- **Layout:**
+  - new overview figure above the abstract;
+  - divergent–convergent Venn diagram in the intro;
+  - example prompts with the RAT, full width at the top of page 3, colour-tinted.
+- **Local build:** the full paper now builds here (`multirow` built in the scratchpad), so layout is checked before each push.
+- Full account: [session log](../../logs/2026-10-14/0719_neurips_camera_ready.md).
+- **Open:**
+  - captions (Figures 3 and 4, Table 1, headline figure);
+  - the stale combinatorial-creativity cite in the Discussion;
+  - per-temperature table and T = 0.7 runs;
+  - appendix RAT and Kombine columns;
+  - remaining rebuttal writing;
+  - OpenReview upload.

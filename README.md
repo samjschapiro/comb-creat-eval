@@ -1,7 +1,7 @@
 # comb-creat-eval
 
 Evaluating automatic creativity metrics for large language models.
-Main tracks: `dat_eval` compares DAT, CDAT, and PACE across 54 LLMs
+Main tracks: `dat_eval` compares DAT, CDAT, PACE, and the RAT across 54 LLMs
 and asks whether their correlations with external creativity
 benchmarks survive partialling out general capability; `new_tests`
 designs new tests on top of that infrastructure (headline:
@@ -43,6 +43,7 @@ bash scripts/dat_eval/score_evals.sh
 
 # 3. Generate camera-ready figures
 uv run python src/dat_eval/scripts/make_figures.py
+uv run python src/dat_eval/scripts/neurips_camera_ready.py   # NeurIPS Table 1 body + headline/correlation figures
 
 # 4. Refresh external benchmark scores
 uv run python src/comb_eval/scripts/fetch_arena_scores.py configs/comb_eval/fetch_arena_scores.yaml

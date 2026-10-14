@@ -23,7 +23,9 @@ src/
 │       ├── run_evals.py        # async DAT/CDAT/PACE runner with budget cap
 │       ├── score_evals.py      # Pearson + semi-partial r(X, Y - Y_hat_g)
 │       ├── multi_embed_appendix.py  # per-embedding pipeline (GloVe + FastText + SBERT)
-│       └── make_figures.py     # camera-ready figures (Times + RdBu_r / Okabe-Ito)
+│       ├── make_figures.py     # camera-ready figures (Times + RdBu_r / Okabe-Ito)
+│       ├── neurips_camera_ready.py  # NeurIPS Table 1 body + headline / correlation figures (MMLU-Pro-only specificity, RAT, Kombine)
+│       └── kombine_as_benchmark.py  # tests vs Kombine task and criterion scores (exploratory)
 └── new_tests/                  # active track (DRAT + new benchmark wrappers)
     ├── drat.py                 # DRAT scoring (k-anchor utility gate, max/min/avg)
     ├── distinctness.py         # pairwise-distance utilities shared across tests
@@ -220,6 +222,7 @@ docs/
 papers/                          # gitignored in outer repo (Overleaf-synced sub-repos)
 ├── iccc-2026/                   # main paper (validity / specificity framework + DRAT)
 │   ├── main.tex, main_neurips.tex      # ICML 2026 / NeurIPS 2026 builds (sections/, tables/, sections_neurips/, tables_neurips/)
+│   ├── figures/neurips/                 # NeurIPS-only figures (shared figures/ untouched)
 │   ├── main_jmlr.tex, main_preprint.tex  # JMLR / arXiv preprint builds (sections_jmlr/, tables_jmlr/)
 │   ├── styles/                          # icml2026, neurips_2026, jmlr2e, preprint
 │   ├── bib/main.bib
