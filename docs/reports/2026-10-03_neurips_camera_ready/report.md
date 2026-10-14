@@ -32,6 +32,11 @@ Done locally (not yet pushed), details in [the recompute report](../2026-10-03_n
 - Stale LiveIdeaBench correlations and the Hivemind typo fixed.
 - Table 1 and both figures reordered: creative writing, output diversity, combinatorial creativity, scientific ideation.
 
+**2026-10-14 (later, pushed `bf8b11c`):**
+- Item 3 done: per-temperature appendix table, with rank stability (DAT r = .87–.96, CDAT r = .83–.89) and each benchmark's temperature.
+- Appendix per-model tables regenerated: RAT column, fixed-gate CDAT (the submitted column was T = 1.5 only), Kombine, no Arena Overall.
+- **Item 4 (T = 0.7 runs) dropped by the author.** Note that 22 of the 54 pool models are no longer on OpenRouter.
+
 Still open from these: the §5 results prose and contribution 3 (several claims flipped), the captions, and a Kombine description in §3.
 
 ## Data & sampling
