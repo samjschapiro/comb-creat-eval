@@ -586,8 +586,8 @@ def fig_headline(cells, R):
 
 # ---------------------------------------------------------------- Figure 3: significant cells only
 
-def _sig_triangle(ax, mat, pmat, labels, fs=14):
-    """Lower triangle coloured by r for every cell; the value is printed only where p < .05."""
+def _sig_triangle(ax, mat, pmat, labels, fs=14, cell_fs=22):
+    """Lower triangle coloured by r for every cell; the value is printed (bold, cell_fs) only where p < .05."""
     from matplotlib.patches import Rectangle
     n = len(labels)
     disp = np.ma.masked_array(np.nan_to_num(mat), mask=~np.tri(n, dtype=bool) | np.isnan(mat))
@@ -598,9 +598,9 @@ def _sig_triangle(ax, mat, pmat, labels, fs=14):
                                    linewidth=0.2, zorder=4))
             v = mat[i, j]
             if i == j:
-                ax.text(j, i, "—", ha="center", va="center", fontsize=fs, color="white", zorder=3)
+                ax.text(j, i, "—", ha="center", va="center", fontsize=cell_fs, fontweight="bold", color="white", zorder=3)
             elif not np.isnan(v) and pmat[i, j] < .05:  # value printed only when significant
-                ax.text(j, i, f"{v:+.2f}", ha="center", va="center", fontsize=fs,
+                ax.text(j, i, f"{v:+.2f}".replace("0.", "."), ha="center", va="center", fontsize=cell_fs, fontweight="bold",
                         color=("white" if abs(v) > 0.6 else "black"), zorder=3)
     ax.set_xticks(range(n)); ax.set_yticks(range(n))
     ax.set_xticklabels(labels, rotation=20, ha="right", fontsize=fs)
