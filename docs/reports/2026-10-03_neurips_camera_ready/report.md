@@ -37,6 +37,12 @@ Done locally (not yet pushed), details in [the recompute report](../2026-10-03_n
 - Appendix per-model tables regenerated: RAT column, fixed-gate CDAT (the submitted column was T = 1.5 only), Kombine, no Arena Overall.
 - **Item 4 (T = 0.7 runs) dropped by the author.** Note that 22 of the 54 pool models are no longer on OpenRouter.
 
+**2026-11-03 (pushed `7af57fe`):**
+- Captions fixed: Figure 3 (RAT), the correlations figure (MMLU-Pro only, output diversity, Kombine, RAT, n = 6–40), the headline figure, Table 1 (no green cells, the gate wording from item 19), and the appendix per-model tables.
+- Item 12 done: no "creativity test(s)" left; it is "semantic distance tests", or just "test" where the claim is general.
+- Item 15 done: the greedy algorithm and plot are a float at the top of page 4, with the text in §2; the appendix keeps the details.
+- The main text now runs about ⅓ page onto page 11 (Limitations and Conclusion). Something has to be cut.
+
 Still open from these: the §5 results prose and contribution 3 (several claims flipped), the captions, and a Kombine description in §3.
 
 ## Data & sampling
