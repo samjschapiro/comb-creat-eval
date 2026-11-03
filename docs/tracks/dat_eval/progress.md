@@ -478,3 +478,29 @@ The text now defines specificity with MMLU-Pro only. The §5 prose and captions 
   - appendix RAT and Kombine columns;
   - remaining rebuttal writing;
   - OpenReview upload.
+
+### 2026-11-03 — captions, rebuttal writing, greedy algorithm in the main text
+
+Camera-ready is about 75% done. Every push was approved and placed on top of the Overleaf head, which is now `04b395f`.
+- **Captions:** every stale caption is fixed (Figure 3, the correlations figure, the headline figure, Table 1, the appendix tables). Table 1's caption carries the CDAT gate wording (#19).
+- **Rebuttal items done:**
+  - #10–11: the definition of creativity and the scope at the top of §2.
+  - #12: "semantic distance tests" throughout.
+  - #15: the greedy algorithm and plot in §2, at the top of page 4.
+  - #17 and #20: checked; no change needed.
+- **Results:**
+  - Output diversity now stresses the DAT null: one divergent response is not sustained diversity.
+  - Kombine is condensed: PACE is the best predictor (r = +.70) with no specificity.
+- **Discussion:** a new paragraph on localizing test algorithms with mechanistic interpretability.
+- **Citations:** CreativityNeuro and Spark.
+- **Layout:**
+  - Each appendix section is on its own page, and Appendix B has text.
+  - Figure 5 cell values are bold at 22 pt.
+- Full account: [session log](../../logs/2026-11-03/1106_neurips_camera_ready_writing.md).
+- **Open:**
+  - The main text overflows to page 11 by about half a page.
+  - Rebuttal items #13–14, #21 and #9.
+  - Bib fixes.
+  - Greedy-plot n mismatch.
+  - "Creativity Test" in the overview figure.
+  - Checklist and OpenReview upload.

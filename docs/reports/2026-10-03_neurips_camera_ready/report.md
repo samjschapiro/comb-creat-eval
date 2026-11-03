@@ -43,6 +43,20 @@ Done locally (not yet pushed), details in [the recompute report](../2026-10-03_n
 - Item 15 done: the greedy algorithm and plot are a float at the top of page 4, with the text in §2; the appendix keeps the details.
 - The main text now runs about ⅓ page onto page 11 (Limitations and Conclusion). Something has to be cut.
 
+**2026-11-03 (later, pushed through `04b395f`):**
+- Items 10 and 11 are done: Definition 1 and the scope paragraph at the top of §2.
+- Items 17 and 20 were checked; no change was needed.
+- Output diversity and Kombine results revised.
+- New Discussion paragraph on mechanistic interpretability.
+- CreativityNeuro and Spark cited.
+- Each appendix section is on its own page.
+- Still open:
+  - items 9, 13–14 and 21;
+  - bib fixes (part D);
+  - a check of items 16, 18 and 19 in the main text;
+  - the page-11 overflow;
+  - the checklist and upload.
+
 Still open from these: the §5 results prose and contribution 3 (several claims flipped), the captions, and a Kombine description in §3.
 
 ## Data & sampling
