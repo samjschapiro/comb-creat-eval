@@ -57,6 +57,10 @@ Done locally (not yet pushed), details in [the recompute report](../2026-10-03_n
   - the page-11 overflow;
   - the checklist and upload.
 
+**2026-11-04 (pushed `d3fd41f`):**
+- Item 9 is done: the intro now discusses Only Connect Wall, CresOWLve, Labyrinth of Links and MM-OPERA. It says we use the text-only RAT because the last two need image inputs that many pool models lack.
+- The greedy algorithm and histogram are one figure, Figure 4 (a)/(b).
+
 Still open from these: the §5 results prose and contribution 3 (several claims flipped), the captions, and a Kombine description in §3.
 
 ## Data & sampling
