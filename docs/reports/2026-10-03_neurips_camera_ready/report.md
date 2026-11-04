@@ -61,6 +61,20 @@ Done locally (not yet pushed), details in [the recompute report](../2026-10-03_n
 - Item 9 is done: the intro now discusses Only Connect Wall, CresOWLve, Labyrinth of Links and MM-OPERA. It says we use the text-only RAT because the last two need image inputs that many pool models lack.
 - The greedy algorithm and histogram are one figure, Figure 4 (a)/(b).
 
+**2026-11-04 (later, Overleaf head `3582e7a`):**
+- The paper is reframed around **jagged creativity**: point creativity (one highly divergent response) vs. distributional creativity (distinct responses across samples). It is in the abstract, intro, Results and a half-width schematic in the Discussion.
+- Results is condensed to three findings.
+- The main text fits in 10 pages after line-saving trims.
+- **Items 13–14 closed by the author.** The intro's "meaningful room" sentence and every "far below the frontier" claim are removed. No use-case sentence will be added; the author called it a reviewer nitpick.
+- Item 9: the author removed Labyrinth of Links and MM-OPERA, so only Only Connect Wall and CresOWLve remain.
+- Still open:
+  - item 21 (construct-local evidence, base-model direction, Springer and Li cites);
+  - the bib fixes;
+  - the jagged-figure caption (placeholder);
+  - the greedy-plot n mismatch;
+  - "Creativity Test" in the overview figure;
+  - the checklist and upload.
+
 Still open from these: the §5 results prose and contribution 3 (several claims flipped), the captions, and a Kombine description in §3.
 
 ## Data & sampling
