@@ -403,7 +403,10 @@ def write_per_benchmark_table():
         if not first:
             lines.append(r"\midrule")
         first = False
-        lines.append(rf"\multicolumn{{{nc}}}{{@{{}}l}}{{\textit{{{lab}}}}} \\")
+        logo = PAPER / f"figures/neurips/logos/{lab.lower()}.pdf"  # provider mark, if we have one
+        mark = (rf"\raisebox{{-0.25ex}}{{\includegraphics[height=1.8ex]{{figures/neurips/logos/{lab.lower()}.pdf}}}}\ "
+                if logo.exists() else "")
+        lines.append(rf"\multicolumn{{{nc}}}{{@{{}}l}}{{{mark}\textit{{{lab}}}}} \\")
         for m in rows:
             cells = [fmt.format(bench[k][m]) if m in bench[k] else "---" for _, k, fmt in cols]
             name = m.split("_", 1)[1].replace("_", r"\_")
