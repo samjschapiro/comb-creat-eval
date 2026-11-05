@@ -484,19 +484,19 @@ def fig_headline(cells, R):
     def ceiling(Rs):
         return _panel_max_ceiling([r for r in Rs if r is not None], v_grid)
 
-    fig = plt.figure(figsize=(22.0, 13.0))  # 0.6 in taller than before, all of it in the (a)-(b) gap
+    fig = plt.figure(figsize=(22.0, 13.6))  # taller for the (a)-(b) gap and a two-row legend; panel sizes unchanged
     nc = len(CONSTRUCTS)
-    gs_top = GridSpec(1, nc, figure=fig, left=0.045, right=0.99, top=0.938, bottom=0.595, wspace=0.12)
-    gs_bot = GridSpec(1, len(BENCHMARKS), figure=fig, left=0.045, right=0.99, top=0.386,
-                      bottom=0.157, wspace=0.26)
+    gs_top = GridSpec(1, nc, figure=fig, left=0.045, right=0.99, top=0.9407, bottom=0.6129, wspace=0.12)
+    gs_bot = GridSpec(1, len(BENCHMARKS), figure=fig, left=0.045, right=0.99, top=0.4131,
+                      bottom=0.1942, wspace=0.26)
     ax_top = [fig.add_subplot(gs_top[0, 0])]
     ax_top += [fig.add_subplot(gs_top[0, i], sharex=ax_top[0], sharey=ax_top[0]) for i in range(1, nc)]
     axes_bot = [fig.add_subplot(gs_bot[0, 0])]
     axes_bot += [fig.add_subplot(gs_bot[0, i], sharex=axes_bot[0], sharey=axes_bot[0])
                  for i in range(1, len(BENCHMARKS))]
-    fig.text(0.5, 0.976, "(a) Prediction by construct", ha="center", va="bottom",
+    fig.text(0.5, 0.9771, "(a) Prediction by construct", ha="center", va="bottom",
              fontsize=28.0 * HFS, fontweight="bold")
-    fig.text(0.5, 0.434, "(b) Prediction by benchmark", ha="center", va="bottom",
+    fig.text(0.5, 0.459, "(b) Prediction by benchmark", ha="center", va="bottom",
              fontsize=28.0 * HFS, fontweight="bold")
 
     # shared limits for the top row
@@ -587,8 +587,11 @@ def fig_headline(cells, R):
                 Line2D([], [], marker="D", linestyle="none", markerfacecolor="black",
                        markeredgecolor="black", markersize=10,
                        label=r"$(v^*, s^*) = \arg\max\,(v + s)$")]
-    fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, 0.005), ncol=len(handles),
-               frameon=False, fontsize=22 * HFS, handletextpad=0.4, columnspacing=1.4)
+    ncol = (len(handles) + 1) // 2  # two rows; matplotlib fills columns first, so interleave to read across
+    rows = [handles[:ncol], handles[ncol:]]
+    handles = [h for pair in zip(*rows) for h in pair] + rows[0][len(rows[1]):]
+    fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, 0.005), ncol=ncol,
+               frameon=False, fontsize=22 * HFS, handletextpad=0.4, columnspacing=2.0)
     OUT_FIG.mkdir(parents=True, exist_ok=True)
     out = OUT_FIG / "fig_headline.pdf"
     plt.savefig(out); plt.savefig(out.with_suffix(".png")); plt.close()
