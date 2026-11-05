@@ -416,7 +416,7 @@ def write_per_benchmark_table():
 
 # ---------------------------------------------------------------- headline figure
 
-def _place_labels(ax, pts, obstacles, xr, yr, fs):
+def _place_labels(ax, pts, obstacles, xr, yr, fs, force=None):
     """Greedy label placement next to each construct-mean point: try 8 directions at a fixed
     offset in points, keep the one whose label box is farthest from every dot (means and cells)
     and from labels already placed. Distances are in axis-fraction units."""
@@ -425,16 +425,18 @@ def _place_labels(ax, pts, obstacles, xr, yr, fs):
              (1, -1, "left", "top"), (-1, -1, "right", "top")]
     fx = lambda x: (x - xr[0]) / (xr[1] - xr[0])
     fy = lambda y: (y - yr[0]) / (yr[1] - yr[0])
-    off = 13  # points
-    w_char, h = 0.0115 * fs / 15, 0.05 * fs / 15  # rough label size in axis fraction
+    off = 13 * fs / 15  # points, grows with the label font
+    w_char, h = 0.015 * fs / 15, 0.055 * fs / 15  # rough label size in axis fraction (bold, generous)
     dots = [(fx(x), fy(y)) for x, y in obstacles]
     placed = []
     for name, (x, y) in pts.items():
         px, py = fx(x), fy(y)
         w = w_char * len(name)
         best, best_score = None, -1e9
-        for dx, dy, ha, va in cands:
-            ox, oy = px + dx * 0.022, py + dy * 0.035
+        pool = [c for c in cands if (c[0], c[1]) == force[name]] if force and name in force else cands
+        for (dx0, dy0, ha, va), far in [(c, 1.0) for c in pool]:
+            dx, dy = dx0 * far, dy0 * far  # also try twice the offset when the near spots are crowded
+            ox, oy = px + dx * 0.022 * fs / 15, py + dy * 0.035 * fs / 15
             cx = ox + (w / 2 if ha == "left" else -w / 2 if ha == "right" else 0)
             cy = oy + (h / 2 if va == "bottom" else -h / 2 if va == "top" else 0)
             def gap(qx, qy):  # distance from a point to the label box
@@ -443,15 +445,23 @@ def _place_labels(ax, pts, obstacles, xr, yr, fs):
             d_lab = min([math.hypot(max(abs(cx - lx) - (w + lw) / 2, 0), max(abs(cy - ly) - h, 0))
                          for lx, ly, lw in placed] or [1])
             inside = 0.01 < cx - w / 2 and cx + w / 2 < 0.99 and 0.01 < cy - h / 2 and cy + h / 2 < 0.99
-            score = min(d_dots, d_lab) - (0 if inside else 1) - 0.002 * (abs(dx) + abs(dy))
+            d_own = gap(px, py)
+            others = [gap(qx, qy) for qx, qy in dots if (qx, qy) != (px, py)]
+            wrong = any(o < d_own for o in others)  # label would sit nearer another dot: misleading
+            score = (min(d_dots, d_lab) - (0 if inside else 1) - (0.5 if wrong else 0)
+                     - 0.002 * (abs(dx0) + abs(dy0)) - (0.02 if far > 1 else 0))
             if score > best_score:
                 best, best_score = (dx, dy, ha, va, cx, cy), score
         dx, dy, ha, va, cx, cy = best
         placed.append((cx, cy, w))
-        n = math.hypot(dx, dy)
+        n = math.hypot(dx, dy) / max(abs(dx), abs(dy), 1)  # keep the far factor in the offset
         ax.annotate(name, xy=(x, y), xytext=(dx / n * off, dy / n * off), textcoords="offset points",
                     ha=ha, va=va, fontsize=fs, fontweight="bold", color="black", zorder=6,
                     bbox=dict(facecolor="white", edgecolor="none", pad=1.0, alpha=0.85))
+
+
+# Figure 6 is drawn at 22 in and printed at ~5.5 in; HFS scales every font so text reads at ~7-9 pt
+HFS = 1.45
 
 
 def fig_headline(cells, R):
@@ -478,16 +488,16 @@ def fig_headline(cells, R):
     nc = len(CONSTRUCTS)
     gs_top = GridSpec(1, nc, figure=fig, left=0.045, right=0.99, top=0.935, bottom=0.575, wspace=0.12)
     gs_bot = GridSpec(1, len(BENCHMARKS), figure=fig, left=0.045, right=0.99, top=0.405,
-                      bottom=0.165, wspace=0.16)
+                      bottom=0.165, wspace=0.26)
     ax_top = [fig.add_subplot(gs_top[0, 0])]
     ax_top += [fig.add_subplot(gs_top[0, i], sharex=ax_top[0], sharey=ax_top[0]) for i in range(1, nc)]
     axes_bot = [fig.add_subplot(gs_bot[0, 0])]
     axes_bot += [fig.add_subplot(gs_bot[0, i], sharex=axes_bot[0], sharey=axes_bot[0])
                  for i in range(1, len(BENCHMARKS))]
     fig.text(0.5, 0.975, "(a) Prediction by construct", ha="center", va="bottom",
-             fontsize=28.0, fontweight="bold")
+             fontsize=28.0 * HFS, fontweight="bold")
     fig.text(0.5, 0.455, "(b) Prediction by benchmark", ha="center", va="bottom",
-             fontsize=28.0, fontweight="bold")
+             fontsize=28.0 * HFS, fontweight="bold")
 
     # shared limits for the top row
     allx, ally = [], []
@@ -513,9 +523,9 @@ def fig_headline(cells, R):
         j = int(np.argmax(v_grid + cy))
         ax.scatter(v_grid[j], cy[j], marker="D", s=70, facecolor="black", edgecolor="black",
                    linewidth=0.8, zorder=7)
-        ax.annotate(f"$(v^*, s^*)=({v_grid[j]:+.2f}, {cy[j]:+.2f})$", xy=(v_grid[j], cy[j]),
-                    xytext=(-12, -8), textcoords="offset points", fontsize=17.0, ha="right",
-                    va="top", zorder=8, bbox=dict(facecolor="white", edgecolor="none", pad=2.0, alpha=0.85))
+        ax.text(0.98, 0.03, f"$(v^*, s^*)=({v_grid[j]:+.2f}, {cy[j]:+.2f})$", transform=ax.transAxes,
+                fontsize=17.0 * HFS, ha="right", va="bottom", zorder=8,
+                bbox=dict(facecolor="white", edgecolor="none", pad=2.0, alpha=0.85))
         star_trans = mtransforms.offset_copy(ax.transData, fig=fig, x=8, y=8, units="points")
         means, obstacles = {}, []
         for t in TESTS:
@@ -536,11 +546,12 @@ def fig_headline(cells, R):
                        linewidth=1.4, zorder=4)
             means[t] = (mx, my); obstacles.append((mx, my))
         ax.set_xlim(*xr); ax.set_ylim(*yr)
-        _place_labels(ax, means, obstacles, xr, yr, 15.0)
-        ax.set_title(cname, fontsize=23.0)
-        ax.tick_params(axis="both", labelsize=17.0)
-        ax.set_xlabel(r"Validity  ($r$)", fontsize=21.0)
-    ax_top[0].set_ylabel(r"Specificity  ($r \mid g$)", fontsize=21.0)
+        _place_labels(ax, means, obstacles, xr, yr, 15.0 * 1.25,
+                      force={"CDAT": (1, -1)} if cname == "Creative Writing" else None)
+        ax.set_title(cname, fontsize=23.0 * HFS)
+        ax.tick_params(axis="both", labelsize=17.0 * HFS)
+        ax.set_xlabel(r"Validity  ($r$)", fontsize=21.0 * HFS)
+    ax_top[0].set_ylabel(r"Specificity  ($r \mid g$)", fontsize=21.0 * HFS)
     for ax in ax_top[1:]:
         plt.setp(ax.get_yticklabels(), visible=False)
 
@@ -561,11 +572,11 @@ def fig_headline(cells, R):
             if "v" in cc and "s" in cc:
                 ax.scatter(cc["v"]["r"], cc["s"]["r"], marker="o", s=85, c=[TEST_COLORS[t]],
                            edgecolor="black", linewidth=0.9, zorder=3, alpha=0.95)
-        ax.set_title(lab, fontsize=20.0)
-        ax.tick_params(axis="both", labelsize=16.0)
-        ax.set_xlabel(r"Validity  ($r$)", fontsize=20.0)
+        ax.set_title(lab, fontsize=20.0 * HFS)
+        ax.tick_params(axis="both", labelsize=16.0 * HFS)
+        ax.set_xlabel(r"Validity  ($r$)", fontsize=20.0 * HFS)
     axes_bot[0].set_xlim(-1.02, 1.02); axes_bot[0].set_ylim(-1.05, 1.05)
-    axes_bot[0].set_ylabel(r"Specificity  ($r \mid g$)", fontsize=21.0)
+    axes_bot[0].set_ylabel(r"Specificity  ($r \mid g$)", fontsize=21.0 * HFS)
     for ax in axes_bot[1:]:
         plt.setp(ax.get_yticklabels(), visible=False)
 
@@ -577,7 +588,7 @@ def fig_headline(cells, R):
                        markeredgecolor="black", markersize=10,
                        label=r"$(v^*, s^*) = \arg\max\,(v + s)$")]
     fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, 0.005), ncol=len(handles),
-               frameon=False, fontsize=22, handletextpad=0.4, columnspacing=1.4)
+               frameon=False, fontsize=22 * HFS, handletextpad=0.4, columnspacing=1.4)
     OUT_FIG.mkdir(parents=True, exist_ok=True)
     out = OUT_FIG / "fig_headline.pdf"
     plt.savefig(out); plt.savefig(out.with_suffix(".png")); plt.close()
