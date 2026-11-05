@@ -484,19 +484,19 @@ def fig_headline(cells, R):
     def ceiling(Rs):
         return _panel_max_ceiling([r for r in Rs if r is not None], v_grid)
 
-    fig = plt.figure(figsize=(22.0, 13.6))  # taller for the (a)-(b) gap and a two-row legend; panel sizes unchanged
+    fig = plt.figure(figsize=(22.0, 13.9))  # taller for the (a)-(b) gap and a two-row legend; panel sizes unchanged
     nc = len(CONSTRUCTS)
-    gs_top = GridSpec(1, nc, figure=fig, left=0.045, right=0.99, top=0.9407, bottom=0.6129, wspace=0.12)
-    gs_bot = GridSpec(1, len(BENCHMARKS), figure=fig, left=0.045, right=0.99, top=0.4131,
-                      bottom=0.1942, wspace=0.26)
+    gs_top = GridSpec(1, nc, figure=fig, left=0.045, right=0.99, top=0.9204, bottom=0.5997, wspace=0.12)
+    gs_bot = GridSpec(1, len(BENCHMARKS), figure=fig, left=0.045, right=0.99, top=0.4042,
+                      bottom=0.19, wspace=0.26)
     ax_top = [fig.add_subplot(gs_top[0, 0])]
     ax_top += [fig.add_subplot(gs_top[0, i], sharex=ax_top[0], sharey=ax_top[0]) for i in range(1, nc)]
     axes_bot = [fig.add_subplot(gs_bot[0, 0])]
     axes_bot += [fig.add_subplot(gs_bot[0, i], sharex=axes_bot[0], sharey=axes_bot[0])
                  for i in range(1, len(BENCHMARKS))]
-    fig.text(0.5, 0.9771, "(a) Prediction by construct", ha="center", va="bottom",
+    fig.text(0.5, 0.9776, "(a) Prediction by construct", ha="center", va="bottom",
              fontsize=28.0 * HFS, fontweight="bold")
-    fig.text(0.5, 0.459, "(b) Prediction by benchmark", ha="center", va="bottom",
+    fig.text(0.5, 0.4491, "(b) Prediction by benchmark", ha="center", va="bottom",
              fontsize=28.0 * HFS, fontweight="bold")
 
     # shared limits for the top row
