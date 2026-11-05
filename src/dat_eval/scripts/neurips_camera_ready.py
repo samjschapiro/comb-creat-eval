@@ -486,8 +486,8 @@ def fig_headline(cells, R):
 
     fig = plt.figure(figsize=(22.0, 12.4))
     nc = len(CONSTRUCTS)
-    gs_top = GridSpec(1, nc, figure=fig, left=0.045, right=0.99, top=0.935, bottom=0.575, wspace=0.12)
-    gs_bot = GridSpec(1, len(BENCHMARKS), figure=fig, left=0.045, right=0.99, top=0.405,
+    gs_top = GridSpec(1, nc, figure=fig, left=0.045, right=0.99, top=0.935, bottom=0.60, wspace=0.12)
+    gs_bot = GridSpec(1, len(BENCHMARKS), figure=fig, left=0.045, right=0.99, top=0.395,
                       bottom=0.165, wspace=0.26)
     ax_top = [fig.add_subplot(gs_top[0, 0])]
     ax_top += [fig.add_subplot(gs_top[0, i], sharex=ax_top[0], sharey=ax_top[0]) for i in range(1, nc)]
@@ -496,7 +496,7 @@ def fig_headline(cells, R):
                  for i in range(1, len(BENCHMARKS))]
     fig.text(0.5, 0.975, "(a) Prediction by construct", ha="center", va="bottom",
              fontsize=28.0 * HFS, fontweight="bold")
-    fig.text(0.5, 0.455, "(b) Prediction by benchmark", ha="center", va="bottom",
+    fig.text(0.5, 0.445, "(b) Prediction by benchmark", ha="center", va="bottom",
              fontsize=28.0 * HFS, fontweight="bold")
 
     # shared limits for the top row
