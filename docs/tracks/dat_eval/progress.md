@@ -504,3 +504,58 @@ Camera-ready is about 75% done. Every push was approved and placed on top of the
   - Greedy-plot n mismatch.
   - "Creativity Test" in the overview figure.
   - Checklist and OpenReview upload.
+
+### 2026-11-04 to 11-06 — jagged creativity, code release, project page, base vs instruct
+
+The camera-ready is finished apart from the OpenReview upload. The main text ends on page 10, and the Overleaf head is `ea451b8` plus the author's later edits.
+- **Reframe:** the paper's lead finding is now *jagged creativity*:
+  - No test predicts output diversity.
+  - Point creativity (one distant response) and distributional creativity (distinct responses across samples) may dissociate.
+  - The abstract, intro, results and conclusion are rewritten around it. Jagged intelligence is cited to Mineault et al. 2026.
+- **Figure 7 (jagged):**
+  - Triangles of three words from real DAT responses: (a) Mistral 7B, (b) GPT-5.4, (c) o3-mini, (d) hypothetical and dashed.
+  - The axes are mean DAT score (point creativity) and vocabulary size (distributional creativity).
+  - Arrows show "ideal scaling" (a→d) and "actual scaling" (a→b).
+  - It sits beside the output-diversity result on page 9.
+  - Script: `scratch/neurips_camera_ready/jagged_creativity/make_jagged_schematic_real.py`.
+- **Appendix G, Evidence for Jagged Creativity:**
+  - Table 5: repeated words across temperatures. GPT-5.4 puts "quasar" in 39/40 responses (40/40 at T = 2.0), and Sonnet 4.6 puts "justice" in 40/40 at every T. Command R+ uses 351 distinct words.
+  - Table 6: base vs instruct (below).
+  - Both tables are cited in the intro and results.
+- **Data fix:** the Opus and Sonnet 4.6 DAT and CDAT responses were truncated by a 256-token cap. Six models were re-run and rescored. Tables 1–2, Figures 5–6 and Appendix D were regenerated, with no significance flips.
+- **Other paper work:**
+  - All 55 bib entries were audited against arXiv and Crossref, leaving 0 BibTeX warnings.
+  - The author's draft comments (29) are addressed. Figure 6 has larger fonts and a two-row legend. Provider logos are in the per-model tables.
+  - The checklist is updated.
+  - The RAT prompt is in Appendix H.
+  - The "Note on Terminology" box is in §2.
+  - Several rounds of line trims kept the main text at 10 pages.
+- **Code release:** https://github.com/samjschapiro/do-semantic-distance-tests-actually-predict-creativity-neurips-26 reproduces `cells.json` and Tables 1–2 exactly. Local copy: `../semantic-distance-creativity`.
+- **Project page:** https://schapiro.ai/semantic-distance-tests/ (source `scratch/neurips_camera_ready/project_page/`, deployed to `samjschapiro.github.io/docs/semantic-distance-tests/`). It now has:
+  - a Jagged Creativity section with the figure, headline numbers, example responses and the base-vs-instruct table;
+  - the current abstract;
+  - the final PDF at `files/SD_NIPS.pdf`.
+
+**Base vs instruct (new experiment, 2026-11-05/06).** `src/dat_eval/scripts/run_base_dat.py` with config `configs/dat_eval/base_models_dat_20261105.yaml`, wrapper `scripts/dat_eval/run_base_dat.sh`.
+- **Setup:** the same DAT prompt given to local base models as a text completion (transcript frame ending in `Response: ["`). The run used HF transformers on MPS in bf16, 40 runs at each T ∈ {1, 1.5, 2}, top-p 1 and top-k 0, with GloVe scoring.
+- **Results at T = 1.0, five pairs:**
+
+| Pair | DAT base / instruct | Distinct words base / instruct |
+|---|---|---|
+| Llama 3.2 3B | 82.0 / 84.0 | 341 / 13 |
+| Llama 3.1 8B | 83.0 / 87.6 | 331 / 236 |
+| Qwen2.5 7B | 79.4 / 76.1 | 298 / 120 |
+| Mistral 7B v0.1 | 77.2 / 81.2 | 351 / 15 |
+| Gemma 2 9B | 65.5 / 77.9 | 159 / 99 |
+| Mean ± SEM | 77.4 ± 3.1 / 81.4 ± 2.1 | 296 ± 35 / 97 ± 41 |
+
+  Instruction tuning raises the DAT score in 4 of 5 pairs and shrinks the vocabulary in all 5. The instruct model's top word is in 33.4 ± 3.9 of 40 runs, against 5.8 ± 1.5 for the base model.
+- **Caveats:**
+  - Base models give almost no valid lists at T ≥ 1.5.
+  - The Gemma base models often fail the task (template copies, repeats).
+  - Gemma 2 2B is excluded because its instruct version gave no valid DAT responses.
+  - The comparison is between a completion frame and a chat prompt.
+- **Gotcha:** `run_base_dat.py` does not load `.env`. Without `HF_TOKEN` in the environment, the gated Llama and Gemma downloads fail as "gated repo" even though access is granted. Use the wrapper.
+- **Follow-up:** the mechanistic version is noted in `llm_creativity_mech_interp/docs/memos/2026-11-06_base_vs_instruct_dat.md`.
+
+**Open:** OpenReview abstract and final PDF upload (author).

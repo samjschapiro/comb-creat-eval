@@ -1,7 +1,7 @@
 # comb-creat-eval
 
 Evaluating automatic creativity metrics for large language models.
-Main tracks: `dat_eval` compares DAT, CDAT, PACE, and the RAT across 54 LLMs
+Main tracks: `dat_eval` compares DAT, CDAT, PACE, and the RAT across 55 LLMs
 and asks whether their correlations with external creativity
 benchmarks survive partialling out general capability; `new_tests`
 designs new tests on top of that infrastructure (headline:

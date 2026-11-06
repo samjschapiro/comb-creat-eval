@@ -25,6 +25,7 @@ src/
 │       ├── multi_embed_appendix.py  # per-embedding pipeline (GloVe + FastText + SBERT)
 │       ├── make_figures.py     # camera-ready figures (Times + RdBu_r / Okabe-Ito)
 │       ├── neurips_camera_ready.py  # NeurIPS Table 1 body + headline / correlation figures (MMLU-Pro-only specificity, RAT, Kombine)
+│       ├── run_base_dat.py     # DAT on local base models (HF transformers, MPS) as a text completion; base vs instruct
 │       └── kombine_as_benchmark.py  # tests vs Kombine task and criterion scores (exploratory)
 └── new_tests/                  # active track (DRAT + new benchmark wrappers)
     ├── drat.py                 # DRAT scoring (k-anchor utility gate, max/min/avg)
@@ -113,6 +114,7 @@ configs/
 │   └── fetch_arena_scores.yaml
 ├── dat_eval/
 │   ├── run_evals.yaml          # 53 models, temps, sampling, budget
+│   ├── base_models_dat_20261105.yaml  # 6 local base models paired with their instruct versions
 │   └── score_evals.yaml        # embedding paths, bootstrap iters
 ├── kg_creat/                   # Kombine run + scoring configs (pilot / Regime-A configs kept for history)
 │   ├── kombine_test30_run.yaml       # the canonical 30-item/task run (original 6 models)
@@ -172,7 +174,8 @@ data/
 ├── dat_eval/                    # DAT / CDAT / PACE runs
 │   ├── run_v1/                  # canonical pool; backfilled models merged in under canonical
 │   │                            # names (originals kept as *.bak_pre_capfix / *.bak_pre_or)
-│   └── backfill_{anthropic,gateway,openrouter}/  # 2026-09-09 coverage backfill, by API route
+│   ├── backfill_{anthropic,gateway,openrouter}/  # 2026-09-09 coverage backfill, by API route
+│   └── base_models_dat_20261105/  # base-model DAT responses per model + summary.json (run logs alongside)
 ├── new_tests/                   # DRAT pilots + ablations + RAT runs
 │   ├── rat/backfill_*/, drat/backfill_*/         # same backfill, RAT and DRAT
 │   ├── drat/{pilot_*, ablation_k*_{expert,conceptnet}{,_ext}}/raw_results.json
