@@ -722,3 +722,28 @@ The paper's τ-multiple test, unchanged, on kept human inventions (`analyze_huma
 ## 2026-10-06 — paper switched to the shared human + model scores
 
 Every model score in the paper now comes from `data/kg_creat/human_study/paper_scores` (`build_paper_scores.py`): one originality pool holding human and model answers, unanswered items counted as failed, and all 90 model items. The four worked-example items (E0, E26, F0, F26), which no human saw, come from the model-only scores — their pool is the models either way; phi-4's two unparsed blends there count as failed. (A first pass used `combined_scores_skip0`, which holds only the 86 items humans saw; the author asked to keep the worked examples.) Updated on Overleaf (pending push): Table 3 top rows and human rows (Humans now 36 / 36 / 35 / 35), the appendix tables with a Humans row, Figure 7 (`analyze_facet_correlations.py --shared-pool`), and Results numbers (task correlations 0.71 / 0.70 / 0.54; LLM utility 59.0 / 53.4 / 43.4; mean composite 36.7; facet correlations; humans above 31 models on analogy invention originality among valid answers). In the facet analysis an unanswered item counts only against utility, not as zero surprise or originality — counting it as zero had dropped r(assoc. originality, analogy originality) from 0.72 to 0.56. Figure 4 needs no change.
+
+## 2026-11-11 — talk deck on the formalism; ICLR rebuttal inventory
+
+**Talk.** A 16-frame Beamer deck of the paper's formal definitions, with a schema-vs-Table-1-example slide per task: `scratch/kombine_math_talk/` (gitignored; XeLaTeX, fonts vendored). While writing it, four formalism inconsistencies surfaced in `05_benchmark.tex`:
+1. association surprise divides by n−1 over n pairs;
+2. M is undefined off the paths, yet h = M[Φ] needs it on φ and s_j;
+3. Q(c') is undefined when one projection is empty;
+4. the paper's analogy example projects v→u, the inverse of M(a_i)=b_i.
+
+Log: `docs/logs/2026-11-11/1525_kombine_math_talk.md`.
+
+**Rebuttal inventory: what the repo already holds per reviewer request.**
+
+| Request | Status | Where |
+|---|---|---|
+| Exp 1 — causal abstraction bottleneck (supply a validated generic space or a hint) | **not run** | correlational evidence only: 43.4% find a valid g, 97.1% coherent blend given one |
+| Exp 2 — human–judge validity with multiple annotators | **partial**: one author, 60 items, 66% agreement (75% on unanimous-panel items); `human_review_blendv3` built but unrated | `kombine_test30/human_review*`, `leaderboard_unanimous.py`, `leaderboard_single_judge.py` |
+| 3a — leave-one-model/provider-out originality, fixed reference pool | **not run** (no API cost; recompute ρ) | — |
+| 3b — inventive-multiple θ sensitivity | **done**: sweep over 0.62/0.674/0.72, (τ,θ) density grid, cross-item null (0.03% FPR) | `calibrate_theta.py`, `plot_tau_theta_grid.py`, inventive-multiples report |
+| 3c — reasoning effort | **done**: 2 models × low/med/high; reasoning tokens rise 7–15×, composite flat (paired high−low −0.4 [−6, +6] / [−8, +7]) | `data/kg_creat/effort_study/`, log 2026-09-07 |
+| cGKy — embedding choice | **done** (appendix robustness across encoders) | `embedding_robustness.py` |
+| cGKy — equal weights / hard utility zero | **not run** (cheap: weight perturbation, ungated composite) | — |
+| cGKy — judge self-preference | **not run** (cheap: per-judge leave-out, own-family bias) | `leaderboard_single_judge.py` is a start |
+| eN17 Q1 — memorization / n-gram novelty | **not run** | — |
+| Reviewer A7nz | review text not yet in hand | — |
