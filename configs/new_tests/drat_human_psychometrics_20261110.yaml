@@ -1,0 +1,10 @@
+# Q1: psychometric properties of the human DRAT next to the DAT, RAT and SCTT (main run, 2026-11-10 export).
+upstream_dir: data/DRAT_data_for_Sam_20261110
+output_dir: data/new_tests/drat_human/psychometrics_20261110
+sample: main
+apply_exclude: true   # drop the study team's 4 exclusions
+min_sets_scored: 3   # person-level DRAT score only counted when >= this many sets were scorable
+glove_path: resources/glove.840B.300d.txt   # for the DAT odd/even split-half
+n_boot: 1000
+seed: 0
+sctt_scores_dir: null   # LLM-judged SCTT covers only the 87 of the 2026-10-27 export; not yet re-judged for 240

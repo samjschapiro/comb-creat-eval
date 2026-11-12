@@ -1,0 +1,5 @@
+# Q2: DRAT performance by anchor category (relation type x k), main run, 2026-11-10 export.
+upstream_dir: data/DRAT_data_for_Sam_20261110
+output_dir: data/new_tests/drat_human/categories_20261110
+sample: main
+apply_exclude: true   # drop the study team's 4 exclusions

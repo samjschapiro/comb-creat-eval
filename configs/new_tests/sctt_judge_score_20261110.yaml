@@ -1,0 +1,3 @@
+# Downstream of sctt_judge_20261110.yaml: merge the three subtest judges' ratings with the hidden key.
+upstream_dir: data/new_tests/drat_human/sctt_judge_20261110
+output_dir: data/new_tests/drat_human/sctt_judge_20261110/downstream/scores

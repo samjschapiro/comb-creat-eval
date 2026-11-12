@@ -1,0 +1,46 @@
+# DRAT correlates vs the weight between DRAT-N (ungated distance) and DRAT-A (share of relevant words).
+# Downstream of the human-battery scoring (both populations' sets) and the SCTT-diversity unit tables.
+drat_sets: data/new_tests/human_battery_llm/full_20261110/downstream/scores/drat_sets_scored.csv
+human_units: data/new_tests/human_battery_llm/sctt_diversity_20261111/human_units.csv
+llm_units: data/new_tests/human_battery_llm/sctt_diversity_20261111/llm_units.csv
+benchmarks: configs/comb_eval/benchmarks.json
+weight_step: 0.05
+n_bootstrap: 1000
+seed: 0
+# Colours follow the construct across panels (dataviz reference categorical slots, fixed order).
+panels:
+  - title: "(a) Humans: battery"
+    population: human
+    criteria:
+      dat: {label: "DAT", color: "#2a78d6"}
+      rat: {label: "RAT", color: "#eb6834"}
+      sctt_creativity: {label: "SCTT creativity", color: "#1baf7a"}
+      ability: {label: "Raven's", color: "#eda100"}
+      bfi_openness: {label: "Openness (BFI)", color: "#e87ba4"}
+  - title: "(b) LLMs: battery"
+    population: llm
+    criteria:
+      dat: {label: "DAT", color: "#2a78d6"}
+      rat: {label: "RAT", color: "#eb6834"}
+      sctt_creativity: {label: "SCTT creativity", color: "#1baf7a"}
+      ability: {label: "MMLU-Pro", color: "#eda100"}
+  # (c)-(e): the NeurIPS paper's benchmarks, grouped by its four constructs (same keys as neurips_camera_ready.py).
+  - title: "(c) LLMs: creative writing"
+    population: llm
+    criteria:
+      arena_cw: {label: "Arena CW", color: "#2a78d6", source: benchmarks, key: arena_cw}
+      eq_bench_cw: {label: "EQ-Bench CW", color: "#eb6834", source: benchmarks, key: eq_bench_cw}
+      mazur_cw_v2: {label: "Mazur CW", color: "#1baf7a", source: benchmarks, key: mazur_cw_v2}
+  - title: "(d) LLMs: output diversity"
+    population: llm
+    criteria:
+      hivemind_diversity: {label: "Hivemind diversity", color: "#2a78d6", source: benchmarks, key: hivemind_diversity}
+      noveltybench_utility: {label: "NoveltyBench utility", color: "#eb6834", source: benchmarks, key: noveltybench_utility}
+  - title: "(e) LLMs: combinatorial creativity\nand scientific ideation"
+    population: llm
+    criteria:
+      kombine: {label: "Kombine", color: "#2a78d6", source: kombine, key: overall}
+      liveideabench: {label: "LiveIdeaBench", color: "#eb6834", source: benchmarks, key: liveideabench}
+ncols: 3
+kombine_composite: data/kg_creat/kombine_test30/scores/composite.json
+output_dir: data/new_tests/human_battery_llm/drat_weight_curves_20261112

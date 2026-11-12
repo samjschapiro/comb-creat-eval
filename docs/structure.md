@@ -34,6 +34,17 @@ src/
     ├── rat.py                  # zero-shot RAT scoring (30 classic items)
     ├── hivemind.py             # Hivemind divergence wrapper
     ├── noveltybench.py         # NoveltyBench utility wrapper
+    ├── drat_human.py           # DRAT human study: package loaders, mixed models, reliability, plotting style
+    ├── human_battery.py        # the human battery (DRAT, RAT, SCTT) rendered as LLM prompts (app wording verbatim)
+    ├── sctt_diversity.py       # SCTT response diversity: within-set / across-call / population (SBERT; no length adjustment)
+    └── scripts/  (human study and human-vs-LLM battery)
+│       ├── analyze_drat_human{,_categories,_gate,_psychometrics}.py, analyze_sctt_subtests.py  # human analyses
+│       ├── prep/score_sctt_judging{,_llm}.py   # LLM-judge SCTT creativity scoring (humans, LLMs)
+│       ├── run_human_battery_llm.py, score_human_battery_llm.py  # run + score the battery on 40 LLMs
+│       ├── compare_human_llm_battery.py       # correlation matrices humans vs LLMs (labels DRAT-N / DRAT-A)
+│       ├── analyze_sctt_diversity.py          # SCTT diversity analysis (downstream of the two populations' responses)
+│       ├── plot_point_vs_distributional.py    # DAT vs within-set variety, humans vs LLMs (downstream)
+│       ├── plot_drat_weight_curves.py         # DRAT correlates vs the DRAT-N/DRAT-A weight (downstream)
 │       ├── run_drat_smoke.py        # DRAT smoke runner used for pilots/ablations
 │       ├── run_eqbench_cw.py        # EQ-Bench CW wrapper
 │       ├── run_hivemind.py          # Hivemind wrapper runner
@@ -130,7 +141,10 @@ configs/
 │   ├── drat_ablation_k{2,3,4}_{expert,conceptnet}{,_ext}.yaml
 │   │                                 # full (k, vocab) grid; _ext = phase-5 extension pool
 │   ├── eqbench_cw.yaml, hivemind.yaml, liveideabench.yaml, noveltybench.yaml
-│   └── rat_pilot.yaml, rat_expansion.yaml, rat_expansion_rerun.yaml
+│   ├── rat_pilot.yaml, rat_expansion.yaml, rat_expansion_rerun.yaml
+│   ├── drat_human_*_<date>.yaml, sctt_judge*_<date>.yaml, sctt_subtests_<date>.yaml  # human study (10-27 / 11-10 packages)
+│   ├── human_battery_llm_{smoke,full,score}.yaml, human_llm_battery_compare_<date>.yaml  # LLM battery + comparison
+│   └── sctt_diversity_<date>.yaml, point_vs_distributional_<date>.yaml, drat_weight_curves_<date>.yaml
 └── plot_twist/                 # TwistBench configs
     ├── generate_llm_twists.yaml     # generator + excluded-judge model lists
     ├── rubric{,_gold,_llm_twists}.yaml  # rubric judge configs
@@ -147,6 +161,7 @@ scripts/
 ├── dat_eval/                   # bash wrappers for dat_eval pipeline
 ├── new_tests/                  # bash wrappers for new_tests runners
 │   ├── run_eqbench_cw.sh, run_hivemind.sh, run_liveideabench.sh, run_noveltybench.sh
+│   ├── run_sctt_diversity.sh, run_point_vs_distributional.sh, run_drat_weight_curves.sh  # human-vs-LLM analyses (.venv/bin/python)
 ├── kg_creat/                   # deploy_study.sh: publishes the jsPsych human-generation study (source in llm_creativity_mech_interp) to schapiro.ai/kombine
 └── safety/
     ├── status.sh               # see what's running, file activity, API conns
@@ -179,7 +194,11 @@ data/
 ├── new_tests/                   # DRAT pilots + ablations + RAT runs
 │   ├── rat/backfill_*/, drat/backfill_*/         # same backfill, RAT and DRAT
 │   ├── drat/{pilot_*, ablation_k*_{expert,conceptnet}{,_ext}}/raw_results.json
-│   └── rat/{pilot_v1, expansion_v1}/summary.json
+│   ├── rat/{pilot_v1, expansion_v1}/summary.json
+│   ├── drat_human/<analysis>_<date>/   # human-study analyses of the DRAT package (main, categories, gate, psychometrics, sctt_*)
+│   └── human_battery_llm/              # full_20261110 (40-LLM battery run + scores), compare_20261110,
+│                                       # sctt_diversity_20261111 (+ downstream/point_vs_distributional), drat_weight_curves_20261112
+├── DRAT_data_for_Sam_<date>/    # human DRAT study packages from Stony Brook (10-27, 11-10); README + VARIABLES.md
 └── plot_twist/                   # TwistBench outputs
     ├── human_twists/, llm_twists/   # gold + generated stories (per-model subfolders)
     ├── annotations/, rubric_gold/   # setup/reveal annotations; rubric scores

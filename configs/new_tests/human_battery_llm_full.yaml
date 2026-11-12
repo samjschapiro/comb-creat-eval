@@ -1,0 +1,75 @@
+# The human DRAT study's battery (DRAT, RAT, SCTT) on the 44 dat_eval-pool models still on OpenRouter
+# (2026-11-10). Items and wording are the human study's (src/new_tests/human_battery.py). DAT reused from dat_eval.
+upstream_dir: data/DRAT_data_for_Sam_20261110
+output_dir: data/new_tests/human_battery_llm/full_20261110
+budget_usd: 50.0          # hard stop on billed spend for this run (key had $85.78 left on 2026-11-10)
+concurrency: 8
+model_concurrency: 6   # models run at once (added after the first 8 models ran one at a time; results unaffected)
+max_retries: 4
+seed: 42
+tests:
+  drat: {samples: 1, temperature: 1.0, max_tokens: 400, max_tokens_reasoning: 4000}   # as in the dat_eval/new_tests DRAT runs
+  rat: {samples: 1, temperature: 0.0, max_tokens: 32, max_tokens_reasoning: 4000}     # as in the RAT runs; reasoning cap raised after gpt-5-nano used 1,610 in the smoke test
+  sctt: {samples: 3, temperature: 1.0, max_tokens: 800, max_tokens_reasoning: 4000}
+# Reasoning is requested (low effort, trace excluded) only for models that cannot turn it off, as in the
+# earlier DRAT backfill; every other model runs without a reasoning block.
+reasoning: {effort: low, exclude: true}
+reasoning_models:
+- openai/gpt-5
+- openai/gpt-5.2
+- openai/gpt-5.4
+- openai/gpt-5-mini
+- openai/gpt-5-nano
+- openai/gpt-5.4-mini
+- openai/gpt-5.4-nano
+- openai/o3
+- google/gemini-2.5-pro
+- google/gemini-3.1-pro-preview
+- google/gemini-3-flash-preview
+- qwen/qwen3-14b
+- qwen/qwen3-32b
+models:   # cheapest first, so a budget stop costs the fewest expensive models
+- mistralai/mistral-nemo
+- meta-llama/llama-3.1-8b-instruct
+- mistralai/mistral-small-24b-instruct-2501
+- microsoft/phi-4
+- cohere/command-r7b-12-2024
+- meta-llama/llama-3.2-1b-instruct
+- qwen/qwen3-14b
+- qwen/qwen3-32b
+- meta-llama/llama-4-scout
+- meta-llama/llama-3.2-3b-instruct
+- openai/gpt-5-nano
+- openai/gpt-4.1-nano
+- qwen/qwen-2.5-72b-instruct
+- google/gemma-3-27b-it
+- cohere/command-r-08-2024
+- openai/gpt-4o-mini
+- google/gemma-2-27b-it
+- meta-llama/llama-3.3-70b-instruct
+- meta-llama/llama-3.1-70b-instruct
+- deepseek/deepseek-chat
+- meta-llama/llama-4-maverick
+- deepseek/deepseek-chat-v3-0324
+- openai/gpt-5.4-nano
+- openai/gpt-4.1-mini
+- openai/gpt-5-mini
+- google/gemini-2.5-flash
+- google/gemini-3-flash-preview
+- openai/gpt-5.4-mini
+- anthropic/claude-haiku-4.5
+- mistralai/mistral-large-2407
+- openai/o3
+- openai/gpt-4.1
+- openai/gpt-5
+- cohere/command-a
+- cohere/command-r-plus-08-2024
+- openai/gpt-4o
+- google/gemini-2.5-pro
+- google/gemini-3.1-pro-preview
+- openai/gpt-5.2
+- openai/gpt-5.4
+- anthropic/claude-sonnet-4.5
+- anthropic/claude-sonnet-4.6
+- anthropic/claude-opus-4.5
+- anthropic/claude-opus-4.6

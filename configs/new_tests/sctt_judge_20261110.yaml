@@ -1,0 +1,11 @@
+# LLM-as-judge scoring of the human SCTT responses (main run, 2026-11-10 export, 240 analysed), following
+# Beaty et al. (SCTT preprint, PsyArXiv y5fbs): holistic 1 (not at all creative) - 5 (very creative),
+# raters consider both originality and plausibility (adapted Silvia et al., 2008 guidelines).
+# Re-judges all 240 (not only the 157 new people) so every response is rated against the same pool.
+upstream_dir: data/DRAT_data_for_Sam_20261110
+reference_dir: data/new_tests/drat_human/sctt_reference   # preprint text + OSF rated example responses
+output_dir: data/new_tests/drat_human/sctt_judge_20261110
+sample: main
+apply_exclude: true   # drop the study team's 4 exclusions
+repeat_fraction: 0.06   # hidden duplicate responses (new ids) to measure judge test-retest consistency
+seed: 0

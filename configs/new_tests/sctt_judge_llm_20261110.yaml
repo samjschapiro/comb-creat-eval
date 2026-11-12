@@ -1,0 +1,9 @@
+# LLM-as-judge scoring of the LLMs' SCTT answers (human-battery run, 2026-11-10), same rubric as the human judging,
+# with already-rated human answers mixed in (hidden) to check that the judges' scale matches their human ratings.
+llm_run_dir: data/new_tests/human_battery_llm/full_20261110
+human_scores_dir: data/new_tests/drat_human/sctt_judge_20261110/downstream/scores
+reference_dir: data/new_tests/drat_human/sctt_reference
+output_dir: data/new_tests/human_battery_llm/full_20261110/downstream/sctt_judge
+human_per_item: 40       # hidden human calibration answers per item (rated in the human run)
+repeat_fraction: 0.06    # hidden duplicates (new ids) to measure judge consistency
+seed: 0

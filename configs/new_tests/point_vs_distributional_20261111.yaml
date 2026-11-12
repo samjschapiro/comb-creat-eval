@@ -1,0 +1,6 @@
+# Point (DAT) vs distributional (SCTT within-set variety) creativity, humans vs LLMs. Downstream of sctt_diversity_20261111.
+upstream_dir: data/new_tests/human_battery_llm/sctt_diversity_20261111
+point: {column: dat, label: "Point creativity (DAT score)"}
+distributional: {column: within_sbert_dist, label: "Distributional creativity\n(SCTT within-set variety, SBERT distance)"}   # mean distance among the 3 responses an individual gives to one scenario; LLMs: within one call, averaged over calls
+label_units: [meta-llama/llama-3.2-1b-instruct]   # least capable model, outlier on SBERT diversity
+output_dir: data/new_tests/human_battery_llm/sctt_diversity_20261111/downstream/point_vs_distributional

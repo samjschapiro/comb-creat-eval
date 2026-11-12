@@ -5,7 +5,8 @@ Main tracks: `dat_eval` compares DAT, CDAT, PACE, and the RAT across 55 LLMs
 and asks whether their correlations with external creativity
 benchmarks survive partialling out general capability; `new_tests`
 designs new tests on top of that infrastructure (headline:
-DRAT — a hybrid of RAT and DAT); `plot_twist` benchmarks
+DRAT — a hybrid of RAT and DAT — given to 240 people and 40 LLMs);
+`plot_twist` benchmarks
 *transformational* creativity via literary plot twists (TwistBench), scoring
 twists on surprise, coherence, diversity, and realism, with the first
 human-vs-LLM comparison; `kg_creat` (**Kombine**) administers a combinatorial-creativity

@@ -1,0 +1,10 @@
+# Human DRAT study: main-run export of 2026-11-10 (240 analysed after the study team's exclusions).
+upstream_dir: data/DRAT_data_for_Sam_20261110
+output_dir: data/new_tests/drat_human/main_20261110
+sample: main
+apply_exclude: true   # drop the study team's 4 exclusions (H027, H060, H100, H153)
+# Sensitivity set: the 43 analysed participants whose quality_flags signal low effort, outside help or a
+# failed attention check (attention_*_failed, drat_low_fluency, drat_few_scorable_sets, rat_near_zero,
+# rat_mostly_blank, sctt_very_short, low_effort_observed, *_outside_help).
+sensitivity_exclude: [H019, H031, H033, H040, H052, H055, H062, H073, H080, H081, H082, H087, H108, H112, H117, H119, H125, H127, H134, H136, H138, H152, H155, H159, H162, H169, H170, H174, H177, H179, H183, H186, H191, H194, H196, H212, H224, H227, H235, H237, H238, H244, H252]
+min_sets_scored: 3   # person-level composite only counted when >= this many sets were scorable

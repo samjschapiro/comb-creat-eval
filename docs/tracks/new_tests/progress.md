@@ -17,6 +17,84 @@ already cares about (creative writing, divergent thinking, scientific
 ideation), measured directly. There is no separate "transfer"
 question.
 
+## Status — 2026-11-12 (DRAT-N / DRAT-A, human vs LLM correlation structure)
+
+Log: `docs/logs/2026-11-12/1544_drat_human_vs_llm.md`. All current figures are collected in
+`docs/reports/2026-11-12_drat_human_vs_llm/figures/` (01–12, with a README mapping each to its run). The
+findings memo is **not written yet**.
+
+- **Naming.** DRAT-N = ungated distance (`glove_dist_all`). DRAT-A = relevance. The comparison figure (09) uses
+  these labels.
+- **Use the share of relevant words for DRAT-A, not the count.**
+  - The count (`glove_n_surv`) correlates .77 with words typed in humans (7.2 words vs the LLMs' 9.95).
+  - As a share, the A–N trade-off is −.59 in humans vs −.63 in LLMs. The −.15 human figure in
+    `compare_20261110` is a count artifact.
+  - The pipeline still uses the count, so the switch is owed in psychometrics, compare and score.
+- **What differs between populations is the relation with ability:**
+  - DRAT-A share vs ability: +.01 humans vs +.53 LLMs;
+  - DRAT-N vs ability: +.18 vs −.51.
+  - In LLMs, DRAT-N is explained (R² = .88) by the share of relevant words and gated distance. Weak models drift
+    off-topic (Llama-3.2-1B: 34% relevant). The sign follows the instruction ("relate to all anchors"), so
+    DAT–ability is +.56 while DRAT-N–ability is −.51.
+- **Correlation matrices** (exploratory permutation test, scratch only):
+  - patterns differ (p = .004 for the 6 tests);
+  - higher overall intercorrelation in LLMs only with ability included (mean |r| +.17, p = .01; first component
+    54% vs 38%);
+  - DAT, RAT and SCTT converge in LLMs while the DRAT decouples;
+  - the DRAT's internal structure matches across populations, making it the measurement-invariance anchor.
+- **Weight curves** (`plot_drat_weight_curves.py`, config `drat_weight_curves_20261112.yaml`, output
+  `data/new_tests/human_battery_llm/drat_weight_curves_20261112/`). Composite w·z(N) + (1−w)·z(A).
+  - Humans: best w ≈ 0.65 for SCTT creativity (.37), and every criterion is positive above 0.5.
+  - LLMs: the sign flips around 0.5. Creative-writing benchmarks prefer A; output diversity prefers N
+    (Hivemind diversity +.73 at 0.7, n = 16). Kombine +.22 (n = 15). Mazur and LiveIdeaBench (n = 10) are
+    uninformative.
+  - Best weights are picked on the same data, so treat the peaks as optimistic.
+- **ARC-AGI-1** covers 19 of 40 battery models (OpenAI, Anthropic and Meta only). ρ = .93 with MMLU-Pro on 11
+  shared models. Robustness check only; not added to `benchmarks.json`.
+- **Anchor similarity (humans, fig 05)** explains about half of item difficulty (survivors .72, rated difficulty
+  −.77). Causal and constitutive anchors are easier than their cosine predicts.
+- **Battery expansion** (assessed, not run): 15 models are runnable on OpenRouter today. They would take Kombine
+  from 15 to 27 and LiveIdeaBench from 10 to 13, at about $25–40. Gemini returns 403 via OpenRouter. o3-mini,
+  o4-mini and GPT-4-turbo are batch-only. Most Mazur and LiveIdeaBench models are deprecated.
+
+**Next:**
+1. Write the memo.
+2. Switch DRAT-A to the share and rerun the downstream steps.
+3. With the author's go-ahead: drop the classifier and split diversity scoring from analysis.
+4. Add the matrix test and a cross-validated composite scan to the pipeline.
+5. Relabel figures 07 and 08.
+6. Later: AUT on the LLMs; an idea-level SCTT diversity scorer.
+
+## Status — 2026-11-11 (SCTT response diversity, humans vs LLMs)
+
+New analysis `analyze_sctt_diversity.py` (config `configs/new_tests/sctt_diversity_20261111.yaml`, wrapper
+`scripts/new_tests/run_sctt_diversity.sh`, output `data/new_tests/human_battery_llm/sctt_diversity_20261111/`).
+It scores the nine common SCTT scenarios (3 responses each) for 240 people (10 Nov package, exclusions
+applied) and the 40 battery LLMs (3 calls per scenario). Scorers are SBERT all-mpnet-base-v2 cosine distance
+and the NoveltyBench DeBERTa distinct classifier. Scores are raw, with **no length adjustment** (author's rule).
+
+- LLM call handling matches `prep_sctt_judging_llm.py`: first 3 items kept. Of 1,080 calls, 37 were dropped
+  (22 had fewer than 3 items, 9 unparsed, 6 were 429 errors) and 10 were truncated. Logged in `llm_call_log.csv`.
+- **The classifier hits its ceiling within a set** (humans .996, LLMs 1.000), so it is uninformative there.
+  It is only useful across LLM calls (.946; reliability .88).
+- **Within-set SBERT distance is reliable but picks up phrasing.** Spearman-Brown is .81 for humans and .69 for
+  LLMs. In people it correlates *negatively* with SCTT creativity (−.36), RAT (−.28) and Raven's (−.16).
+  - The least-diverse human sets repeat a sentence stem ("The water in one lake is warmer than...") while
+    giving three distinct ideas.
+  - The most-diverse sets are terse fragments.
+  - Treat it as a phrasing measure, not idea diversity, until an idea-level scorer exists.
+- **Across-call diversity in LLMs partly tracks the paper's output-diversity benchmarks.** Corrected 2026-11-12:
+  the main metrics cover 17–20 battery models, so the earlier n = 10/16 figures were secondary metrics.
+  - Hivemind intra-sim (n = 17): across-call −.53 (p = .03, BH .07); population spread −.69 (BH .01).
+  - NoveltyBench utility (n = 20): not significant (within .14, across .35, population .11).
+  - Secondary metrics, smaller n: NoveltyBench distinct .85 (n = 10), Hivemind diversity .72 (n = 16).
+  - Classifier vs MMLU-Pro: ρ = −.66 (n = 26), but SBERT across-call shows no such link (−.27, n.s.). It is
+    classifier-specific. The author questioned the need for the classifier; dropping it is proposed.
+- **LLMs vary less across calls than within one call:** SBERT .348 vs .378, lower in 90% of models. But the two
+  correlate at .88, so on this scorer they are not "jagged".
+- **Population spread:** humans .582 [.568, .595] vs LLMs .394 [.375, .416]. Every scenario shows the gap, and
+  the median model is less distinctive than every person (median percentile in the human distribution: 0).
+
 ## Status — 2026-05-09 (paper polish + LIB pool refresh)
 
 DRAT scoring pool grew to **n = 20** on LiveIdeaBench after adding the

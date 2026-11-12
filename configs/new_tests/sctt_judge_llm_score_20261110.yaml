@@ -1,0 +1,3 @@
+# Downstream of sctt_judge_llm_20261110.yaml: merge the judges' ratings of the LLMs' SCTT answers with the hidden key.
+upstream_dir: data/new_tests/human_battery_llm/full_20261110/downstream/sctt_judge
+output_dir: data/new_tests/human_battery_llm/full_20261110/downstream/sctt_judge/downstream/scores

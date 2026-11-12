@@ -1,0 +1,11 @@
+# Score the LLMs' human-battery answers (DRAT, RAT; DAT from dat_eval) with the human study's own scorer.
+upstream_dir: data/DRAT_data_for_Sam_20261110            # package: scoring/, stimuli/ noun pool, human sets (reproduction check)
+llm_run_dir: data/new_tests/human_battery_llm/full_20261110
+dat_dir: data/dat_eval/run_v1                            # existing LLM DAT runs (40 trials per model)
+dat_file: dat_responses_t1-0.json                        # temperature 1.0
+output_dir: data/new_tests/human_battery_llm/full_20261110/downstream/scores
+glove_path: resources/glove.840B.300d.txt
+fasttext_path: resources/crawl-300d-2M.vec
+nltk_data: data/nltk_data
+q: 0.90       # the package's threshold quantile
+n_min: 3      # survivors needed for a set to be scorable

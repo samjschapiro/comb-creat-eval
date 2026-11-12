@@ -1,0 +1,9 @@
+# Relevance-gate comparison (max vs mean vs min over anchors) for the human DRAT, GloVe, main run 2026-11-10 export.
+upstream_dir: data/DRAT_data_for_Sam_20261110
+output_dir: data/new_tests/drat_human/gate_20261110
+sample: main
+apply_exclude: true   # drop the study team's 4 exclusions
+glove_path: resources/glove.840B.300d.txt
+q: 0.90               # threshold quantile over the noun pool (the package's primary rule)
+n_min: 3              # survivors needed for a set to be scorable
+min_sets_scored: 3    # scorable sets needed for a person-level score

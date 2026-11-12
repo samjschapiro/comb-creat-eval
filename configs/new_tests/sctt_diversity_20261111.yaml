@@ -1,0 +1,13 @@
+# SCTT response diversity, humans vs LLMs: within-set, across-call (LLMs) and population level. Raw scores, no length adjustment.
+upstream_dir: data/DRAT_data_for_Sam_20261110        # human package (main sample, study-team exclusions applied)
+human_measures: data/new_tests/drat_human/psychometrics_sctt_20261110/person_measures.csv
+llm_responses_dir: data/new_tests/human_battery_llm/full_20261110/responses
+llm_model_table: data/new_tests/human_battery_llm/compare_20261110/llm_model_table.csv
+benchmarks: configs/comb_eval/benchmarks.json      # NoveltyBench utility + Hivemind intra-sim (the paper's output-diversity metrics), plus NoveltyBench distinct / Hivemind diversity
+items: [sctt_rq_2, sctt_rq_3, sctt_rq_4, sctt_hyp_2, sctt_hyp_3, sctt_hyp_4, sctt_exp_2, sctt_exp_3, sctt_exp_4]   # the nine common scenarios
+embedding_model: sentence-transformers/all-mpnet-base-v2   # SBERT model of the DRAT scoring
+classifier_threshold: 0.5                           # NoveltyBench DeBERTa distinctness, canonical argmax
+device: mps
+n_bootstrap: 500
+seed: 0
+output_dir: data/new_tests/human_battery_llm/sctt_diversity_20261111

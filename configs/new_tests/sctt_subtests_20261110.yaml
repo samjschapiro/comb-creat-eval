@@ -1,0 +1,4 @@
+# SCTT creativity by subtest vs the DRAT and other measures (main run, 2026-11-10 export, 240 analysed).
+sctt_scores_dir: data/new_tests/drat_human/sctt_judge_20261110/downstream/scores
+psychometrics_dir: data/new_tests/drat_human/psychometrics_sctt_20261110
+output_dir: data/new_tests/drat_human/sctt_subtests_20261110
