@@ -1,0 +1,20 @@
+# Abstraction-bottleneck CAUSAL test: score all 3 conditions x 6 models in ONE pass with the paper's judge
+# panel (kombine_test30_panel_score.yaml / human_study_score.yaml). upstream_dir holds symlinks named
+# <condition>__<model> (built by run_abstraction_causal.sh). Originality is pool-relative over these answers
+# PLUS every paper answer to the same item (pool_extra_dirs), so O(c') is on the paper's scale.
+# Blends are judge-only (no factuality calls): ~3 panel calls per blend, ~$0.054/blend -> ~$29 for 540.
+upstream_dir: data/kg_creat/abstraction_causal/score_input
+output_dir: data/kg_creat/abstraction_causal/scores
+pool_extra_dirs:
+  - data/kg_creat/kombine_test30/responses
+judge:
+  enabled: true
+  models:
+    - anthropic/claude-haiku-4.5
+    - openai/gpt-5.4
+    - openai/o3
+  factuality_model: anthropic/claude-haiku-4.5
+  panel_open_ended: true
+  concurrency: 16
+embedding:
+  model: mlx-community/all-MiniLM-L6-v2-4bit

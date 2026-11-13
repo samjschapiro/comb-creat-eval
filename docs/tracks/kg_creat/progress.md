@@ -772,3 +772,17 @@ The user texted it to co-authors on 11-13; files come back as `kombine_ratings_<
 | — | Memorisation / novelty vs pretraining (eN17 Q1) | **Not run.** Options: n-gram novelty (check the "death of the n-gram" paper first), plus the rhetorical point that novelty is relative to a class of artifacts (Swanson's undiscovered public knowledge). |
 | — | Reviewer A7nz full review | Text not yet in hand; needed to draft that reply. |
 | — | Formalism clarity | Fix the four issues noted 2026-11-11 (association surprise denominator, domain of M, Q with an empty projection, analogy example direction). |
+
+## 2026-11-13 (later) — rebuttal: robustness analyses + causal abstraction test done; replies drafted
+
+- **Originality pool (3a):** leave-one-model-out Spearman 1.000 (35/35); fixed external pool ≥ 0.998; originality dimensions ≥ 0.93.
+- **Composite:** no gate 0.965; Dirichlet weightings median 0.971.
+- **Judge self-preference:** none detectable (difference in differences +2.7 / −0.2 / +3.3 pp, CIs spanning 0).
+- **Causal test:** supplying a validated generic space raises blend success on previously failed items from 17.2% to 65.5% (p = 1.7e-14), while a content-free hint does nothing (22.4%, n.s.). Elaboration is intact given a valid g.
+- **Spend:** about $27 of the OpenRouter key; $41.41 remains.
+- **Drafts:** `rebuttal_iclr_2027.md`. Log: `docs/logs/2026-11-13/1156_rebuttal_free_analyses_and_abstraction_causal.md`.
+- **Outstanding:**
+  - rater-study analysis (S2);
+  - A7nz text;
+  - optional n-gram novelty;
+  - paper edits.

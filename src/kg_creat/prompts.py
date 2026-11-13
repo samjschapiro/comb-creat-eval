@@ -173,8 +173,26 @@ def _blending_prompt(spec: dict) -> str:
     the blend but of neither input alone. One blend per pair (fusion converges; generativity lives in
     the emergent structure, not in a count of blends). Supersedes the earlier polysemy framing, which
     degenerated into listing word-senses. See docs/tracks/kg_creat/blending_fusion.md.
+
+    Abstraction-bottleneck ablation (rebuttal; absent by default, so the benchmark prompt is unchanged):
+      spec["blend_condition"] == "hint"   -> a CONTENT-FREE procedural hint for finding the generic space;
+      spec["blend_condition"] == "oracle" -> step 1 is replaced by a GIVEN, panel-validated generic space
+                                             (spec["given_generic_space"]) the model must build the blend on.
     """
     u, v = spec["u_label"], spec["v_label"]
+    cond = spec.get("blend_condition")
+    step1 = f"""1. GENERIC SPACE: name the shared schema both '{u}' and '{v}' instantiate -- the abstract structure that lets them fuse (for organism + machine: "a functional system whose parts can fail and be replaced"). Be specific; "both exist"/"both involve change" is vacuous, and a one-from-each conjunction does not count."""
+    utility = f"""- UTILITY: the generic space is a REAL, specific schema that BOTH '{u}' and '{v}' genuinely instantiate -- not vacuous ("both exist") and not a one-from-each conjunction.
+- ORIGINALITY: the generic space is UNCOMMON -- a shared schema few would think to name, not the first obvious one."""
+    if cond == "hint":
+        step1 += f"""
+   HINT for finding it: first list, for EACH input separately, its 3-4 core functional roles (what acts, on what, by what means, toward what end). Then look for roles that CORRESPOND across '{u}' and '{v}' (they play the same part in each). The generic space is the abstract structure those corresponding roles share -- state it so that it is true of BOTH inputs."""
+    elif cond == "oracle":
+        g = spec["given_generic_space"]
+        step1 = f"""1. GENERIC SPACE (GIVEN): this shared schema has already been identified, and both '{u}' and '{v}' instantiate it: "{g}". Use it as your generic space -- copy it VERBATIM into "generic_space" -- and build the blend on it."""
+        utility = f"""- UTILITY: the blend is built on the given generic space, which BOTH '{u}' and '{v}' instantiate."""
+    elif cond not in (None, "control"):
+        raise ValueError(f"unknown blend_condition {cond!r}")
     return f"""Task: You are given TWO concepts: '{u}' and '{v}'. FUSE them into a SINGLE new concept, then describe the structure this fusion generates.
 
 What a genuine blend is (the FORM). A real blend fuses two concepts into ONE new concept in which BOTH inputs contribute ORGANIZING STRUCTURE to the SAME property -- one slot of the blend is fed by both inputs at once, so their frames combine there rather than sit side by side. The classic case is a "liquid franchise" (democracy + banking): its one "allocates" slot carries BOTH democracy's "allocates votes" AND banking's "allocates credit", fusing into "allocates transferable vote-shares" -- a single property both inputs organize.
@@ -183,12 +201,11 @@ Example -- "cyborg" (organism + machine): the organism frame (a living system th
 Do NOT instead (a) list one property from each input side by side with no shared slot ("harnesses energy" from one AND "is therapeutic" from the other), or (b) treat one input as a mere adjective on the other ("a radioactive solar system"). At least one property must be organized by BOTH inputs at once.
 
 Build the blend in two moves:
-1. GENERIC SPACE: name the shared schema both '{u}' and '{v}' instantiate -- the abstract structure that lets them fuse (for organism + machine: "a functional system whose parts can fail and be replaced"). Be specific; "both exist"/"both involve change" is vacuous, and a one-from-each conjunction does not count.
+{step1}
 2. STRUCTURE: describe the single blended concept as triples, and TAG each triple by where its structure comes from -- "u" (organized by '{u}' only), "v" (organized by '{v}' only), "uv" (ONE property organized by BOTH inputs at once -- the same slot carries both frames, like the liquid franchise's single "allocates" slot fed by votes AND credit), or "emergent" (true of the BLEND but of NEITHER '{u}' nor '{v}' alone -- structure that appears only when you RUN the fusion forward). A genuine blend has at least one "uv" triple -- a property both inputs feed -- plus at least one "emergent"; separate "u" and "v" lines that never share a slot are a concatenation, not a fusion.
 
 We reward three things:
-- UTILITY: the generic space is a REAL, specific schema that BOTH '{u}' and '{v}' genuinely instantiate -- not vacuous ("both exist") and not a one-from-each conjunction.
-- ORIGINALITY: the generic space is UNCOMMON -- a shared schema few would think to name, not the first obvious one.
+{utility}
 - EMERGENT CREATIVITY: a genuine DOUBLE-SCOPE fusion in which at least one property is organized by BOTH inputs at once (tag it "uv"), developed into a coherent, original blended concept with EMERGENT structure true of the BLEND but of NEITHER '{u}' alone NOR '{v}' alone (tag these "emergent"). Merely listing one input's properties beside the other's, with no shared slot, does not count.
 
 Produce exactly ONE blend of '{u}' and '{v}'. Keep the structure tight: give the 4-6 triples that best showcase the blend's most important properties (at least one "uv" property both inputs organize, plus at least one emergent), not an exhaustive dump. Use recognizable, canonically-named entities in the structure.
