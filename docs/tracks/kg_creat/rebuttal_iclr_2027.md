@@ -24,8 +24,11 @@ backed by results already in the repo; each section names its source.
 - **Conditions:**
   - **control:** the original prompt, freshly re-sampled. This is the baseline any gain must beat, since
     a model that failed once may succeed by chance on a second draw.
-  - **hint:** the original prompt plus a content-free procedural hint: list each input's functional
-    roles, find the corresponding ones, and abstract them.
+  - **hint:** the original prompt plus a content-free procedural hint, verbatim: *"first list, for EACH
+    input separately, its 3-4 core functional roles (what acts, on what, by what means, toward what end).
+    Then look for roles that CORRESPOND across [u] and [v] (they play the same part in each). The generic
+    space is the abstract structure those corresponding roles share -- state it so that it is true of BOTH
+    inputs."*
   - **oracle:** the generic space is supplied. It is a panel-validated one written by a model outside the
     test set, and the same one is used for every model on a given item.
 
