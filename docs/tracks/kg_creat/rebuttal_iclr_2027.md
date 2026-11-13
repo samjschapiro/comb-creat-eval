@@ -1,7 +1,7 @@
 # ICLR 2027 (Kombine) — Rebuttal drafts
 
-Status: drafting (2026-11-13). Rebuttals due **2026-11-18**. Reviewers: cGKy, eN17, A7nz (A7nz's full
-review text not yet in hand).
+Status: drafting (2026-11-13). Rebuttals due **2026-11-18**. Reviewers: cGKy, En17, A7nz (all weak accept, 3/3
+confidence; full thread in hand as of 2026-11-13).
 
 Legend: **[PENDING: …]** marks a number that an analysis still running will fill in. Everything else is
 backed by results already in the repo; each section names its source.
@@ -10,16 +10,16 @@ backed by results already in the repo; each section names its source.
 
 ## Shared points (2+ reviewers)
 
-### S1 — Is the abstraction bottleneck causal? (eN17, cGKy)
+### S1 — Is the abstraction bottleneck causal? (En17, cGKy)
 
-> eN17: An experiment supplying validated generic spaces and measuring improvements in downstream blending
+> En17: An experiment supplying validated generic spaces and measuring improvements in downstream blending
 > performance would provide stronger evidence for this claim.
 > cGKy: The proposed explanation (missing experiential knowledge) is speculation with no test, e.g.
 > providing the generic space or a hint.
 
 **Draft response.** Thank you both; we ran exactly this intervention.
-- **Models:** six, spanning frontier to small (claude-opus-5, gpt-5.2, qwen3-max, llama-3.3-70b,
-  gpt-4o-mini, phi-4).
+- **Models:** six, spanning frontier to small (claude-opus-5, gpt-5.2, deepseek-chat-v3, qwen-2.5-72b,
+  llama-3.3-70b, gpt-4o-mini).
 - **Items:** all 30 blending items.
 - **Conditions:**
   - **control:** the original prompt, freshly re-sampled. This is the baseline any gain must beat, since
@@ -61,10 +61,10 @@ intervention locates the bottleneck causally. The failure of a purely procedural
 knowledge-based rather than a procedural account, but does not by itself establish which knowledge is
 missing. Source: `docs/reports/2026-11-13_kg_creat_abstraction_causal/report.md`.
 
-### S2 — Validity of the LLM judges against humans (A7nz, eN17)
+### S2 — Validity of the LLM judges against humans (A7nz, En17)
 
 > A7nz: correlation of judge to human connection is thin.
-> eN17: Expanding the human evaluation to include multiple independent annotators and more samples would
+> En17: Expanding the human evaluation to include multiple independent annotators and more samples would
 > strengthen confidence in the benchmark's scoring methodology.
 
 **Draft response.** We agree. We have run a new multi-annotator study.
@@ -240,7 +240,7 @@ appendix. Source: `data/kg_creat/effort_study/`, log 2026-09-07.
 
 ---
 
-## Reviewer eN17
+## Reviewer En17
 
 ### W1 — LLM-judge validity → see S2.
 
@@ -274,9 +274,188 @@ the n-gram" critique first; only offer it if run.)*
 
 ---
 
+### Q2 — Human-validated generic spaces
+
+> Have the authors considered evaluating blending performance when models are explicitly provided with
+> human-validated generic spaces?
+
+**Draft response.** Yes; see S1. The supplied generic spaces were panel-validated. [OPTIONAL, ~15 min of
+co-author time: have 2–3 co-authors accept or reject the 30 oracle generic spaces
+(`data/kg_creat/abstraction_causal/oracle_g.json`) and report the oracle effect restricted to
+human-accepted ones. This would make the answer "human-validated" literally.]
+
+---
+
+## Reviewer cGKy: points not yet answered
+
+### Q1 — Size, samples per item, resample variance
+
+> How many entity pairs per task, and how many samples per model per item? How much does a model's score
+> vary across resamples at T = 0.9?
+
+**Draft response.**
+- **Size.** We confirm: 30 entity pairs per task. Analogy and blending share the same 30 pairs;
+  association uses a different 30. That gives 90 items per model, with one sample per model per item at
+  T = 0.9: 3,150 scored artifacts.
+- **Why one sample is enough here.** Per-model conclusions rest on 30 items per task with bootstrap CIs
+  over items, not on single answers, and the paper's claims are about the population of models.
+- **Resample variance.** [PENDING, free: the causal-test control condition is a fresh T = 0.9 resample
+  of the original prompt for six models on all 30 blending items. Report the per-model test–retest
+  difference in blend success, paired by item, to answer this directly.]
+
+### W1 (judges) / Q5 — Validation of the Haiku 4.5 factuality judge
+
+> Path factuality is judged by Claude Haiku 4.5, plausibly weaker than many models it judges, with no
+> retrieval. ... What is its error rate on paths from stronger models?
+
+**Draft response.**
+- **The task is easy for the judge.** It checks single Wikidata-style triples about well-known entities
+  (each has ≥ 78 sitelinks), one at a time. It never judges a whole creative answer.
+- **Agreement with an independent judge.** Haiku 4.5 agrees with gpt-oss-120b on 88–92% of 54,277
+  triples in every provider family. It is slightly stricter, with no family leniency (see self-preference
+  above).
+- [PENDING, free: the same agreement split by evaluated-model tier (frontier vs the rest), to answer "on
+  paths from stronger models".]
+- [OPTIONAL: humans also rate factuality in the S2 study, which gives a human error rate for the panel's
+  factuality on association.]
+
+### W1 (judges) — ICC 0.48–0.67 and quoting 75% rather than 66%
+
+**Draft response.**
+- We agree the main text should report both numbers. We will quote 66% overall agreement alongside the
+  75% on unanimous items.
+- Fair-to-good reliability between *individual* judges is why we use a three-judge majority. The new
+  multi-annotator study (S2) shows how the panel compares with the agreement *between humans* on the
+  same items.
+
+### W1 — "No human baseline or human creativity ratings"
+
+**Draft response.**
+- **Human baseline.** Since submission, we have collected a human generation study on the same items:
+  94 kept sessions; 375 association, 298 analogy and 201 blending answers.
+  - Humans pass the validity gate less often than the typical model, mostly by breaking task rules.
+  - Their valid answers are more original than most models' valid answers, and less surprising.
+  - Human answers sit farther from model answers than from each other.
+  - [Decide how much of this to put in the rebuttal. The full composite places kept humans last of 37
+    entries, which needs careful framing: it is a rules-compliance effect.]
+- **Human creativity ratings.** The S2 study collects them: 1–5 originality from multiple raters,
+  correlated with ρ.
+
+### "Blending is 10–15 points harder": non-comparable rubrics across tasks
+
+**Draft response.**
+- **We agree the three rates use different criteria.** We will soften the cross-task wording to "models
+  pass the blending gate less often". The claim we make is about the gate each task defines.
+- **The comparable contrast is analogy vs blending.** Both are posed on the *same* 30 entity pairs, and
+  both gates are three-judge panel verdicts on a structural claim (shared relational structure; a
+  generic space instantiated by both inputs). Paired by (model, item), analogy leads by 13.5 points
+  (McNemar OR 1.84 [1.49, 2.28], p = 3.5 × 10⁻⁹; 23 of 30 models).
+- **The abstraction bottleneck no longer depends on a cross-task comparison.** It is now established
+  *within* blending by the intervention in S1: the same models on the same items go from 17% to 66%
+  success when given the generic space.
+
+### Q4 — Multiples: same-model baseline, threshold, per-property normalisation
+
+**Draft response.**
+- **Threshold.** See S3b. Every finding keeps its direction across θ ∈ [0.62, 0.72], and the
+  cross-item null false-positive rate is 0.03%.
+- **Per-property normalisation.** Already in the multiples analysis: the fixed-τ blend/analogy ratio is
+  mostly because blends assert about twice as many properties (5.0 vs 2.4). Normalised per property,
+  blends still converge 3.3× more often (paired Wilcoxon p = 5 × 10⁻⁸; 2.0× with verbatim,
+  encoder-free matching). We will lead with the per-property figure.
+- **Same-model baseline.** [PENDING, free: the causal-test control is a second T = 0.9 blend from six
+  models on all 30 items. The rate of τ = 2 multiples between a model's two samples gives the
+  within-model ceiling, to set against the cross-model rate.]
+
+### W — Same-provider effect could be version similarity
+
+**Draft response.** [PENDING, free: split same-provider pairs into successive versions of one line
+(e.g. opus-4.5 / opus-4.6) and different lines from the same provider (e.g. haiku / opus, gpt-4o-mini /
+o3), then re-test both against cross-provider pairs. If the effect holds for different lines, it is not
+only version similarity. If it doesn't, we report it as lineage similarity, which is still a finding
+about homogeneity.]
+
+---
+
 ## Reviewer A7nz
 
-[Need the full review text.] Known point: judge–human correlation is thin → see S2.
+Rating 3 (weak accept), soundness 3. The review is in bullet points with no questions. Each point is
+answered briefly, mostly by pointing to shared sections.
+
+### "How do you differentiate creativeness against factual incorrectness, truthfulness?"
+
+**Draft response.**
+- **Factuality is a precondition, not part of creativity.**
+  - In association, every link in a chain must be a true fact (checked triple by triple). A chain with a
+    false link scores zero, however remote its endpoints.
+  - In analogy and blending, the *source* structure (the paths, the generic space) must be true of the
+    real entities.
+  - Only the *invented* concept is allowed to be counterfactual, since it is new by construction. It is
+    judged for coherence (is it built from the mapping or blend?), not truth.
+- **So the two are separated by design.** Creativity is scored only on factual, valid combinations, and
+  the invention is the one place where non-existence is the point.
+
+### "Score is driven by validity: if not valid then 0, which doesn't align to interpret creativity"
+
+**Draft response.**
+- **Why the gate.** It encodes the standard two-criterion definition of a creative product, which must
+  be novel *and* useful/appropriate (Runco & Jaeger, 2012). A remote but invalid combination is novel
+  without being creative.
+- **The ranking does not depend on it.** Removing the gate gives Spearman 0.965 with the paper ranking
+  (same #1, 9 of the top 10).
+- **Failed answers are not more original.** Failed and valid artifacts are equally original
+  (association 0.337 vs 0.331; analogy 0.453 vs 0.462; blending 0.383 vs 0.382), so the gate does not
+  hide creative-but-invalid work.
+- **We will report ungated originality as its own column.** It is a distinct construct (Spearman 0.42
+  with the composite), and readers can weight it themselves. See cGKy W1, composite.
+
+### "Abstraction bottleneck may come from the judge end, which hasn't been explored"
+
+**Draft response.** This is a fair concern, and the new experiment (S1) tests it.
+- **If the bottleneck were judge strictness on generic spaces,** supplying a generic space should not
+  help much: the same judges evaluate it.
+- **Instead, success goes from 17% to 66%** on previously failed items when a validated generic space is
+  supplied. A content-free hint does not help (22%, n.s.).
+- **Elaboration is not judged harshly.** Models produce coherent blends 91–99% of the time once they have
+  an accepted generic space.
+- **The judges are not simply lenient on supplied abstractions either.** They re-accept a supplied
+  generic space in only 72% of verbatim copies.
+- **Humans check the judges directly** on generic-space validity and blend coherence in the new
+  multi-annotator study (S2).
+
+### "Correlation of judge to human connection is thin" → see S2.
+
+### Missing related work
+
+**Draft response.** Thank you; we will add all of these.
+- **Creativity tests on LLMs:**
+  - Stevenson et al. (2022): GPT-3 on the Alternate Uses Task.
+  - Koivisto & Grassini (2023): AI beat average humans but not the best.
+  - Guzik et al. (2023): Torrance tests.
+  - Organisciak et al. (2023): automated creativity scoring.
+
+  These test divergent thinking on standard prompts. Kombine instead tests whether models can *combine*
+  given, unrelated concepts into a valid structure and use it to invent. Our external-validity analysis
+  already relates Kombine to such tests across the 35 models (composite vs DAT r = 0.66).
+- **Judging creative quality:**
+  - Chakrabarty et al. (CHI 2024, TTCW): expert-derived rubrics for creative writing, which supports our
+    rubric-based panel.
+  - Lu et al. (2024, Creativity Index): measures novelty against web text, a complementary *H-novelty*
+    reference to our *P-novelty* pool. We will discuss it as the natural extension (see En17 Q1) and
+    note why it fits our setting poorly: our outputs are short structured triples about well-known
+    entities, where n-gram overlap with the web is high whether or not the combination is new.
+- **AIs sounding alike:**
+  - Doshi & Hauser (2024);
+  - Padmakumar & He (ICLR 2024);
+  - Anderson et al. (2024);
+  - Kirk et al. (2024).
+
+  These document homogenisation in human–AI writing and after RLHF. Our inventive-multiples result
+  extends it from surface text to *invented concepts*: different models independently invent concepts
+  with the same properties, and more so within a provider.
+
+*(Check before sending: the Lu et al. claim that n-gram novelty fits short triples poorly is our
+argument, not theirs. Verify against the paper or soften it. "Death of the n-gram" is still to check.)*
 
 ---
 
@@ -287,6 +466,12 @@ the n-gram" critique first; only offer it if run.)*
 - θ: correct the "99th percentile" wording; add the (τ,θ) density figure and null FPR (S3b).
 - Add appendices: effort study (cGKy W2), composite / judge robustness (cGKy W1), pool robustness (cGKy Q2).
 - Rename surprise to "semantic surprise (remoteness)" and clarify within- vs across-artifact.
-- State P- vs H-creativity scope (eN17 Q1).
+- State P- vs H-creativity scope (En17 Q1).
 - Formalism fixes from 2026-11-11 (association surprise denominator, domain of M, Q with an empty
   projection, direction of the analogy example).
+- Report 66% overall human–panel agreement alongside 75% on unanimous items (cGKy W1).
+- Soften the cross-task "blending is harder" wording; lead with the same-anchor analogy vs blending
+  contrast and the within-blending intervention (cGKy).
+- Lead the multiples comparison with the per-property ratio (3.3×), not the fixed-τ ratio (cGKy Q4).
+- Related work: the 12 papers A7nz lists, plus a P- vs H-novelty discussion around Lu et al. (2024).
+- Clarify that only the invented concept may be counterfactual; source structures must be factual (A7nz).
