@@ -309,9 +309,18 @@ replies stand without them.*
   T = 0.9: 3,150 scored artifacts.
 - **Why one sample is enough here.** Per-model conclusions rest on 30 items per task with bootstrap CIs
   over items, not on single answers, and the paper's claims are about the population of models.
-- **Resample variance.** [PENDING, free: the causal-test control condition is a fresh T = 0.9 resample
-  of the original prompt for six models on all 30 blending items. Report the per-model test–retest
-  difference in blend success, paired by item, to answer this directly.]
+- **Resample and item variance (new).** We re-ran 10 models on 30 *new* entity pairs, disjoint at the
+  entity level, and scored them with the same judges. Fresh items and fresh draws together bound the
+  T = 0.9 resample variance from above.
+  - **Overall:** scores on the two sets correlate at r = 0.92 (ICC(A,1) = 0.92). The mean absolute
+    change is 2.7 points out of 100, and no model's change exceeds its item-bootstrap 95% CI.
+  - **By task:** blending r = 0.95, analogy 0.87, association 0.65. Association has the narrowest
+    spread between models (SD 5.7 vs about 10 for the others), so it is the task that most needs more
+    items. We will say so.
+  - **Size of the noise:** the item-sampling SE of one model's overall score on 30 items is about
+    3.4 points.
+
+  Source: `docs/reports/2026-11-13_kg_creat_rebuttal_test_retest/`.
 
 ### W1 (judges) / Q5 — Validation of the Haiku 4.5 factuality judge
 
@@ -479,6 +488,7 @@ argument, not theirs. Verify against the paper or soften it. "Death of the n-gra
 - State P- vs H-creativity scope (En17 Q1).
 - Formalism fixes from 2026-11-11 (association surprise denominator, domain of M, Q with an empty
   projection, direction of the analogy example).
+- Add the test–retest appendix (10 models, 30 new items; cGKy Q1).
 - Report 66% overall human–panel agreement alongside 75% on unanimous items (cGKy W1).
 - Soften the cross-task "blending is harder" wording; lead with the same-anchor analogy vs blending
   contrast and the within-blending intervention (cGKy).

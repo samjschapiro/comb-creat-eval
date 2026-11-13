@@ -1,6 +1,7 @@
 # TEST-RETEST scoring: the SAME judge panel and factuality judge as test30 (scores/config.yaml), so the
 # two item sets are scored identically. Paid OpenRouter judges + local MLX embeddings; run WITHOUT
-# LLM_BASE_URL. Est ~$8-10 per model (panel + factuality). NOT RUNNABLE until OpenRouter is topped up.
+# LLM_BASE_URL. Run 2026-11-13 for the rebuttal (cGKy Q1); the key was watched and the run killed if it fell below $3.
+# Originality here is relative to the 10 retest models only (no test30 pool).
 upstream_dir: data/kg_creat/kombine_retest30/responses
 output_dir: data/kg_creat/kombine_retest30/scores
 judge:
@@ -9,7 +10,7 @@ judge:
     - anthropic/claude-haiku-4.5
     - openai/gpt-5.4
     - openai/o3
-  factuality_model: openai/gpt-oss-120b
+  factuality_model: anthropic/claude-haiku-4.5   # 2026-11-13: matches the paper (test30 switched on 09-07)
   panel_open_ended: true
   concurrency: 16
 embedding:

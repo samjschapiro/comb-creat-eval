@@ -786,3 +786,33 @@ The user texted it to co-authors on 11-13; files come back as `kombine_ratings_<
   - A7nz text;
   - optional n-gram novelty;
   - paper edits.
+
+## 2026-11-13 (evening): rebuttal: full thread triaged, A7nz drafted, test–retest scored
+
+**Full review thread received.** All three reviewers gave 3 (weak accept). A7nz's review is bullet points
+only, and its replies are drafted:
+- creativity vs factuality;
+- the utility gate;
+- "the bottleneck may be the judges", answered by the causal test;
+- the 12 related-work papers.
+
+The cGKy points the draft had missed are added: Q1, Q4, Q5, ICC and the 66% vs 75% figure, the human
+baseline, and rubric comparability. The user notes that **cGKy's review is largely LLM-written**, so
+those points are triaged: shared points the AC will weigh are answered in full, the rest in one or two
+sentences, with no new experiments. The S1 model list was fixed: it named qwen3-max and phi-4, which
+were replaced before the run.
+
+**Test–retest scored (cGKy Q1).** The September retest30 answers (10 models × 90, already elicited) are
+now judged with the paper's panel and Haiku factuality: about $24 on OpenRouter, $16.90 left. New script
+`analyze_retest.py` recomputes test30 originality over the same 10-model pool so the two sets compare
+fairly.
+- **Overall:** r = 0.92, ICC(A,1) = 0.92, mean |Δ| 2.7 points. No model's change is outside its CI.
+- **By task:** blending 0.95, analogy 0.87, association 0.65.
+
+Report: `docs/reports/2026-11-13_kg_creat_rebuttal_test_retest/`.
+
+**Open.**
+- S2: waiting on the co-author ratings.
+- Optional: human validation of the 30 oracle generic spaces (En17 Q2).
+- Check the Lu et al. claim and "death of the n-gram".
+- Trim cGKy's replies to fit the length limit.
