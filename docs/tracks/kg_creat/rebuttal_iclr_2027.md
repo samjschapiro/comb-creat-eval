@@ -118,6 +118,12 @@ Correct the wording.)* Source: `docs/reports/2026-09-01_kg_creat_inventive_multi
 
 ## Reviewer cGKy
 
+*Triage (2026-11-13): this review reads as largely LLM-written. It is long, every claim is hedged, and it
+asks for every standard robustness check. Answer the points the AC will weigh, which are also the ones
+other reviewers raise: pool robustness, the causal test, human validation, the composite and gate, and
+self-preference. Answer the rest in one or two sentences, and don't commit new experiments to them. The
+per-point replies below are a menu, not a checklist; cut them to fit the length limit.*
+
 ### W1 / Q2 — Stability of the leaderboard, especially originality, under a changed reference pool
 
 > How stable is the leaderboard, originality especially, if you remove a model or a whole provider, or
@@ -286,7 +292,11 @@ human-accepted ones. This would make the answer "human-validated" literally.]
 
 ---
 
-## Reviewer cGKy: points not yet answered
+## Reviewer cGKy: lower-priority points (one or two sentences each in the final reply)
+
+*Not worth new analyses: the same-provider version split and the same-model multiples baseline. Q1
+resample variance and the Q5 tier split are free and quick, so run them only if there's spare time; the
+replies stand without them.*
 
 ### Q1 — Size, samples per item, resample variance
 
