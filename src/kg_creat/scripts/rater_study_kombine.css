@@ -1,0 +1,168 @@
+/* Vendored verbatim from the Kombine human generation study (llm_creativity_mech_interp/src/experiments/
+   kombine_generation/index.html) so the rater study looks exactly like the study participants used.
+   Re-copy rather than edit if the study's styles change. */
+/* Match the AUT experiment's UI: system font, #007bff buttons, #f5f5f5 bg, blue/orange/green accents. */
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f5f5; }
+        .jspsych-content { max-width: 950px; font-size: 16px; }
+        .jspsych-btn { font-size: 16px; padding: 12px 24px; margin: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .jspsych-btn:hover { background-color: #0056b3; }
+        .jspsych-slider { width: 80%; max-width: 500px; }
+
+        .kb-wrap { text-align: left; }
+        .kb-eyebrow { font-size: 13px; font-weight: bold; letter-spacing: .05em; text-transform: uppercase; color: #666; margin-bottom: 6px; }
+        .kb-eyebrow.assoc { color: #1976d2; } .kb-eyebrow.analogy { color: #f57c00; } .kb-eyebrow.blend { color: #388e3c; }
+        .kb-ask { color: #333; font-size: 16px; margin: 6px 0 18px; }
+        .kb-ask b { font-weight: bold; }
+
+        .kb-pair { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; margin: 8px 0 6px; }
+        .kb-chip { font-size: 20px; font-weight: bold; padding: 9px 16px; border-radius: 8px; }
+        .kb-chip.a { color: #1976d2; background: #e3f2fd; }
+        .kb-chip.b { color: #f57c00; background: #fff3e0; }
+        .kb-chip.solo { color: #388e3c; background: #e8f5e9; }
+        .kb-tween { font-size: 13px; letter-spacing: .05em; text-transform: uppercase; color: #666; }
+
+        .kb-field { display: flex; flex-direction: column; gap: 6px; margin: 14px 0; }
+        .kb-field label { font-size: 14px; font-weight: bold; color: #333; }
+        .kb-field input[type=text], .kb-field textarea {
+            font-family: inherit; font-size: 15px; color: #333; background: #fff; border: 1px solid #ccc;
+            border-radius: 5px; padding: 10px 12px; width: 100%; box-sizing: border-box; resize: vertical;
+        }
+        .kb-field input:focus, .kb-field textarea:focus { outline: none; border-color: #007bff; box-shadow: 0 0 0 3px rgba(0,123,255,.15); }
+        .kb-field input[type=range] { accent-color: #007bff; }
+
+        /* association path builder */
+        .kb-path { display: flex; flex-direction: column; }
+        .kb-node { display: flex; align-items: center; gap: 10px; }
+        .kb-dot { width: 11px; height: 11px; border-radius: 50%; border: 2px solid; flex: none; }
+        .kb-dot.a { border-color: #1976d2; background: #e3f2fd; } .kb-dot.b { border-color: #f57c00; background: #fff3e0; }
+        .kb-node .lbl { font-size: 17px; font-weight: bold; } .kb-node .lbl.a { color: #1976d2; } .kb-node .lbl.b { color: #f57c00; }
+        .kb-rung { display: flex; align-items: center; gap: 10px; padding: 7px 0; }
+        .kb-rail { width: 11px; align-self: stretch; display: flex; justify-content: center; flex: none; }
+        .kb-rail::before { content: ""; width: 2px; background: #ccc; min-height: 24px; }
+        .kb-step { flex: 1; display: flex; gap: 8px; }
+        .kb-step input { flex: 1; }
+        .kb-x { width: 28px; height: 28px; border-radius: 5px; border: 1px solid #ccc; background: #fff; color: #666; cursor: pointer; }
+        .kb-add { margin: 6px 0 2px 22px; }
+        .kb-add button { font-size: 13px; color: #007bff; background: #fff; border: 1px dashed #007bff; border-radius: 5px; padding: 7px 12px; cursor: pointer; }
+
+        .kb-rel { background: #e3f2fd; border: 1px solid #bbdefb; border-radius: 8px; padding: 12px; }
+        .kb-senses { display: grid; gap: 12px; } @media (min-width: 600px) { .kb-senses { grid-template-columns: 1fr 1fr; } }
+        .kb-sense { border: 1px solid #ccc; border-radius: 8px; padding: 13px; background: #fff; }
+        .kb-sense.two { border-color: #a5d6a7; background: #f1f8f1; }
+        .kb-example { margin: 16px 0 2px; font-size: 14px; color: #666; }
+        .kb-example summary { cursor: pointer; color: #007bff; font-size: 14px; }
+        .kb-example .body { margin-top: 8px; padding: 10px 12px; border-left: 3px solid #007bff; background: #e3f2fd; border-radius: 0 5px 5px 0; }
+        .kb-progress { font-size: 14px; color: #666; }
+
+        /* "I can't think of one" opt-out under a field */
+        .kb-skip { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 13px; color: #888; font-weight: normal; cursor: pointer; }
+        .kb-skip input[type=checkbox] { width: auto; margin: 0; }
+        .kb-field input:disabled { background: #f0f0f0; color: #aaa; }
+
+        /* association triples: entity / relation / entity per row */
+        .kb-triple { display: flex; gap: 6px; align-items: center; margin: 7px 0; }
+        .kb-triple .tnum { color: #888; font-size: 13px; width: 16px; flex: none; text-align: right; }
+        .kb-triple input { flex: 1; min-width: 0; font-family: inherit; font-size: 15px; color: #333; background: #fff;
+            border: 1px solid #ccc; border-radius: 5px; padding: 8px 10px; box-sizing: border-box; }
+        .kb-triple input:focus { outline: none; border-color: #007bff; box-shadow: 0 0 0 3px rgba(0,123,255,.15); }
+        .kb-triple input[readonly] { background: #f5f5f5; }
+
+        /* persistent entity / relation / entity column labels (placeholders vanish once a cell is typed in) */
+        .kb-thead { margin: 10px 0 2px; align-items: flex-end; }
+        .kb-thead .thd { flex: 1; min-width: 0; font-size: 12px; font-weight: bold; color: #666; text-transform: uppercase; letter-spacing: .04em; padding-left: 10px; }
+        .kb-thead .thd-x { width: 28px; flex: none; }
+        .an-subhead { margin: 2px 0 0; }
+        .an-subhead .anlbl { display: flex; flex-wrap: wrap; gap: 5px; }
+        .an-subhead .anlbl span { flex: 1 1 120px; min-width: 96px; font-size: 12px; font-weight: bold; color: #666; text-transform: uppercase; letter-spacing: .04em; padding-left: 9px; }
+
+        /* analogy: a full triple in each domain per row (u-triple left, v-triple right) */
+        /* analogy trials get a wider canvas so long entries (e.g. "immune system") stay readable */
+        body.an-trial .jspsych-content { max-width: 1180px; }
+        .an-colhead { display: flex; gap: 16px; align-items: center; margin: 8px 0 6px; }
+        .an-colhead .col { flex: 1; text-align: center; }
+        .an-rowwrap { margin: 10px 0; }
+        .an-row { display: flex; gap: 16px; align-items: flex-start; }
+        .an-tri { flex: 1; display: flex; flex-wrap: wrap; gap: 5px; min-width: 0; }
+        /* cells are textareas so any entry (even a long word) wraps inside the cell instead of scrolling */
+        .an-tri input, .an-tri textarea { flex: 1 1 120px; min-width: 96px; font-family: inherit; font-size: 15px; color: #333; background: #fff;
+            border: 1px solid #ccc; border-radius: 5px; padding: 8px 9px; box-sizing: border-box; }
+        .an-tri textarea { resize: none; overflow: hidden; min-height: 38px; line-height: 1.35; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .an-tri.aside input, .an-tri.aside textarea { border-color: #90caf9; }
+        .an-tri.bside input, .an-tri.bside textarea { border-color: #ffb74d; }
+        .an-tri input:focus, .an-tri textarea:focus { outline: none; border-color: #007bff; box-shadow: 0 0 0 3px rgba(0,123,255,.15); }
+        .an-tri input[readonly], .an-tri input:disabled, .an-tri textarea[readonly], .an-tri textarea:disabled { background: #f0f0f0; color: #333; }
+        .an-rmbtn { flex: none; width: 26px; }
+        .an-dk { margin: 3px 0 0 2px; font-size: 12px; }
+        .an-divider { border: none; border-top: 2px solid #ce93d8; margin: 16px 0 8px; }
+        /* the INVENTED concept (analogy invention side, blend's new concept) is shaded gold everywhere: examples and live cells */
+        .an-tri.newc textarea, .an-tri.newc input,
+        .an-tri.newc textarea[readonly], .an-tri.newc input[readonly] { border-color: #c9a94a; background: #fff3c4; }
+        .kb-legend { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #666; margin: 8px 0 0; }
+        .kb-legend .sw { width: 14px; height: 14px; border: 1px solid #c9a94a; background: #fff3c4; border-radius: 3px; }
+        /* direction of projection between the two sides of an invention row: static arrow in examples, radio toggle in trials */
+        .an-dirarrow { flex: none; align-self: center; color: #b08d2a; font-size: 22px; padding: 0 6px; }
+        .an-dir { flex: none; align-self: center; display: flex; flex-direction: column; gap: 3px; padding: 0 6px; }
+        .an-dir label { cursor: pointer; }
+        .an-dir input { position: absolute; opacity: 0; width: 0; height: 0; }
+        .an-dir span { display: block; width: 34px; text-align: center; font-size: 18px; line-height: 26px; color: #b08d2a; border: 1px solid #c9a94a; border-radius: 5px; background: #fff; }
+        .an-dir input:checked + span { background: #c9a94a; color: #fff; }
+        .an-dir input:disabled + span { opacity: .4; cursor: default; }
+        .an-dir input:focus-visible + span { box-shadow: 0 0 0 3px rgba(0,123,255,.25); }
+        .an-tri.emergent textarea, .an-tri.emergent input { border-color: #9a95d6; background: #f6f5fc; }
+        .bl-arrow { flex: none; align-self: center; color: #999; font-size: 18px; padding: 0 2px; }
+        .bl-arrowhead { flex: none; width: 22px; }
+        .bl-tagrow { margin: 3px 0 0 2px; }
+        .bl-tag { font-size: 12px; padding: 1px 8px; border-radius: 10px; white-space: nowrap; }
+        .bl-tag.u { background: #e3f0f8; color: #33627e; }
+        .bl-tag.v { background: #fbeadd; color: #8a4a1c; }
+        .bl-tag.uv { background: #efe9f7; color: #5b4a86; }
+        /* a "both" row stacks its two source links on the left, both projecting into one link in the new concept */
+        .bl-src { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+        .bl-src .an-tri { flex: none; }
+        /* per-row source selector: which concept the link comes from (radio pills) */
+        .bl-from { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0 0 2px; font-size: 12px; color: #666; }
+        .bl-from label { cursor: pointer; }
+        .bl-from input { position: absolute; opacity: 0; width: 0; height: 0; }
+        .bl-from span { display: inline-block; padding: 1px 10px; border-radius: 10px; border: 1px solid #ccc; background: #fff; font-size: 12px; color: #666; }
+        .bl-from input:checked + span.u { background: #e3f0f8; color: #33627e; border-color: #90caf9; }
+        .bl-from input:checked + span.v { background: #fbeadd; color: #8a4a1c; border-color: #ffb74d; }
+        .bl-from input:checked + span.uv { background: #efe9f7; color: #5b4a86; border-color: #b39ddb; }
+        .bl-from input:disabled + span { opacity: .4; }
+        .bl-from input:focus-visible + span { box-shadow: 0 0 0 3px rgba(0,123,255,.25); }
+
+        /* LLM traps: present in the DOM (so a model reading or filling the page acts on them) but invisible to people.
+           Off-screen rather than display:none so the fields are still "real" form controls. */
+        .kb-hp { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0 0 0 0) !important; clip-path: inset(50%) !important; white-space: nowrap !important; border: 0 !important; }
+        /* notice shown when a paste or drop is blocked */
+        .kb-toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 16px; border-radius: 6px; font-size: 14px; z-index: 1000; opacity: 0; transition: opacity .2s; pointer-events: none; }
+        .kb-toast.show { opacity: 1; }
+
+        /* comprehension check (one quiz per task, before any items) */
+        .qz-q { margin: 0 0 22px; padding: 14px 16px; background: #fff; border: 1px solid #e0dde6; border-radius: 8px; }
+        .qz-q.wrong { border-color: #c0392b; }
+        .qz-prompt { font-weight: bold; margin: 0 0 10px; }
+        .qz-opt { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 6px; cursor: pointer; }
+        .qz-opt:hover { background: #f3f6fb; }
+        .qz-opt input { flex: none; }
+        .qz-tri { display: inline-flex; gap: 4px; }
+        .qz-tri span { padding: 3px 8px; border: 1px solid #ccc; border-radius: 4px; background: #fafafa; }
+        .qz-tri span.r { font-style: italic; }
+        .qz-sep { color: #999; margin: 0 6px; }
+        .qz-fb { color: #c0392b; font-size: 14px; margin: 8px 0 0; }
+        .qz-banner { color: #c0392b; font-weight: bold; margin: 0 0 16px; }
+        .qz-q.right { border-color: #388e3c; }
+        .qz-fb.ok, .qz-banner.ok { color: #2e7d32; }
+        .an-warn { color: #c0392b; font-size: 14px; margin: 6px 0 0; }
+
+        /* debug-only skip bar (never shown to Prolific participants) */
+        .kb-debugbar { position: fixed; top: 8px; right: 8px; z-index: 1000; display: flex; gap: 6px; align-items: center; background: #fff3cd; border: 1px solid #e0a800; border-radius: 6px; padding: 6px 8px; font-size: 12px; color: #664d03; }
+        .kb-debugbar button { font-size: 12px; padding: 4px 8px; border: 1px solid #b08d2a; border-radius: 4px; background: #fff; color: #664d03; cursor: pointer; }
+
+        /* mobile */
+        @media (max-width: 560px) {
+            .jspsych-content { font-size: 15px; padding: 0 6px; }
+            .kb-chip { font-size: 17px; padding: 8px 12px; }
+            .kb-step { flex-wrap: wrap; }
+            .kb-step input { flex: 1 1 100%; }
+            .kb-add { margin-left: 12px; }
+        }

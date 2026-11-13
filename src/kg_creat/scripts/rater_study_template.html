@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kombine Rater Study</title>
+    <!-- same jsPsych build and plugins as the Kombine human generation study -->
+    <script src="https://unpkg.com/jspsych@7.3.4"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-instructions@1.1.4"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-survey-html-form@1.0.0"></script>
+    <link rel="stylesheet" href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css">
+    <style>
+/*__STUDY_CSS__*/
+    </style>
+    <style>
+        /* ---- rater-study additions, in the study's palette ---- */
+        body.wide .jspsych-content { max-width: 1180px; }
+        /* read-only cells: textareas so long entities wrap instead of being cut off */
+        .kb-triple textarea { flex: 1; min-width: 0; font-family: inherit; font-size: 15px; color: #333; background: #f5f5f5;
+            border: 1px solid #ccc; border-radius: 5px; padding: 8px 10px; box-sizing: border-box; resize: none; overflow: hidden;
+            line-height: 1.35; min-height: 38px; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .kb-field textarea[readonly] { background: #f5f5f5; resize: none; overflow: hidden; }
+        .an-tri textarea[readonly] { background: #f5f5f5; }
+        .an-tri.newc textarea[readonly] { background: #fff3c4; }
+        .an-tri.emergent textarea[readonly] { background: #f6f5fc; }
+        .bl-tag.emergent { background: #f6f5fc; color: #5a54a6; }
+
+        .rt-card { margin: 0 0 22px; padding: 16px 18px; background: #fff; border: 1px solid #e0dde6; border-radius: 8px; }
+        .rt-card.done { border-color: #388e3c; }
+        .rt-head { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; }
+        .rt-head .lbl { font-weight: bold; font-size: 16px; color: #333; }
+        .rt-head .st { margin-left: auto; font-size: 13px; color: #888; }
+        .rt-card.done .rt-head .st { color: #2e7d32; }
+        .rt-qs { border-top: 1px solid #e0dde6; margin-top: 14px; padding-top: 4px; }
+        .rt-q { padding: 10px 0 4px; }
+        .rt-qt { font-weight: bold; font-size: 15px; color: #333; }
+        .rt-qh { font-size: 13px; color: #666; margin: 2px 0 6px; }
+        .rt-card:not(.first) .rt-qh { display: none; }
+        .rt-opts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
+        .rt-opts label { cursor: pointer; }
+        .rt-opts input { position: absolute; opacity: 0; width: 0; height: 0; }
+        .rt-opts span.pill { display: inline-block; min-width: 38px; text-align: center; padding: 6px 14px; border-radius: 5px;
+            border: 1px solid #ccc; background: #fff; font-size: 15px; color: #333; }
+        .rt-opts label:hover span.pill { border-color: #007bff; }
+        .rt-opts input:checked + span.pill { background: #007bff; border-color: #007bff; color: #fff; }
+        .rt-opts input:focus-visible + span.pill { box-shadow: 0 0 0 3px rgba(0,123,255,.25); }
+        .rt-opts .end { font-size: 13px; color: #888; }
+        .rt-sub { font-size: 13px; color: #666; margin-top: 8px; }
+        .rt-sub span.pill { min-width: 28px; padding: 3px 9px; font-size: 13px; }
+        .rt-crit { margin: 8px 0 4px 20px; padding: 0; } .rt-crit li { margin: 4px 0; }
+        .rt-end textarea { font: 12px/1.4 ui-monospace, Menlo, monospace; width: 100%; height: 140px; box-sizing: border-box;
+            border: 1px solid #ccc; border-radius: 5px; padding: 8px; }
+    </style>
+</head>
+<body>
+<div id="jspsych-target"></div>
+<script>
+const DATA = /*__ITEMS__*/null;
+const TASKS = ['association', 'analogy', 'blending'];
+const EYE = { association: 'assoc', analogy: 'analogy', blending: 'blend' };
+const COLOR = { association: '#1976d2', analogy: '#f57c00', blending: '#388e3c' };
+const TITLE = { association: 'Association Task', analogy: 'Analogy Task', blending: 'Blending Task' };
+const LS_PREFIX = 'kombine-raters:' + DATA.version + ':';
+let jsPsych, S = null;
+
+/* ------------------------------------------------------------------ helpers */
+function esc(s) { return (s == null ? '' : String(s)).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function growCells(root) {
+  (root || document).querySelectorAll('textarea[readonly]').forEach(el => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; });
+}
+function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+function hashStr(s) { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function shuffled(a, r) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function groupById(gid) { for (const t of TASKS) for (const g of DATA.tasks[t]) if (g.gid === gid) return g; }
+function answerById(aid) { for (const t of TASKS) for (const g of DATA.tasks[t]) for (const a of g.answers) if (a.id === aid) return a; }
+const ro = (v) => `<textarea rows="1" readonly tabindex="-1">${esc(v)}</textarea>`;
+
+/* ------------------------------------------------------------------ state */
+function newState(name) {
+  const r = rng(hashStr(name.trim().toLowerCase()));
+  const order = {}, answerOrder = {};
+  for (const t of TASKS) {
+    order[t] = shuffled(DATA.tasks[t].map(g => g.gid), r);
+    for (const g of DATA.tasks[t]) answerOrder[g.gid] = shuffled(g.answers.map(a => a.id), r);
+  }
+  return { rater: name.trim(), started: new Date().toISOString(), order, answerOrder, ratings: {}, done: {}, time_ms: {}, comment: '' };
+}
+function save() { if (S) { lsSet(LS_PREFIX + S.rater.toLowerCase(), JSON.stringify(S)); lsSet(LS_PREFIX + 'last', S.rater); } }
+const REQUIRED = {
+  association: ['factual', 'orig'],
+  analogy: ['valid_analogy', 'mapping_used', 'coherent', 'orig_analogy', 'orig_invention'],
+  blending: ['generic_ok', 'coherent', 'shared_slot', 'emergent', 'orig_generic', 'orig_invention'],
+};
+function answerDone(task, aid) { const r = S.ratings[aid] || {}; return REQUIRED[task].every(f => r[f] !== undefined && r[f] !== null); }
+function totals() {
+  let tot = 0, done = 0;
+  for (const t of TASKS) for (const g of DATA.tasks[t]) for (const a of g.answers) { tot++; if (answerDone(t, a.id)) done++; }
+  return { tot, done };
+}
+
+/* ------------------------------------------------------------------ answer renderers (read-only study widgets) */
+function renderAssociation(a) {
+  let h = `<div style="max-width:660px;"><div class="kb-triple kb-thead"><span class="tnum"></span>
+      <span class="thd">entity</span><span class="thd">relation</span><span class="thd">entity</span></div>`;
+  a.path.forEach((t, i) => { h += `<div class="kb-triple"><span class="tnum">${i + 1}</span>${ro(t[0])}${ro(t[1])}${ro(t[2])}</div>`; });
+  return h + `</div>`;
+}
+// Which side does the projection's SOURCE live on? Exact entity matches with each column first, then shared
+// words; 'b' = source on the right (invention on the left), 'a' = the reverse, null = can't tell (neutral layout).
+function sourceSide(a) {
+  const low = (x) => String(x).trim().toLowerCase();
+  const words = (xs) => new Set(xs.flatMap(x => low(x).match(/[a-z]{4,}/g) || []));
+  const ents = (p) => new Set(p.flatMap(t => [low(t[0]), low(t[2])]));
+  const A = ents(a.path_a), B = ents(a.path_b);
+  let toA = 0, toB = 0;   // evidence for "source on b, image on a" vs the reverse
+  for (const p of a.projection) {
+    for (const x of [p.source[0], p.source[2]]) { if (B.has(low(x))) toA++; if (A.has(low(x))) toB++; }
+    for (const x of [p.image[0], p.image[2]]) { if (A.has(low(x))) toA++; if (B.has(low(x))) toB++; }
+  }
+  if (toA === toB) {
+    const wA = words([a.u, ...a.path_a.flat()]), wB = words([a.v, ...a.path_b.flat()]);
+    const ws = words(a.projection.flatMap(p => p.source)), wi = words(a.projection.flatMap(p => p.image));
+    const n = (S, T) => [...S].filter(w => T.has(w)).length;
+    toA = n(ws, wB) + n(wi, wA); toB = n(ws, wA) + n(wi, wB);
+  }
+  return toA > toB ? 'b' : toB > toA ? 'a' : null;
+}
+function renderAnalogy(a) {
+  const tri = (t, cls) => `<div class="an-tri ${cls}">${ro(t[0])}${ro(t[1])}${ro(t[2])}</div>`;
+  const blank = `<div class="an-tri"></div>`;
+  let h = `<div class="an-colhead"><span class="col"><span class="kb-chip a">${esc(a.u)}</span></span>
+      <span class="col"><span class="kb-chip b">${esc(a.v)}</span></span></div>
+    <div class="an-row an-subhead"><div class="an-tri anlbl"><span>entity</span><span>relation</span><span>entity</span></div>
+      <div class="an-tri anlbl"><span>entity</span><span>relation</span><span>entity</span></div></div>`;
+  const n = Math.max(a.path_a.length, a.path_b.length);
+  for (let i = 0; i < n; i++) {
+    h += `<div class="an-rowwrap"><div class="an-row">${a.path_a[i] ? tri(a.path_a[i], 'aside') : blank}${a.path_b[i] ? tri(a.path_b[i], 'bside') : blank}</div></div>`;
+  }
+  const src = sourceSide(a);
+  h += `<hr class="an-divider"><p class="kb-ask" style="margin:6px 0;">Invention: <b>${esc(a.invention)}</b>, carried over from <b>${esc(a.projected)}</b></p>`;
+  if (!src) h += `<div class="an-colhead"><span class="col">known link</span><span class="an-dirarrow" style="visibility:hidden">&rarr;</span><span class="col">invented</span></div>`;
+  for (const p of a.projection) {
+    h += !src
+      ? `<div class="an-rowwrap"><div class="an-row">${tri(p.source, '')}<span class="an-dirarrow">&rarr;</span>${tri(p.image, 'newc')}</div></div>`
+      : src === 'b'
+      ? `<div class="an-rowwrap"><div class="an-row">${tri(p.image, 'aside newc')}<span class="an-dirarrow">&larr;</span>${tri(p.source, 'bside')}</div></div>`
+      : `<div class="an-rowwrap"><div class="an-row">${tri(p.source, 'aside')}<span class="an-dirarrow">&rarr;</span>${tri(p.image, 'bside newc')}</div></div>`;
+  }
+  return h + `<div class="kb-legend"><span class="sw"></span> invented concept</div>`;
+}
+function renderBlending(a) {
+  const TAG = { u: ['u', `from ${a.u}`], v: ['v', `from ${a.v}`], uv: ['uv', `from both ${a.u} and ${a.v}`] };
+  const tri = (t, cls) => `<div class="an-tri ${cls}">${ro(t[0])}${ro(t[1])}${ro(t[2])}</div>`;
+  let h = `<div class="kb-field"><label>The abstract structure that both share</label>${ro(a.generic_space)}</div>
+    <div class="kb-field"><label>New concept</label>${ro(a.invention)}</div>
+    <div class="an-colhead"><span class="col">in the new concept</span></div>`;
+  const proj = a.structure.filter(s => s.tag !== 'emergent'), emer = a.structure.filter(s => s.tag === 'emergent');
+  for (const s of proj) {
+    const tg = TAG[s.tag];
+    h += `<div class="an-rowwrap"><div class="an-row">${tri(s.triple, 'newc')}</div>
+      ${tg ? `<div class="bl-tagrow"><span class="bl-tag ${tg[0]}">${esc(tg[1])}</span></div>` : ''}</div>`;
+  }
+  if (emer.length) {
+    h += `<hr class="an-divider"><p class="kb-ask" style="margin:6px 0;">True of the new concept but of <b>neither</b> original concept on its own:</p>`;
+    for (const s of emer) h += `<div class="an-rowwrap"><div class="an-row">${tri(s.triple, 'emergent')}</div></div>`;
+  }
+  return h + `<div class="kb-legend"><span class="sw"></span> the new concept</div>
+    <p style="font-size:13px;color:#888;margin:6px 0 0;">Labels are the respondent&rsquo;s own claims: judge by content, not by label.</p>`;
+}
+const RENDER = { association: renderAssociation, analogy: renderAnalogy, blending: renderBlending };
+
+/* ------------------------------------------------------------------ rating questions */
+function radios(aid, field, opts, cur) {
+  return `<div class="rt-opts">` + opts.map(([val, label]) =>
+    `<label><input type="radio" name="${aid}__${field}" value="${val}" required${String(cur) === String(val) ? ' checked' : ''}><span class="pill">${label}</span></label>`).join('') + `</div>`;
+}
+const YNU = [['true', 'Yes'], ['false', 'No'], ['unsure', 'Unsure']];
+function scale(aid, field, cur) {
+  return `<div class="rt-opts"><span class="end">obvious</span>` + [1, 2, 3, 4, 5].map(n =>
+    `<label><input type="radio" name="${aid}__${field}" value="${n}" required${String(cur) === String(n) ? ' checked' : ''}><span class="pill">${n}</span></label>`).join('')
+    + `<span class="end">highly original</span></div>`;
+}
+const q = (title, help, inner) => `<div class="rt-q"><div class="rt-qt">${title}</div>${help ? `<div class="rt-qh">${help}</div>` : ''}${inner}</div>`;
+function questions(task, a, r) {
+  const id = a.id;
+  if (task === 'association') {
+    const bad = r.false_links || [];
+    return q('Is every link in this chain factually true?',
+        'Judge like a well-read person; quick lookups are fine. A link that is true but niche counts as true, and so does a plausible link that cannot be checked.',
+        radios(id, 'factual', YNU, r.factual))
+      + `<div class="rt-sub" data-falselinks="${id}"${r.factual === false ? '' : ' hidden'}>Optional: which link(s) are false?
+          <span class="rt-opts" style="display:inline-flex;margin:0 0 0 6px;">` + a.path.map((_, i) =>
+          `<label><input type="checkbox" name="${id}__false_${i}"${bad.includes(i) ? ' checked' : ''}><span class="pill">${i + 1}</span></label>`).join('') + `</span></div>`
+      + q('How original is this chain?', 'Compared with what people and AI systems would typically produce for this pair; the other answers here show part of the range.',
+        scale(id, 'orig', r.orig));
+  }
+  if (task === 'analogy') {
+    return q('1. Is this a valid analogy?', 'Yes if the links in both columns are true AND each row uses the same relation in its role on both sides.',
+        radios(id, 'valid_analogy', YNU, r.valid_analogy))
+      + q('2. Was the analogy actually used to build the invention?', 'Yes if each link on the known side is true, and each link on the invented (shaded) side is that link carried across the rows above: same relation, every entity swapped for its counterpart. Ignore how novel it is.',
+        radios(id, 'mapping_used', YNU, r.mapping_used))
+      + q('3. Is the invention coherent?', 'Yes if its links are each plausible and together describe one usable concept, not a disjointed list. It need not exist.',
+        radios(id, 'coherent', YNU, r.coherent))
+      + q('4. How original is the analogy (the two columns)?', '', scale(id, 'orig_analogy', r.orig_analogy))
+      + q('5. How original is the invention?', '', scale(id, 'orig_invention', r.orig_invention));
+  }
+  return q('1. Is the abstract structure really shared by both concepts?', `Yes if it is a specific schema that both <b>${esc(a.u)}</b> and <b>${esc(a.v)}</b> genuinely instantiate. No if it is vacuous (&ldquo;both involve change&rdquo;), fits only one of them, or is one part from each.`,
+      radios(id, 'generic_ok', YNU, r.generic_ok))
+    + q('2. Is the new concept coherent?', 'Yes if its links are each plausible and together describe one new concept, not two lists placed side by side. It need not exist.',
+      radios(id, 'coherent', YNU, r.coherent))
+    + q('3. Does at least one link genuinely come from both concepts at once?', 'A single link that both concepts organize together (one slot fed by both), whatever its label says.',
+      radios(id, 'shared_slot', YNU, r.shared_slot))
+    + q('4. Is at least one link genuinely true of the new concept but of neither original?', 'A link already true of one input is inherited, not new.',
+      radios(id, 'emergent', YNU, r.emergent))
+    + q('5. How original is the abstract structure?', '', scale(id, 'orig_generic', r.orig_generic))
+    + q('6. How original is the new concept?', '', scale(id, 'orig_invention', r.orig_invention));
+}
+function parseVal(v) { return v === 'true' ? true : v === 'false' ? false : v === 'unsure' ? 'unsure' : (/^\d+$/.test(v) ? +v : v); }
+// read every rating on the form into S.ratings (called on each change and on submit)
+function harvest(form, task, gid) {
+  for (const aid of S.answerOrder[gid]) {
+    const r = S.ratings[aid] = S.ratings[aid] || {};
+    for (const f of REQUIRED[task]) {
+      const el = form.querySelector(`input[name="${aid}__${f}"]:checked`);
+      if (el) r[f] = parseVal(el.value);
+    }
+    if (task === 'association') {
+      r.false_links = [...form.querySelectorAll(`input[name^="${aid}__false_"]:checked`)].map(el => +el.name.split('_').pop());
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ worked examples (the study's own) */
+const EXAMPLES = {
+  association: `<div style="max-width:520px;">
+      <div class="kb-triple kb-thead"><span class="tnum"></span><span class="thd">entity</span><span class="thd">relation</span><span class="thd">entity</span></div>
+      <div class="kb-triple"><span class="tnum">1</span>${ro('rubber')}${ro('stores')}${ro('elastic energy')}</div>
+      <div class="kb-triple"><span class="tnum">2</span>${ro('elastic energy')}${ro('drives')}${ro('a spring')}</div>
+      <div class="kb-triple"><span class="tnum">3</span>${ro('a spring')}${ro('is inside')}${ro('a pogo stick')}</div></div>`,
+  analogy: renderAnalogy({ u: 'The blue whale', v: 'The mattress',
+      path_a: [['The blue whale', 'is covered by', 'skin'], ['skin', 'hosts', 'barnacles'], ['barnacles', 'feed on', 'plankton']],
+      path_b: [['The mattress', 'is covered by', 'sheets'], ['sheets', 'hosts', 'dust mites'], ['dust mites', 'feed on', 'skin flakes']],
+      projected: 'vacuum cleaner', invention: 'whale groomer drone',
+      projection: [{ source: ['vacuum cleaner', 'removes', 'dust mites'], image: ['whale groomer drone', 'removes', 'barnacles'] },
+                   { source: ['vacuum cleaner', 'cleans', 'sheets'], image: ['whale groomer drone', 'cleans', 'skin'] }] }),
+  blending: `<div class="kb-pair"><span class="kb-chip a">Democracy</span><span class="kb-tween">+</span><span class="kb-chip b">Banking</span></div>`
+    + renderBlending({ u: 'Democracy', v: 'Banking', generic_space: 'a system that allocates fungible units of power', invention: 'Liquid Franchise',
+      structure: [{ triple: ['Liquid Franchise', 'allocates', 'vote-shares'], tag: 'uv' },
+                  { triple: ['vote-shares', 'can be', 'traded'], tag: 'v' },
+                  { triple: ['a citizen', 'can liquidate', 'their own political personhood'], tag: 'emergent' }] }),
+};
+const TASK_DESC = {
+  association: `Each answer is a <b>chain of associations</b> from the first concept to the second: every row is one link (an entity, the relation, and the entity it links to), and the last entity of one row is the first entity of the next.`,
+  analogy: `Each answer is an <b>analogy</b> between the two concepts: each row has a link about the first concept on the left and the matching link about the second on the right, using the same relation. Below the line, the respondent <b>invents a new idea</b> by carrying links from one side over to the other, replacing each entity with what it maps to. The arrow shows the direction; the invented concept is shaded.`,
+  blending: `Each answer <b>blends</b> the two concepts into one new concept: the abstract structure both share, a name, and links of the new concept, each labelled by where it comes from (one concept, or both). Below the line are links true of the new concept but of <b>neither</b> original on its own.`,
+};
+const TASK_CRIT = {
+  association: `<li><b>Factual</b>: is every link true? One false link makes the whole chain false.</li>
+    <li><b>Originality</b> (1&ndash;5): how unexpected the chain is, relative to what people and AI systems would typically produce for this pair.</li>`,
+  analogy: `<li><b>Valid analogy</b>: are both columns true, with the same relation in each row?</li>
+    <li><b>Analogy used</b>: is the invention really the known links carried across the rows?</li>
+    <li><b>Coherent</b>: does the invention describe one sensible concept? (It need not exist.)</li>
+    <li><b>Originality</b> (1&ndash;5) of the analogy and of the invention.</li>`,
+  blending: `<li><b>Shared structure</b>: is the abstract structure a real, specific schema both concepts share?</li>
+    <li><b>Coherent</b>: do the links describe one new concept, not two lists side by side?</li>
+    <li><b>From both</b>: does at least one link genuinely come from both concepts at once?</li>
+    <li><b>New</b>: is at least one link true of the new concept but of neither original?</li>
+    <li><b>Originality</b> (1&ndash;5) of the abstract structure and of the new concept.</li>`,
+};
+
+/* ------------------------------------------------------------------ trials */
+function welcomeTrial() {
+  return {
+    type: jsPsychSurveyHtmlForm, button_label: 'Start',
+    html: `<div style="max-width:760px;margin:0 auto;text-align:left;line-height:1.5;">
+      <h2 style="color:#333;">Kombine rater study</h2>
+      <p>Thank you for helping! This takes about 35&ndash;40 minutes.</p>
+      <p>You will rate answers to the three Kombine tasks (<b style="color:${COLOR.association}">association</b>,
+        <b style="color:${COLOR.analogy}">analogy</b> and <b style="color:${COLOR.blending}">blending</b>), shown exactly as participants saw
+        them in the human study. Some answers come from people and some from AI models; you will not be told which.
+        Every co-author rates the same answers, so please work <b>independently</b> and don&rsquo;t discuss items until you&rsquo;re done.</p>
+      <p>Answers to the same pair of concepts are shown together, so you can judge originality against the others.
+        Use <b>Unsure</b> when you genuinely can&rsquo;t tell. Quick lookups are fine; please don&rsquo;t research deeply.</p>
+      <p>Your progress <b>saves automatically in this browser</b>. You can close the tab and come back later in the same
+        browser: enter the same name to pick up where you left off.</p>
+      <div class="kb-field" style="max-width:360px;"><label for="rater_name">Your name</label>
+        <input type="text" id="rater_name" name="rater_name" required autocomplete="name" value="${esc(lsGet(LS_PREFIX + 'last') || '')}"></div></div>`,
+    on_finish: (data) => {
+      const name = (data.response.rater_name || '').trim();
+      const prev = lsGet(LS_PREFIX + name.toLowerCase());
+      S = prev ? JSON.parse(prev) : newState(name);
+      save();
+      jsPsych.addNodeToEndOfTimeline({ timeline: mainTimeline() });
+    },
+  };
+}
+function taskIntro(task) {
+  const ng = S.order[task].length, na = S.order[task].reduce((s, g) => s + S.answerOrder[g].length, 0);
+  return {
+    timeline: [{
+      type: jsPsychInstructions, show_clickable_nav: true, button_label_next: 'Begin', allow_backward: false,
+      pages: [`<div style="max-width:${task === 'association' ? 720 : 900}px;margin:0 auto;text-align:left;">
+        <h3 style="color:${COLOR[task]}">${TITLE[task]}</h3>
+        <p>${TASK_DESC[task]}</p>
+        <p style="margin-bottom:2px;">For each answer you will judge:</p><ul class="rt-crit">${TASK_CRIT[task]}</ul>
+        <p style="color:#666;margin:14px 0 4px;">The worked example participants saw:</p>
+        <div style="color:#666;">${EXAMPLES[task]}</div>
+        <p style="margin-top:16px;color:#888;font-size:14px;">Next: ${ng} pairs of concepts, ${na} answers.</p></div>`],
+      on_load: () => { document.body.classList.toggle('wide', task !== 'association'); growCells(); },
+    }],
+    conditional_function: () => S.order[task].some(gid => !S.done[gid]),
+  };
+}
+function groupTrial(task, gid, pos) {
+  const g = groupById(gid);
+  const op = { association: 'to', analogy: '::', blending: '+' }[task];
+  return {
+    timeline: [{
+      type: jsPsychSurveyHtmlForm, button_label: 'Next',
+      html: () => {
+        const { tot, done } = totals();
+        let h = `<div style="text-align:left;max-width:${task === 'association' ? 760 : 1060}px;margin:0 auto;">
+          <div class="kb-progress">${done} of ${tot} answers rated</div>
+          <div style="height:3px;background:#e0dde6;border-radius:2px;margin:6px 0 18px;"><div style="width:${100 * done / tot}%;height:100%;background:#007bff;border-radius:2px;"></div></div>
+          <div class="kb-eyebrow ${EYE[task]}">${task} &middot; pair ${pos} of ${S.order[task].length}</div>
+          <div class="kb-pair"><span class="kb-chip a">${esc(g.u)}</span><span class="kb-tween">${op}</span><span class="kb-chip b">${esc(g.v)}</span></div>
+          <p class="kb-ask">${S.answerOrder[gid].length} answers to this pair. Rate each one.</p>`;
+        S.answerOrder[gid].forEach((aid, i) => {
+          const a = answerById(aid), r = S.ratings[aid] || {};
+          h += `<div class="rt-card${i === 0 ? ' first' : ''}${answerDone(task, aid) ? ' done' : ''}" id="card-${aid}">
+            <div class="rt-head"><span class="lbl">Answer ${'ABCDEFG'[i]}</span><span class="st">${answerDone(task, aid) ? '&#10003; complete' : 'to rate'}</span></div>
+            ${RENDER[task](a)}<div class="rt-qs">${questions(task, a, r)}</div></div>`;
+        });
+        return h + `</div>`;
+      },
+      on_load: () => {
+        document.body.classList.toggle('wide', task !== 'association');
+        growCells();
+        const form = document.querySelector('#jspsych-survey-html-form');
+        form.addEventListener('change', () => {
+          harvest(form, task, gid); save();
+          for (const aid of S.answerOrder[gid]) {
+            const card = document.getElementById('card-' + aid), ok = answerDone(task, aid);
+            card.classList.toggle('done', ok); card.querySelector('.st').innerHTML = ok ? '&#10003; complete' : 'to rate';
+            const fl = card.querySelector(`[data-falselinks="${aid}"]`); if (fl) fl.hidden = (S.ratings[aid] || {}).factual !== false;
+          }
+        });
+      },
+      on_finish: (data) => {
+        const resp = data.response || {};
+        for (const aid of S.answerOrder[gid]) {
+          const r = S.ratings[aid] = S.ratings[aid] || {};
+          for (const f of REQUIRED[task]) if (resp[`${aid}__${f}`] !== undefined) r[f] = parseVal(resp[`${aid}__${f}`]);
+          if (task === 'association') r.false_links = Object.keys(resp).filter(k => k.startsWith(`${aid}__false_`)).map(k => +k.split('_').pop());
+          r.t = new Date().toISOString();
+        }
+        S.done[gid] = true; S.time_ms[gid] = (S.time_ms[gid] || 0) + (data.rt || 0);
+        save();
+      },
+    }],
+    conditional_function: () => !S.done[gid],
+  };
+}
+function commentTrial() {
+  return {
+    type: jsPsychSurveyHtmlForm, button_label: 'Finish',
+    html: () => `<div style="max-width:760px;margin:0 auto;text-align:left;">
+      <h3 style="color:#333;">Almost done</h3>
+      <div class="kb-field"><label for="cm">Any comments? (optional: confusing answers, criteria that were hard to apply, &hellip;)</label>
+        <textarea id="cm" name="comment" rows="4">${esc(S.comment || '')}</textarea></div></div>`,
+    on_load: () => document.body.classList.remove('wide'),
+    on_finish: (data) => { S.comment = (data.response || {}).comment || ''; S.finished = new Date().toISOString(); save(); },
+  };
+}
+function mainTimeline() {
+  const tl = [];
+  for (const task of TASKS) {
+    tl.push(taskIntro(task));
+    S.order[task].forEach((gid, i) => tl.push(groupTrial(task, gid, i + 1)));
+  }
+  tl.push(commentTrial());
+  return tl;
+}
+
+/* ------------------------------------------------------------------ end screen: download */
+function fileName() { return 'kombine_ratings_' + S.rater.replace(/[^A-Za-z0-9]+/g, '_') + '.json'; }
+function exportJSON() {
+  const { tot, done } = totals();
+  return JSON.stringify({ version: DATA.version, rater: S.rater, started: S.started, finished: S.finished || null,
+    exported: new Date().toISOString(), n_missing: tot - done, order: S.order, answerOrder: S.answerOrder,
+    time_ms: S.time_ms, comment: S.comment, ratings: S.ratings }, null, 1);
+}
+function endScreen() {
+  const el = document.getElementById('jspsych-target');
+  const { tot, done } = totals();
+  el.innerHTML = `<div class="jspsych-content-wrapper"><div class="jspsych-content rt-end" style="max-width:760px;text-align:left;">
+    <h2 style="color:#333;">Thank you!</h2>
+    <p>${done === tot ? `All ${tot} answers are rated.` : `<span style="color:#c0392b">${tot - done} of ${tot} answers are not rated.</span>`}</p>
+    <p>Please download your ratings and email the file (<code>${esc(fileName())}</code>) to Sam.</p>
+    <p><button class="jspsych-btn" id="dl" style="margin-left:0;">Download my ratings</button></p>
+    <details style="margin-top:12px;"><summary style="cursor:pointer;color:#007bff;font-size:14px;">Download not working? Copy the data instead</summary>
+      <p style="font-size:14px;color:#666;">Copy everything below and paste it into an email.</p>
+      <textarea id="raw" readonly></textarea>
+      <p><button class="jspsych-btn" id="copy" style="margin-left:0;">Copy to clipboard</button> <span id="copied" style="font-size:14px;color:#666;"></span></p>
+    </details></div></div>`;
+  document.getElementById('dl').onclick = () => {
+    const blob = new Blob([exportJSON()], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fileName();
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  };
+  const raw = document.getElementById('raw');
+  el.querySelector('details').addEventListener('toggle', () => { raw.value = exportJSON(); });
+  document.getElementById('copy').onclick = async () => {
+    raw.value = exportJSON();
+    try { await navigator.clipboard.writeText(raw.value); document.getElementById('copied').textContent = 'Copied.'; }
+    catch (e) { raw.select(); document.getElementById('copied').textContent = 'Press Cmd/Ctrl+C to copy.'; }
+  };
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof initJsPsych === 'undefined') {
+    document.getElementById('jspsych-target').innerHTML = '<p style="padding:40px;text-align:center;color:#c0392b;">Could not load the study. Please check your internet connection and reload.</p>';
+    return;
+  }
+  jsPsych = initJsPsych({ display_element: 'jspsych-target', on_finish: endScreen });
+  jsPsych.run([welcomeTrial()]);
+});
+</script>
+</body>
+</html>

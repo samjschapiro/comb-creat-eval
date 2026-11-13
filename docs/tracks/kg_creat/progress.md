@@ -747,3 +747,28 @@ Log: `docs/logs/2026-11-11/1525_kombine_math_talk.md`.
 | cGKy — judge self-preference | **not run** (cheap: per-judge leave-out, own-family bias) | `leaderboard_single_judge.py` is a start |
 | eN17 Q1 — memorization / n-gram novelty | **not run** | — |
 | Reviewer A7nz | review text not yet in hand | — |
+
+## 2026-11-13 — rebuttal Exp 2: co-author rater study built and sent
+
+A jsPsych page in the human study's own UI. Co-authors independently rate the same 40 answers:
+- 12 entity pairs, each with one human answer (comprehension-screened, 46/75 participants) and 2–3 model answers;
+- half of the answers are panel-pass;
+- questions mirror the judges (F; pair_sat, valid, coherent; generic_ok, coherent, scope), plus 1–5 originality.
+
+The user texted it to co-authors on 11-13; files come back as `kombine_ratings_<name>.json`. The analysis is ready: `analyze_rater_study.py` reports α, human–human agreement, panel vs held-out rater against the other raters' majority vs that rater, and Spearman of human originality vs ρ. Log: `docs/logs/2026-11-13/1119_kombine_rater_study_platform.md`.
+
+**Outstanding rebuttal steps (rebuttals due 2026-11-18).**
+
+| # | Item | Status / next action |
+|---|---|---|
+| 2 | Human–judge validity (A7nz, eN17) | Platform sent. Collect files into `data/kg_creat/rater_study/ratings/`, run the analysis, draft the reply. |
+| 1 | Causal abstraction bottleneck (eN17, cGKy) | **Not run.** Proposed design: give models that failed a validated generic space (and a weaker hint), then score V, Q, O(c'), about 6 models, tens of dollars. Needs the user's go-ahead. |
+| 3a | Leave-one-model / provider-out originality, fixed reference pool (cGKy Q2) | **Not run.** Free: recompute ρ and the rank stability of the leaderboard. |
+| 3b | θ sensitivity of inventive multiples | **Done** (sweep 0.62 / 0.674 / 0.72, (τ,θ) density, null FPR 0.03%). Fix the paper's wording: 0.674 was chosen by inspection, not as "the 99th percentile". |
+| 3c | Reasoning effort (cGKy W2) | **Done** (2 models × low/med/high; reasoning tokens 7–15× higher, overall score unchanged). Draft the reply. |
+| — | Equal-weight composite / hard utility zero (cGKy) | **Not run.** Free: weight perturbation, ungated composite, rank stability. |
+| — | Judge self-preference (cGKy) | **Not run.** Free: per-judge leave-out and own-family bias test. |
+| — | Embedding choice (cGKy) | **Done** (appendix encoder robustness). Point to it. |
+| — | Memorisation / novelty vs pretraining (eN17 Q1) | **Not run.** Options: n-gram novelty (check the "death of the n-gram" paper first), plus the rhetorical point that novelty is relative to a class of artifacts (Swanson's undiscovered public knowledge). |
+| — | Reviewer A7nz full review | Text not yet in hand; needed to draft that reply. |
+| — | Formalism clarity | Fix the four issues noted 2026-11-11 (association surprise denominator, domain of M, Q with an empty projection, analogy example direction). |

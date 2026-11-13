@@ -74,6 +74,7 @@ src/
 │       ├── repair_elicit.py, rejudge_factuality.py           # backfill failed draws; re-judge paths the batched judge truncated
 │       ├── rescore_originality.py, rescore_split_originality.py, rescore_blends.py  # pool-relative rescore; base/emergent split; blend-v3 rescore
 │       ├── build_blind_review.py, blind_review_server.py     # blind human re-rating of panel dimensions (+ hidden key)
+│       ├── build_rater_study.py, analyze_rater_study.py, rater_study_template.html, rater_study_kombine.css  # co-author rater study (rebuttal): jsPsych page in the human study UI + reliability / judge-validity analysis
 │       ├── build_blend_review.py, blend_review_server.py     # blend-specific review UI (uv shared-slot format)
 │       ├── leaderboard_unanimous.py, leaderboard_single_judge.py  # judge-robustness checks on the leaderboard
 │       ├── shared_property_judge.py, coherence_taxonomy_judge.py  # blend shared-slot + failure-mode probes
@@ -185,6 +186,7 @@ data/
 │       ├── blends_v3/           # `uv`-tag blend re-elicitation, merged back into responses/
 │       ├── scores/<model>/path_scores.json  # per-artifact scores + per-judge explanations; composite.json
 │       ├── human_review{,_blendv3}/  # blind review items + hidden key + ratings.jsonl
+│       ├── rater_study/            # co-author rater study: items.json, key.json (hidden), rate.html, ratings/*.json, analysis.json
 │       └── analysis/            # invention_homogeneity.json, invention_vectors.npz
 ├── dat_eval/                    # DAT / CDAT / PACE runs
 │   ├── run_v1/                  # canonical pool; backfilled models merged in under canonical
