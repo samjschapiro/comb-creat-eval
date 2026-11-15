@@ -228,17 +228,39 @@ original: association 0.337 vs 0.331, analogy 0.453 vs 0.462, blending 0.383 vs 
 > thinking budget rather than ability?
 
 **Draft response.** We ran a controlled effort study.
-- **Design:** two frontier reasoning models (gpt-5.6-sol, gpt-6-astra-flex) at low / medium / high effort.
-  All six configurations were scored in one pooled pass, so originality is comparable across levels.
-- **Manipulation check:** the models genuinely thought more. Mean reasoning tokens went 1,786 → 4,981 →
-  13,076 (sol, 7.3×) and 1,011 → 6,526 → 14,779 (astra, 14.6×).
-- **Result: the overall score did not move.** Paired high − low: sol −0.4 points, 95% CI [−6.2, +5.4];
-  astra −0.4, [−8.1, +7.0]. Of 38 per-dimension effort contrasts, only three exclude zero, and they are
-  one effect: sol's association utility.
-- **That one effect is a path-length artifact.** Higher effort produces longer chains (4.8 → 5.5 hops),
-  and a chain is factual only if every link is. Per-link factuality is nearly flat (93.9 → 92.2%), and
-  per-link factuality raised to the mean chain length predicts each configuration's path utility within
-  1–3 points.
+- **Models:** two frontier reasoning models (gpt-5.6-sol, gpt-6-astra-flex), each at low, medium and
+  high reasoning effort.
+- **Items:** all 90.
+- **Scoring:** all six configurations in one pooled pass, so originality is comparable across effort
+  levels.
+
+| Model · effort | Mean reasoning tokens | Association | Analogy | Blending | **Overall** [95% CI] |
+|---|---|---|---|---|---|
+| gpt-5.6-sol · low | 1,786 | 49.1 | 78.6 | 63.8 | **63.8** [59.1, 67.9] |
+| gpt-5.6-sol · medium | 4,981 | 46.7 | 71.8 | 67.2 | **61.9** [56.7, 66.5] |
+| gpt-5.6-sol · high | 13,076 (7.3×) | 44.5 | 73.9 | 71.9 | **63.4** [58.3, 67.8] |
+| gpt-6-astra-flex · low | 1,011 | 44.9 | 70.0 | 64.9 | **59.9** [54.3, 65.0] |
+| gpt-6-astra-flex · medium | 6,526 | 44.4 | 66.4 | 53.8 | **54.8** [48.6, 60.3] |
+| gpt-6-astra-flex · high | 14,779 (14.6×) | 46.6 | 70.3 | 61.6 | **59.5** [53.6, 64.5] |
+
+- **Effort had no effect on the overall score.** Paired high − low difference: sol −0.4 [−6.2, +5.4];
+  astra −0.4 [−8.1, +7.0].
+- **Only one effect, and it is mechanical.** Of 38 per-dimension contrasts, only three exclude zero.
+  They are a single effect, sol's association utility: surprise and originality are gated on utility,
+  so a utility drop pulls both down.
+
+**That effect is a path-length artifact.** More effort produces longer chains, and a chain is factual
+only if *every* link is. Per-link factuality barely moves, and per-link factuality raised to the mean
+chain length predicts each configuration's path utility within 1–3 points:
+
+| Model · effort | Association paths | Mean hops | Per-link factuality | Path utility (observed) | Predicted = p_link ^ hops |
+|---|---|---|---|---|---|
+| sol · low | 586 | 4.81 | 93.9% | 73.0% | 73.9% |
+| sol · medium | 804 | 4.95 | 92.3% | 69.2% | 67.3% |
+| sol · high | 1,220 | 5.52 | 92.2% | 65.7% | 63.9% |
+| astra · low | 1,187 | 6.79 | 93.8% | 65.6% | 64.8% |
+| astra · medium | 1,620 | 7.29 | 93.7% | 64.5% | 62.2% |
+| astra · high | 1,572 | 7.29 | 94.2% | 67.6% | 64.7% |
 
 Thinking an order of magnitude longer does not buy combinatorial creativity on Kombine, so the ranking
 reflects what models do with their default budget, not the budget itself. We will add this as an
