@@ -245,18 +245,61 @@ original: association 0.337 vs 0.331, analogy 0.453 vs 0.462, blending 0.383 vs 
   35 evaluated models. The panel was chosen to be non-subject, and the factuality judge (claude-haiku-4.5)
   is not evaluated either.
 - **Family-level bias, tested.** Judges do share providers with evaluated models (10 Anthropic and
-  7 OpenAI models among the 35), so we tested this directly from the stored per-judge votes:
-  1. **Own-family leniency.** For each judge: its vote minus the other family's judges', on its own
-     provider's models vs third-party models (cluster bootstrap over models). The estimates are +2.7 pp
-     for Haiku 4.5 (95% CI [−1.7, 7.1]), −0.2 pp for o3 ([−5.1, 4.3]) and +3.3 pp for gpt-5.4
-     ([−3.1, 8.7]). None differs from zero. Of 18 judge × dimension cells, the only significant one goes
-     against the judge's own family.
-  2. **Leave one judge out.** The ranking is essentially unchanged (Spearman 0.966–0.993; same #1 in 5 of
-     6 configurations). Dropping Haiku moves Anthropic models *down* by only 0.2–0.6 ranks on average,
-     and dropping an OpenAI judge moves OpenAI models *up*, the opposite of what self-preference predicts.
-  3. **Factuality.** Haiku 4.5 agrees with an independent judge (gpt-oss-120b) on 88–92% of 54,277
-     triples in every provider family. It is slightly *stricter* everywhere, and no more lenient on
-     Anthropic models (difference in differences +1.1 pp, [−0.5, 2.7]).
+  7 OpenAI among the 35; 18 third-party), so we tested it directly from the stored per-judge votes.
+
+  **1. Own-family leniency.** The measure is a difference in differences, in percentage points: each
+  judge's pass vote minus the other family's judges' mean vote, on its own provider's models minus on
+  third-party models. Positive means more lenient on its own family. Bootstrap CI, clustered over models.
+
+  | Judge (family) | All dimensions | Analogy valid | Analogy coherent | Blend generic space | Blend coherent | Blend double-scope | Blend emergent |
+  |---|---|---|---|---|---|---|---|
+  | Haiku 4.5 (Anthropic) | **+2.7** [−1.7, 7.1] | +7.4 [−4.9, 18.6] | +2.8 [−3.5, 9.6] | +3.8 [−1.9, 9.6] | +3.3 [−1.8, 8.2] | +3.6 [−3.6, 10.8] | −4.3 [−11.7, 3.1] |
+  | o3 (OpenAI) | **−0.2** [−5.1, 4.3] | +1.0 [−9.6, 13.4] | −1.3 [−7.3, 4.5] | +1.5 [−4.7, 7.9] | −6.6 [−14.0, −0.2] | −0.9 [−9.0, 6.9] | +4.7 [−4.9, 13.8] |
+  | gpt-5.4 (OpenAI) | **+3.3** [−3.1, 8.7] | +5.0 [−9.1, 19.1] | +2.1 [−5.8, 9.6] | +1.4 [−4.3, 7.3] | −1.1 [−9.9, 6.6] | +3.1 [−4.9, 10.1] | +9.2 [−1.2, 18.3] |
+
+  - **No judge is significantly lenient toward its own family overall.**
+  - **One of the 18 judge × dimension cells excludes zero:** o3 on blend coherence. It goes *against*
+    o3's own family.
+
+  **2. Change the panel.**
+  - **Strict:** both remaining judges must pass an answer. **Lenient:** either may.
+  - **Rank change by family:** the mean change in rank for Anthropic / OpenAI / third-party models;
+    positive means the family moves up.
+
+  | Panel | Spearman with paper | Same #1 | Top-5 overlap | Rank change: Anthropic / OpenAI / third-party |
+  |---|---|---|---|---|
+  | Drop Haiku, strict | 0.981 | yes | 4 | −0.6 / +0.6 / +0.1 |
+  | Drop Haiku, lenient | 0.988 | yes | 4 | −0.2 / +0.4 / −0.1 |
+  | Drop o3, strict | 0.966 | yes | 3 | −0.5 / +1.9 / −0.4 |
+  | Drop o3, lenient | 0.993 | yes | 4 | +0.3 / +0.4 / −0.3 |
+  | Drop gpt-5.4, strict | 0.992 | yes | 4 | +0.5 / +0.4 / −0.4 |
+  | Drop gpt-5.4, lenient | 0.978 | no | 4 | +0.3 / +0.6 / −0.4 |
+  | Haiku only | 0.978 | no | 4 | +0.9 / +0.1 / −0.6 |
+  | o3 only | 0.991 | yes | 4 | 0.0 / +0.4 / −0.2 |
+  | gpt-5.4 only | 0.982 | yes | 4 | −0.7 / +0.9 / +0.1 |
+  | Other-family judges only, strict | 0.954 | yes | 3 | −3.5 / +1.7 / +1.3 |
+  | Other-family judges only, lenient | 0.983 | no | 5 | +1.9 / −1.6 / −0.4 |
+
+  - **Dropping a judge barely moves the ranking** (Spearman 0.966–0.993).
+  - **Dropping Haiku moves Anthropic models down by under one rank.** Dropping an OpenAI judge moves
+    OpenAI models *up*, the opposite of self-preference.
+  - **The two "other-family only" panels bracket the paper's panel.** Anthropic models are judged by
+    o3 + gpt-5.4, and OpenAI models by Haiku. Their ranks move in opposite directions depending only on
+    whether the panel is strict or lenient. The strict panel's −3.5 for Anthropic comes from requiring
+    two judges to agree, not from removing Haiku.
+
+  **3. Factuality judge.** Haiku 4.5 compared with an independent gpt-oss-120b judge, on 54,277 triples
+  both judged:
+
+  | Models' family | Models | Triples | Haiku: % true | gpt-oss: % true | Agreement |
+  |---|---|---|---|---|---|
+  | Anthropic | 10 | 19,056 | 91.4 | 92.0 | 89.5% |
+  | OpenAI | 7 | 15,201 | 93.1 | 94.6 | 91.7% |
+  | Third-party | 18 | 20,020 | 88.8 | 90.5 | 88.3% |
+
+  - **Haiku is slightly stricter than gpt-oss on every family.**
+  - **Its relative leniency on Anthropic models** (difference in differences vs third-party) is +1.1 pp
+    [−0.5, 2.7], and on OpenAI models +0.2 pp [−1.3, 1.7]. Neither differs from zero.
 
   Source: `docs/reports/2026-11-13_kg_creat_rebuttal_composite_and_judges/`.
 
