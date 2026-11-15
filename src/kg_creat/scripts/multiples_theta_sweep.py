@@ -5,7 +5,7 @@ anchor echo removed, one-to-one maximum matching). Read-only with respect to inv
 At each theta and tau = 2 (and tau = 3 for the collapse):
   rate of multiple pairs (overall / blending / analogy) and inventions in >= 1 multiple;
   blending / analogy: share of INVENTIONS in >= 1 multiple (the paper's 14.3x), pair rate at fixed tau, and per property (mean shared/kmin, averaged within item then over items);
-  same-provider / cross-provider rate ratio;
+  same-provider / cross-provider: the paper's concept-level, opportunity-matched ratio (2.3x), and the pair-rate ratio;
   a cross-item null (pairs answering DIFFERENT anchors, same task; 30k per task, seed 0): % at tau >= 1 and >= 2.
 
     .venv_mlx/bin/python -m src.kg_creat.scripts.multiples_theta_sweep
@@ -85,11 +85,29 @@ def main():
              "rate_tau3": pct(P, 3), "tau3_over_tau2": pct(P, 3) / pct(P),
              "null_tau1_pct": 100 * float(np.mean([s >= 1 for _t, s in nsh])),
              "null_tau2_pct": 100 * float(np.mean([s >= 2 for _t, s in nsh]))}
+        # the paper's provider ratio (analyze_inventive_multiples.concept_level, tau = 2): per invented concept, share with
+        # >= 1 multiple among its own provider's k models vs the expected share among k random other-provider models
+        from math import comb
+        by = defaultdict(lambda: {"s": [], "d": []})
+        for x in P:
+            key = "s" if x["same"] else "d"
+            by[x["a"]][key].append(x["sh"]); by[x["b"]][key].append(x["sh"])
+        n = same_hit = matched = 0.0
+        for i in range(len(names)):
+            sl, dl = by[i]["s"], by[i]["d"]
+            k, D = len(sl), len(dl)
+            if k == 0 or D < k:
+                continue
+            dd = sum(1 for y in dl if y >= 2)
+            n += 1; same_hit += any(y >= 2 for y in sl); matched += 1.0 - comb(D - dd, k) / comb(D, k)
+        r["concept_same_pct"], r["concept_cross_matched_pct"] = 100 * same_hit / n, 100 * matched / n
+        r["same_over_cross_concept"] = same_hit / matched
         r["blend_over_analogy_inventions"] = r["inv_blend_pct"] / r["inv_analogy_pct"] if r["inv_analogy_pct"] else None
         rows.append(r)
         print(f"theta {th:.3f}: tau2 {r['rate_tau2']:.2f}% (bl {r['blend_tau2']:.2f} / an {r['analogy_tau2']:.2f}) "
               f"inv {r['inventions_in_multiple_pct']:.1f}% (bl {r['inv_blend_pct']:.1f} / an {r['inv_analogy_pct']:.1f} = {r['blend_over_analogy_inventions'] or float('nan'):.1f}x) | bl/an fixed {r['blend_over_analogy_fixed_tau'] or float('nan'):.1f}x "
-              f"per-prop {r['blend_over_analogy_per_property']:.1f}x | same/cross {r['same_over_cross']:.2f}x "
+              f"per-prop {r['blend_over_analogy_per_property']:.1f}x | concept same/cross {r['same_over_cross_concept']:.2f}x "
+              f"({r['concept_same_pct']:.1f}/{r['concept_cross_matched_pct']:.1f}) | pair same/cross {r['same_over_cross']:.2f}x "
               f"({r['same_pct']:.2f}/{r['cross_pct']:.2f}) | tau3 {r['rate_tau3']:.3f}% | null tau1 {r['null_tau1_pct']:.2f}% "
               f"tau2 {r['null_tau2_pct']:.3f}%")
     OUT.write_text(json.dumps(rows, indent=1))

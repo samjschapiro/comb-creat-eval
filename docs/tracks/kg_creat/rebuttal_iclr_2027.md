@@ -106,23 +106,23 @@ the top 8 unchanged.
   - **Per-property ratio:** shared properties ÷ the smaller invention's property count, averaged within
     item, then blending ÷ analogy.
 
-  | θ | Inventions in ≥ 1 multiple: all (blend / analogy = ratio) | Blend ÷ analogy, pair rate | Blend ÷ analogy, per property | Same ÷ cross provider |
-  | --- | --- | --- | --- | --- |
-  | 0.55 | 45.3% (83.7 / 6.9 = **12.1×**) | 36× | 3.3× | 2.02× |
-  | 0.60 | 34.9% (65.1 / 4.9 = **13.2×**) | 30× | 3.2× | 2.28× |
-  | 0.62 | 30.8% (57.3 / 4.3 = **13.2×**) | 26× | 3.3× | 2.43× |
-  | 0.65 | 24.8% (45.9 / 3.8 = **12.2×**) | 22× | 3.3× | 2.48× |
-  | **0.674 (paper)** | **19.9% (37.3 / 2.6 = 14.3×)** | **27×** | **3.4×** | **2.49×** |
-  | 0.70 | 14.8% (27.5 / 2.2 = **12.4×**) | 22× | 3.5× | 2.28× |
-  | 0.72 | 11.7% (21.9 / 1.5 = **14.2×**) | 25× | 3.5× | 2.10× |
-  | 0.75 | 8.2% (15.2 / 1.2 = **13.1×**) | 21× | 3.6× | 1.92× |
+  | θ | Inventions in ≥ 1 multiple: all (blend / analogy = ratio) | Blend ÷ analogy, per property | Same ÷ cross provider: concepts with a same-provider multiple ÷ matched cross-provider expectation |
+  | --- | --- | --- | --- |
+  | 0.55 | 45.3% (83.7 / 6.9 = **12.1×**) | 3.3× | 26.3 / 16.4 = 1.60× |
+  | 0.60 | 34.9% (65.1 / 4.9 = **13.2×**) | 3.2× | 18.1 / 9.6 = 1.88× |
+  | 0.62 | 30.8% (57.3 / 4.3 = **13.2×**) | 3.3× | 15.5 / 7.4 = 2.09× |
+  | 0.65 | 24.8% (45.9 / 3.8 = **12.2×**) | 3.3× | 12.1 / 5.3 = 2.30× |
+  | **0.674 (paper)** | **19.9% (37.3 / 2.6 = 14.3×)** | **3.4×** | **9.3 / 4.1 = 2.3×** |
+  | 0.70 | 14.8% (27.5 / 2.2 = **12.4×**) | 3.5× | 6.3 / 3.0 = 2.13× |
+  | 0.72 | 11.7% (21.9 / 1.5 = **14.2×**) | 3.5× | 4.8 / 2.3 = 2.03× |
+  | 0.75 | 8.2% (15.2 / 1.2 = **13.1×**) | 3.6× | 3.0 / 1.7 = 1.78× |
 
   - **Absolute rates move with θ, as they must.** Each finding holds in direction and roughly in size at
     every θ:
     - **Blends converge more than analogies.** By the paper's measure (share of inventions in a
-      multiple), 12.1–14.3×, against 14.3× at the paper's θ. Per property, the ratio robust to
+      multiple), 12.1–14.3× (14.3× at the paper's θ). Per property, the ratio robust to
       properties per concept, 3.2–3.6×, nearly flat across θ.
-    - **Same-provider pairs converge more than cross-provider pairs:** 1.9–2.5×.
+    - **Same-provider models converge more than cross-provider models.** By the paper's measure, 1.6–2.3× (2.3× at the paper's θ).
     - **Convergence collapses from τ = 2 to τ = 3:** by 6–27×, depending on θ.
   - **The cross-item null almost never produces a τ = 2 multiple** (≤ 0.015% at any θ ≥ 0.55; none at
     θ ≥ 0.65). So multiples are convergence on the item, not shared phrasing.
@@ -132,10 +132,13 @@ the top 8 unchanged.
   Source: `src/kg_creat/scripts/multiples_theta_sweep.py` →
   `data/kg_creat/kombine_test30/analysis/multiples_theta_sweep.json`.
 
-  *(Note on the ratios. The paper's 14.3× compares the share of inventions that belong to a multiple
-  (37.3% vs 2.6%); this sweep reproduces it exactly at θ = 0.674. The pair-rate ratio (27×) is a
-  different, more extreme quantity. Don't quote it in the reply. Lead with 14.3× and the per-property
-  3.4×, which answers cGKy's "normalised for properties per concept".)*
+  *(Note on the ratios. Both columns use the paper's definitions, and both are reproduced exactly at
+  θ = 0.674:
+  - 14.3× is the share of inventions in a multiple, 37.3% vs 2.6%;
+  - 2.3× is the share of concepts with a same-provider multiple vs the expected share from an equal
+    number of other-provider models, 9.3% vs 4.1%.
+
+  Pair-level rates (27× and 2.5×) are different quantities. Don't quote them.)*
 
 *(Paper fix: the text calls 0.674 "the 99th percentile of cosine similarity over all property pairs".
 It was chosen by inspection; 0.674 happens to be the 99.2nd percentile of within-item similarities.
