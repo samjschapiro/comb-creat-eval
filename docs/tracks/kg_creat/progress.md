@@ -833,7 +833,7 @@ blending.
 
 **Invented names.**
 - 32–40% never appear verbatim.
-- Familiar names already score lower on emergent originality.
+- Familiar names score modestly lower on emergent originality (within item −0.15 / −0.10; small).
 - Multiples are not more common among existing names.
 
 **Failed check.** The Swanson endpoint contrast failed: at 4.6T tokens, every pair co-occurs somewhere.

@@ -15,7 +15,7 @@ pretraining?
   association or analogy.
 - **Creativity:** it predicts neither originality nor cross-model convergence in any task, and nothing at
   all in blending.
-- **Names:** most invented names are new phrases or ordinary words. Familiar ones already score lower on
+- **Names:** most invented names are new phrases or ordinary words. Familiar ones score modestly lower on
   our originality metric.
 
 ## Method
@@ -84,9 +84,31 @@ co-occur there.
   *self-legislated decalogue*.
 - **Frequent names are ordinary words:** *Treatment*, *David*, *Covenant*, *Icon*, *Lattice*. A name's
   existence does not mean the *concept* existed, so this table bounds verbatim naming, not memorisation.
-- **Familiar names already score lower on our originality metric.** Emergent originality falls with name
-  frequency: Spearman −0.14 for analogy (p = 1e-5) and −0.06 for blending, and −0.15 / −0.10 within item.
-  So the pool-relative metric already discounts familiar concepts.
+- **Familiar names score modestly lower on our originality metric.** The metric never sees the corpus.
+  It only compares an invention with the other models' inventions for the same item. Even so, emergent
+  originality falls slightly as the name gets more frequent in pretraining text.
+  - **Within item:** Spearman −0.15 for analogy (permutation p = 0.0005) and −0.10 for blending
+    (p = 0.0015). Correlations are computed after centring each item, so this is not "easier items have
+    both commoner names and lower originality".
+  - **Effect size:** small, about half an SD between never-seen and very common names, and the four bands
+    fall in order. Mean emergent originality by verbatim count (SD about 0.06):
+
+    | Task | Never | 1–99× | 100–100k× | ≥ 100k× |
+    |---|---|---|---|---|
+    | Analogy | 0.513 (n = 418) | 0.510 (278) | 0.494 (303) | 0.482 (38) |
+    | Blending | 0.475 (327) | 0.469 (327) | 0.464 (361) | 0.457 (11) |
+
+  - **Examples from one item each:**
+    - analogy E5: *Phagosomal emission* (never seen) 0.579 vs *event horizon* (1.9M occurrences) 0.436;
+    - blending F1: *grief cipher* (never seen) 0.513 vs *The Blue Key* (192k occurrences) 0.409.
+  - **Mechanism:** the name is one of the invention's elements. It is always included for analogy, and
+    for blending it enters as the subject of the emergent triples. Stock phrases such as *event horizon*
+    tend to sit near what other models write for the item, so their nearest-neighbour distance is
+    smaller.
+  - **What this supports:** only weakly that pool-relative originality *tracks* corpus novelty
+    (convergent validity with an H-novelty reference). It does not support "the metric discounts familiar
+    concepts". The relationship explains about 1–2% of the variance in ranks.
+
 - **Convergence is not recall of a named concept.** An invention is no more likely to be part of an
   inventive multiple when its name already exists:
 
@@ -132,7 +154,8 @@ sitelinks).
 >   (|ρ| ≤ 0.26, n.s., all tasks) nor convergence between models (|ρ| ≤ 0.13). In blending it predicts
 >   nothing.
 > - **Inventions.** 32–40% of invented names never appear verbatim in 4.6T tokens. Inventions with more
->   familiar names already receive lower originality from our metric, and convergent inventions are not
+>   familiar names receive modestly lower originality from our metric (within item ρ = −0.15 / −0.10),
+>   although it never sees the corpus, and convergent inventions are not
 >   more likely to carry existing names.
 >
 > Following Saakyan et al. (2025), we use n-gram statistics only as a contamination check, not as a

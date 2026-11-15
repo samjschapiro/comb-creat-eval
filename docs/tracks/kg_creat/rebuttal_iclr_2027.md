@@ -286,7 +286,8 @@ appendix. Source: `data/kg_creat/effort_study/`, log 2026-09-07.
    - **Familiarity and creativity.** It predicts neither originality (|ρ| ≤ 0.26, n.s., every task) nor
      convergence between models (|ρ| ≤ 0.13). In blending it predicts nothing at all.
    - **Inventions.** 32–40% of invented names never appear verbatim in 4.6T tokens. Familiar names
-     already receive lower originality from our metric, and convergent inventions are not more likely to
+     receive modestly lower originality from our metric (within item ρ = −0.15 / −0.10), although it
+     never sees the corpus, and convergent inventions are not more likely to
      carry existing names.
 
    Following Saakyan et al. (2025, "Death of the Novel(ty)"), we use n-gram statistics only as a
