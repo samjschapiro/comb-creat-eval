@@ -45,6 +45,24 @@ does it move?
 | **Overall** | **0.92** | **0.88** | **0.92** | 41.7 | 42.4 | **2.7** | 3.4 | **0 / 10** | 0.88 / 0.75 |
 | Utility only, overall | 0.92 | 0.88 | 0.91 | 56.5 | 58.0 | 3.5 | 4.4 | 0 / 10 | 0.89 / 0.79 |
 
+**What the three agreement statistics measure.** Each is computed over the 10 models. Each model is
+one data point: its score on test30 against its score on retest30.
+- **Pearson r:** do the scores line up on a straight line? It uses the actual values, so a large gap
+  between two models counts more than a small one.
+- **Spearman ρ:** do the models come out in the same *order*? Each score is replaced by its rank (1st to
+  10th), and the ranks are correlated.
+  - ρ can sit below r when several models are nearly tied. On test30, opus-4.5 (46.1) and sonnet-4.6
+    (45.8) are 0.3 points apart, and opus-4.8 (41.9) and opus-4.7 (40.8) are 1.1 apart. Small shifts on
+    new items flip such pairs, and each flip costs a full rank although the scores barely moved.
+  - That is why overall ρ = 0.88 is below r = 0.92.
+- **ICC(A,1)** (two-way, absolute agreement, single measure; McGraw & Wong, 1996): does a model get the
+  *same number* on both sets?
+  - Unlike r and ρ, it also penalises a shift in level common to all models.
+  - Blending's ICC (0.84) is below its r (0.95) because every model scored about 5 points lower on the
+    new blending items, a difference in item difficulty, not in model ordering.
+  - ICC is the right statistic for "is a model's absolute score reproducible?"; r and ρ are the right
+    ones for "is the leaderboard reproducible?".
+
 *Item SE* is the median, over models, of the item-bootstrap standard error of one model's score on one
 set of 30 items. The per-model CIs come from a bootstrap that resamples items within each task,
 independently in each set (2,000 draws).
