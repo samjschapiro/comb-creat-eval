@@ -290,6 +290,15 @@ appendix. Source: `data/kg_creat/effort_study/`, log 2026-09-07.
      never sees the corpus, and convergent inventions are not more likely to
      carry existing names.
 
+   - **Memorised inventions.** We define these as invented concepts already documented near their
+     inputs, with the properties the model assigned. Only 2.1% of inventions qualify, against 0.4% under
+     a cross-item null, at the same rate for analogy and blending.
+     - They come mostly from older open-weight models (Llama-3.3-70B 17%), and their rate falls with a
+       model's Kombine score (blending ρ = −0.41). 15 of the 35 models never produce one.
+     - They are *less* often part of an inventive multiple (blending 19% vs 38%), so the convergence we
+       report is on new concepts, not shared recall. Source:
+       `docs/reports/2026-11-14_kg_creat_memorized_inventions/`.
+
    Following Saakyan et al. (2025, "Death of the Novel(ty)"), we use n-gram statistics only as a
    contamination check, not as a creativity score. Source:
    `docs/reports/2026-11-14_kg_creat_rebuttal_corpus_contamination/`.

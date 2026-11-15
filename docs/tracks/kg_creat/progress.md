@@ -839,3 +839,26 @@ blending.
 **Failed check.** The Swanson endpoint contrast failed: at 4.6T tokens, every pair co-occurs somewhere.
 
 Report: `docs/reports/2026-11-14_kg_creat_rebuttal_corpus_contamination/`.
+
+## 2026-11-14 (later): memorised inventions (companion to the inventive multiples)
+
+`memorized_inventions.py` defines a memorised invention as one with all three properties, in the 4.6T
+OLMo 2 mix:
+- the name is attested at least 10 times;
+- it co-occurs with one of its inputs;
+- at least 2 of its properties co-occur with the name.
+
+A cross-item null (one mismatched item per invention) gives the chance rate.
+
+**Results.**
+- **Rare.** 2.1% (43 of 2,070) against a 0.4% null; equal across tasks (Wilcoxon p = 0.96).
+- **Provider.** The effect is significant (permutation p = 0.016): Meta 11%, with llama-3.3-70b at 17%,
+  then Phi-4, Qwen-2.5 and sonnet-4.5. 15 of 35 models produce none.
+- **Capability.** The per-model rate falls with the composite (ρ = −0.31; blending −0.41, p = 0.015).
+- **Inputs.** Input co-occurrence predicts memorisation (ρ ≈ +0.37); prominence and semantic distance
+  don't.
+- **Multiples.** Memorised inventions are *less* often in multiples (blending 19% vs 38%, analogy 0% vs
+  2.7%). Convergence is on new concepts.
+- **Validity.** Memorised blends fail the generic-space check more often (29% vs 45% pass).
+
+Report: `docs/reports/2026-11-14_kg_creat_memorized_inventions/`.
