@@ -99,14 +99,42 @@ the top 8 unchanged.
   Between 0.50 and 0.60, matches share a single noun and little else.
 - **False positives.** Against a cross-item null, where two inventions answer *different* entity pairs
   and so cannot share an item-specific property, only 0.03% of 185,480 matched pairs clear 0.674.
-- **Sensitivity.** We swept θ.
-  - At τ = 2, the rate of multiple pairs (overall / blending / analogy) is 2.2 / 4.3 / 0.1% at θ = 0.62,
-    1.1 / 2.2 / 0.1% at 0.674, and 0.6 / 1.1 / 0.0% at 0.72.
-  - Absolute rates move with θ, as they must, but **the direction of every finding is unchanged at every
-    θ**: blends converge more than analogies, same-provider pairs converge more than cross-provider pairs,
-    and convergence collapses from τ = 2 to τ = 3.
+- **Sensitivity.** We swept θ from 0.55 to 0.75, rerunning the full multiples pipeline at each value
+  (name-free properties, anchor echo removed, one-to-one matching):
+  - **Multiples:** model pairs answering the *same* item that share at least τ properties.
+  - **Null:** 60k pairs answering *different* items.
+  - **Per-property ratio:** shared properties ÷ the smaller invention's property count, averaged within
+    item, then blending ÷ analogy.
+
+  | θ | Pairs that are multiples, τ = 2 (blend / analogy) | Inventions in ≥ 1 multiple | Blend ÷ analogy, fixed τ | Blend ÷ analogy, per property | Same ÷ cross provider | τ = 3 rate | Null rate, τ ≥ 1 / τ ≥ 2 |
+  |---|---|---|---|---|---|---|---|
+  | 0.55 | 5.52% (10.78 / 0.30) | 45.3% | 36× | 3.3× | 2.02× | 0.91% | 0.72% / 0.015% |
+  | 0.60 | 2.97% (5.77 / 0.19) | 34.9% | 30× | 3.2× | 2.28× | 0.32% | 0.33% / 0.003% |
+  | 0.62 | 2.25% (4.34 / 0.17) | 30.8% | 26× | 3.3× | 2.43× | 0.23% | 0.26% / 0.002% |
+  | 0.65 | 1.57% (3.01 / 0.14) | 24.8% | 22× | 3.3× | 2.48× | 0.15% | 0.17% / 0 |
+  | **0.674 (paper)** | **1.14% (2.21 / 0.08)** | **19.9%** | **27×** | **3.4×** | **2.49×** | **0.09%** | **0.12% / 0** |
+  | 0.70 | 0.80% (1.54 / 0.07) | 14.8% | 22× | 3.5× | 2.28× | 0.05% | 0.08% / 0 |
+  | 0.72 | 0.59% (1.15 / 0.05) | 11.7% | 25× | 3.5× | 2.10× | 0.04% | 0.07% / 0 |
+  | 0.75 | 0.38% (0.74 / 0.03) | 8.2% | 21× | 3.6× | 1.92× | 0.01% | 0.04% / 0 |
+
+  - **Absolute rates move with θ, as they must.** Each finding holds in direction and roughly in size at
+    every θ:
+    - **Blends converge more than analogies:** 3.2–3.6× per property, the confound-free ratio, which
+      is nearly flat across θ. 21–36× at fixed τ.
+    - **Same-provider pairs converge more than cross-provider pairs:** 1.9–2.5×.
+    - **Convergence collapses from τ = 2 to τ = 3:** by 6–27×, depending on θ.
+  - **The cross-item null almost never produces a τ = 2 multiple** (≤ 0.015% at any θ ≥ 0.55; none at
+    θ ≥ 0.65). So multiples are convergence on the item, not shared phrasing.
   - A joint density over (τ, θ) shows the full picture rather than one cell. We will add it to the
     appendix.
+
+  Source: `src/kg_creat/scripts/multiples_theta_sweep.py` →
+  `data/kg_creat/kombine_test30/analysis/multiples_theta_sweep.json`.
+
+  *(Check before sending: the reviewer quotes 14.3× blend ÷ analogy from the submitted paper. The
+  current pipeline, after the anchor-echo filter and the switch to τ-criteria (09-09), gives 27× at
+  fixed τ and 3.4× per property. Quote whichever the revised paper reports, and lead with the per-property
+  ratio, which is the one robust to properties per concept, as cGKy asked.)*
 
 *(Paper fix: the text calls 0.674 "the 99th percentile of cosine similarity over all property pairs".
 It was chosen by inspection; 0.674 happens to be the 99.2nd percentile of within-item similarities.
