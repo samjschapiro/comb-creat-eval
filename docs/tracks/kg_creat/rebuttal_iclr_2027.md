@@ -492,9 +492,32 @@ replies stand without them.*
   mostly because blends assert about twice as many properties (5.0 vs 2.4). Normalised per property,
   blends still converge 3.3× more often (paired Wilcoxon p = 5 × 10⁻⁸; 2.0× with verbatim,
   encoder-free matching). We will lead with the per-property figure.
-- **Same-model baseline.** [PENDING, free: the causal-test control is a second T = 0.9 blend from six
-  models on all 30 items. The rate of τ = 2 multiples between a model's two samples gives the
-  within-model ceiling, to set against the cross-model rate.]
+- **Same-model baseline (new).** Six models (claude-opus-5, gpt-5.2, deepseek-v3, qwen-2.5-72b,
+  llama-3.3-70b, gpt-4o-mini) each produced a second blend at T = 0.9 for all 30 items, from the
+  identical prompt (the control condition of our abstraction experiment, S1). Under the paper's
+  criterion (θ = 0.674, τ = 2):
+
+  | Two blends for the same item, from… | Pairs | Share ≥ 1 property | **Multiple (τ = 2)** | Share ≥ 3 properties |
+  |---|---|---|---|---|
+  | the same model, two samples | 179 | 70.9% | **31.8%** | 9.5% |
+  | two different models (same six) | 1,790 | 21.3% | **2.8%** | 0.2% |
+  | two different models (all 35, paper) | 17,276 | — | 2.2% | — |
+  | different items (cross-item null) | 60,000 | — | ≈ 0 | — |
+
+  - **A model repeats itself 11× more often than it matches another model** (11.4×, item-bootstrap 95% CI
+    [7.8, 17.3]). Per model, the within-model rate ranges from 20% (deepseek-v3) to 50% (llama-3.3-70b,
+    which re-coins the identical name, e.g. *Karmic Attraction* twice).
+  - **So cross-model multiples sit between the two baselines.** They are far above chance (the null is
+    about 0), but at roughly a tenth of a model's own self-similarity.
+  - We will state the homogeneity finding on this scale: different models converge on the same
+    invention about 1/11 as often as one model converges with itself. That is real, but distinct
+    models are not interchangeable.
+  - **Scope.** Blending only: this was the condition we could resample at no cost. The six-model subset
+    has only one same-provider pair (gpt-5.2 / gpt-4o-mini, 0 multiples in 120 pairs), too few to
+    compare.
+
+  Source: `src/kg_creat/scripts/same_model_multiples.py` →
+  `data/kg_creat/kombine_test30/analysis/same_model_multiples.json`.
 
 ### W — Same-provider effect could be version similarity
 
