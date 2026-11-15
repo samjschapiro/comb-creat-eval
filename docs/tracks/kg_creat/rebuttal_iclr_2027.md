@@ -103,23 +103,24 @@ the top 8 unchanged.
   (name-free properties, anchor echo removed, one-to-one matching).
 
   Columns, all at τ = 2:
-  - **Blends / Analogies:** share of inventions that are part of at least one multiple.
+  - **All / Blends / Analogies:** share of inventions that are part of at least one multiple (all
+    tasks; blending only; analogy only).
   - **Ratio:** Blends ÷ Analogies, the paper's 14.3×.
   - **Per property:** the same ratio after normalising for properties per invention (shared properties
     ÷ the smaller invention's property count, averaged within item).
   - **Provider:** share of concepts with a multiple from a same-provider model, ÷ the share expected
     from an equal number of other-provider models. This is the paper's 2.3× (9.3% vs 4.1%).
 
-  | θ | Blends | Analogies | Ratio | Per property | Provider |
-  |---|---|---|---|---|---|
-  | 0.55 | 83.7% | 6.9% | 12.1× | 3.3× | 1.6× |
-  | 0.60 | 65.1% | 4.9% | 13.2× | 3.2× | 1.9× |
-  | 0.62 | 57.3% | 4.3% | 13.2× | 3.3× | 2.1× |
-  | 0.65 | 45.9% | 3.8% | 12.2× | 3.3× | 2.3× |
-  | **0.674 (paper)** | **37.3%** | **2.6%** | **14.3×** | **3.4×** | **2.3×** |
-  | 0.70 | 27.5% | 2.2% | 12.4× | 3.5× | 2.1× |
-  | 0.72 | 21.9% | 1.5% | 14.2× | 3.5× | 2.0× |
-  | 0.75 | 15.2% | 1.2% | 13.1× | 3.6× | 1.8× |
+  | θ | All | Blends | Analogies | Ratio | Per property | Provider |
+  | --- | --- | --- | --- | --- | --- | --- |
+  | 0.55 | 45.3% | 83.7% | 6.9% | 12.1× | 3.3× | 1.6× |
+  | 0.60 | 34.9% | 65.1% | 4.9% | 13.2× | 3.2× | 1.9× |
+  | 0.62 | 30.8% | 57.3% | 4.3% | 13.2× | 3.3× | 2.1× |
+  | 0.65 | 24.8% | 45.9% | 3.8% | 12.2× | 3.3× | 2.3× |
+  | **0.674 (paper)** | **19.9%** | **37.3%** | **2.6%** | **14.3×** | **3.4×** | **2.3×** |
+  | 0.70 | 14.8% | 27.5% | 2.2% | 12.4× | 3.5× | 2.1× |
+  | 0.72 | 11.7% | 21.9% | 1.5% | 14.2× | 3.5× | 2.0× |
+  | 0.75 | 8.2% | 15.2% | 1.2% | 13.1× | 3.6× | 1.8× |
 
   - **Absolute rates move with θ, as they must.** Each finding holds in direction and roughly in size at
     every θ:
