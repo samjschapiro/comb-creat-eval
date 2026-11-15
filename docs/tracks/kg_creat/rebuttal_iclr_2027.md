@@ -106,21 +106,22 @@ the top 8 unchanged.
   - **Per-property ratio:** shared properties ÷ the smaller invention's property count, averaged within
     item, then blending ÷ analogy.
 
-  | θ | Pairs that are multiples, τ = 2 (blend / analogy) | Inventions in ≥ 1 multiple | Blend ÷ analogy, fixed τ | Blend ÷ analogy, per property | Same ÷ cross provider | τ = 3 rate | Null rate, τ ≥ 1 / τ ≥ 2 |
+  | θ | Pairs that are multiples, τ = 2 (blend / analogy) | Inventions in ≥ 1 multiple: all (blend / analogy = ratio) | Blend ÷ analogy, pair rate | Blend ÷ analogy, per property | Same ÷ cross provider | τ = 3 rate | Null rate, τ ≥ 1 / τ ≥ 2 |
   |---|---|---|---|---|---|---|---|
-  | 0.55 | 5.52% (10.78 / 0.30) | 45.3% | 36× | 3.3× | 2.02× | 0.91% | 0.72% / 0.015% |
-  | 0.60 | 2.97% (5.77 / 0.19) | 34.9% | 30× | 3.2× | 2.28× | 0.32% | 0.33% / 0.003% |
-  | 0.62 | 2.25% (4.34 / 0.17) | 30.8% | 26× | 3.3× | 2.43× | 0.23% | 0.26% / 0.002% |
-  | 0.65 | 1.57% (3.01 / 0.14) | 24.8% | 22× | 3.3× | 2.48× | 0.15% | 0.17% / 0 |
-  | **0.674 (paper)** | **1.14% (2.21 / 0.08)** | **19.9%** | **27×** | **3.4×** | **2.49×** | **0.09%** | **0.12% / 0** |
-  | 0.70 | 0.80% (1.54 / 0.07) | 14.8% | 22× | 3.5× | 2.28× | 0.05% | 0.08% / 0 |
-  | 0.72 | 0.59% (1.15 / 0.05) | 11.7% | 25× | 3.5× | 2.10× | 0.04% | 0.07% / 0 |
-  | 0.75 | 0.38% (0.74 / 0.03) | 8.2% | 21× | 3.6× | 1.92× | 0.01% | 0.04% / 0 |
+  | 0.55 | 5.52% (10.78 / 0.30) | 45.3% (83.7 / 6.9 = **12.1×**) | 36× | 3.3× | 2.02× | 0.91% | 0.72% / 0.015% |
+  | 0.60 | 2.97% (5.77 / 0.19) | 34.9% (65.1 / 4.9 = **13.2×**) | 30× | 3.2× | 2.28× | 0.32% | 0.33% / 0.003% |
+  | 0.62 | 2.25% (4.34 / 0.17) | 30.8% (57.3 / 4.3 = **13.2×**) | 26× | 3.3× | 2.43× | 0.23% | 0.26% / 0.002% |
+  | 0.65 | 1.57% (3.01 / 0.14) | 24.8% (45.9 / 3.8 = **12.2×**) | 22× | 3.3× | 2.48× | 0.15% | 0.17% / 0 |
+  | **0.674 (paper)** | **1.14% (2.21 / 0.08)** | **19.9% (37.3 / 2.6 = 14.3×)** | **27×** | **3.4×** | **2.49×** | **0.09%** | **0.12% / 0** |
+  | 0.70 | 0.80% (1.54 / 0.07) | 14.8% (27.5 / 2.2 = **12.4×**) | 22× | 3.5× | 2.28× | 0.05% | 0.08% / 0 |
+  | 0.72 | 0.59% (1.15 / 0.05) | 11.7% (21.9 / 1.5 = **14.2×**) | 25× | 3.5× | 2.10× | 0.04% | 0.07% / 0 |
+  | 0.75 | 0.38% (0.74 / 0.03) | 8.2% (15.2 / 1.2 = **13.1×**) | 21× | 3.6× | 1.92× | 0.01% | 0.04% / 0 |
 
   - **Absolute rates move with θ, as they must.** Each finding holds in direction and roughly in size at
     every θ:
-    - **Blends converge more than analogies:** 3.2–3.6× per property, the confound-free ratio, which
-      is nearly flat across θ. 21–36× at fixed τ.
+    - **Blends converge more than analogies.** By the paper's measure (share of inventions in a
+      multiple), 12.1–14.3×, against 14.3× at the paper's θ. Per property, the ratio robust to
+      properties per concept, 3.2–3.6×, nearly flat across θ.
     - **Same-provider pairs converge more than cross-provider pairs:** 1.9–2.5×.
     - **Convergence collapses from τ = 2 to τ = 3:** by 6–27×, depending on θ.
   - **The cross-item null almost never produces a τ = 2 multiple** (≤ 0.015% at any θ ≥ 0.55; none at
@@ -131,10 +132,10 @@ the top 8 unchanged.
   Source: `src/kg_creat/scripts/multiples_theta_sweep.py` →
   `data/kg_creat/kombine_test30/analysis/multiples_theta_sweep.json`.
 
-  *(Check before sending: the reviewer quotes 14.3× blend ÷ analogy from the submitted paper. The
-  current pipeline, after the anchor-echo filter and the switch to τ-criteria (09-09), gives 27× at
-  fixed τ and 3.4× per property. Quote whichever the revised paper reports, and lead with the per-property
-  ratio, which is the one robust to properties per concept, as cGKy asked.)*
+  *(Note on the ratios. The paper's 14.3× compares the share of inventions that belong to a multiple
+  (37.3% vs 2.6%); this sweep reproduces it exactly at θ = 0.674. The pair-rate ratio (27×) is a
+  different, more extreme quantity. Don't quote it in the reply. Lead with 14.3× and the per-property
+  3.4×, which answers cGKy's "normalised for properties per concept".)*
 
 *(Paper fix: the text calls 0.674 "the 99th percentile of cosine similarity over all property pairs".
 It was chosen by inspection; 0.674 happens to be the 99.2nd percentile of within-item similarities.

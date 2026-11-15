@@ -4,7 +4,7 @@ anchor echo removed, one-to-one maximum matching). Read-only with respect to inv
 
 At each theta and tau = 2 (and tau = 3 for the collapse):
   rate of multiple pairs (overall / blending / analogy) and inventions in >= 1 multiple;
-  blending / analogy at fixed tau, and per property (mean shared/kmin, averaged within item then over items);
+  blending / analogy: share of INVENTIONS in >= 1 multiple (the paper's 14.3x), pair rate at fixed tau, and per property (mean shared/kmin, averaged within item then over items);
   same-provider / cross-provider rate ratio;
   a cross-item null (pairs answering DIFFERENT anchors, same task; 30k per task, seed 0): % at tau >= 1 and >= 2.
 
@@ -77,15 +77,18 @@ def main():
         nsh = [(t, shared_properties(S[a], S[b], tau=th)) for t, a, b in null]
         r = {"theta": th, "rate_tau2": pct(P), "blend_tau2": pct(bl), "analogy_tau2": pct(an),
              "inventions_in_multiple_pct": 100 * len(inv_in) / len(names),
+             "inv_blend_pct": 100 * float(np.mean([i in inv_in for i in range(len(names)) if str(tk[i]) == "blending"])),
+             "inv_analogy_pct": 100 * float(np.mean([i in inv_in for i in range(len(names)) if str(tk[i]) == "analogy"])),
              "blend_over_analogy_fixed_tau": pct(bl) / pct(an) if pct(an) else None,
              "blend_over_analogy_per_property": per_prop(bl) / per_prop(an),
              "same_pct": pct(same), "cross_pct": pct(cross), "same_over_cross": pct(same) / pct(cross),
              "rate_tau3": pct(P, 3), "tau3_over_tau2": pct(P, 3) / pct(P),
              "null_tau1_pct": 100 * float(np.mean([s >= 1 for _t, s in nsh])),
              "null_tau2_pct": 100 * float(np.mean([s >= 2 for _t, s in nsh]))}
+        r["blend_over_analogy_inventions"] = r["inv_blend_pct"] / r["inv_analogy_pct"] if r["inv_analogy_pct"] else None
         rows.append(r)
         print(f"theta {th:.3f}: tau2 {r['rate_tau2']:.2f}% (bl {r['blend_tau2']:.2f} / an {r['analogy_tau2']:.2f}) "
-              f"inv {r['inventions_in_multiple_pct']:.1f}% | bl/an fixed {r['blend_over_analogy_fixed_tau'] or float('nan'):.1f}x "
+              f"inv {r['inventions_in_multiple_pct']:.1f}% (bl {r['inv_blend_pct']:.1f} / an {r['inv_analogy_pct']:.1f} = {r['blend_over_analogy_inventions'] or float('nan'):.1f}x) | bl/an fixed {r['blend_over_analogy_fixed_tau'] or float('nan'):.1f}x "
               f"per-prop {r['blend_over_analogy_per_property']:.1f}x | same/cross {r['same_over_cross']:.2f}x "
               f"({r['same_pct']:.2f}/{r['cross_pct']:.2f}) | tau3 {r['rate_tau3']:.3f}% | null tau1 {r['null_tau1_pct']:.2f}% "
               f"tau2 {r['null_tau2_pct']:.3f}%")
