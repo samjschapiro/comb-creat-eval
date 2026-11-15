@@ -23,7 +23,7 @@
 | Pool variant | n | Overall Spearman (min) | Kendall τ (min) | Max rank shift | Top 8 unchanged | Max \|Δ overall\| (pts) | Originality-dim Spearman (min / median) |
 |---|---|---|---|---|---|---|---|
 | Leave one model out | 35 | 1.000 | 1.000 | 0 | 8/8 | 0.14 | 0.997 / 0.999 |
-| Leave one provider out | 10 | 1.000 | 0.996 | 1 | 8/8 | 0.68 | 0.992 / 0.998 |
+| Leave one provider out | 10 | 0.9996 | 0.996 | 1 | 8/8 | 0.68 | 0.992 / 0.998 |
 | Fixed pool: other half of models | 20 | 0.998 | 0.985 | 1 | 8/8 | 1.18 | 0.929 / 0.990 |
 | Fixed pool: humans only | 1 | 0.998 | 0.987 | 2 | 8/8 | 5.75 | 0.951 / 0.975 |
 
@@ -32,7 +32,7 @@
 | Anthropic (10) | 25 | 1.000 | 1.000 | 0 | 0.68 | 0.994 |
 | OpenAI (7) | 28 | 1.000 | 1.000 | 0 | 0.38 | 0.996 |
 | Google (5) | 30 | 1.000 | 1.000 | 0 | 0.24 | 0.996 |
-| DeepSeek (3) | 32 | 1.000 | 0.996 | 1 | 0.13 | 0.997 |
+| DeepSeek (3) | 32 | 0.9996 | 0.996 | 1 | 0.13 | 0.997 |
 | Meta (2) | 33 | 1.000 | 1.000 | 0 | 0.10 | 0.997 |
 | Qwen (2) | 33 | 1.000 | 1.000 | 0 | 0.09 | 0.999 |
 | xAI (2) | 33 | 1.000 | 1.000 | 0 | 0.06 | 0.999 |
@@ -41,7 +41,7 @@
 | Moonshot (1) | 34 | 1.000 | 1.000 | 0 | 0.06 | 0.999 |
 
 **Rebuttal sentences**
-> Originality is computed against the pool of all responses to an item, so we recomputed it under four alternative pools. These were leaving out each model (35 variants), leaving out each provider (10), and two fixed external pools that do not depend on who is evaluated: the other half of the models (20 random splits) and human answers only. Leaving out any single model leaves the ranking of the remaining 34 unchanged (Spearman = Kendall = 1.00 in all 35 cases). Dropping an entire provider, including all 10 Anthropic or all 7 OpenAI models, moves at most one model by one rank (Spearman ≥ 0.999).
+> Originality is computed against the pool of all responses to an item, so we recomputed it under four alternative pools. These were leaving out each model (35 variants), leaving out each provider (10), and two fixed external pools that do not depend on who is evaluated: the other half of the models (20 random splits) and human answers only. Leaving out any single model leaves the ranking of the remaining 34 unchanged (Spearman = Kendall = 1.00 in all 35 cases). Dropping an entire provider, including all 10 Anthropic or all 7 OpenAI models, moves at most one model by one rank (one adjacent swap, when DeepSeek is dropped: Spearman 0.9996).
 >
 > Scoring every model against a fixed pool it is not part of also preserves the ranking (Spearman ≥ 0.998, top 8 unchanged in every case), and the models' originality scores keep their order (Spearman ≥ 0.93 on every originality dimension; ≥ 0.99 when one model or provider is removed). The leaderboard reflects stable differences between models, not the particular pool. We will add this analysis to the appendix.
 

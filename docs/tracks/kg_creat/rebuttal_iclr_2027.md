@@ -136,7 +136,7 @@ reproduces every stored originality value to within 3e-7.
 | Pool variant | n | Overall Spearman (min) | Max rank shift | Top 8 unchanged | Originality-dim Spearman (min) |
 |---|---|---|---|---|---|
 | Leave one model out | 35 | 1.000 | 0 | 8/8 | 0.997 |
-| Leave one provider out | 10 | ≥ 0.999 | 1 | 8/8 | 0.992 |
+| Leave one provider out | 10 | 0.9996 | 1 | 8/8 | 0.992 |
 | Fixed pool: the other half of the models | 20 | 0.998 | 1 | 8/8 | 0.929 |
 | Fixed pool: human answers only | 1 | 0.998 | 2 | 8/8 | 0.951 |
 
