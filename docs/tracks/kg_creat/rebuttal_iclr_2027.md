@@ -358,14 +358,39 @@ replies stand without them.*
   over items, not on single answers, and the paper's claims are about the population of models.
 - **Resample and item variance (new).** We re-ran 10 models on 30 *new* entity pairs, disjoint at the
   entity level, and scored them with the same judges. Fresh items and fresh draws together bound the
-  T = 0.9 resample variance from above.
-  - **Overall:** scores on the two sets correlate at r = 0.92 (ICC(A,1) = 0.92). The mean absolute
-    change is 2.7 points out of 100, and no model's change exceeds its item-bootstrap 95% CI.
-  - **By task:** blending r = 0.95, analogy 0.87, association 0.65. Association has the narrowest
-    spread between models (SD 5.7 vs about 10 for the others), so it is the task that most needs more
-    items. We will say so.
-  - **Size of the noise:** the item-sampling SE of one model's overall score on 30 items is about
-    3.4 points.
+  T = 0.9 resample variance from above. Agreement across the 10 models between the two item sets:
+
+  | Score | Pearson r | Spearman ρ | ICC(A,1) | Mean \|Δ\| (points) | Item SE, one set | Models with Δ outside 95% CI |
+  |---|---|---|---|---|---|---|
+  | Association | 0.65 | 0.71 | 0.53 | 7.1 | 3.0 | 4 / 10 |
+  | Analogy | 0.87 | 0.88 | 0.80 | 7.8 | 6.7 | 1 / 10 |
+  | Blending | 0.95 | 0.94 | 0.84 | 5.8 | 7.0 | 0 / 10 |
+  | **Overall** | **0.92** | **0.88** | **0.92** | **2.7** | 3.4 | **0 / 10** |
+
+  Per model, overall score on the original vs the new items:
+
+  | Model | Original 30 | New 30 | Δ [95% CI] |
+  |---|---|---|---|
+  | claude-opus-4.6* | 54.1 | 54.2 | +0.1 [−7.8, +8.3] |
+  | claude-fable-5* | 49.9 | 49.2 | −0.7 [−9.6, +8.5] |
+  | claude-opus-4.5* | 46.1 | 49.1 | +3.0 [−6.8, +12.4] |
+  | claude-sonnet-4.6 | 45.8 | 51.5 | +5.7 [−3.0, +14.7] |
+  | claude-fable-5.1 | 43.8 | 40.8 | −3.0 [−12.8, +6.6] |
+  | claude-opus-4.8 | 41.9 | 42.4 | +0.5 [−9.1, +10.0] |
+  | claude-opus-4.7 | 40.8 | 37.4 | −3.4 [−12.8, +5.7] |
+  | gpt-5-mini | 37.2 | 44.7 | +7.5 [−1.7, +16.4] |
+  | gpt-4.1 | 31.1 | 28.2 | −2.9 [−12.0, +6.1] |
+  | gpt-4o-mini | 26.2 | 26.3 | +0.1 [−8.1, +8.2] |
+
+  \* Sampling conditions also changed for these three (direct API with a thinking budget vs OpenRouter
+  at T = 0.9), which can only lower agreement.
+
+  - **The overall score reproduces.** No model's change exceeds what item sampling alone would produce.
+  - **Association is the least reliable task.** Its spread between models is narrowest (SD 5.7 vs about
+    10 for the other tasks), so it is the task that most needs more items. We will say so.
+  - **What the statistics measure.** r and ρ ask whether the leaderboard reproduces. ICC(A,1) also
+    penalises a shift common to all models. Blending's ICC (0.84) is below its r (0.95) because the new
+    blending items were about 5 points harder for every model.
 
   Source: `docs/reports/2026-11-13_kg_creat_rebuttal_test_retest/`.
 
