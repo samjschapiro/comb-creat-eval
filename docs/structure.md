@@ -75,6 +75,7 @@ src/
 │       ├── rescore_originality.py, rescore_split_originality.py, rescore_blends.py  # pool-relative rescore; base/emergent split; blend-v3 rescore
 │       ├── build_blind_review.py, blind_review_server.py     # blind human re-rating of panel dimensions (+ hidden key)
 │       ├── build_rater_study.py, analyze_rater_study.py, rater_study_template.html, rater_study_kombine.css  # co-author rater study (rebuttal): jsPsych page in the human study UI + reliability / judge-validity analysis
+│       ├── corpus_novelty.py  # contamination check vs open pretraining corpora (infini-gram): anchor co-occurrence/lift, documented hops, verbatim invention names, per-item predictors
 │       ├── analyze_retest.py  # test-retest across test30 / retest30 (10 models; test30 originality recomputed over the same 10-model pool)
 │       ├── build_blend_review.py, blend_review_server.py     # blend-specific review UI (uv shared-slot format)
 │       ├── leaderboard_unanimous.py, leaderboard_single_judge.py  # judge-robustness checks on the leaderboard

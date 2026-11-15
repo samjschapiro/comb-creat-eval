@@ -275,8 +275,23 @@ appendix. Source: `data/kg_creat/effort_study/`, log 2026-09-07.
    Swanson's point about discoverable-but-undiscovered connections. We will state this scope explicitly
    in the paper.
 
-*(Optional, not yet run: n-gram novelty of answers against a pretraining corpus index. Check the "death of
-the n-gram" critique first; only offer it if run.)*
+5. **A direct contamination test (new).** We searched two open pretraining corpora with infini-gram: the
+   4.6T-token OLMo 2 mix and a 9.2B-token Dolma sample.
+   - **Inputs.** The input pairs are not textually associated. The median pair co-occurs within 100
+     tokens less than half as often as its frequencies predict (lift 0.45; 68% below chance).
+   - **Steps.** Association chains are built from documented facts (87% of hops appear in the corpus),
+     which is the intended retrieval component.
+   - **Familiarity and validity.** Familiarity of the inputs makes a *valid* connection easier to find
+     (association pass rate ρ = +0.47, robust to entity prominence).
+   - **Familiarity and creativity.** It predicts neither originality (|ρ| ≤ 0.26, n.s., every task) nor
+     convergence between models (|ρ| ≤ 0.13). In blending it predicts nothing at all.
+   - **Inventions.** 32–40% of invented names never appear verbatim in 4.6T tokens. Familiar names
+     already receive lower originality from our metric, and convergent inventions are not more likely to
+     carry existing names.
+
+   Following Saakyan et al. (2025, "Death of the Novel(ty)"), we use n-gram statistics only as a
+   contamination check, not as a creativity score. Source:
+   `docs/reports/2026-11-14_kg_creat_rebuttal_corpus_contamination/`.
 
 ---
 
@@ -474,7 +489,10 @@ answered briefly, mostly by pointing to shared sections.
   with the same properties, and more so within a provider.
 
 *(Check before sending: the Lu et al. claim that n-gram novelty fits short triples poorly is our
-argument, not theirs. Verify against the paper or soften it. "Death of the n-gram" is still to check.)*
+argument, not theirs. Verify against the paper or soften it. Our own corpus check supports it: many
+invented names are ordinary words that occur millions of times, e.g. "Treatment", "Covenant". Better
+still, point to the corpus contamination test (En17 Q1) as our engagement with H-novelty. "Death of the
+Novel(ty)" is checked: Saakyan et al., ICLR 2026, arXiv 2509.22641.)*
 
 ---
 
@@ -485,7 +503,7 @@ argument, not theirs. Verify against the paper or soften it. "Death of the n-gra
 - θ: correct the "99th percentile" wording; add the (τ,θ) density figure and null FPR (S3b).
 - Add appendices: effort study (cGKy W2), composite / judge robustness (cGKy W1), pool robustness (cGKy Q2).
 - Rename surprise to "semantic surprise (remoteness)" and clarify within- vs across-artifact.
-- State P- vs H-creativity scope (En17 Q1).
+- State P- vs H-creativity scope; add the corpus contamination appendix (En17 Q1).
 - Formalism fixes from 2026-11-11 (association surprise denominator, domain of M, Q with an empty
   projection, direction of the analogy example).
 - Add the test–retest appendix (10 models, 30 new items; cGKy Q1).

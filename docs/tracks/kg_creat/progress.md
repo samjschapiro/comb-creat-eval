@@ -816,3 +816,26 @@ Report: `docs/reports/2026-11-13_kg_creat_rebuttal_test_retest/`.
 - Optional: human validation of the 30 oracle generic spaces (En17 Q2).
 - Check the Lu et al. claim and "death of the n-gram".
 - Trim cGKy's replies to fit the length limit.
+
+## 2026-11-14: rebuttal, corpus contamination check (En17 Q1)
+
+`corpus_novelty.py` searches the OLMo 2 mix (4.6T tokens) and a Dolma sample (9.2B) via infini-gram, at
+no cost.
+
+**Inputs are not textually associated.** The median co-occurrence lift is 0.45, and 68% of pairs fall
+below chance.
+
+**Chains reuse documented facts.** 87% of hops appear in the corpus.
+
+**Familiarity predicts validity only.** Input co-occurrence predicts association and analogy validity
+(ρ ≈ +0.47 / +0.49, robust to prominence), but no originality or multiples outcome, and nothing in
+blending.
+
+**Invented names.**
+- 32–40% never appear verbatim.
+- Familiar names already score lower on emergent originality.
+- Multiples are not more common among existing names.
+
+**Failed check.** The Swanson endpoint contrast failed: at 4.6T tokens, every pair co-occurs somewhere.
+
+Report: `docs/reports/2026-11-14_kg_creat_rebuttal_corpus_contamination/`.
