@@ -46,6 +46,9 @@ About 6,600 new queries; no API spend.
 
 1. **Memorised inventions are rare.** 43 of 2,070 inventions are memorised: 2.1%, against 0.4% under
    the cross-item null. 40 are specific, and 1.3% meet the strict definition.
+   - **Hand audit** (see "Audit of all 43"): 35 are reuses of a known concept, 8 of them a concept from
+     one input's domain relabelled. 8 are string coincidences.
+   - **Audited rate:** about 1.7%.
 2. **Task makes no difference.** Analogy 2.1% vs blending 2.0%, paired over the 30 shared anchor pairs
    (Wilcoxon p = 0.96).
 3. **Provider and model matter.**
@@ -142,28 +145,206 @@ Abstract-concept inputs invite existing abstract nouns. The domain cells are sma
 - **Memorised inventions score slightly lower on originality,** but not significantly, with this few
   of them.
 
-## Examples (specific memorised inventions, most frequent names first)
+## Examples in detail
 
-| Inputs | Task | Name (occurrences in 4.6T) | Model | Properties documented with the name |
+**Notation.**
+- **Corpus columns:** ✓ = the property's object co-occurs with the name within 100 tokens in the 4.6T
+  corpus; ✗ = it does not; ? = inconclusive (sampled zero, and absent from the 9.2B sample).
+- **Counts** are verbatim occurrences of the name.
+- **Analogy inventions** are shown as source triple → image triple. The relation is copied from the
+  source by construction, so only the object is the model's choice.
+- **Blends** show the tag the model gave each triple: *u* / *v* = inherited from one input, *uv* = from
+  both, *emergent* = new to the blend.
+
+### 1. A known concept reused as the blend: *Icon*
+
+*Christianity + Beauty* → **Icon** (102M occurrences), claude-sonnet-4.5. It passes the panel.
+
+Generic space: *"a transformative revelation of transcendence through contemplatable manifest form"*.
+
+| Tag | Triple | Corpus |
+|---|---|---|
+| u | Icon — requires — consecration | ✓ |
+| v | Icon — exhibits — compositional harmony | ? |
+| uv | Icon — reveals through — radiant form | ? |
+| uv | Icon — transforms — beholders | ✓ |
+| emergent | Icon — accrues sanctity through — visible aging | ? |
+
+- The religious icon *is* already the place where Christianity and beauty meet, so the model retrieved a
+  ready-made blend rather than building one.
+- claude-opus-4.7 produced its sibling *Iconography* (2.7M) on the same item: *summons devotion through
+  harmonious form* ?, *promises salvation* ✓, *obeys golden ratio* ✓, *treats symmetry as sacrament* ✓,
+  *canonizes faces* ✓. The panel *rejected* it.
+- Both are judged valid or invalid on their merits. Memorisation is a different axis from validity.
+
+### 2. A stock concept that fits one input: *Moral Compass*
+
+*The Ten Commandments + Free will* → **Moral Compass** (2.4M), llama-3.3-70b. It fails the panel.
+
+Generic space: *"a guiding principle for decision making"*.
+
+| Tag | Triple | Corpus |
+|---|---|---|
+| uv | Moral Compass — influences — behavior | ✓ |
+| u | Moral Compass — is based on — divine law | ✓ |
+| v | Moral Compass — respects — personal autonomy | ✓ |
+| emergent | Moral Compass — evolves through — self-reflection | ✓ |
+| uv | Moral Compass — balances — freedom and responsibility | ✓ |
+
+- **Every property is documented** with the name: the textbook memorised invention.
+- **The generic space is too thin** to be instantiated by both inputs, which is why it fails.
+- **The item attracts this failure.** Five models land in the same neighbourhood: *Ethical Compass*
+  (gemini-2.5-flash), and *Moral Autonomy* three times (llama-4-maverick, qwen-2.5-72b, gpt-4o-mini).
+  The only one that passes is gpt-4o-mini's *moral autonomy*, which *prescribes ethical guidelines* ✓,
+  *exercises individual choice* ✓, *balances duty and freedom* ✓ and *enhances personal
+  responsibility* ✓.
+
+### 3. An analogy that maps to an existing concept in the target domain: *voltage regulator*
+
+*Justice + Electricity* → **voltage regulator** (785k), deepseek-chat-v3. Projected source: *appeals
+court*.
+
+| Source triple | → | Image triple | Corpus |
+|---|---|---|---|
+| appeals court — reviews — verdict | → | voltage regulator — reviews — power flow | ✓ |
+| appeals court — ensures — fairness | → | voltage regulator — ensures — stability | ✓ |
+
+- **The mapping is sensible.** But its image is a component that already exists, so the "invention"
+  is a relabelled real device.
+- **The same item produced four more** existing electrical concepts: *Dielectric Breakdown*
+  (gemini-3-flash; from *Perjury*: violates Insulation ✓, corrupts Conduction ✓), *Power Surge
+  Protector* (llama-3.3), *Negative Power* (kimi-k2) and *Recalibration* (phi-4).
+- **Justice + Electricity is the most-affected item.** The target domain has a ready vocabulary of
+  control devices onto which "fairness / correction" maps.
+
+### 4. A genuine cross-domain analogy that lands on an existing term: *Concept Album*
+
+*Frida Kahlo + Bob Dylan* → **Concept Album** (975k), llama-3.3-70b. Projected source: *Self Portrait*.
+It passes.
+
+| Source triple | → | Image triple | Corpus |
+|---|---|---|---|
+| Self Portrait — explores — Identity | → | Concept Album — explores — Social Justice | ✓ |
+| Self Portrait — features — Vibrant Colors | → | Concept Album — features — Poetic Lyrics | ✓ |
+
+The mapping (a painter's self-portrait ↦ a songwriter's concept album) is a reasonable analogy. Its
+image is simply an existing genre, with generic one- or two-word properties.
+
+### 5. A familiar name with new content: *Dream factory*
+
+*Charlie Chaplin + Surrealism* → **Dream factory** (58k), gpt-6-astra-flex. It passes.
+
+| Tag | Triple | Corpus |
+|---|---|---|
+| u | Dream factory — employs — The Tramp | ✓ |
+| u | Dream factory — uses — assembly lines | ✓ |
+| uv | Dream factory — drives production through — involuntary gestures | ✗ |
+| uv | Dream factory — mass produces — dream objects | ✗ |
+| emergent | Dream factory — turns sleep into — overtime | ? |
+| emergent | Dream factory — turns repression into — machine breakdowns | ✗ |
+
+- *Dream factory* is a long-standing nickname for Hollywood, so the name and the Chaplin side are
+  documented.
+- **The blend itself is not documented:** none of the double-scope or emergent properties are.
+- It passes the definition on its two *u*-side properties. This is the kind of case where
+  name-plus-properties overstates memorisation. The model took a known label and built something new
+  under it.
+
+### 6. False positives: the name exists, the concept doesn't
+
+| Inputs | Invention (count) | Model | What the string means in the corpus | Properties that matched |
 |---|---|---|---|---|
-| Opera + Documentary film | analogy | *Treatment* (377M) | llama-3.3-70b | 2/2: interviews, screenwriters |
-| Christianity + Beauty | blend | *Icon* (102M) | sonnet-4.5 | 2/5: consecration, radiant form, … |
-| Christianity + Beauty | blend | *Iconography* (2.7M) | opus-4.7 | 4/5: golden ratio, sacrament, harmonious form, faces |
-| Ten Commandments + Free will | blend | *Moral Compass* (2.4M) | llama-3.3-70b | 5/5: divine law, personal autonomy, … |
-| Cinema + Evolution | analogy | *Mimicry* (2.2M) | phi-4 | 2/2: predator–prey dynamics, survival advantage |
-| Frida Kahlo + Bob Dylan | analogy | *Concept Album* (975k) | llama-3.3-70b | 2/2: poetic lyrics, social justice |
-| Justice + Electricity | analogy | *voltage regulator* (785k) | deepseek-v3 | 2/2: power flow, stability |
-| Charlie Chaplin + Surrealism | analogy | *The Sleepwalker* (369k) | opus-4.8 | 2/2: automatism, unconscious |
-| Constellations + Cricket | blend | *Star Field* (201k) | sonnet-4.5 | 4/6: innings, runs, named formations, seasonal cycles |
-| Networks + Salt | analogy | *Flavor Enhancer* (176k) | llama-3.3-70b | 2/2: flavor, taste |
+| Justice + Electricity, blend | *current court* (106k) | qwen3-max | "the current court" | adjudicates disputes ✓, conducts charge ✓; emergent properties ✗ / ? |
+| Mount Everest + The light bulb, analogy | *power window* (130k) | gpt-5 | car power windows | enables illumination ✓, used after connection ✓, signaled at lamp base ✓ (from *weather window*) |
+| Justice + Electricity, analogy | *Recalibration* (552k) | phi-4 | the ordinary word | powers Machinery ✓, transforms Energy ✓ |
+| Hinduism + Gravity, blend | *Karmic Gravity* (347) | opus-4.8 | a rare New-Age phrase | cycles souls through samsara ✓, pulls soul by karmic mass ✓ |
 
-**For contrast, the paper's showcase inventions are not memorised.** *Stellar moksha* never appears
-verbatim. *Liquid franchise* (38–45 occurrences) and *narrative species* (912) do occur as strings, but not
-near their inputs together with the properties the models gave them. This is exactly the distinction the
-definition draws.
+These pass the definition because their names are ordinary strings and their properties are common
+nouns. The analogy *weather window → power window* is the model's own construction; the car part
+already has that name by coincidence.
 
-A typical memorised invention is not a creative blend. It is an existing concept from the vicinity of one
-input (*voltage regulator* for Justice + Electricity), relabelled as the answer.
+## Audit of all 43
+
+Our reading of what each flagged invention is:
+- **K**: a known concept reused as the answer (27);
+- **K-1**: a known concept from *one* input's domain, relabelled (8);
+- **F**: a false positive, i.e. the string exists but the concept is the model's own (8).
+
+The counts are one author's judgement, to be checked by a co-author before quoting.
+
+| Item | Task | Model | Name (count) | Properties (relation — object, corpus) | Label |
+|---|---|---|---|---|---|
+| Christianity + Beauty | blend | sonnet-4.5 | Icon (102M) | requires consecration ✓; exhibits compositional harmony ?; reveals through radiant form ?; transforms beholders ✓; accrues sanctity through visible aging ? | K |
+| Christianity + Beauty | blend | opus-4.7 | Iconography (2.7M) | summons devotion through harmonious form ?; promises salvation ✓; obeys golden ratio ✓; treats symmetry as sacrament ✓; canonizes faces ✓ | K |
+| Christianity + Beauty | blend | opus-4.6 | Gloria (7.8M) | transforms perceiver through devoted attention ?; offers redemption ✓; manifests in sensory form ?; makes right perception salvific ✓; makes kitsch heresy ✓ | K (theological "glory") |
+| Christianity + Beauty | analogy | llama-3.3 | Aesthete (283k) | embodies Taste ✓; serves Culture ✓ (from *Saint*) | K |
+| Social contract + Prayer | blend | sonnet-4.5 | Covenant (21M) | binds through mutual obligations ✓; legitimates authority ✓; specifies explicit terms ✓; requires faith ✓; treats violations as crime and sin ?; established by sworn oath ✓ | K |
+| Social contract + Prayer | analogy | llama-3.3 | Litany (3.6M) | outlines Blessings ✓; establishes Rituals ✓ (from *Constitution*) | K |
+| Ten Commandments + Free will | blend | llama-3.3 | Moral Compass (2.4M) | all five ✓ (see above) | K |
+| Ten Commandments + Free will | blend | gemini-2.5-flash | Ethical Compass (58k) | possesses inherent directives ✗; allows alternative paths ✗; guides towards moral integrity ✓; generates self-imposed accountability ✗; calibrates based on personal conviction ✓ | K |
+| Ten Commandments + Free will | blend | gpt-4o-mini | moral autonomy (68k) | prescribes ethical guidelines ✓; exercises individual choice ✓; balances duty and freedom ✓; enhances personal responsibility ✓ | K |
+| Ten Commandments + Free will | blend | qwen-2.5-72b | Moral Autonomy (69k) | provides guidelines ✓; enables choice ✓; balances commandments and freedom ✗; adapts to situational context ✗ | K |
+| Ten Commandments + Free will | blend | llama-4-maverick | Moral Autonomy (69k) | is guided by principles ✓; involves choice ✓; balances obligation and desire ✗; develops personal responsibility through moral action ✗ | K |
+| Language + French Revolution | blend | llama-3.3 | Revolutionary Discourse (12k) | uses semantics ?; involves power struggle ?; shapes public opinion ✓; creates new social norms ✗; employs rhetorical devices ✗; leads to social upheaval ✓ | K |
+| Language + French Revolution | blend | deepseek-chat | Revolutionary Discourse (12k) | is composed of signs ?; targets oppressive regimes ✓; transforms meaning ✓; propagates through collective action ? | K |
+| Language + French Revolution | blend | llama-4-maverick | Revolutionary Rhetoric (66k) | uses metaphor ✓; mobilizes masses ?; frames social identity ?; reshapes public discourse ✓; creates new solidarity ✗ | K |
+| Language + French Revolution | analogy | qwen-2.5-72b | Revolutionary Manifesto (12k) | structures Rebellion ✓; guides Liberty ?; enables Progress ✓ (from *Grammar*) | K |
+| Inflation + The Constitution | blend | gpt-5-mini | Monetary Constitution (7.6k) | defines unit of account ✓; sets legitimate change procedure ✗; alters money supply ✓; allocates amendment authority ✗; entrenches non-dilutable purchasing rights ✗ | K (Buchanan) |
+| Inflation + The Constitution | blend | qwen-2.5-72b | Economic Constitution (11k) | regulates value ?; ensures rights ✓; distributes purchasing power ✓; adapts to economic shifts ✗ | K (ordoliberal) |
+| Inflation + The Constitution | analogy | llama-3.3 | Constitutional Safeguard (12k) | is implemented by Supreme Court ✓; aims to stabilize Civil Rights ✓ (from *QE*) | K |
+| Vaccines + Ethics | analogy | llama-3.3 | Collective Conscience (195k) | require Moral Education ✓; protect Minority Rights ✓ (from *Herd Immunity*) | K (Durkheim) |
+| Frida Kahlo + Bob Dylan | analogy | llama-3.3 | Concept Album (975k) | explores Social Justice ✓; features Poetic Lyrics ✓ | K |
+| Opera + Documentary film | analogy | llama-3.3 | Treatment (377M) | informs Interviews ✓; written by Screenwriters ✓ (from *Libretto*) | K (film treatment) |
+| Charlie Chaplin + Surrealism | blend | gpt-6-astra-flex | Dream factory (58k) | see above | K, new content |
+| Charlie Chaplin + Surrealism | analogy | opus-4.8 | The Sleepwalker (369k) | created by Surrealism; performed via automatism ✓; conveys unconscious ✓ (from *The Tramp*) | K |
+| Networks + Salt | blend | opus-4.7 | Ionic Network (1.4k) | has nodes and edges ?; forms crystal lattice ✓; connects nodes via ionic bonds ✓; tunes percolation by solvent dielectric ✗; dissolves into disconnected ion cloud ✗; recrystallizes on evaporation ✓ | K (chemistry) |
+| Networks + Salt | blend | kimi-k2 | crystalline lattice (64k) | has nodes ✓; forms via ionic bonding ✓; maintains structure through local neighbor interactions ✗; dissolves at specific threshold density ✗ | K |
+| Cinema + Evolution | analogy | phi-4 | Mimicry (2.2M) | is used for Survival Advantage ✓; transforms Predator-Prey Dynamics ✓ (from *CGI*) | K |
+| The blue whale + The mattress | analogy | llama-4-maverick | rotation schedule (48k) | is influenced by comfort preference ✗; affects mattress wear ✓; is tracked by users ✓ (from *migration pattern*) | K (mattress rotation) |
+| Justice + Electricity | analogy | deepseek-v3 | voltage regulator (785k) | see above | K-1 |
+| Justice + Electricity | analogy | gemini-3-flash | Dielectric Breakdown (65k) | violates Insulation ✓; corrupts Conduction ✓ (from *Perjury*) | K-1 |
+| Justice + Electricity | analogy | llama-3.3 | Power Surge Protector (7.6k) | prevents Overload ✓; is installed by Electricians ✓ (from *Vaccine*) | K-1 |
+| Justice + Electricity | analogy | kimi-k2 | Negative Power (191k) | restores Load ✓; requires Sink ?; measures Demand ✓ (from *Restitution*) | K-1 |
+| Mount Everest + The light bulb | analogy | qwen-2.5-72b | power pack (604k) | supplies electricity ✓; enables illumination ✓ (from *oxygen tank*) | K-1 |
+| Networks + Salt | analogy | llama-3.3 | Flavor Enhancer (176k) | directs Flavor ✓; optimizes Taste ✓ (from *Router*) | K-1 |
+| Don Quixote + Pi | analogy | sonnet-4.5 | rational approximation (52k) | grounds Pi; simplifies calculation ✓; provides finite precision ✓ (from *Sancho Panza*) | K-1 |
+| Rice + Radio | analogy | sonnet-4.5 | Premodulation (1.7k) | precedes Modulation ✓; drives Interference ✓; migrates into Carrier ✓; prevents Reception ? (from *Parboiling*) | K-1 |
+| Justice + Electricity | blend | qwen3-max | current court (106k) | see above | F |
+| Mount Everest + The light bulb | analogy | gpt-5 | power window (130k) | see above | F |
+| Justice + Electricity | analogy | phi-4 | Recalibration (552k) | powers Machinery ✓; transforms Energy ✓ (from *Reform*) | F |
+| Hinduism + Gravity | blend | opus-4.8 | Karmic Gravity (347) | cycles souls through samsara ✓; curves bodies along geodesics ?; pulls soul by karmic mass ✓; (+ moksha is escape velocity, emergent) | F |
+| Constellations + Cricket | blend | sonnet-4.5 | Star Field (201k) | organizes players into named formations ✗; reads positions for tactical advantage ✗; rotates formation with innings ✓; scores runs ✓; marks seasonal cycles ✓; navigates play by stellar positions ✓ | F (astronomy term) |
+| Justice + Electricity | blend | phi-4 | Circuity (62k) | transmits electrical current ✓; ensures equitable access ✗; provides power ✓; balances network stress ✗ | F (the word "circuity") |
+| Networks + Salt | analogy | fable-5.1 | Seed cluster (7.0k) | reverses Percolation ✓; attracts Nodes ✓; nucleates Edges ?; regrows Networks (from *Seed crystal*) | F |
+| Networks + Salt | analogy | opus-4.5 | seed network (4.5k) | templates network growth ✓; determines network topology ✓; placed in connection rich environment ✗ (from *seed crystal*) | F |
+
+## What the properties and relations look like
+
+Comparing the 43 memorised inventions with all the others:
+
+| | Properties per invention | Words per object | Words per relation | Words per name |
+|---|---|---|---|---|
+| Analogy, memorised (22) | 2.55 | **1.30** | 1.38 | 1.77 |
+| Analogy, other (1,015) | 2.60 | 1.79 | 1.45 | 2.15 |
+| Blending, memorised (21) | 4.95 | **1.85** | 1.66 | 1.76 |
+| Blending, other (1,012) | 5.01 | 2.13 | 1.83 | 2.01 |
+
+**Relations.**
+- **In blends, the most frequent are generic:** *balances* (5), *uses* (3), *has*, *requires*,
+  *transforms*, *involves*, *creates*, *employs*, *ensures*, *provides*, *adapts to* (2 each).
+- **For comparison:** the paper's showcase blends use specific, compound relations, e.g. *tunes
+  percolation by*, *turns repression into*, *accrues sanctity through*.
+- **In analogies, the relation is inherited from the source path,** so it says more about the source
+  than the invention. The memorised ones come from generic sources too: *enables* (3), *prevents*,
+  *transforms* (2 each).
+
+**What this means.**
+- **The memorised profile:** a short, often one-word name; generic relations; one-word objects
+  (*Flavor*, *Taste*, *Culture*, *Rituals*, *Energy*).
+- **Partly mechanical.** Short, common strings are more likely to co-occur in text, so the detector is
+  biased toward finding them.
+- **Partly substantive.** The analogy inventions that cleared the bar mostly have the minimum two
+  properties, stated as bare nouns. They are retrievals, not constructions.
 
 ## Caveats
 
